@@ -186,9 +186,9 @@ pub fn ctaphid_wink(device:&hidapi::HidDevice , cid:&[u8]){
     //println!("Wrote: {:?} byte", res);
 
     let mut buf = [0u8; 64];
-    let res = device.read_timeout(&mut buf[..],1000).unwrap();
+    let _res = device.read_timeout(&mut buf[..],1000).unwrap();
     //let err = device.check_error();
-    println!("Read: {:?}", &buf[..res]);    
+    //println!("Read: {:?}", &buf[..res]);    
 
     //buf.to_vec()
 }
