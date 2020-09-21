@@ -1,17 +1,17 @@
 mod ctaphid;
 mod get_info_command;
 mod get_info_response;
-pub mod make_credential_command;
-pub mod make_credential_response;
-pub mod get_assertion_command;
-pub mod get_assertion_response;
+mod make_credential_command;
+mod make_credential_response;
+mod get_assertion_command;
+mod get_assertion_response;
 mod client_pin_command;
 mod client_pin_response;
 mod util;
-pub mod cose;
-pub mod p256;
-pub mod ss;
-pub mod pintoken;
+mod cose;
+mod p256;
+mod ss;
+mod pintoken;
 
 extern crate crypto as rust_crypto;
 
@@ -47,7 +47,7 @@ mod tests {
     }
 
     #[test]
-    fn client_pin_get_keyagreement() {
+    fn test_client_pin_get_keyagreement() {
         let params = HidParam::get_default_params();
         let device = ctaphid::connect_device(params);
         let cid = ctaphid::ctaphid_init(&device);
@@ -63,102 +63,28 @@ mod tests {
     }
 
     #[test]
-    fn make_credential_with_pin_non_rk() {
+    fn test_make_credential_with_pin_non_rk() {
         // parameter
-        let pin = "1234";
+        let rpid = "test.com";
         let challenge = b"this is challenge".to_vec();
         let user_id = b"12345".to_vec();
         let user_name = "test user";
+        let pin = "1234";
 
-        // init
-        let params = HidParam::get_default_params();
-        let device = ctaphid::connect_device(params);
-        let cid = ctaphid::ctaphid_init(&device);
-
-        // pin token
-        let pin_token = get_pin_token(&device,&cid,pin.to_string());
-
-        // create cmmand
-        let send_payload = 
-        {
-            let mut params = make_credential_command::Params::new("test.com",challenge,user_id);
-            params.user_name = user_name.to_string();
-            //params.user_display_name = String::from("DispUser");
-    
-            // create pin auth
-            let pin_auth = pin_token.unwrap().auth(&params.client_data_hash);
-            println!("- pin_auth({:02})    = {:?}", pin_auth.len(),util::to_hex_str(&pin_auth));
-            params.pin_auth = pin_auth.to_vec();
-    
-            make_credential_command::create_payload(params)
-        };
-
-        // send & response
-        let response_cbor = ctaphid::ctaphid_cbor(&device,&cid,&send_payload).unwrap();
-
-        let att = make_credential_response::parse_cbor(&response_cbor).unwrap();
-        println!("authenticatorMakeCredential (0x01)");
-        println!("- fmt                                     = {:?}", att.fmt);
-        println!("- rpid_hash({:02})                           = {:?}", att.rpid_hash.len(),util::to_hex_str(&att.rpid_hash));
-        println!("- flags_user_present_result               = {:?}", att.flags_user_present_result);
-        println!("- flags_user_verified_result              = {:?}", att.flags_user_verified_result);
-        println!("- flags_attested_credential_data_included = {:?}", att.flags_attested_credential_data_included);
-        println!("- flags_extensiondata_included            = {:?}", att.flags_extension_data_included);
-        println!("- sign_count                              = {:?}", att.sign_count);
-        println!("- aaguid({:02})                              = {:?}", att.aaguid.len(),util::to_hex_str(&att.aaguid));
-        println!("- credential_id({:02})                       = {:?}", att.credential_id.len(),util::to_hex_str(&att.credential_id));
+        make_credential_with_pin_non_rk(rpid,&challenge,&user_id,user_name,pin);
 
         assert!(true);
     }
 
     #[test]
-    fn get_assertion_with_pin() {
+    fn test_get_assertion_with_pin() {
         // parameter
-        let pin = "1234";
+        let rpid = "test.com";
         let challenge = b"this is challenge".to_vec();
         let credential_id = hex::decode("2C33F87AEFEB4280E85D97C68BF5FDFE2BB4C9598809C7F20EA254681CF4B284F710732347DDAA892815872D039BB22AFFCB0C8ECC79A85D34CE642B8B6C3514").unwrap();
+        let pin = "1234";
 
-        // init
-        let params = HidParam::get_default_params();
-        let device = ctaphid::connect_device(params);
-        let cid = ctaphid::ctaphid_init(&device);
-
-        // pin token
-        let pin_token = get_pin_token(&device,&cid,pin.to_string());
-
-        // create cmmand
-        let send_payload = 
-        {
-            let mut params = get_assertion_command::Params::new("test.com",challenge,credential_id);
-            params.option_up=true;
-            params.option_uv=true;
-
-            // create pin auth
-            let pin_auth = pin_token.unwrap().auth(&params.client_data_hash);
-            println!("- pin_auth({:02})    = {:?}", pin_auth.len(),util::to_hex_str(&pin_auth));
-            params.pin_auth = pin_auth.to_vec();
-
-            get_assertion_command::create_payload(params)
-        };
-
-        // send & response
-        let response_cbor = ctaphid::ctaphid_cbor(&device,&cid,&send_payload).unwrap();
-
-        let ass = get_assertion_response::parse_cbor(&response_cbor).unwrap();
-        println!("authenticatorGetAssertion (0x02)");
-        println!("- rpid_hash({:02})                          = {:?}", ass.rpid_hash.len(),util::to_hex_str(&ass.rpid_hash));
-        println!("- flags_user_present_result               = {:?}", ass.flags_user_present_result);
-        println!("- flags_user_verified_result              = {:?}", ass.flags_user_verified_result);
-        println!("- flags_attested_credential_data_included = {:?}", ass.flags_attested_credential_data_included);
-        println!("- flags_extensiondata_included            = {:?}", ass.flags_extension_data_included);
-        println!("- sign_count                              = {:?}", ass.sign_count);
-        println!("- aaguid({:02})                              = {:?}", ass.aaguid.len(),util::to_hex_str(&ass.aaguid));
-        println!("- number_of_credentials                   = {:?}", ass.number_of_credentials);
-        println!("- signature({:02})                           = {:?}", ass.signature.len(),util::to_hex_str(&ass.signature));
-        println!("- user_id({:02})                             = {:?}", ass.user_id.len(),util::to_hex_str(&ass.user_id));
-        println!("- user_name                               = {:?}", ass.user_name);
-        println!("- user_display_name                       = {:?}", ass.user_display_name);
-        println!("- credential_id({:02})                       = {:?}", ass.credential_id.len(),util::to_hex_str(&ass.credential_id));
+        get_assertion_with_pin(rpid,&challenge,&credential_id,pin);
 
         assert!(true);
     }
@@ -181,7 +107,7 @@ impl HidParam {
     }
 }
 
-pub fn get_pin_token(device:&hidapi::HidDevice,cid:&[u8],pin:String)->Option<pintoken::PinToken>
+fn get_pin_token(device:&hidapi::HidDevice,cid:&[u8],pin:String)->Option<pintoken::PinToken>
 {
     if pin.len() > 0 {
         let send_payload = client_pin_command::create_payload(client_pin_command::SubCommand::GetKeyAgreement).unwrap();
@@ -280,4 +206,90 @@ pub fn get_pin_retries()->i32{
     //println!("- retries       = {:?}", pin.retries);
 
     pin.retries
+}
+
+pub fn make_credential_with_pin_non_rk(rpid:&str,challenge:&Vec<u8>,user_id:&Vec<u8>,user_name:&str,pin:&str) {
+
+    // init
+    let params = HidParam::get_default_params();
+    let device = ctaphid::connect_device(params);
+    let cid = ctaphid::ctaphid_init(&device);
+
+    // pin token
+    let pin_token = get_pin_token(&device,&cid,pin.to_string());
+
+    // create cmmand
+    let send_payload = 
+    {
+        let mut params = make_credential_command::Params::new(rpid,challenge.to_vec(),user_id.to_vec());
+        params.user_name = user_name.to_string();
+        //params.user_display_name = String::from("DispUser");
+
+        // create pin auth
+        let pin_auth = pin_token.unwrap().auth(&params.client_data_hash);
+        println!("- pin_auth({:02})    = {:?}", pin_auth.len(),util::to_hex_str(&pin_auth));
+        params.pin_auth = pin_auth.to_vec();
+
+        make_credential_command::create_payload(params)
+    };
+
+    // send & response
+    let response_cbor = ctaphid::ctaphid_cbor(&device,&cid,&send_payload).unwrap();
+
+    let att = make_credential_response::parse_cbor(&response_cbor).unwrap();
+    println!("authenticatorMakeCredential (0x01)");
+    println!("- fmt                                     = {:?}", att.fmt);
+    println!("- rpid_hash({:02})                           = {:?}", att.rpid_hash.len(),util::to_hex_str(&att.rpid_hash));
+    println!("- flags_user_present_result               = {:?}", att.flags_user_present_result);
+    println!("- flags_user_verified_result              = {:?}", att.flags_user_verified_result);
+    println!("- flags_attested_credential_data_included = {:?}", att.flags_attested_credential_data_included);
+    println!("- flags_extensiondata_included            = {:?}", att.flags_extension_data_included);
+    println!("- sign_count                              = {:?}", att.sign_count);
+    println!("- aaguid({:02})                              = {:?}", att.aaguid.len(),util::to_hex_str(&att.aaguid));
+    println!("- credential_id({:02})                       = {:?}", att.credential_id.len(),util::to_hex_str(&att.credential_id));
+}
+
+pub fn get_assertion_with_pin(rpid:&str,challenge:&Vec<u8>,credential_id:&Vec<u8>,pin:&str) {
+
+    // init
+    let params = HidParam::get_default_params();
+    let device = ctaphid::connect_device(params);
+    let cid = ctaphid::ctaphid_init(&device);
+
+    // pin token
+    let pin_token = get_pin_token(&device,&cid,pin.to_string());
+
+    // create cmmand
+    let send_payload = 
+    {
+        let mut params = get_assertion_command::Params::new(rpid,challenge.to_vec(),credential_id.to_vec());
+        params.option_up=true;
+        params.option_uv=true;
+
+        // create pin auth
+        let pin_auth = pin_token.unwrap().auth(&params.client_data_hash);
+        println!("- pin_auth({:02})    = {:?}", pin_auth.len(),util::to_hex_str(&pin_auth));
+        params.pin_auth = pin_auth.to_vec();
+
+        get_assertion_command::create_payload(params)
+    };
+
+    // send & response
+    let response_cbor = ctaphid::ctaphid_cbor(&device,&cid,&send_payload).unwrap();
+
+    let ass = get_assertion_response::parse_cbor(&response_cbor).unwrap();
+    println!("authenticatorGetAssertion (0x02)");
+    println!("- rpid_hash({:02})                          = {:?}", ass.rpid_hash.len(),util::to_hex_str(&ass.rpid_hash));
+    println!("- flags_user_present_result               = {:?}", ass.flags_user_present_result);
+    println!("- flags_user_verified_result              = {:?}", ass.flags_user_verified_result);
+    println!("- flags_attested_credential_data_included = {:?}", ass.flags_attested_credential_data_included);
+    println!("- flags_extensiondata_included            = {:?}", ass.flags_extension_data_included);
+    println!("- sign_count                              = {:?}", ass.sign_count);
+    println!("- aaguid({:02})                              = {:?}", ass.aaguid.len(),util::to_hex_str(&ass.aaguid));
+    println!("- number_of_credentials                   = {:?}", ass.number_of_credentials);
+    println!("- signature({:02})                           = {:?}", ass.signature.len(),util::to_hex_str(&ass.signature));
+    println!("- user_id({:02})                             = {:?}", ass.user_id.len(),util::to_hex_str(&ass.user_id));
+    println!("- user_name                               = {:?}", ass.user_name);
+    println!("- user_display_name                       = {:?}", ass.user_display_name);
+    println!("- credential_id({:02})                       = {:?}", ass.credential_id.len(),util::to_hex_str(&ass.credential_id));
 }
