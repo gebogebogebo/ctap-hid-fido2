@@ -5,8 +5,8 @@ pub mod make_credential_command;
 pub mod make_credential_response;
 pub mod get_assertion_command;
 pub mod get_assertion_response;
-pub mod client_pin_command;
-pub mod client_pin_response;
+mod client_pin_command;
+mod client_pin_response;
 mod util;
 pub mod cose;
 pub mod p256;
@@ -41,19 +41,8 @@ mod tests {
 
     #[test]
     fn test_client_pin_get_retries() {
-        let params = HidParam::get_default_params();
-        let device = ctaphid::connect_device(params);
-        let cid = ctaphid::ctaphid_init(&device);
-
-        let send_payload = client_pin_command::create_payload(client_pin_command::SubCommand::GetRetries).unwrap();
-        println!("{}",util::to_hex_str(&send_payload));
-
-        let response_cbor = ctaphid::ctaphid_cbor(&device,&cid,&send_payload).unwrap();
-
-        let pin = client_pin_response::parse_cbor_client_pin_get_retries(&response_cbor).unwrap();
-        println!("authenticatorClientPIN (0x06) - getRetries");
-        println!("- retries       = {:?}", pin.retries);
-
+        let retry = get_pin_retries();
+        println!("- retries       = {:?}", retry);
         assert!(true);
     }
 
@@ -274,4 +263,21 @@ pub fn wink(){
 
 pub fn get_hid_devices()->Vec<HidParam>{
     ctaphid::get_hid_devices()
+}
+
+pub fn get_pin_retries()->i32{
+    let params = HidParam::get_default_params();
+    let device = ctaphid::connect_device(params);
+    let cid = ctaphid::ctaphid_init(&device);
+
+    let send_payload = client_pin_command::create_payload(client_pin_command::SubCommand::GetRetries).unwrap();
+    println!("{}",util::to_hex_str(&send_payload));
+
+    let response_cbor = ctaphid::ctaphid_cbor(&device,&cid,&send_payload).unwrap();
+
+    let pin = client_pin_response::parse_cbor_client_pin_get_retries(&response_cbor).unwrap();
+    //println!("authenticatorClientPIN (0x06) - getRetries");
+    //println!("- retries       = {:?}", pin.retries);
+
+    pin.retries
 }
