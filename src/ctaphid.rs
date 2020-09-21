@@ -17,30 +17,14 @@ const CTAPHID_KEEPALIVE:u8 = CTAP_FRAME_INIT|0x3B;
 //const CTAPHID_KEEPALIVE_STATUS_PROCESSING = 1;     // The authenticator is still processing the current request.
 //const CTAPHID_KEEPALIVE_STATUS_UPNEEDED = 2;       // The authenticator is waiting for user presence.
 
-pub struct HidParam {
-	vid: u16,
-    pid: u16,
-}
-
-impl HidParam {
-    pub fn get_default_params() -> Vec<HidParam>{
-        vec![
-            HidParam{vid:0x1050,pid:0x0402},        // yubikey
-            HidParam{vid:0x1050,pid:0x0120},        // yubikey
-            HidParam{vid:0x096E,pid:0x85D},         // biopass
-            HidParam{vid:0x483,pid:0x0a2ca},        // solokey
-        ]
-    }
-}
-
 #[allow(deprecated)]
-pub fn get_hid_devices()->Vec<HidParam>{
+pub fn get_hid_devices()->Vec<crate::HidParam>{
     let api = HidApi::new().expect("Failed to create AcaPI instance");
-    let mut res:Vec<HidParam> = vec![];
+    let mut res:Vec<crate::HidParam> = vec![];
 
     let devices = api.devices();
     for dev in devices{
-        res.push(HidParam{vid:dev.vendor_id,pid:dev.product_id});
+        res.push(crate::HidParam{vid:dev.vendor_id,pid:dev.product_id});
         println!("product_string = {:?}", dev.product_string);
         println!("- vendor_id = 0x{:2x}", dev.vendor_id);
         println!("- product_id = 0x{:2x}", dev.product_id);
@@ -48,7 +32,7 @@ pub fn get_hid_devices()->Vec<HidParam>{
     res
 }
 
-pub fn connect_device(params : Vec<HidParam>)-> hidapi::HidDevice{
+pub fn connect_device(params : Vec<crate::HidParam>)-> hidapi::HidDevice{
     let api = HidApi::new().expect("Failed to create AcaPI instance");
     for param in params{
         if let Ok(dev) = api.open(param.vid, param.pid){

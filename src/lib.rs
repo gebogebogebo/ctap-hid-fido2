@@ -1,13 +1,13 @@
-pub mod ctaphid;
-pub mod get_info_command;
-pub mod get_info_response;
+mod ctaphid;
+mod get_info_command;
+mod get_info_response;
 pub mod make_credential_command;
 pub mod make_credential_response;
 pub mod get_assertion_command;
 pub mod get_assertion_response;
 pub mod client_pin_command;
 pub mod client_pin_response;
-pub mod util;
+mod util;
 pub mod cose;
 pub mod p256;
 pub mod ss;
@@ -22,17 +22,15 @@ mod tests {
     use super::*;
 
     #[test]
-    fn get_hid_devices() {
-        let devs = ctaphid::get_hid_devices();
-        assert!(devs.len()>0);
+    fn test_get_hid_devices() {
+        get_hid_devices();        
+        assert!(true);
     }
     
     #[test]
     fn test_wink() {
-        let params = ctaphid::HidParam::get_default_params();
-        let device = ctaphid::connect_device(params);
-        let cid = ctaphid::ctaphid_init(&device);
-        ctaphid::ctaphid_wink(&device,&cid);
+        wink();
+        assert!(true);
     }
 
     #[test]
@@ -43,7 +41,7 @@ mod tests {
 
     #[test]
     fn test_client_pin_get_retries() {
-        let params = ctaphid::HidParam::get_default_params();
+        let params = HidParam::get_default_params();
         let device = ctaphid::connect_device(params);
         let cid = ctaphid::ctaphid_init(&device);
 
@@ -61,7 +59,7 @@ mod tests {
 
     #[test]
     fn client_pin_get_keyagreement() {
-        let params = ctaphid::HidParam::get_default_params();
+        let params = HidParam::get_default_params();
         let device = ctaphid::connect_device(params);
         let cid = ctaphid::ctaphid_init(&device);
 
@@ -84,7 +82,7 @@ mod tests {
         let user_name = "test user";
 
         // init
-        let params = ctaphid::HidParam::get_default_params();
+        let params = HidParam::get_default_params();
         let device = ctaphid::connect_device(params);
         let cid = ctaphid::ctaphid_init(&device);
 
@@ -132,7 +130,7 @@ mod tests {
         let credential_id = hex::decode("2C33F87AEFEB4280E85D97C68BF5FDFE2BB4C9598809C7F20EA254681CF4B284F710732347DDAA892815872D039BB22AFFCB0C8ECC79A85D34CE642B8B6C3514").unwrap();
 
         // init
-        let params = ctaphid::HidParam::get_default_params();
+        let params = HidParam::get_default_params();
         let device = ctaphid::connect_device(params);
         let cid = ctaphid::ctaphid_init(&device);
 
@@ -178,6 +176,22 @@ mod tests {
 
 }
 
+pub struct HidParam {
+	pub vid: u16,
+    pub pid: u16,
+}
+
+impl HidParam {
+    pub fn get_default_params() -> Vec<HidParam>{
+        vec![
+            HidParam{vid:0x1050,pid:0x0402},        // yubikey
+            HidParam{vid:0x1050,pid:0x0120},        // yubikey
+            HidParam{vid:0x096E,pid:0x85D},         // biopass
+            HidParam{vid:0x483,pid:0x0a2ca},        // solokey
+        ]
+    }
+}
+
 pub fn get_pin_token(device:&hidapi::HidDevice,cid:&[u8],pin:String)->Option<pintoken::PinToken>
 {
     if pin.len() > 0 {
@@ -209,7 +223,7 @@ pub fn get_pin_token(device:&hidapi::HidDevice,cid:&[u8],pin:String)->Option<pin
 }
 
 pub fn get_info()->Result<Vec<(String,String)>,String>{
-    let params = ctaphid::HidParam::get_default_params();
+    let params = HidParam::get_default_params();
     let device = ctaphid::connect_device(params);
     let cid = ctaphid::ctaphid_init(&device);
 
@@ -252,8 +266,12 @@ pub fn get_info()->Result<Vec<(String,String)>,String>{
 }
 
 pub fn wink(){
-    let params = ctaphid::HidParam::get_default_params();
+    let params = HidParam::get_default_params();
     let device = ctaphid::connect_device(params);
     let cid = ctaphid::ctaphid_init(&device);
     ctaphid::ctaphid_wink(&device,&cid);
+}
+
+pub fn get_hid_devices()->Vec<HidParam>{
+    ctaphid::get_hid_devices()
 }
