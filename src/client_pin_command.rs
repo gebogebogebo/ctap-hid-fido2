@@ -3,6 +3,7 @@ use std::collections::BTreeMap;
 use serde_cbor::to_vec;
 use crate::cose;
 
+#[allow(dead_code)]
 pub enum SubCommand {
     GetRetries=0x01,
     GetKeyAgreement=0x02,

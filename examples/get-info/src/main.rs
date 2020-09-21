@@ -7,8 +7,11 @@ fn main() {
     }
 
     let result = ctap_hid_fido2::get_info().unwrap();
-
     for (key, value) in result {
         println!("{} / {}", key, value);
     }
+
+    let retry = ctap_hid_fido2::get_pin_retries();
+    println!("pin retry = {}", retry);
+
 }
