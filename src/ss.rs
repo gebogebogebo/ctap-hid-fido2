@@ -28,9 +28,7 @@ impl SharedSecret {
         let peer = p256::P256Key::from_cose(peer_key)
                     .unwrap()
                     .bytes();
-
-//            .context(FidoErrorKind::ParsePublic)?
-//            .bytes();
+                    
         let peer = Input::from(&peer);
         let shared_secret = agreement::agree_ephemeral(
             private,
