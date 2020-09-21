@@ -28,7 +28,7 @@ mod tests {
     }
     
     #[test]
-    fn wink() {
+    fn test_wink() {
         let params = ctaphid::HidParam::get_default_params();
         let device = ctaphid::connect_device(params);
         let cid = ctaphid::ctaphid_init(&device);
@@ -36,30 +36,13 @@ mod tests {
     }
 
     #[test]
-    fn get_info() {
-        let params = ctaphid::HidParam::get_default_params();
-        let device = ctaphid::connect_device(params);
-        let cid = ctaphid::ctaphid_init(&device);
-
-        let send_payload = get_info_command::create_payload();
-        println!("{}",util::to_hex_str(&send_payload));
-
-        let response_cbor = ctaphid::ctaphid_cbor(&device,&cid,&send_payload).unwrap();
-
-        let info = get_info_response::parse_cbor(&response_cbor).unwrap();
-        println!("authenticatorGetInfo (0x04)");
-        println!("- versions      = {:?}", info.versions);
-        println!("- extensions    = {:?}", info.extensions);
-        println!("- aaguid({:?})    = {:?}", info.aaguid.len(),util::to_hex_str(&info.aaguid));
-        println!("- options       = {:?}", info.options);
-        println!("- max_msg_size  = {:?}", info.max_msg_size);
-        println!("- pin_protocols = {:?}", info.pin_protocols);
-
+    fn test_get_info() {
+        get_info().unwrap();
         assert!(true);
     }
 
     #[test]
-    fn client_pin_get_retries() {
+    fn test_client_pin_get_retries() {
         let params = ctaphid::HidParam::get_default_params();
         let device = ctaphid::connect_device(params);
         let cid = ctaphid::ctaphid_init(&device);
@@ -223,4 +206,54 @@ pub fn get_pin_token(device:&hidapi::HidDevice,cid:&[u8],pin:String)->Option<pin
     }else{
         None
     }
+}
+
+pub fn get_info()->Result<Vec<(String,String)>,String>{
+    let params = ctaphid::HidParam::get_default_params();
+    let device = ctaphid::connect_device(params);
+    let cid = ctaphid::ctaphid_init(&device);
+
+    let send_payload = get_info_command::create_payload();
+    println!("{}",util::to_hex_str(&send_payload));
+
+    let response_cbor = ctaphid::ctaphid_cbor(&device,&cid,&send_payload).unwrap();
+
+    let info = get_info_response::parse_cbor(&response_cbor).unwrap();
+
+    let mut result:Vec<(String,String)> = vec![];
+
+    for i in info.versions {
+        result.push(("versions".to_string(), i));
+    }
+    for i in info.extensions {
+        result.push(("extensions".to_string(), i));
+    }
+    result.push(("aaguid".to_string(), util::to_hex_str(&info.aaguid)));
+
+    for i in info.options {
+        result.push((format!("options-{}", i.0), i.1.to_string()));
+    }
+
+    result.push(("max_msg_size".to_string(), info.max_msg_size.to_string()));
+
+    for i in info.pin_protocols {
+        result.push(("pin_protocols".to_string(), i.to_string()));
+    }
+
+    //println!("authenticatorGetInfo (0x04)");
+    //println!("- versions      = {:?}", info.versions);
+    //println!("- extensions    = {:?}", info.extensions);
+    //println!("- aaguid({:?})    = {:?}", info.aaguid.len(),util::to_hex_str(&info.aaguid));
+    //println!("- options       = {:?}", info.options);
+    //println!("- max_msg_size  = {:?}", info.max_msg_size);
+    //println!("- pin_protocols = {:?}", info.pin_protocols);
+
+    Ok(result)
+}
+
+pub fn wink(){
+    let params = ctaphid::HidParam::get_default_params();
+    let device = ctaphid::connect_device(params);
+    let cid = ctaphid::ctaphid_init(&device);
+    ctaphid::ctaphid_wink(&device,&cid);
 }
