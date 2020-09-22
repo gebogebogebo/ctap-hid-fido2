@@ -3,7 +3,8 @@ extern crate ctap_hid_fido2;
 fn main() {
     println!("wink - start");
 
-    ctap_hid_fido2::wink();
-
+    let hid_params = ctap_hid_fido2::HidParam::get_default_params();
+    ctap_hid_fido2::wink(hid_params);
+    
     println!("wink - end");
 }

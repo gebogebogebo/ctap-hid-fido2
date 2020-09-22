@@ -17,15 +17,17 @@ fn main() {
     }
     println!("");
 
+    let hid_params = ctap_hid_fido2::HidParam::get_default_params();
+
     println!("- get_info");
-    let result = ctap_hid_fido2::get_info().unwrap();
+    let result = ctap_hid_fido2::get_info(&hid_params).unwrap();
     for (key, value) in result {
         println!("{} / {}", key, value);
     }
     println!("");
 
     println!("- get_pin_retries");
-    let retry = ctap_hid_fido2::get_pin_retries();
+    let retry = ctap_hid_fido2::get_pin_retries(&hid_params);
     println!("pin retry = {}", retry);
     println!("");
 
