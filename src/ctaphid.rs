@@ -1,6 +1,6 @@
 use hidapi::HidApi;
 use std::{thread, time};
-use crate::util;
+//use crate::util;
 
 const CTAP_FRAME_INIT:u8 = 0x80;
 const PACKET_SIZE:usize = 1+64;
@@ -18,25 +18,44 @@ const CTAPHID_KEEPALIVE:u8 = CTAP_FRAME_INIT|0x3B;
 //const CTAPHID_KEEPALIVE_STATUS_UPNEEDED = 2;       // The authenticator is waiting for user presence.
 
 #[allow(deprecated)]
-pub fn get_hid_devices()->Vec<crate::HidParam>{
+pub fn get_hid_devices(usage_page:Option<u16>)->Vec<(String,crate::HidParam)>{
     let api = HidApi::new().expect("Failed to create AcaPI instance");
-    let mut res:Vec<crate::HidParam> = vec![];
+    let mut res = vec![];
 
     let devices = api.devices();
-    for dev in devices{
-        res.push(crate::HidParam{vid:dev.vendor_id,pid:dev.product_id});
-        println!("product_string = {:?}", dev.product_string);
-        println!("- vendor_id = 0x{:2x}", dev.vendor_id);
-        println!("- product_id = 0x{:2x}", dev.product_id);
+    for dev in devices.clone(){
+
+        if usage_page == None || usage_page.unwrap() == dev.usage_page{
+            res.push(
+                (dev.product_string.unwrap(),
+                crate::HidParam{vid:dev.vendor_id,pid:dev.product_id})
+                );
+        }
+        
+        //println!("product_string = {:?}", dev.product_string);
+        //println!("- vendor_id = 0x{:2x}", dev.vendor_id);
+        //println!("- product_id = 0x{:2x}", dev.product_id);
     }
     res
 }
 
-pub fn connect_device(params : Vec<crate::HidParam>)-> hidapi::HidDevice{
+fn get_path(api:&hidapi::HidApi,param:&crate::HidParam,usage_page:u16)->Option<hidapi::HidDeviceInfo>{
+    let devices = api.devices();
+    for x in devices.clone(){
+        if x.vendor_id == param.vid && x.product_id == param.pid && x.usage_page == usage_page{
+            return Some(x);
+        }
+    }
+    None
+}
+
+pub fn connect_device(params : Vec<crate::HidParam>,usage_page:u16)-> hidapi::HidDevice{
     let api = HidApi::new().expect("Failed to create AcaPI instance");
     for param in params{
-        if let Ok(dev) = api.open(param.vid, param.pid){
-            return dev;
+        if let Some(dev_info) = get_path(&api,&param,usage_page){
+            if let Ok(dev) = api.open_path(&dev_info.path){
+                return dev;
+            }
         }
     }
     panic!("Failed to open device");
@@ -49,7 +68,7 @@ pub fn ctaphid_init(device : &hidapi::HidDevice) -> [u8;4]{
                          0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
                          0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
                          0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00];
-    println!("CTAPHID_INIT = {}", util::to_hex_str(&cmd));
+    //println!("CTAPHID_INIT = {}", util::to_hex_str(&cmd));
 
     // Write data to device
     let _res = device.write(&cmd).unwrap();
@@ -68,7 +87,7 @@ fn ctaphid_cbor_responce_status(packet:&[u8;64]) -> (u8,u16,u8){
     // cid
     //println!("- cid: {:?}", &packet[0..4]);
     // cmd
-    println!("- cmd: 0x{:2X}", packet[4]);
+    //println!("- cmd: 0x{:2X}", packet[4]);
 
     // 応答データ全体のサイズ packet[5],[6]
     let payload_size = ((packet[5] as u16) << 8) + packet[6] as u16;
@@ -163,7 +182,7 @@ pub fn ctaphid_wink(device:&hidapi::HidDevice , cid:&[u8]){
                          0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
                          0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
                          0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00];
-    println!("CTAPHID_WINK = {}", util::to_hex_str(&cmd));
+    //println!("CTAPHID_WINK = {}", util::to_hex_str(&cmd));
 
     // Write data to device
     let _res = device.write(&cmd).unwrap();
@@ -181,7 +200,7 @@ pub fn ctaphid_cbor(device:&hidapi::HidDevice , cid:&[u8] , payload:&Vec<u8>) ->
 
     // initialization_packet
     let res = create_initialization_packet(cid,payload);
-    println!("CTAPHID_CBOR(0) = {}", util::to_hex_str(&res.0));
+    //println!("CTAPHID_CBOR(0) = {}", util::to_hex_str(&res.0));
 
     // Write data to device
     let _res = device.write(&res.0).unwrap();
@@ -191,7 +210,7 @@ pub fn ctaphid_cbor(device:&hidapi::HidDevice , cid:&[u8] , payload:&Vec<u8>) ->
     if res.1 == true {
         for seqno in 0..100{
             let res = create_continuation_packet(seqno,cid,payload);
-            println!("CTAPHID_CBOR(1) = {}", util::to_hex_str(&res.0));
+            //println!("CTAPHID_CBOR(1) = {}", util::to_hex_str(&res.0));
             let _res = device.write(&res.0).unwrap();
             if res.1 == false {
                 break;
@@ -223,8 +242,8 @@ pub fn ctaphid_cbor(device:&hidapi::HidDevice , cid:&[u8] , payload:&Vec<u8>) ->
 
     let payload_size = st.1;
     let response_status = st.2;
-    println!("payload_size = {:?} byte", payload_size);
-    println!("response_status = 0x{:02X}", response_status);
+    //println!("payload_size = {:?} byte", payload_size);
+    //println!("response_status = 0x{:02X}", response_status);
 
     if response_status != 0x00{
         Err(response_status)
@@ -259,11 +278,13 @@ pub fn ctaphid_cbor(device:&hidapi::HidDevice , cid:&[u8] , payload:&Vec<u8>) ->
             cbor_data.push(dat);
         }
     
+        /*
         println!("");
         println!("## Cbor Data");
         println!("{}", util::to_hex_str(&cbor_data));
         println!("##");
-    
+        */
+
         Ok(cbor_data)    
     }
 }

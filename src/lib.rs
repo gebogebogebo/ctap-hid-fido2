@@ -139,11 +139,11 @@ fn get_pin_token(device:&hidapi::HidDevice,cid:&[u8],pin:String)->Option<pintoke
 
 pub fn get_info()->Result<Vec<(String,String)>,String>{
     let params = HidParam::get_default_params();
-    let device = ctaphid::connect_device(params);
+    let device = ctaphid::connect_device(params,0xf1d0);
     let cid = ctaphid::ctaphid_init(&device);
 
     let send_payload = get_info_command::create_payload();
-    println!("{}",util::to_hex_str(&send_payload));
+    //println!("{}",util::to_hex_str(&send_payload));
 
     let response_cbor = ctaphid::ctaphid_cbor(&device,&cid,&send_payload).unwrap();
 
@@ -182,22 +182,26 @@ pub fn get_info()->Result<Vec<(String,String)>,String>{
 
 pub fn wink(){
     let params = HidParam::get_default_params();
-    let device = ctaphid::connect_device(params);
+    let device = ctaphid::connect_device(params,0xf1d0);
     let cid = ctaphid::ctaphid_init(&device);
     ctaphid::ctaphid_wink(&device,&cid);
 }
 
-pub fn get_hid_devices()->Vec<HidParam>{
-    ctaphid::get_hid_devices()
+pub fn get_hid_devices()->Vec<(String,HidParam)>{
+    ctaphid::get_hid_devices(None)
+}
+
+pub fn get_fidokey_devices()->Vec<(String,HidParam)>{
+    ctaphid::get_hid_devices(Some(0xf1d0))
 }
 
 pub fn get_pin_retries()->i32{
     let params = HidParam::get_default_params();
-    let device = ctaphid::connect_device(params);
+    let device = ctaphid::connect_device(params,0xf1d0);
     let cid = ctaphid::ctaphid_init(&device);
 
     let send_payload = client_pin_command::create_payload(client_pin_command::SubCommand::GetRetries).unwrap();
-    println!("{}",util::to_hex_str(&send_payload));
+    //println!("{}",util::to_hex_str(&send_payload));
 
     let response_cbor = ctaphid::ctaphid_cbor(&device,&cid,&send_payload).unwrap();
 
@@ -212,7 +216,7 @@ pub fn make_credential_with_pin_non_rk(rpid:&str,challenge:&Vec<u8>,user_id:&Vec
 
     // init
     let params = HidParam::get_default_params();
-    let device = ctaphid::connect_device(params);
+    let device = ctaphid::connect_device(params,0xf1d0);
     let cid = ctaphid::ctaphid_init(&device);
 
     // pin token
@@ -253,7 +257,7 @@ pub fn get_assertion_with_pin(rpid:&str,challenge:&Vec<u8>,credential_id:&Vec<u8
 
     // init
     let params = HidParam::get_default_params();
-    let device = ctaphid::connect_device(params);
+    let device = ctaphid::connect_device(params,0xf1d0);
     let cid = ctaphid::ctaphid_init(&device);
 
     // pin token
