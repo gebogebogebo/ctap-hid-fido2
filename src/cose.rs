@@ -12,6 +12,7 @@ pub struct CoseKey {
 
 impl CoseKey {
 
+    #[allow(dead_code)]
     pub fn print(self: &CoseKey,title:&str){
         println!("{}",title);
         println!("- kty       = {:?}", self.key_type);
@@ -54,29 +55,4 @@ impl CoseKey {
         }
         Ok(cose)
     }
-
-    /*
-    pub fn decode<R: ReadBytesExt>(generic: &mut GenericDecoder<R>) -> FidoResult<Self> {
-        let items;
-        {
-            let decoder = generic.borrow_mut();
-            items = decoder.object()?;
-        }
-        let mut cose_key = CoseKey::default();
-        cose_key.algorithm = -7;
-        for _ in 0..items {
-            match generic.borrow_mut().i16()? {
-                0x01 => cose_key.key_type = generic.borrow_mut().u16()?,
-                0x02 => cose_key.algorithm = generic.borrow_mut().i32()?,
-                key if key < 0 => {
-                    cose_key.parameters.insert(key, generic.value()?);
-                }
-                _ => {
-                    generic.value()?; // skip unknown parameter
-                }
-            }
-        }
-        Ok(cose_key)
-    }
-    */
 }

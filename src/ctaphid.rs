@@ -39,21 +39,21 @@ pub fn get_hid_devices(usage_page:Option<u16>)->Vec<(String,crate::HidParam)>{
     res
 }
 
-fn get_path(api:&hidapi::HidApi,param:&crate::HidParam,usage_page:u16)->Option<hidapi::HidDeviceInfo>{
-    let devices = api.devices();
-    for x in devices.clone(){
-        if x.vendor_id == param.vid && x.product_id == param.pid && x.usage_page == usage_page{
+fn get_path(api:&hidapi::HidApi,param:&crate::HidParam,usage_page:u16)->Option<hidapi::DeviceInfo>{
+    let devices = api.device_list();
+    for x in devices.cloned(){
+        if x.vendor_id() == param.vid && x.product_id() == param.pid && x.usage_page() == usage_page{
             return Some(x);
         }
     }
     None
 }
 
-pub fn connect_device(params : Vec<crate::HidParam>,usage_page:u16)-> hidapi::HidDevice{
+pub fn connect_device(params : &[crate::HidParam],usage_page:u16)-> hidapi::HidDevice{
     let api = HidApi::new().expect("Failed to create AcaPI instance");
     for param in params{
         if let Some(dev_info) = get_path(&api,&param,usage_page){
-            if let Ok(dev) = api.open_path(&dev_info.path){
+            if let Ok(dev) = api.open_path(&dev_info.path()){
                 return dev;
             }
         }
