@@ -45,9 +45,27 @@ pub fn create_payload(params : Params) -> Vec<u8>{
 
     // 0x03 : user
     let mut user_val = BTreeMap::new();
-    user_val.insert(Value::Text("id".to_string()),Value::Bytes(params.user_id));
-    if params.user_name.len() > 0 {
-        user_val.insert(Value::Text("name".to_string()),Value::Text(params.user_name.to_string()));
+    // user id
+    {
+        let user_id = {
+            if params.user_id.len() > 0 {
+                params.user_id.to_vec()
+            }else{
+                vec![0x00]
+            }
+        };
+        user_val.insert(Value::Text("id".to_string()),Value::Bytes(user_id));
+    }
+    // user name
+    {
+        let user_name = {
+            if params.user_name.len() > 0 {
+                params.user_name.to_string()
+            }else{
+                " ".to_string()
+            }
+        };
+        user_val.insert(Value::Text("name".to_string()),Value::Text(user_name));
     }
     if params.user_display_name.len() > 0 {
         user_val.insert(Value::Text("displayName".to_string()),Value::Text(params.user_display_name.to_string()));
@@ -60,6 +78,14 @@ pub fn create_payload(params : Params) -> Vec<u8>{
     pub_key_cred_params_val.insert(Value::Text("type".to_string()),Value::Text("public-key".to_string()));
     let tmp = Value::Map(pub_key_cred_params_val);
     let pub_key_cred_params = Value::Array(vec![tmp]);
+
+    // 0x07 : options
+    let options = {
+        let mut options_val = BTreeMap::new();
+        options_val.insert(Value::Text("rk".to_string()),Value::Bool(params.option_rk));
+        options_val.insert(Value::Text("uv".to_string()),Value::Bool(params.option_uv));
+        Value::Map(options_val)
+    };
 
     // pinAuth(0x08)
     let pin_auth = {
@@ -79,6 +105,7 @@ pub fn create_payload(params : Params) -> Vec<u8>{
     make_credential.insert(Value::Integer(0x02),rp);
     make_credential.insert(Value::Integer(0x03),user);
     make_credential.insert(Value::Integer(0x04),pub_key_cred_params);
+    make_credential.insert(Value::Integer(0x07),options);
     if let Some(x) = pin_auth {
         make_credential.insert(Value::Integer(0x08),x);
         make_credential.insert(Value::Integer(0x09),pin_protocol);

@@ -61,7 +61,7 @@ fn parse_cbor_authdata(authdata:Vec<u8>,ass:&mut Assertion){
 
 fn parse_cbor_member(member:i128,val:&Value,ass:&mut Assertion){
 
-    util::cbor_value_print(val);
+    //util::cbor_value_print(val);
 
     match member{
         1 => {
@@ -130,9 +130,8 @@ pub fn parse_cbor(bytes:&[u8]) -> Result<Assertion,String>{
     if let Value::Map(map) = cbor{
         for (key, val) in &map {     
             if let Value::Integer(member) = key {
-                println!("member = {}",member);
+                //println!("member = {}",member);
                 parse_cbor_member(*member,val,&mut ass);
-                println!("");
             }
         }
         Ok(ass)

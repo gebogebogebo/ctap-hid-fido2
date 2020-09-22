@@ -12,7 +12,7 @@ const CTAPHID_INIT:u8 = CTAP_FRAME_INIT|0x06;
 const CTAPHID_WINK:u8 = CTAP_FRAME_INIT|0x08;
 const CTAPHID_CBOR:u8 = CTAP_FRAME_INIT|0x10;
 //This command code is used in response messages only.
-//const CTAPHID_ERROR:u8 = CTAP_FRAME_INIT|0x3F;
+const CTAPHID_ERROR:u8 = CTAP_FRAME_INIT|0x3F;
 const CTAPHID_KEEPALIVE:u8 = CTAP_FRAME_INIT|0x3B;
 //const CTAPHID_KEEPALIVE_STATUS_PROCESSING = 1;     // The authenticator is still processing the current request.
 //const CTAPHID_KEEPALIVE_STATUS_UPNEEDED = 2;       // The authenticator is waiting for user presence.
@@ -234,6 +234,9 @@ pub fn ctaphid_cbor(device:&hidapi::HidDevice , cid:&[u8] , payload:&Vec<u8>) ->
         } else if st.0 == CTAPHID_KEEPALIVE {
             println!("keep alive");
             thread::sleep(time::Duration::from_millis(100));
+        } else if st.0 == CTAPHID_ERROR{
+            println!("CTAPHID_ERROR Error code = 0x{:02x}",st.2);
+            break;
         } else {
             println!("err");
             break;
