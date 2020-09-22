@@ -20,7 +20,9 @@ extern crate crypto as rust_crypto;
 #[cfg(test)]
 mod tests {
     use super::*;
-
+    use serde_cbor::Value;
+    use num::NumCast;
+    
     #[test]
     fn test_get_hid_devices() {
         get_hid_devices();        
@@ -94,6 +96,35 @@ mod tests {
         assert!(true);
     }
 
+    #[test]
+    fn decrypt_token() {
+
+        /*
+        let client_data_hash = hex::decode("E61E2BD6C4612662960B159CD54CF8EFF1A998C89B3742519D11F85E0F5E7876").unwrap();
+        let x = hex::decode("A0266D4E6277C9B06C45E549641DDC3A2AEBFC51689A851364F7A5083E8B10E0").unwrap();
+        let y = hex::decode("0BC0D53545D4950B634FC849954B49F4082F9117226123FCFF9DB51F79095C44").unwrap();
+        let mut pin_token_enc = hex::decode("9AE0EE7F17328F42202EC2D0320BB3E0").unwrap();
+        let pin_auth_check = hex::decode("9AE0EE7F17328F42202EC2D0320BB3E0").unwrap();
+
+        let mut key_agreement =  cose::CoseKey::default();
+        key_agreement.key_type = 2;
+        key_agreement.algorithm = -25;
+        key_agreement.parameters.insert(NumCast::from(-1).unwrap(), Value::Integer(1));
+        key_agreement.parameters.insert(NumCast::from(-2).unwrap(), Value::Bytes(x));
+        key_agreement.parameters.insert(NumCast::from(-3).unwrap(), Value::Bytes(y));
+
+        let shared_secret = ss::SharedSecret::new(&key_agreement).unwrap();
+
+        // pintoken -> dec(pintoken)
+        let pin_token_dec = shared_secret.decrypt_token(&mut pin_token_enc);
+
+        let pin_auth = pin_token_dec.unwrap().auth(&client_data_hash);
+
+        assert_eq!(pin_auth.to_vec(),pin_auth_check);
+        */
+        assert!(true);
+    }
+
 }
 
 pub struct HidParam {
@@ -119,22 +150,24 @@ fn get_pin_token(device:&hidapi::HidDevice,cid:&[u8],pin:String)->Option<pintoke
         let response_cbor = ctaphid::ctaphid_cbor(device,cid,&send_payload).unwrap();
     
         let key_agreement = client_pin_response::parse_cbor_client_pin_get_keyagreement(&response_cbor).unwrap();
-        //key_agreement.print("authenticatorClientPIN (0x06) - getKeyAgreement");        
+        key_agreement.print("authenticatorClientPIN (0x06) - getKeyAgreement");        
     
         let shared_secret = ss::SharedSecret::new(&key_agreement).unwrap();
-        //shared_secret.public_key.print("SharedSecret  - Public Key");
+        shared_secret.public_key.print("SharedSecret  - Public Key");
         
         let pin_hash_enc = shared_secret.encrypt_pin(&pin).unwrap();
-        //println!("- PIN hash enc({:?})       = {:?}", pin_hash_enc.len(), util::to_hex_str(&pin_hash_enc));
+        println!("- PIN hash enc({:?})       = {:?}", pin_hash_enc.len(), util::to_hex_str(&pin_hash_enc));
     
         let send_payload = client_pin_command::create_payload_get_pin_token(&shared_secret.public_key,pin_hash_enc.to_vec());
         let response_cbor = ctaphid::ctaphid_cbor(&device,&cid,&send_payload).unwrap();
     
         // get pin_token (enc)
         let mut pin_token_enc = client_pin_response::parse_cbor_client_pin_get_pin_token(&response_cbor).unwrap();
+        println!("- pin_token_enc({:?})       = {:?}", pin_token_enc.len(), util::to_hex_str(&pin_token_enc));
     
         // pintoken -> dec(pintoken)
         let pin_token_dec = shared_secret.decrypt_token(&mut pin_token_enc).unwrap();
+        //println!("- pin_token_dec({:?})       = {:?}", pin_token_dec.len(), util::to_hex_str(&pin_token_dec));
 
         Some(pin_token_dec)
     }else{
@@ -232,6 +265,8 @@ pub fn make_credential_with_pin_non_rk(hid_param:&[HidParam],rpid:&str,challenge
         params.option_rk = false; // non rk
         params.option_uv = true;
 
+        println!("- client_data_hash({:02})    = {:?}", params.client_data_hash.len(),util::to_hex_str(&params.client_data_hash));
+
         // create pin auth
         let pin_auth = pin_token.unwrap().auth(&params.client_data_hash);
         //println!("- pin_auth({:02})    = {:?}", pin_auth.len(),util::to_hex_str(&pin_auth));
@@ -239,7 +274,7 @@ pub fn make_credential_with_pin_non_rk(hid_param:&[HidParam],rpid:&str,challenge
 
         make_credential_command::create_payload(params)
     };
-    //println!("- make_credential({:02})    = {:?}", send_payload.len(),util::to_hex_str(&send_payload));
+    println!("- make_credential({:02})    = {:?}", send_payload.len(),util::to_hex_str(&send_payload));
 
     // send & response
     let response_cbor = match ctaphid::ctaphid_cbor(&device,&cid,&send_payload){
