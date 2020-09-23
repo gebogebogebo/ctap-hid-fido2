@@ -26,8 +26,13 @@ pub fn get_hid_devices(usage_page:Option<u16>)->Vec<(String,crate::HidParam)>{
     for dev in devices.clone(){
 
         if usage_page == None || usage_page.unwrap() == dev.usage_page{
+            let mut memo = "".to_string();
+            if let Some(n) = dev.product_string {
+                memo = n.to_string();
+            }
+
             res.push(
-                (dev.product_string.unwrap(),
+                (memo,
                 crate::HidParam{vid:dev.vendor_id,pid:dev.product_id})
                 );
         }
