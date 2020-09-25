@@ -67,8 +67,16 @@ pub fn create_payload(params : Params) -> Vec<u8>{
         };
         user_val.insert(Value::Text("name".to_string()),Value::Text(user_name));
     }
-    if params.user_display_name.len() > 0 {
-        user_val.insert(Value::Text("displayName".to_string()),Value::Text(params.user_display_name.to_string()));
+    // displayName
+    {
+        let display_name = {
+            if params.user_display_name.len() > 0 {
+                params.user_display_name.to_string()
+            }else{
+                " ".to_string()
+            }
+        };
+        user_val.insert(Value::Text("displayName".to_string()),Value::Text(display_name));
     }
     let user = Value::Map(user_val);
 
