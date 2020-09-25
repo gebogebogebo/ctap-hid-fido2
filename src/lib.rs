@@ -132,7 +132,9 @@ mod tests {
 
         let rpid = "test.com";
         let challenge = b"this is challenge".to_vec();
-        let pin_auth = hex::decode("FF95E70BB8008BB1B0EE8296C0A16130").unwrap();
+        // create windows
+        let pin_auth = hex::decode("6F79FB322D74972ACAA844C10C183BF7").unwrap();
+        let check = "01A7015820E61E2BD6C4612662960B159CD54CF8EFF1A998C89B3742519D11F85E0F5E787602A262696468746573742E636F6D646E616D656003A36269644100646E616D6561206B646973706C61794E616D6561200481A263616C672664747970656A7075626C69632D6B657907A262726BF4627576F508506F79FB322D74972ACAA844C10C183BF70901".to_string();
 
         // create cmmand
         let send_payload = 
@@ -151,7 +153,6 @@ mod tests {
             make_credential_command::create_payload(params)
         };
 
-        let check = "01A7015820E61E2BD6C4612662960B159CD54CF8EFF1A998C89B3742519D11F85E0F5E787602A262696468746573742E636F6D646E616D656003A26269644100646E616D6561200481A263616C672664747970656A7075626C69632D6B657907A262726BF4627576F50850FF95E70BB8008BB1B0EE8296C0A161300901".to_string();
         let command = hex::encode(send_payload).to_uppercase();
         assert_eq!(command,check);
     }
@@ -161,11 +162,11 @@ mod tests {
         let out_bytes = hex::decode("1A81CD600A1F6CF4BE5260FE3257B241").unwrap();
         let client_data_hash = hex::decode("E61E2BD6C4612662960B159CD54CF8EFF1A998C89B3742519D11F85E0F5E7876").unwrap();
         //println!("- out_bytes({:?})       = {:?}", out_bytes.len(), util::to_hex_str(&out_bytes));
+        let check = "F0AC99D6AAD2E199AF9CF25F6568A6F5".to_string();
 
         let pin_token_dec = pintoken::PinToken(hmac::SigningKey::new(&digest::SHA256, &out_bytes));
         let pin_auth = pin_token_dec.auth(&client_data_hash);
 
-        let check = "F0AC99D6AAD2E199AF9CF25F6568A6F5".to_string();
 
         assert_eq!(check,hex::encode(pin_auth).to_uppercase());
     }
