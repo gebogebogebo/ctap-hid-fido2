@@ -125,6 +125,36 @@ mod tests {
         assert!(true);
     }
 
+    #[test]
+    fn test_make_credential_with_pin_non_rk_command() {
+
+        let rpid = "test.com";
+        let challenge = b"this is challenge".to_vec();
+        let pin_auth = hex::decode("FF95E70BB8008BB1B0EE8296C0A16130").unwrap();
+
+        // create cmmand
+        let send_payload = 
+        {
+            let mut params = make_credential_command::Params::new(rpid,challenge.to_vec(),[].to_vec());
+            params.option_rk = false; // non rk
+            params.option_uv = true;
+
+            println!("- client_data_hash({:02})    = {:?}", params.client_data_hash.len(),util::to_hex_str(&params.client_data_hash));
+
+            // create pin auth
+            //let pin_auth = pin_token.unwrap().auth(&params.client_data_hash);
+
+            params.pin_auth = pin_auth.to_vec();
+
+            make_credential_command::create_payload(params)
+        };
+
+        let check = "01A7015820E61E2BD6C4612662960B159CD54CF8EFF1A998C89B3742519D11F85E0F5E787602A262696468746573742E636F6D646E616D656003A26269644100646E616D6561200481A263616C672664747970656A7075626C69632D6B657907A262726BF4627576F50850FF95E70BB8008BB1B0EE8296C0A161300901".to_string();
+        let command = hex::encode(send_payload).to_string().to_uppercase();
+        //hex::encode(data: T)
+        assert_eq!(command,check);
+    }
+
 }
 
 pub struct HidParam {
@@ -269,7 +299,9 @@ pub fn make_credential_with_pin_non_rk(hid_param:&[HidParam],rpid:&str,challenge
 
         // create pin auth
         let pin_auth = pin_token.unwrap().auth(&params.client_data_hash);
-        //println!("- pin_auth({:02})    = {:?}", pin_auth.len(),util::to_hex_str(&pin_auth));
+        //let pin_auth = hex::decode("FF95E70BB8008BB1B0EE8296C0A16130").unwrap();
+
+        println!("- pin_auth({:02})    = {:?}", pin_auth.len(),util::to_hex_str(&pin_auth));
         params.pin_auth = pin_auth.to_vec();
 
         make_credential_command::create_payload(params)
