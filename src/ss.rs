@@ -8,6 +8,7 @@ use rust_crypto::buffer::{RefReadBuffer, RefWriteBuffer};
 use crate::cose;
 use crate::p256;
 use crate::pintoken;
+use crate::util;
 
 #[derive(Debug)]
 pub struct SharedSecret {
@@ -77,6 +78,8 @@ impl SharedSecret {
         let mut out_bytes = [0; 16];
         let mut output = RefWriteBuffer::new(&mut out_bytes);
         decryptor.decrypt(&mut input, &mut output, true).unwrap();
+        println!("- out_bytes({:?})       = {:?}", out_bytes.len(), util::to_hex_str(&out_bytes));
+
         Ok(pintoken::PinToken(hmac::SigningKey::new(&digest::SHA256, &out_bytes)))
     }
 
