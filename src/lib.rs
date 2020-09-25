@@ -101,12 +101,6 @@ mod tests {
 
     #[test]
     fn decrypt_token() {
-
-        let out_bytes = hex::decode("1AF808E678AF2479384D8DB65D502A62").unwrap();
-        println!("- out_bytes({:?})       = {:?}", out_bytes.len(), util::to_hex_str(&out_bytes));
-
-        let pin_token = pintoken::PinToken(hmac::SigningKey::new(&digest::SHA256, &out_bytes));
-
         /*
         let client_data_hash = hex::decode("E61E2BD6C4612662960B159CD54CF8EFF1A998C89B3742519D11F85E0F5E7876").unwrap();
         let x = hex::decode("A0266D4E6277C9B06C45E549641DDC3A2AEBFC51689A851364F7A5083E8B10E0").unwrap();
@@ -158,8 +152,22 @@ mod tests {
         };
 
         let check = "01A7015820E61E2BD6C4612662960B159CD54CF8EFF1A998C89B3742519D11F85E0F5E787602A262696468746573742E636F6D646E616D656003A26269644100646E616D6561200481A263616C672664747970656A7075626C69632D6B657907A262726BF4627576F50850FF95E70BB8008BB1B0EE8296C0A161300901".to_string();
-        let command = hex::encode(send_payload).to_string().to_uppercase();
+        let command = hex::encode(send_payload).to_uppercase();
         assert_eq!(command,check);
+    }
+
+    #[test]
+    fn test_create_pin_auth() {
+        let out_bytes = hex::decode("1A81CD600A1F6CF4BE5260FE3257B241").unwrap();
+        let client_data_hash = hex::decode("E61E2BD6C4612662960B159CD54CF8EFF1A998C89B3742519D11F85E0F5E7876").unwrap();
+        //println!("- out_bytes({:?})       = {:?}", out_bytes.len(), util::to_hex_str(&out_bytes));
+
+        let pin_token_dec = pintoken::PinToken(hmac::SigningKey::new(&digest::SHA256, &out_bytes));
+        let pin_auth = pin_token_dec.auth(&client_data_hash);
+
+        let check = "F0AC99D6AAD2E199AF9CF25F6568A6F5".to_string();
+
+        assert_eq!(check,hex::encode(pin_auth).to_uppercase());
     }
 
 }
