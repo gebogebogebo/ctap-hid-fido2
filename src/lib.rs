@@ -20,9 +20,11 @@ extern crate crypto as rust_crypto;
 #[cfg(test)]
 mod tests {
     use super::*;
-    use serde_cbor::Value;
-    use num::NumCast;
-    
+    //use serde_cbor::Value;
+    //use num::NumCast;
+    use ring::{agreement, rand, digest, hmac};
+  
+    /*
     #[test]
     fn test_get_hid_devices() {
         get_hid_devices();        
@@ -95,9 +97,15 @@ mod tests {
 
         assert!(true);
     }
+    */
 
     #[test]
     fn decrypt_token() {
+
+        let out_bytes = hex::decode("1AF808E678AF2479384D8DB65D502A62").unwrap();
+        println!("- out_bytes({:?})       = {:?}", out_bytes.len(), util::to_hex_str(&out_bytes));
+
+        let pin_token = pintoken::PinToken(hmac::SigningKey::new(&digest::SHA256, &out_bytes));
 
         /*
         let client_data_hash = hex::decode("E61E2BD6C4612662960B159CD54CF8EFF1A998C89B3742519D11F85E0F5E7876").unwrap();
