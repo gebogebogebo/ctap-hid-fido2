@@ -1,3 +1,138 @@
+/*!
+### Examples
+
+#### get_info
+
+```Rust
+println!("- get_info");
+let hid_params = ctap_hid_fido2::HidParam::get_default_params();
+let result = match ctap_hid_fido2::get_info(&hid_params) {
+    Ok(info) => info,
+    Err(error) => {
+        println!("error: {:?}", error);
+        return;
+    },
+};    
+for (key, value) in result {
+    println!("{} / {}", key, value);
+}
+```
+
+console
+
+```sh
+- get_info
+versions / U2F_V2
+versions / FIDO_2_0
+extensions / hmac-secret
+aaguid / FA2B99DC9E3942578F924A30D23C4118
+options-rk / true
+options-up / true
+options-plat / false
+options-clientPin / true
+max_msg_size / 1200
+pin_protocols / 1
+```
+
+
+#### get_pin_retries
+
+```Rust
+println!("- get_pin_retries");
+let retry = match ctap_hid_fido2::get_pin_retries(&hid_params) {
+    Ok(result) => result,
+    Err(error) => {
+        println!("error: {:?}", error);
+        return;
+    },
+};    
+println!("pin retry = {}", retry);
+```
+
+console
+
+```sh
+- get_pin_retries
+pin retry = 8
+```
+
+
+#### make_credential_with_pin_non_rk
+
+```Rust
+println!("- make_credential_with_pin_non_rk");
+let rpid = "test.com";
+let challenge = b"this is challenge".to_vec();
+let pin = "1234";
+
+let hid_params = ctap_hid_fido2::HidParam::get_default_params();
+let result = match ctap_hid_fido2::make_credential_with_pin_non_rk(&hid_params,rpid,&challenge,pin){
+    Ok(result) => result,
+    Err(err) => {
+        println!("{:?}",err);
+        return;
+    }
+};
+println!("credential_id({:02})  = {:?}", result.credential_id.len(),util::to_hex_str(&result.credential_id));
+```
+
+console
+
+```sh
+- make_credential_with_pin_non_rk
+keep alive
+...
+credential_id(64)  = "CEB92D2EEE7888246DF4FF9A186268511EA270675119E679164AD910B74A9ED1E2D7FCEA81853FDB5149A3FD00F3FB63ED3D74ABE6C143D92B41639E7564FA00"
+
+```
+
+
+#### get_assertion_with_pin
+
+```Rust
+println!("- get_assertion_with_pin");
+let hid_params = ctap_hid_fido2::HidParam::get_default_params();
+let rpid = "test.com";
+let challenge = b"this is challenge".to_vec();
+let cre_id = b"set credential id".to_vec();
+let pin = "1234";
+
+let result = match ctap_hid_fido2::get_assertion_with_pin(&hid_params,rpid,&challenge,&cre_id,pin){
+    Ok(result) => result,
+    Err(err) => {
+        println!("{:?}",err);
+        return;
+    }
+};
+println!("number_of_credentials = {:?}",result.number_of_credentials);
+```
+
+console
+
+```sh
+- get_assertion_with_pin
+keep alive
+...
+number_of_credentials = 0
+```
+
+#### wink
+Only the FIDO key glows
+
+```Rust
+let hid_params = ctap_hid_fido2::HidParam::get_default_params();
+let result = match ctap_hid_fido2::wink(&hid_params) {
+    Ok(()) => (),
+    Err(error) => {
+        println!("error: {:?}", error);
+        return;
+    },
+};
+```
+
+*/
+
+
 mod ctaphid;
 mod get_info_command;
 mod get_info_response;
