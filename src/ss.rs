@@ -75,10 +75,11 @@ impl SharedSecret {
             NoPadding,
         );
         let mut input = RefReadBuffer::new(data);
-        let mut out_bytes = [0; 16];
+        //let mut out_bytes = [0; 16];
+        let mut out_bytes = [0; 32];
         let mut output = RefWriteBuffer::new(&mut out_bytes);
         decryptor.decrypt(&mut input, &mut output, true).unwrap();
-        println!("- out_bytes({:?})       = {:?}", out_bytes.len(), util::to_hex_str(&out_bytes));
+        //println!("- out_bytes({:?})       = {:?}", out_bytes.len(), util::to_hex_str(&out_bytes));
 
         Ok(pintoken::PinToken(hmac::SigningKey::new(&digest::SHA256, &out_bytes)))
     }
