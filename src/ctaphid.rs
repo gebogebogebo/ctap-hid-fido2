@@ -2,6 +2,8 @@ use hidapi::HidApi;
 use std::{thread, time};
 //use crate::util;
 
+pub const USAGE_PAGE_FIDO: u16 = 0xf1d0;
+
 const CTAP_FRAME_INIT:u8 = 0x80;
 const PACKET_SIZE:usize = 1+64;
 const PAYLOAD_SIZE_AN_INITIALIZATION_PACKET:usize = 64-7;
@@ -54,16 +56,16 @@ fn get_path(api:&hidapi::HidApi,param:&crate::HidParam,usage_page:u16)->Option<h
     None
 }
 
-pub fn connect_device(params : &[crate::HidParam],usage_page:u16)-> hidapi::HidDevice{
+pub fn connect_device(params : &[crate::HidParam],usage_page:u16)-> Result<hidapi::HidDevice,&'static str>{
     let api = HidApi::new().expect("Failed to create AcaPI instance");
     for param in params{
         if let Some(dev_info) = get_path(&api,&param,usage_page){
             if let Ok(dev) = api.open_path(&dev_info.path()){
-                return dev;
+                return Ok(dev);
             }
         }
     }
-    panic!("Failed to open device");
+    Err("Failed to open device")
 }
 
 pub fn ctaphid_init(device : &hidapi::HidDevice) -> [u8;4]{

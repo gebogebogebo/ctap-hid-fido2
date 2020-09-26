@@ -8,7 +8,7 @@ use rust_crypto::buffer::{RefReadBuffer, RefWriteBuffer};
 use crate::cose;
 use crate::p256;
 use crate::pintoken;
-use crate::util;
+//use crate::util;
 
 #[derive(Debug)]
 pub struct SharedSecret {
