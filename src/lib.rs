@@ -275,7 +275,7 @@ mod tests {
     #[test]
     fn test_wink() {
         let hid_params = HidParam::get_default_params();
-        wink(&hid_params);
+        wink(&hid_params).unwrap();
         assert!(true);
     }
 
