@@ -413,8 +413,8 @@ fn get_pin_token(device:&hidapi::HidDevice,cid:&[u8],pin:String)->Result<pintoke
 #[cfg(test)]
 mod tests {
     use super::*;
-    use serde_cbor::Value;
-    use num::NumCast;
+    //use serde_cbor::Value;
+    //use num::NumCast;
     use ring::{digest, hmac};
   
     #[test]
@@ -485,7 +485,7 @@ mod tests {
 
         let hid_params = HidParam::get_default_params();
 
-        get_assertion_with_pin(&hid_params,rpid,&challenge,&credential_id,pin);
+        get_assertion_with_pin(&hid_params,rpid,&challenge,&credential_id,pin).unwrap();
 
         assert!(true);
     }
