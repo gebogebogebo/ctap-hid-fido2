@@ -1,9 +1,9 @@
-use ring::{agreement, rand, digest, hmac};
-use ring::error::Unspecified;
-use untrusted::Input;
 use crypto::aes;
 use crypto::blockmodes::NoPadding;
 use crypto::buffer::{RefReadBuffer, RefWriteBuffer};
+use ring::error::Unspecified;
+use ring::{agreement, digest, hmac, rand};
+use untrusted::Input;
 
 use crate::cose;
 use crate::p256;
@@ -17,19 +17,18 @@ pub struct SharedSecret {
 }
 
 impl SharedSecret {
-    pub fn new(peer_key: &cose::CoseKey) -> Result<Self,String> {
+    pub fn new(peer_key: &cose::CoseKey) -> Result<Self, String> {
         let rng = rand::SystemRandom::new();
-        let private = agreement::EphemeralPrivateKey::generate(&agreement::ECDH_P256, &rng).unwrap();
+        let private =
+            agreement::EphemeralPrivateKey::generate(&agreement::ECDH_P256, &rng).unwrap();
         //    .context(String::from("FidoErrorKind::GenerateKey"));
 
         let public = &mut [0u8; agreement::PUBLIC_KEY_MAX_LEN][..private.public_key_len()];
         private.compute_public_key(public).unwrap();
         //.context(FidoErrorKind::GenerateKey,)?;
 
-        let peer = p256::P256Key::from_cose(peer_key)
-                    .unwrap()
-                    .bytes();
-                    
+        let peer = p256::P256Key::from_cose(peer_key).unwrap().bytes();
+
         let peer = Input::from(&peer);
         let shared_secret = agreement::agree_ephemeral(
             private,
@@ -37,20 +36,19 @@ impl SharedSecret {
             peer,
             Unspecified,
             |material| Ok(digest::digest(&digest::SHA256, material)),
-        ).unwrap();
+        )
+        .unwrap();
         //.context(FidoErrorKind::GenerateSecret)?;
 
         let mut res = SharedSecret {
-            public_key: p256::P256Key::from_bytes(&public)
-                .unwrap()
-                .to_cose(),
+            public_key: p256::P256Key::from_bytes(&public).unwrap().to_cose(),
             shared_secret: [0; 32],
         };
         res.shared_secret.copy_from_slice(shared_secret.as_ref());
         Ok(res)
     }
 
-    pub fn encrypt_pin(&self, pin: &str) -> Result<[u8; 16],String> {
+    pub fn encrypt_pin(&self, pin: &str) -> Result<[u8; 16], String> {
         let mut encryptor = aes::cbc_encryptor(
             aes::KeySize::KeySize256,
             &self.shared_secret,
@@ -67,7 +65,7 @@ impl SharedSecret {
         Ok(out_bytes)
     }
 
-    pub fn decrypt_token(&self, data: &mut [u8]) -> Result<pintoken::PinToken,String> {
+    pub fn decrypt_token(&self, data: &mut [u8]) -> Result<pintoken::PinToken, String> {
         let mut decryptor = aes::cbc_decryptor(
             aes::KeySize::KeySize256,
             &self.shared_secret,
@@ -81,7 +79,9 @@ impl SharedSecret {
         decryptor.decrypt(&mut input, &mut output, true).unwrap();
         //println!("- out_bytes({:?})       = {:?}", out_bytes.len(), util::to_hex_str(&out_bytes));
 
-        Ok(pintoken::PinToken(hmac::SigningKey::new(&digest::SHA256, &out_bytes)))
+        Ok(pintoken::PinToken(hmac::SigningKey::new(
+            &digest::SHA256,
+            &out_bytes,
+        )))
     }
-
 }

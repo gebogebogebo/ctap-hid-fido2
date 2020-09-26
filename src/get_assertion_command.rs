@@ -1,34 +1,31 @@
-
+use crate::util;
+use serde_cbor::to_vec;
 use serde_cbor::Value;
 use std::collections::BTreeMap;
-use serde_cbor::to_vec;
-use crate::util;
 
-pub struct Params
-{
-    pub rp_id : String,
-    pub client_data_hash : Vec<u8>,
-    pub allowlist_credential_id : Vec<u8>,
-    pub option_up : bool,
-    pub option_uv : bool,
-    pub pin_auth : Vec<u8>,
+pub struct Params {
+    pub rp_id: String,
+    pub client_data_hash: Vec<u8>,
+    pub allowlist_credential_id: Vec<u8>,
+    pub option_up: bool,
+    pub option_uv: bool,
+    pub pin_auth: Vec<u8>,
 }
 
 impl Params {
-    pub fn new(rp_id:&str,challenge:Vec<u8>,credential_id:Vec<u8>) -> Params {
+    pub fn new(rp_id: &str, challenge: Vec<u8>, credential_id: Vec<u8>) -> Params {
         Params {
-            rp_id : rp_id.to_string(),
-            client_data_hash : util::create_clientdata_hash(challenge),
-            allowlist_credential_id : credential_id.to_vec(),
-            option_up : false,
-            option_uv : false,
-            pin_auth : [].to_vec(),
+            rp_id: rp_id.to_string(),
+            client_data_hash: util::create_clientdata_hash(challenge),
+            allowlist_credential_id: credential_id.to_vec(),
+            option_up: false,
+            option_uv: false,
+            pin_auth: [].to_vec(),
         }
     }
 }
 
-
-pub fn create_payload(params : Params) -> Vec<u8>{
+pub fn create_payload(params: Params) -> Vec<u8> {
     // 0x01 : rpid
     let rpid = Value::Text(params.rp_id.to_string());
 
@@ -37,22 +34,28 @@ pub fn create_payload(params : Params) -> Vec<u8>{
 
     // 0x03 : allowList
     let mut allow_list_val = BTreeMap::new();
-    allow_list_val.insert(Value::Text("id".to_string()),Value::Bytes(params.allowlist_credential_id));
-    allow_list_val.insert(Value::Text("type".to_string()),Value::Text("public-key".to_string()));
+    allow_list_val.insert(
+        Value::Text("id".to_string()),
+        Value::Bytes(params.allowlist_credential_id),
+    );
+    allow_list_val.insert(
+        Value::Text("type".to_string()),
+        Value::Text("public-key".to_string()),
+    );
     let tmp = Value::Map(allow_list_val);
     let allow_list = Value::Array(vec![tmp]);
 
     // 0x05 : options
     let mut options_val = BTreeMap::new();
-    options_val.insert(Value::Text("up".to_string()),Value::Bool(params.option_up));
-    options_val.insert(Value::Text("uv".to_string()),Value::Bool(params.option_uv));
+    options_val.insert(Value::Text("up".to_string()), Value::Bool(params.option_up));
+    options_val.insert(Value::Text("uv".to_string()), Value::Bool(params.option_uv));
     let options = Value::Map(options_val);
 
     // pinAuth(0x06)
     let pin_auth = {
         if params.pin_auth.len() > 0 {
             Some(Value::Bytes(params.pin_auth))
-        }else{
+        } else {
             None
         }
     };
@@ -62,13 +65,13 @@ pub fn create_payload(params : Params) -> Vec<u8>{
 
     // create cbor object
     let mut get_assertion = BTreeMap::new();
-    get_assertion.insert(Value::Integer(0x01),rpid);
-    get_assertion.insert(Value::Integer(0x02),cdh);
-    get_assertion.insert(Value::Integer(0x03),allow_list);
-    get_assertion.insert(Value::Integer(0x05),options);
+    get_assertion.insert(Value::Integer(0x01), rpid);
+    get_assertion.insert(Value::Integer(0x02), cdh);
+    get_assertion.insert(Value::Integer(0x03), allow_list);
+    get_assertion.insert(Value::Integer(0x05), options);
     if let Some(x) = pin_auth {
-        get_assertion.insert(Value::Integer(0x06),x);
-        get_assertion.insert(Value::Integer(0x07),pin_protocol);
+        get_assertion.insert(Value::Integer(0x06), x);
+        get_assertion.insert(Value::Integer(0x07), pin_protocol);
     }
     let cbor = Value::Map(get_assertion);
 
@@ -78,4 +81,3 @@ pub fn create_payload(params : Params) -> Vec<u8>{
 
     payload
 }
-

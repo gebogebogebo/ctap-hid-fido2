@@ -1,4 +1,3 @@
-
 use ring::hmac;
 
 pub struct PinToken(pub hmac::SigningKey);
