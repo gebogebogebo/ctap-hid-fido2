@@ -17,13 +17,22 @@ mod pintoken;
 
 extern crate crypto as rust_crypto;
 
+/// HID device vendor ID , product ID
 pub struct HidParam {
-	pub vid: u16,
+    /// vendor ID
+    pub vid: u16,
+    /// product ID
     pub pid: u16,
 }
 
 impl HidParam {
-    pub fn get_default_params() -> Vec<HidParam>{
+    /// Generate HID parameters for FIDO key devices
+    /// - yubikey black = vid:0x1050 , pid:0x0402
+    /// - yubikey blue = vid:0x1050 , pid:0x0120
+    /// - biopass = vid:0x096E , pid:0x085D
+    /// - all in pass = vid:0x096E , pid:0x0866
+    /// - solokey = vid:0x0483 , pid:0xa2ca
+pub fn get_default_params() -> Vec<HidParam>{
         vec![
             HidParam{vid:0x1050,pid:0x0402},        // yubikey black
             HidParam{vid:0x1050,pid:0x0120},        // yubikey blue
@@ -72,10 +81,17 @@ fn get_pin_token(device:&hidapi::HidDevice,cid:&[u8],pin:String)->Result<pintoke
     }
 }
 
+/// Get HID devices
 pub fn get_hid_devices()->Vec<(String,HidParam)>{
     ctaphid::get_hid_devices(None)
 }
 
+/// Get HID FIDO devices
+pub fn get_fidokey_devices()->Vec<(String,HidParam)>{
+    ctaphid::get_hid_devices(Some(ctaphid::USAGE_PAGE_FIDO))
+}
+
+/// Lights the LED on the FIDO key
 pub fn wink(hid_params:&[HidParam])->Result<(),&'static str>{
     let device = ctaphid::connect_device(hid_params,ctaphid::USAGE_PAGE_FIDO)?;
     let cid = ctaphid::ctaphid_init(&device);
@@ -83,10 +99,7 @@ pub fn wink(hid_params:&[HidParam])->Result<(),&'static str>{
     Ok(())
 }
 
-pub fn get_fidokey_devices()->Vec<(String,HidParam)>{
-    ctaphid::get_hid_devices(Some(0xf1d0))
-}
-
+/// Get FIDO key information
 pub fn get_info(hid_params:&[HidParam])->Result<Vec<(String,String)>,&'static str>{
     let device = ctaphid::connect_device(hid_params,ctaphid::USAGE_PAGE_FIDO)?;
     let cid = ctaphid::ctaphid_init(&device);
@@ -129,6 +142,7 @@ pub fn get_info(hid_params:&[HidParam])->Result<Vec<(String,String)>,&'static st
     Ok(result)
 }
 
+/// Get PIN retry count
 pub fn get_pin_retries(hid_params:&[HidParam])->Result<i32,&'static str>{
     let device = ctaphid::connect_device(hid_params,ctaphid::USAGE_PAGE_FIDO)?;
     let cid = ctaphid::ctaphid_init(&device);
@@ -145,6 +159,7 @@ pub fn get_pin_retries(hid_params:&[HidParam])->Result<i32,&'static str>{
     Ok(pin.retries)
 }
 
+/// Registration command.Generate credentials
 pub fn make_credential_with_pin_non_rk(hid_params:&[HidParam],rpid:&str,challenge:&[u8],pin:&str)->Result<make_credential_with_pin_non_rk_result::MakeCredentialWithPinNonRkResult,String> {
 
     // init
@@ -206,6 +221,7 @@ pub fn make_credential_with_pin_non_rk(hid_params:&[HidParam],rpid:&str,challeng
     Ok(result)
 }
 
+/// Authentication command
 pub fn get_assertion_with_pin(hid_params:&[HidParam],rpid:&str,challenge:&[u8],credential_id:&[u8],pin:&str) ->Result<get_assertion_with_pin_result::GetAssertionWithPinResult,String>{
 
     // init
