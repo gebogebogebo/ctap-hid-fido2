@@ -138,7 +138,7 @@ mod get_info_command;
 mod get_info_response;
 mod make_credential_command;
 mod make_credential_response;
-mod make_credential_with_pin_non_rk_result;
+mod make_credential_params;
 mod get_assertion_command;
 mod get_assertion_response;
 mod get_assertion_with_pin_result;
@@ -255,7 +255,7 @@ pub fn get_pin_retries(hid_params:&[HidParam])->Result<i32,&'static str>{
 }
 
 /// Registration command.Generate credentials
-pub fn make_credential_with_pin_non_rk(hid_params:&[HidParam],rpid:&str,challenge:&[u8],pin:&str)->Result<make_credential_with_pin_non_rk_result::MakeCredentialWithPinNonRkResult,String> {
+pub fn make_credential_with_pin_non_rk(hid_params:&[HidParam],rpid:&str,challenge:&[u8],pin:&str)->Result<make_credential_params::MakeCredentialWithPinNonRkResult,String> {
 
     // init
     let device = ctaphid::connect_device(hid_params,ctaphid::USAGE_PAGE_FIDO)?;
@@ -310,7 +310,7 @@ pub fn make_credential_with_pin_non_rk(hid_params:&[HidParam],rpid:&str,challeng
     println!("- credential_id({:02})                       = {:?}", att.credential_id.len(),util::to_hex_str(&att.credential_id));
     */
 
-    let result = make_credential_with_pin_non_rk_result::MakeCredentialWithPinNonRkResult{
+    let result = make_credential_params::MakeCredentialWithPinNonRkResult{
         credential_id: att.credential_id.to_vec(),
     };
     Ok(result)
