@@ -22,7 +22,7 @@ mod tests {
     use super::*;
     //use serde_cbor::Value;
     //use num::NumCast;
-    use ring::{agreement, rand, digest, hmac};
+    use ring::{digest, hmac};
   
     /*
     #[test]
@@ -167,7 +167,6 @@ mod tests {
         let pin_token_dec = pintoken::PinToken(hmac::SigningKey::new(&digest::SHA256, &out_bytes));
         let pin_auth = pin_token_dec.auth(&client_data_hash);
 
-
         assert_eq!(check,hex::encode(pin_auth).to_uppercase());
     }
 
@@ -181,10 +180,11 @@ pub struct HidParam {
 impl HidParam {
     pub fn get_default_params() -> Vec<HidParam>{
         vec![
-            HidParam{vid:0x1050,pid:0x0402},        // yubikey
-            HidParam{vid:0x1050,pid:0x0120},        // yubikey
-            HidParam{vid:0x096E,pid:0x85D},         // biopass
-            HidParam{vid:0x483,pid:0x0a2ca},        // solokey
+            HidParam{vid:0x1050,pid:0x0402},        // yubikey black
+            HidParam{vid:0x1050,pid:0x0120},        // yubikey blue
+            HidParam{vid:0x096E,pid:0x085D},        // biopass
+            HidParam{vid:0x096E,pid:0x0866},        // all in pass
+            HidParam{vid:0x0483,pid:0xa2ca},        // solokey
         ]
     }
 }
