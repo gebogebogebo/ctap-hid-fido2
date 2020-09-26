@@ -18,5 +18,13 @@ Rust FIDO2 CTAP library
   - Windows10 1909
   - Visual Studio Code
 
+- Confirmed operation FIDO key
+  - Yubikey Blue (Security Key Series)
+  - Yubikey Black (YubiKey 5)
+  - FEITIAN BioPass K27 USB Security Key
+  - FEITIAN AllinPass FIDO2 K33
+  - SoloKey
+
+
 ## Author
 gebo
