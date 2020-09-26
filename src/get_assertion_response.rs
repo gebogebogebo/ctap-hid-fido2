@@ -1,8 +1,10 @@
+use crate::get_assertion_params;
 use crate::util;
 use byteorder::{BigEndian, ReadBytesExt};
 use serde_cbor::Value;
 use std::io::Cursor;
 
+/*
 pub struct Assertion {
     pub rpid_hash: Vec<u8>,
     pub flags_user_present_result: bool,
@@ -22,8 +24,9 @@ pub struct Assertion {
 
     pub credential_id: Vec<u8>,
 }
+*/
 
-fn parse_cbor_authdata(authdata: Vec<u8>, ass: &mut Assertion) {
+fn parse_cbor_authdata(authdata: Vec<u8>, ass: &mut get_assertion_params::Assertion) {
     let mut index = 0;
 
     let clo_vec = |idx: usize, x: usize| (authdata[idx..idx + x].to_vec(), idx + x);
@@ -56,7 +59,7 @@ fn parse_cbor_authdata(authdata: Vec<u8>, ass: &mut Assertion) {
     //index = ret.1;
 }
 
-fn parse_cbor_member(member: i128, val: &Value, ass: &mut Assertion) {
+fn parse_cbor_member(member: i128, val: &Value, ass: &mut get_assertion_params::Assertion) {
     //util::cbor_value_print(val);
 
     match member {
@@ -98,29 +101,10 @@ fn parse_cbor_member(member: i128, val: &Value, ass: &mut Assertion) {
     }
 }
 
-pub fn parse_cbor(bytes: &[u8]) -> Result<Assertion, String> {
+pub fn parse_cbor(bytes: &[u8]) -> Result<get_assertion_params::Assertion, String> {
+    let mut ass = get_assertion_params::Assertion::default();
+
     let cbor: Value = serde_cbor::from_slice(bytes).unwrap();
-
-    let mut ass = Assertion {
-        rpid_hash: [].to_vec(),
-        flags_user_present_result: false,
-        flags_user_verified_result: false,
-        flags_attested_credential_data_included: false,
-        flags_extension_data_included: false,
-
-        sign_count: 0,
-        aaguid: [].to_vec(),
-
-        number_of_credentials: 0,
-
-        signature: [].to_vec(),
-        user_id: [].to_vec(),
-        user_name: String::from(""),
-        user_display_name: String::from(""),
-
-        credential_id: [].to_vec(),
-    };
-
     if let Value::Map(map) = cbor {
         for (key, val) in &map {
             if let Value::Integer(member) = key {

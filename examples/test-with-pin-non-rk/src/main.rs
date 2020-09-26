@@ -25,13 +25,13 @@ fn main() {
 
     println!("- Register Success!!");
     println!(
-        "- credential_id({:02})  = {:?}",
+        "- credential_id({:02}) = {:?}",
         cre_id.len(),
         util::to_hex_str(&cre_id)
     );
 
     println!("get_assertion_with_pin()");
-    let result = match ctap_hid_fido2::get_assertion_with_pin(
+    let att = match ctap_hid_fido2::get_assertion(
         &ctap_hid_fido2::HidParam::get_default_params(),
         rpid,
         &challenge,
@@ -45,9 +45,11 @@ fn main() {
         }
     };
     println!("- Authenticate Success!!");
+    println!("- sign_count = {:?}", att.sign_count);
     println!(
-        "- number_of_credentials = {:?}",
-        result.number_of_credentials
+        "- signature({:02}) = {:?}",
+        att.signature.len(),
+        util::to_hex_str(&att.signature)
     );
 
     println!("----- test-with-pin-non-rk end -----");
