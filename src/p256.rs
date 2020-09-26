@@ -1,6 +1,5 @@
-
-use serde_cbor::Value;
 use crate::cose;
+use serde_cbor::Value;
 
 #[derive(Debug, Default)]
 pub struct P256Key {
@@ -9,21 +8,16 @@ pub struct P256Key {
 }
 
 impl P256Key {
-    pub fn from_cose(cose: &cose::CoseKey) -> Result<Self,String> {
-
+    pub fn from_cose(cose: &cose::CoseKey) -> Result<Self, String> {
         if cose.key_type != 2 || (cose.algorithm != -7 && cose.algorithm != -25) {
             return Err(String::from("Err KeyType"));
         }
 
-        if let (Some(Value::Integer(curve)),
-                Some(Value::Bytes(x)),
-                Some(Value::Bytes(y))) =
-            (
-                cose.parameters.get(&-1),
-                cose.parameters.get(&-2),
-                cose.parameters.get(&-3),
-            )
-        {
+        if let (Some(Value::Integer(curve)), Some(Value::Bytes(x)), Some(Value::Bytes(y))) = (
+            cose.parameters.get(&-1),
+            cose.parameters.get(&-2),
+            cose.parameters.get(&-3),
+        ) {
             if *curve != 1 {
                 return Err(String::from("Err KeyType"));
             }
@@ -35,7 +29,7 @@ impl P256Key {
         return Err(String::from("Err KeyType"));
     }
 
-    pub fn from_bytes(bytes: &[u8]) -> Result<Self,String> {
+    pub fn from_bytes(bytes: &[u8]) -> Result<Self, String> {
         if bytes.len() != 65 || bytes[0] != 0x04 {
             return Err(String::from("FidoErrorKind::CborDecode"));
         }
@@ -53,9 +47,10 @@ impl P256Key {
                 (-1, Value::Integer(1)),
                 (-2, Value::Bytes(self.x.to_vec())),
                 (-3, Value::Bytes(self.y.to_vec())),
-            ].iter()
-                .cloned()
-                .collect(),
+            ]
+            .iter()
+            .cloned()
+            .collect(),
         }
     }
 
