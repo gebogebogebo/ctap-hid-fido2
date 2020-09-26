@@ -159,13 +159,14 @@ pub struct HidParam {
 }
 
 impl HidParam {
+
     /// Generate HID parameters for FIDO key devices
     /// - yubikey black = vid:0x1050 , pid:0x0402
     /// - yubikey blue = vid:0x1050 , pid:0x0120
     /// - biopass = vid:0x096E , pid:0x085D
     /// - all in pass = vid:0x096E , pid:0x0866
     /// - solokey = vid:0x0483 , pid:0xa2ca
-pub fn get_default_params() -> Vec<HidParam>{
+    pub fn get_default_params() -> Vec<HidParam>{
         vec![
             HidParam{vid:0x1050,pid:0x0402},        // yubikey black
             HidParam{vid:0x1050,pid:0x0120},        // yubikey blue
@@ -268,7 +269,7 @@ pub fn make_credential_rk(hid_params:&[HidParam],rpid:&str,challenge:&[u8],pin:&
 
 /// Registration command.Generate credentials(without PIN ,non Resident Key)
 pub fn make_credential_without_pin(hid_params:&[HidParam],rpid:&str,challenge:&[u8])->Result<make_credential_params::Attestation,String> {
-    let result : make_credential_params::Attestation = Default::default();
+    let result = make_credential_inter(hid_params,rpid,challenge,"")?;
     Ok(result)
 }
 
@@ -277,9 +278,6 @@ fn make_credential_inter(hid_params:&[HidParam],rpid:&str,challenge:&[u8],pin:&s
     // init
     let device = ctaphid::connect_device(hid_params,ctaphid::USAGE_PAGE_FIDO)?;
     let cid = ctaphid::ctaphid_init(&device);
-
-    // pin token
-    let pin_token = get_pin_token(&device,&cid,pin.to_string())?;
 
     // create cmmand
     let send_payload = 
@@ -292,12 +290,15 @@ fn make_credential_inter(hid_params:&[HidParam],rpid:&str,challenge:&[u8],pin:&s
 
         //println!("- client_data_hash({:02})    = {:?}", params.client_data_hash.len(),util::to_hex_str(&params.client_data_hash));
 
-        // create pin auth
-        let pin_auth = pin_token.auth(&params.client_data_hash);
-        //let pin_auth = hex::decode("FF95E70BB8008BB1B0EE8296C0A16130").unwrap();
+        // get pintoken & create pin auth
+        if pin.len() > 0 {
+            let pin_auth = get_pin_token(&device,&cid,pin.to_string())?
+                            .auth(&params.client_data_hash);
+            //let pin_auth = hex::decode("FF95E70BB8008BB1B0EE8296C0A16130").unwrap();
 
-        //println!("- pin_auth({:02})    = {:?}", pin_auth.len(),util::to_hex_str(&pin_auth));
-        params.pin_auth = pin_auth.to_vec();
+            //println!("- pin_auth({:02})    = {:?}", pin_auth.len(),util::to_hex_str(&pin_auth));
+            params.pin_auth = pin_auth.to_vec();
+        }
 
         make_credential_command::create_payload(params)
     };
