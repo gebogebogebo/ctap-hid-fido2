@@ -1,3 +1,5 @@
+https://img.shields.io/github/license/gebogebogebo/ctap-hid-fido2
+
 # ctap-hid-fido2
 Rust FIDO2 CTAP library
 
@@ -93,9 +95,9 @@ get_pin_retries()
 
 
 
-#### make_credential_with_pin_non_rk()
+#### make_credential()
 
-#### get_assertion_with_pin()
+#### get_assertion()
 
 ```Rust
 use ctap_hid_fido2;
@@ -103,42 +105,54 @@ use ctap_hid_fido2::util;
 
 fn main() {
     println!("----- test-with-pin-non-rk start -----");
-    
+
     // parameter
     let rpid = "test.com";
     let challenge = b"this is challenge".to_vec();
     let pin = "1234";
 
-    println!("make_credential_with_pin_non_rk()");
-    let cre_id = match ctap_hid_fido2::make_credential_with_pin_non_rk(
-                                &ctap_hid_fido2::HidParam::get_default_params(),
-                                rpid,
-                                &challenge,
-                                pin){
+    println!("make_credential()");
+    let cre_id = match ctap_hid_fido2::make_credential(
+        &ctap_hid_fido2::HidParam::get_default_params(),
+        rpid,
+        &challenge,
+        pin,
+    ) {
         Ok(result) => result.credential_id,
         Err(err) => {
-            println!("- Register Error {:?}",err);
+            println!("- Register Error {:?}", err);
             return;
         }
     };
+
     println!("- Register Success!!");
-    println!("- credential_id({:02})  = {:?}", cre_id.len(),util::to_hex_str(&cre_id));
+    println!(
+        "- credential_id({:02}) = {:?}",
+        cre_id.len(),
+        util::to_hex_str(&cre_id)
+    );
 
     println!("get_assertion_with_pin()");
-    let result = match ctap_hid_fido2::get_assertion_with_pin(
-                                        &ctap_hid_fido2::HidParam::get_default_params(),
-                                        rpid,
-                                        &challenge,
-                                        &cre_id,
-                                        pin){
+    let att = match ctap_hid_fido2::get_assertion(
+        &ctap_hid_fido2::HidParam::get_default_params(),
+        rpid,
+        &challenge,
+        &cre_id,
+        pin,
+    ) {
         Ok(result) => result,
         Err(err) => {
-            println!("- Authenticate Error {:?}",err);
+            println!("- Authenticate Error {:?}", err);
             return;
         }
     };
     println!("- Authenticate Success!!");
-    println!("- number_of_credentials = {:?}",result.number_of_credentials);
+    println!("- sign_count = {:?}", att.sign_count);
+    println!(
+        "- signature({:02}) = {:?}",
+        att.signature.len(),
+        util::to_hex_str(&att.signature)
+    );
 
     println!("----- test-with-pin-non-rk end -----");
 }
@@ -148,14 +162,15 @@ console
 
 ```sh
 ----- test-with-pin-non-rk start -----
-make_credential_with_pin_non_rk()
+make_credential()
 - touch fido key
 - Register Success!!
-- credential_id(64)  = "1378DDCAE25657B1EB45BB09D5D2DC41E6B549A32419C34CEC251104500CBAACD52B643D4D21F8DE459CFB59D52ACF52D284E2D87BCA6A4D65DA729FD902F50D"
+- credential_id(64) = "65CE1DDB3B5BF9FDD85664F324D575478783121DE0D4489E0CB5BAB24ED8C8F4965235E0F80011B7D13391295A42C964FB256DC02768B1A3DF434FEB83EE1CE7"
 get_assertion_with_pin()
 - touch fido key
 - Authenticate Success!!
-- number_of_credentials = 0
+- sign_count = 271
+- signature(71) = "304502201B03779653849389198BF8291C0170AD51BBC0C714E2AF1D260A3B3413E75D51022100DA9053755FD1C74214F70E58FCB1E8E302C617BA69B297AC855D15BF4D5CA748"
 ----- test-with-pin-non-rk end -----
 ```
 
@@ -163,7 +178,7 @@ get_assertion_with_pin()
 
 #### wink
 
-Just blink the LED on the FIDO key...
+Just blink the LED on the FIDO key
 
 ```Rust
 use ctap_hid_fido2;
