@@ -276,7 +276,7 @@ pub fn make_credential(
     challenge: &[u8],
     pin: &str,
 ) -> Result<make_credential_params::Attestation, String> {
-    let result = make_credential_inter(hid_params, rpid, challenge, pin)?;
+    let result = make_credential_inter(hid_params, rpid, challenge, pin,false,true)?;
     Ok(result)
 }
 
@@ -298,7 +298,7 @@ pub fn make_credential_without_pin(
     rpid: &str,
     challenge: &[u8],
 ) -> Result<make_credential_params::Attestation, String> {
-    let result = make_credential_inter(hid_params, rpid, challenge, "")?;
+    let result = make_credential_inter(hid_params, rpid, challenge, "",false,false)?;
     Ok(result)
 }
 
@@ -307,6 +307,8 @@ fn make_credential_inter(
     rpid: &str,
     challenge: &[u8],
     pin: &str,
+    rk:bool,
+    uv:bool,
 ) -> Result<make_credential_params::Attestation, String> {
     // init
     let device = ctaphid::connect_device(hid_params, ctaphid::USAGE_PAGE_FIDO)?;
@@ -318,8 +320,8 @@ fn make_credential_inter(
             make_credential_command::Params::new(rpid, challenge.to_vec(), [].to_vec());
         //params.user_name = user_name.to_string();
         //params.user_display_name = String::from("DispUser");
-        params.option_rk = false; // non rk
-        params.option_uv = true;
+        params.option_rk = rk;
+        params.option_uv = uv;
 
         //println!("- client_data_hash({:02})    = {:?}", params.client_data_hash.len(),util::to_hex_str(&params.client_data_hash));
 
@@ -545,41 +547,13 @@ mod tests {
         // parameter
         let rpid = "test.com";
         let challenge = b"this is challenge".to_vec();
-        let credential_id = hex::decode("2C33F87AEFEB4280E85D97C68BF5FDFE2BB4C9598809C7F20EA254681CF4B284F710732347DDAA892815872D039BB22AFFCB0C8ECC79A85D34CE642B8B6C3514").unwrap();
+        let credential_id = hex::decode("D740FF6B4C60816482A3AA2F1BA59E5247B966BAAB9EAC53D64222A46517B3915C7E99AB715D84A3BC5E0E92AA50E67A5813637FD1744BD301AB08F87191DDB816E037010000").unwrap();
         let pin = "1234";
 
         let hid_params = HidParam::get_default_params();
 
         get_assertion_with_pin(&hid_params, rpid, &challenge, &credential_id, pin).unwrap();
 
-        assert!(true);
-    }
-
-    #[test]
-    fn decrypt_token() {
-        /*
-        let client_data_hash = hex::decode("E61E2BD6C4612662960B159CD54CF8EFF1A998C89B3742519D11F85E0F5E7876").unwrap();
-        let x = hex::decode("A0266D4E6277C9B06C45E549641DDC3A2AEBFC51689A851364F7A5083E8B10E0").unwrap();
-        let y = hex::decode("0BC0D53545D4950B634FC849954B49F4082F9117226123FCFF9DB51F79095C44").unwrap();
-        let mut pin_token_enc = hex::decode("9AE0EE7F17328F42202EC2D0320BB3E0").unwrap();
-        let pin_auth_check = hex::decode("9AE0EE7F17328F42202EC2D0320BB3E0").unwrap();
-
-        let mut key_agreement =  cose::CoseKey::default();
-        key_agreement.key_type = 2;
-        key_agreement.algorithm = -25;
-        key_agreement.parameters.insert(NumCast::from(-1).unwrap(), Value::Integer(1));
-        key_agreement.parameters.insert(NumCast::from(-2).unwrap(), Value::Bytes(x));
-        key_agreement.parameters.insert(NumCast::from(-3).unwrap(), Value::Bytes(y));
-
-        let shared_secret = ss::SharedSecret::new(&key_agreement).unwrap();
-
-        // pintoken -> dec(pintoken)
-        let pin_token_dec = shared_secret.decrypt_token(&mut pin_token_enc);
-
-        let pin_auth = pin_token_dec.unwrap().auth(&client_data_hash);
-
-        assert_eq!(pin_auth.to_vec(),pin_auth_check);
-        */
         assert!(true);
     }
 
