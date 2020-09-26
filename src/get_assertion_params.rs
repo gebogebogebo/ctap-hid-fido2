@@ -2,12 +2,6 @@
 get_assertion API parameters()
 */
 
-/// Result of get_assertion_with_pin()
-#[derive(Debug, Default)]
-pub struct GetAssertionWithPinResult {
-    pub number_of_credentials: i32,
-}
-
 /// Assertion Object
 #[derive(Debug, Default)]
 pub struct Assertion {

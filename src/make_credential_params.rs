@@ -10,7 +10,7 @@ pub struct RkParam {
 }
 
 /// Attestation Object
-/// https://www.w3.org/TR/webauthn/#sctn-attestation
+/// [https://www.w3.org/TR/webauthn/#sctn-attestation](https://www.w3.org/TR/webauthn/#sctn-attestation)
 #[derive(Debug, Default)]
 pub struct Attestation {
     pub fmt: String,
