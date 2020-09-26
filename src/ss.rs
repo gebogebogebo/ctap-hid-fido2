@@ -1,9 +1,9 @@
 use ring::{agreement, rand, digest, hmac};
 use ring::error::Unspecified;
 use untrusted::Input;
-use rust_crypto::aes;
-use rust_crypto::blockmodes::NoPadding;
-use rust_crypto::buffer::{RefReadBuffer, RefWriteBuffer};
+use crypto::aes;
+use crypto::blockmodes::NoPadding;
+use crypto::buffer::{RefReadBuffer, RefWriteBuffer};
 
 use crate::cose;
 use crate::p256;

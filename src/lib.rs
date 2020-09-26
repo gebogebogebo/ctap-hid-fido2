@@ -138,10 +138,10 @@ mod get_info_command;
 mod get_info_response;
 mod make_credential_command;
 mod make_credential_response;
-pub mod make_credential_with_pin_non_rk_result;
+mod make_credential_with_pin_non_rk_result;
 mod get_assertion_command;
 mod get_assertion_response;
-pub mod get_assertion_with_pin_result;
+mod get_assertion_with_pin_result;
 mod client_pin_command;
 mod client_pin_response;
 pub mod util;
@@ -149,8 +149,6 @@ mod cose;
 mod p256;
 mod ss;
 mod pintoken;
-
-extern crate crypto as rust_crypto;
 
 /// HID device vendor ID , product ID
 pub struct HidParam {
@@ -175,44 +173,6 @@ pub fn get_default_params() -> Vec<HidParam>{
             HidParam{vid:0x096E,pid:0x0866},        // all in pass
             HidParam{vid:0x0483,pid:0xa2ca},        // solokey
         ]
-    }
-}
-
-fn get_pin_token(device:&hidapi::HidDevice,cid:&[u8],pin:String)->Result<pintoken::PinToken,String>
-{
-    if pin.len() > 0 {
-        let send_payload = client_pin_command::create_payload(client_pin_command::SubCommand::GetKeyAgreement).unwrap();
-        let response_cbor = ctaphid::ctaphid_cbor(device,cid,&send_payload).unwrap();
-    
-        let key_agreement = client_pin_response::parse_cbor_client_pin_get_keyagreement(&response_cbor).unwrap();
-        //key_agreement.print("authenticatorClientPIN (0x06) - getKeyAgreement");        
-    
-        let shared_secret = ss::SharedSecret::new(&key_agreement).unwrap();
-        //shared_secret.public_key.print("SharedSecret  - Public Key");
-        
-        let pin_hash_enc = shared_secret.encrypt_pin(&pin).unwrap();
-        //println!("- PIN hash enc({:?})       = {:?}", pin_hash_enc.len(), util::to_hex_str(&pin_hash_enc));
-    
-        let send_payload = client_pin_command::create_payload_get_pin_token(&shared_secret.public_key,pin_hash_enc.to_vec());
-        let response_cbor = match ctaphid::ctaphid_cbor(&device,&cid,&send_payload){
-            Ok(result) => result,
-            Err(err) => {
-                let msg = format!("get_pin_token_command err = 0x{:02x}",err);
-                return Err(msg);
-            }
-        };
-        
-        // get pin_token (enc)
-        let mut pin_token_enc = client_pin_response::parse_cbor_client_pin_get_pin_token(&response_cbor).unwrap();
-        //println!("- pin_token_enc({:?})       = {:?}", pin_token_enc.len(), util::to_hex_str(&pin_token_enc));
-    
-        // pintoken -> dec(pintoken)
-        let pin_token_dec = shared_secret.decrypt_token(&mut pin_token_enc).unwrap();
-        //println!("- pin_token_dec({:?})       = {:?}", pin_token_dec.len(), util::to_hex_str(&pin_token_dec));
-
-        Ok(pin_token_dec)
-    }else{
-        Err("pin not set".to_string())
     }
 }
 
@@ -408,8 +368,48 @@ pub fn get_assertion_with_pin(hid_params:&[HidParam],rpid:&str,challenge:&[u8],c
     Ok(result)
 }
 
-// cargo test -- --test-threads=1
+fn get_pin_token(device:&hidapi::HidDevice,cid:&[u8],pin:String)->Result<pintoken::PinToken,String>
+{
+    if pin.len() > 0 {
+        let send_payload = client_pin_command::create_payload(client_pin_command::SubCommand::GetKeyAgreement).unwrap();
+        let response_cbor = ctaphid::ctaphid_cbor(device,cid,&send_payload).unwrap();
+    
+        let key_agreement = client_pin_response::parse_cbor_client_pin_get_keyagreement(&response_cbor).unwrap();
+        //key_agreement.print("authenticatorClientPIN (0x06) - getKeyAgreement");        
+    
+        let shared_secret = ss::SharedSecret::new(&key_agreement).unwrap();
+        //shared_secret.public_key.print("SharedSecret  - Public Key");
+        
+        let pin_hash_enc = shared_secret.encrypt_pin(&pin).unwrap();
+        //println!("- PIN hash enc({:?})       = {:?}", pin_hash_enc.len(), util::to_hex_str(&pin_hash_enc));
+    
+        let send_payload = client_pin_command::create_payload_get_pin_token(&shared_secret.public_key,pin_hash_enc.to_vec());
+        let response_cbor = match ctaphid::ctaphid_cbor(&device,&cid,&send_payload){
+            Ok(result) => result,
+            Err(err) => {
+                let msg = format!("get_pin_token_command err = 0x{:02x}",err);
+                return Err(msg);
+            }
+        };
+        
+        // get pin_token (enc)
+        let mut pin_token_enc = client_pin_response::parse_cbor_client_pin_get_pin_token(&response_cbor).unwrap();
+        //println!("- pin_token_enc({:?})       = {:?}", pin_token_enc.len(), util::to_hex_str(&pin_token_enc));
+    
+        // pintoken -> dec(pintoken)
+        let pin_token_dec = shared_secret.decrypt_token(&mut pin_token_enc).unwrap();
+        //println!("- pin_token_dec({:?})       = {:?}", pin_token_dec.len(), util::to_hex_str(&pin_token_dec));
 
+        Ok(pin_token_dec)
+    }else{
+        Err("pin not set".to_string())
+    }
+}
+
+
+//
+// cargo test -- --test-threads=1
+//
 #[cfg(test)]
 mod tests {
     use super::*;

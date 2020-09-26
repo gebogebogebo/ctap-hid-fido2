@@ -228,6 +228,7 @@ pub fn ctaphid_cbor(device:&hidapi::HidDevice , cid:&[u8] , payload:&Vec<u8>) ->
     // read - 1st packet
     let mut buf = [0u8; 64];
 
+    let mut keep_alive_msg_flag = false;
     let mut st:(u8,u16,u8)=(0,0,0);
     for _ in 0..100{
 
@@ -239,7 +240,10 @@ pub fn ctaphid_cbor(device:&hidapi::HidDevice , cid:&[u8] , payload:&Vec<u8>) ->
         if st.0 == CTAPHID_CBOR {
             break;
         } else if st.0 == CTAPHID_KEEPALIVE {
-            println!("keep alive");
+            if keep_alive_msg_flag == false{
+                println!("- touch fido key");
+                keep_alive_msg_flag = true;
+            }
             thread::sleep(time::Duration::from_millis(100));
         } else if st.0 == CTAPHID_ERROR{
             println!("CTAPHID_ERROR Error code = 0x{:02x}",st.2);
