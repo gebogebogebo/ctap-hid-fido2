@@ -2,28 +2,9 @@
 use serde_cbor::Value;
 use std::io::Cursor;
 use byteorder::{BigEndian, ReadBytesExt};
+use crate::make_credential_params;
 
-pub struct Attestation
-{
-    pub fmt : String,
-    pub rpid_hash: Vec<u8>,
-    pub flags_user_present_result : bool,
-    pub flags_user_verified_result : bool,
-    pub flags_attested_credential_data_included : bool,
-    pub flags_extension_data_included : bool,
-    pub sign_count :u32,
-    pub aaguid : Vec<u8>,
-    pub credential_id : Vec<u8>,
-    pub credential_publickey : String,
-    pub credential_publickey_byte : Vec<u8>,
-    pub authdata : Vec<u8>,
-
-    pub attstmt_alg : u32,
-    pub attstmt_sig : Vec<u8>,
-    pub attstmt_x5c : Vec<u8>,
-}
-
-fn parse_cbor_member(member:i128,val:&Value,attestation:&mut Attestation){
+fn parse_cbor_member(member:i128,val:&Value,attestation:&mut make_credential_params::Attestation){
     match member{
         1 => {
             // fmt (0x01)
@@ -44,7 +25,7 @@ fn parse_cbor_member(member:i128,val:&Value,attestation:&mut Attestation){
     }
 }
 
-fn parse_cbor_authdata(authdata:&[u8],attestation:&mut Attestation){
+fn parse_cbor_authdata(authdata:&[u8],attestation:&mut make_credential_params::Attestation){
     let mut index = 0;
 
     // rpIdHash	(32)
@@ -96,11 +77,14 @@ fn parse_cbor_authdata(authdata:&[u8],attestation:&mut Attestation){
     */
 }
 
-pub fn parse_cbor(bytes:&[u8]) -> Result<Attestation,String>{
+pub fn parse_cbor(bytes:&[u8]) -> Result<make_credential_params::Attestation,String>{
 
     let cbor: Value = serde_cbor::from_slice(bytes).unwrap();
     
-    let mut attestation = Attestation {
+    let mut attestation = Default::default();
+
+    /*
+    let mut attestation = make_credential_params::Attestation {
         fmt : String::from(""),
         rpid_hash: [].to_vec(),
         flags_user_present_result : false,
@@ -118,6 +102,7 @@ pub fn parse_cbor(bytes:&[u8]) -> Result<Attestation,String>{
         attstmt_sig : [].to_vec(),
         attstmt_x5c : [].to_vec(),    
     };
+    */
 
     if let Value::Map(map) = cbor{
         for (key, val) in &map {     

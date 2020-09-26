@@ -9,18 +9,20 @@ fn main() {
     let challenge = b"this is challenge".to_vec();
     let pin = "1234";
 
-    println!("make_credential_with_pin_non_rk()");
-    let cre_id = match ctap_hid_fido2::make_credential_with_pin_non_rk(
-                                &ctap_hid_fido2::HidParam::get_default_params(),
-                                rpid,
-                                &challenge,
-                                pin){
+    println!("make_credential()");
+    let cre_id = match ctap_hid_fido2::make_credential(
+                            &ctap_hid_fido2::HidParam::get_default_params(),
+                            rpid,
+                            &challenge,
+                            pin
+                            ){
         Ok(result) => result.credential_id,
         Err(err) => {
             println!("- Register Error {:?}",err);
             return;
         }
     };
+    
     println!("- Register Success!!");
     println!("- credential_id({:02})  = {:?}", cre_id.len(),util::to_hex_str(&cre_id));
 
