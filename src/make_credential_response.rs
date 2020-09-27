@@ -82,31 +82,9 @@ fn parse_cbor_authdata(authdata: &[u8], attestation: &mut make_credential_params
 }
 
 pub fn parse_cbor(bytes: &[u8]) -> Result<make_credential_params::Attestation, String> {
-    let cbor: Value = serde_cbor::from_slice(bytes).unwrap();
-
     let mut attestation = Default::default();
-
-    /*
-    let mut attestation = make_credential_params::Attestation {
-        fmt : String::from(""),
-        rpid_hash: [].to_vec(),
-        flags_user_present_result : false,
-        flags_user_verified_result : false,
-        flags_attested_credential_data_included : false,
-        flags_extension_data_included : false,
-        sign_count :0,
-        aaguid : [].to_vec(),
-        credential_id : [].to_vec(),
-        credential_publickey : String::from(""),
-        credential_publickey_byte : [].to_vec(),
-        authdata : [].to_vec(),
-
-        attstmt_alg : 0,
-        attstmt_sig : [].to_vec(),
-        attstmt_x5c : [].to_vec(),
-    };
-    */
-
+    
+    let cbor: Value = serde_cbor::from_slice(bytes).unwrap();
     if let Value::Map(map) = cbor {
         for (key, val) in &map {
             if let Value::Integer(member) = key {
