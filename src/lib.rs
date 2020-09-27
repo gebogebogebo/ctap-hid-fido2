@@ -549,7 +549,7 @@ mod tests {
     fn test_client_pin_get_retries() {
         let hid_params = HidParam::get_default_params();
         let retry = get_pin_retries(&hid_params);
-        println!("- retries       = {:?}", retry);
+        println!("- retries = {:?}", retry);
         assert!(true);
     }
 
@@ -581,22 +581,8 @@ mod tests {
 
         let params = HidParam::get_default_params();
 
-        let _result = make_credential(&params, rpid, &challenge, pin);
-
-        assert!(true);
-    }
-
-    #[test]
-    fn test_get_assertion_with_pin() {
-        // parameter
-        let rpid = "test.com";
-        let challenge = b"this is challenge".to_vec();
-        let credential_id = hex::decode("D740FF6B4C60816482A3AA2F1BA59E5247B966BAAB9EAC53D64222A46517B3915C7E99AB715D84A3BC5E0E92AA50E67A5813637FD1744BD301AB08F87191DDB816E037010000").unwrap();
-        let pin = "1234";
-
-        let hid_params = HidParam::get_default_params();
-
-        get_assertion(&hid_params, rpid, &challenge, &credential_id, pin).unwrap();
+        let att = make_credential(&params, rpid, &challenge, pin).unwrap();
+        get_assertion(&params, rpid, &challenge, &att.credential_id, pin).unwrap();
 
         assert!(true);
     }
