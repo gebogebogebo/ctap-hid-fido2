@@ -1,4 +1,5 @@
 ![license](https://img.shields.io/github/license/gebogebogebo/ctap-hid-fido2)
+![twitter](https://img.shields.io/twitter/url?style=social&url=https%3A%2F%2Fgithub.com%2Fgebogebogebo%2Fctap-hid-fido2)
 
 # ctap-hid-fido2
 Rust FIDO2 CTAP library
