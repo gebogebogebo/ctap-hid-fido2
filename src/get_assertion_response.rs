@@ -4,28 +4,6 @@ use byteorder::{BigEndian, ReadBytesExt};
 use serde_cbor::Value;
 use std::io::Cursor;
 
-/*
-pub struct Assertion {
-    pub rpid_hash: Vec<u8>,
-    pub flags_user_present_result: bool,
-    pub flags_user_verified_result: bool,
-    pub flags_attested_credential_data_included: bool,
-    pub flags_extension_data_included: bool,
-
-    pub sign_count: u32,
-    pub aaguid: Vec<u8>,
-
-    pub number_of_credentials: i32,
-
-    pub signature: Vec<u8>,
-    pub user_id: Vec<u8>,
-    pub user_name: String,
-    pub user_display_name: String,
-
-    pub credential_id: Vec<u8>,
-}
-*/
-
 fn parse_cbor_authdata(authdata: Vec<u8>, ass: &mut get_assertion_params::Assertion) {
     let mut index = 0;
 
@@ -67,8 +45,6 @@ fn parse_cbor_member(member: i128, val: &Value, ass: &mut get_assertion_params::
             // 0x01:credential
             if let Value::Map(xs) = val {
                 for (key, val2) in xs {
-                    //util::cbor_value_print(key);
-                    //util::cbor_value_print(val2);
                     if let Value::Text(s) = key {
                         let ss = s.as_str();
                         match ss {
@@ -76,7 +52,6 @@ fn parse_cbor_member(member: i128, val: &Value, ass: &mut get_assertion_params::
                             "type" => {}
                             _ => {}
                         }
-                        //println!("key = {:?}",key);
                     }
                 }
             }

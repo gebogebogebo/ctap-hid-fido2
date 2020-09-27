@@ -2,6 +2,7 @@ use crate::util;
 use num::NumCast;
 use serde_cbor::Value;
 
+#[derive(Debug, Default)]
 pub struct Info {
     pub versions: Vec<String>,
     pub extensions: Vec<String>,
@@ -27,7 +28,7 @@ fn parse_cbor_member(member: i128, val: &Value, info: &mut Info) {
                 }
             }
         }
-        5 => info.max_msg_size = util::cbor_value_to_i32(val).unwrap(),
+        5 => info.max_msg_size = util::cbor_cast_value(val).unwrap(),
         6 => {
             if let Value::Array(xs) = val {
                 for x in xs {
@@ -42,17 +43,9 @@ fn parse_cbor_member(member: i128, val: &Value, info: &mut Info) {
 }
 
 pub fn parse_cbor(bytes: &[u8]) -> Result<Info, String> {
+    let mut info = Info::default();
+    
     let cbor = serde_cbor::from_slice(bytes).unwrap();
-
-    let mut info = Info {
-        versions: [].to_vec(),
-        extensions: [].to_vec(),
-        aaguid: b"".to_vec(),
-        options: [].to_vec(),
-        max_msg_size: 0,
-        pin_protocols: [].to_vec(),
-    };
-
     if let Value::Map(n) = cbor {
         for (key, val) in &n {
             if let Value::Integer(member) = key {

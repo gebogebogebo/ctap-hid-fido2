@@ -46,7 +46,7 @@ pub fn parse_cbor_client_pin_get_retries(bytes: &[u8]) -> Result<Pin, String> {
         for (key, val) in &n {
             if let Value::Integer(member) = key {
                 match member {
-                    3 => pin.retries = util::cbor_value_to_i32(val).unwrap(),
+                    3 => pin.retries = util::cbor_cast_value(val).unwrap(),
                     _ => println!("- anything error"),
                 }
             }

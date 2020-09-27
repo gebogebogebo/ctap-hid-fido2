@@ -16,26 +16,9 @@ pub fn print_typename<T>(_: T) {
 //
 // pub crate
 //
-#[allow(dead_code)]
-pub(crate) fn cbor_value_to_i128(value: &Value) -> Option<i128> {
-    if let Value::Integer(x) = value {
-        Some(*x)
-    } else {
-        None
-    }
-}
 
 #[allow(dead_code)]
-pub(crate) fn cbor_value_to_i32(value: &Value) -> Option<i32> {
-    if let Value::Integer(x) = value {
-        Some(NumCast::from(*x).unwrap())
-    } else {
-        None
-    }
-}
-
-#[allow(dead_code)]
-pub(crate) fn cbor_value_to_u16(value: &Value) -> Option<u16> {
+pub(crate) fn cbor_cast_value<T:NumCast>(value: &Value) -> Option<T> {
     if let Value::Integer(x) = value {
         Some(NumCast::from(*x).unwrap())
     } else {

@@ -3,6 +3,7 @@ use serde_cbor::to_vec;
 use serde_cbor::Value;
 use std::collections::BTreeMap;
 
+#[derive(Debug, Default)]
 pub struct Params {
     pub rp_id: String,
     pub rp_name: String,
@@ -17,17 +18,11 @@ pub struct Params {
 
 impl Params {
     pub fn new(rp_id: &str, challenge: Vec<u8>, user_id: Vec<u8>) -> Params {
-        Params {
-            rp_id: rp_id.to_string(),
-            rp_name: "".to_string(),
-            user_id: user_id.to_vec(),
-            user_name: "".to_string(),
-            user_display_name: "".to_string(),
-            option_rk: false,
-            option_uv: false,
-            client_data_hash: util::create_clientdata_hash(challenge),
-            pin_auth: [].to_vec(),
-        }
+        let mut params = Params::default();
+        params.rp_id = rp_id.to_string();
+        params.user_id = user_id.to_vec();
+        params.client_data_hash = util::create_clientdata_hash(challenge);
+        params
     }
 }
 
