@@ -1,6 +1,6 @@
 use ctap_hid_fido2;
-use ctap_hid_fido2::util;
 use ctap_hid_fido2::make_credential_params;
+use ctap_hid_fido2::util;
 
 fn main() {
     println!("----- test-with-pin-rk start -----");

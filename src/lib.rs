@@ -172,6 +172,7 @@ mod ctaphid;
 mod get_assertion_command;
 pub mod get_assertion_params;
 mod get_assertion_response;
+mod get_next_assertion_command;
 mod get_info_command;
 mod get_info_response;
 mod make_credential_command;
@@ -471,6 +472,27 @@ fn get_assertion_inter(
         Ok(n) => n,
         Err(err) => {
             let msg = format!("get_assertion_command err = 0x{:02x}", err);
+            return Err(msg);
+        }
+    };
+    println!("- response_cbor({:02})    = {:?}", response_cbor.len(),util::to_hex_str(&response_cbor));
+
+    let ass = get_assertion_response::parse_cbor(&response_cbor).unwrap();
+    Ok(ass)
+}
+
+pub fn get_next_assertion(    
+    device: &hidapi::HidDevice,
+    cid: &[u8],
+) -> Result<get_assertion_params::Assertion, String> {
+
+    let send_payload = get_next_assertion_command::create_payload();
+
+    // send & response
+    let response_cbor = match ctaphid::ctaphid_cbor(&device, &cid, &send_payload) {
+        Ok(n) => n,
+        Err(err) => {
+            let msg = format!("get_next_assertion_command err = 0x{:02x}", err);
             return Err(msg);
         }
     };

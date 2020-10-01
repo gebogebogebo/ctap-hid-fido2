@@ -82,9 +82,10 @@ pub fn create_payload(params: Params) -> Vec<u8> {
     }
     let cbor = Value::Map(get_assertion);
 
-    // Command - authenticatorMakeCredential (0x01)
+    // Command - authenticatorGetAssertion (0x02)
     let mut payload = [0x02].to_vec();
     payload.append(&mut to_vec(&cbor).unwrap());
 
     payload
 }
+
