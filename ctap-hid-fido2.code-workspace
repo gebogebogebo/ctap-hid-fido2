@@ -11,6 +11,9 @@
 		},
 		{
 			"path": "examples/test-with-pin-non-rk"
+		},
+		{
+			"path": "examples/test-with-pin-rk"
 		}
 	],
 	"settings": {}

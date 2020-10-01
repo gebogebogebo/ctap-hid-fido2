@@ -31,17 +31,24 @@ pub fn create_payload(params: Params) -> Vec<u8> {
     let cdh = Value::Bytes(params.client_data_hash);
 
     // 0x03 : allowList
-    let mut allow_list_val = BTreeMap::new();
-    allow_list_val.insert(
-        Value::Text("id".to_string()),
-        Value::Bytes(params.allowlist_credential_id),
-    );
-    allow_list_val.insert(
-        Value::Text("type".to_string()),
-        Value::Text("public-key".to_string()),
-    );
-    let tmp = Value::Map(allow_list_val);
-    let allow_list = Value::Array(vec![tmp]);
+    let allow_list = {
+        if params.allowlist_credential_id.len() > 0 {
+            let mut allow_list_val = BTreeMap::new();
+            allow_list_val.insert(
+                Value::Text("id".to_string()),
+                Value::Bytes(params.allowlist_credential_id),
+            );
+            allow_list_val.insert(
+                Value::Text("type".to_string()),
+                Value::Text("public-key".to_string()),
+            );
+            let tmp = Value::Map(allow_list_val);
+            let allow_list = Value::Array(vec![tmp]);
+            Some(allow_list)
+        }else{
+            None
+        }
+    };
 
     // 0x05 : options
     let mut options_val = BTreeMap::new();
@@ -65,7 +72,9 @@ pub fn create_payload(params: Params) -> Vec<u8> {
     let mut get_assertion = BTreeMap::new();
     get_assertion.insert(Value::Integer(0x01), rpid);
     get_assertion.insert(Value::Integer(0x02), cdh);
-    get_assertion.insert(Value::Integer(0x03), allow_list);
+    if let Some(obj) = allow_list{
+        get_assertion.insert(Value::Integer(0x03), obj);
+    }
     get_assertion.insert(Value::Integer(0x05), options);
     if let Some(x) = pin_auth {
         get_assertion.insert(Value::Integer(0x06), x);
