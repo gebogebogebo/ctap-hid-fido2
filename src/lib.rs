@@ -274,14 +274,6 @@ pub fn get_info(hid_params: &[HidParam]) -> Result<Vec<(String, String)>, &'stat
         result.push(("pin_protocols".to_string(), i.to_string()));
     }
 
-    //println!("authenticatorGetInfo (0x04)");
-    //println!("- versions      = {:?}", info.versions);
-    //println!("- extensions    = {:?}", info.extensions);
-    //println!("- aaguid({:?})    = {:?}", info.aaguid.len(),util::to_hex_str(&info.aaguid));
-    //println!("- options       = {:?}", info.options);
-    //println!("- max_msg_size  = {:?}", info.max_msg_size);
-    //println!("- pin_protocols = {:?}", info.pin_protocols);
-
     Ok(result)
 }
 
@@ -394,20 +386,6 @@ fn make_credential_inter(
     };
 
     let att = make_credential_response::parse_cbor(&response_cbor).unwrap();
-
-    /*
-    println!("authenticatorMakeCredential (0x01)");
-    println!("- fmt                                     = {:?}", att.fmt);
-    println!("- rpid_hash({:02})                           = {:?}", att.rpid_hash.len(),util::to_hex_str(&att.rpid_hash));
-    println!("- flags_user_present_result               = {:?}", att.flags_user_present_result);
-    println!("- flags_user_verified_result              = {:?}", att.flags_user_verified_result);
-    println!("- flags_attested_credential_data_included = {:?}", att.flags_attested_credential_data_included);
-    println!("- flags_extensiondata_included            = {:?}", att.flags_extension_data_included);
-    println!("- sign_count                              = {:?}", att.sign_count);
-    println!("- aaguid({:02})                              = {:?}", att.aaguid.len(),util::to_hex_str(&att.aaguid));
-    println!("- credential_id({:02})                       = {:?}", att.credential_id.len(),util::to_hex_str(&att.credential_id));
-    */
-
     Ok(att)
 }
 
@@ -419,19 +397,19 @@ pub fn get_assertion(
     credential_id: &[u8],
     pin: &str,
 ) -> Result<get_assertion_params::Assertion, String> {
-    let result = get_assertion_inter(hid_params, rpid, challenge, credential_id, pin, true, true)?;
-    Ok(result)
+    let asss = get_assertion_inter(hid_params, rpid, challenge, credential_id, pin, true, true)?;
+    Ok(asss[0].clone())
 }
 
-pub fn get_assertion_rk(
+pub fn get_assertions_rk(
     hid_params: &[HidParam],
     rpid: &str,
     challenge: &[u8],
     pin: &str,
-) -> Result<get_assertion_params::Assertion, String> {
+) -> Result<Vec<get_assertion_params::Assertion>, String> {
     let dmy:[u8;0] = [];
-    let result = get_assertion_inter(hid_params, rpid, challenge, &dmy, pin, true, true)?;
-    Ok(result)
+    let asss = get_assertion_inter(hid_params, rpid, challenge, &dmy, pin, true, true)?;
+    Ok(asss)
 }
 
 
@@ -443,7 +421,7 @@ fn get_assertion_inter(
     pin: &str,
     up: bool,
     uv: bool,
-) -> Result<get_assertion_params::Assertion, String> {
+) -> Result<Vec<get_assertion_params::Assertion>, String> {
     // init
     let device = ctaphid::connect_device(hid_params, ctaphid::USAGE_PAGE_FIDO)?;
     let cid = ctaphid::ctaphid_init(&device);
@@ -478,7 +456,15 @@ fn get_assertion_inter(
     println!("- response_cbor({:02})    = {:?}", response_cbor.len(),util::to_hex_str(&response_cbor));
 
     let ass = get_assertion_response::parse_cbor(&response_cbor).unwrap();
-    Ok(ass)
+
+    let mut asss = vec![ass];
+
+    for _ in 0..(asss[0].number_of_credentials-1){
+        let ass = get_next_assertion(&device, &cid).unwrap();
+        asss.push(ass);
+    }
+
+    Ok(asss)
 }
 
 pub fn get_next_assertion(    
@@ -617,8 +603,11 @@ mod tests {
         let params = HidParam::get_default_params();
 
         let att = make_credential(&params, rpid, &challenge, pin).unwrap();
-        get_assertion(&params, rpid, &challenge, &att.credential_id, pin).unwrap();
+        att.print("Attestation");
 
+        let ass = get_assertion(&params, rpid, &challenge, &att.credential_id, pin).unwrap();
+        ass.print("Assertion");
+        
         assert!(true);
     }
 

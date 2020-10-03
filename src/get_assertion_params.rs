@@ -5,7 +5,7 @@ get_assertion API parameters()
 use crate::util;
 
 /// Assertion Object
-#[derive(Debug, Default)]
+#[derive(Debug, Default,Clone)]
 pub struct Assertion {
     pub rpid_hash: Vec<u8>,
     pub flags_user_present_result: bool,
@@ -30,7 +30,6 @@ impl Assertion{
     #[allow(dead_code)]
     pub fn print(self: &Assertion, title: &str) {
         println!("{}", title);
-        println!("authenticatorGetAssertion (0x02)");
         println!("- rpid_hash({:02})                          = {:?}", self.rpid_hash.len(),util::to_hex_str(&self.rpid_hash));
         println!("- flags_user_present_result               = {:?}", self.flags_user_present_result);
         println!("- flags_user_verified_result              = {:?}", self.flags_user_verified_result);
