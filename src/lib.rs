@@ -380,7 +380,7 @@ fn make_credential_inter(
     let response_cbor = match ctaphid::ctaphid_cbor(&device, &cid, &send_payload) {
         Ok(n) => n,
         Err(err) => {
-            let msg = format!("make_credential_command err = 0x{:02x}", err);
+            let msg = format!("make_credential_command err = {}", util::get_ctap_status_message(err));
             return Err(msg);
         }
     };
@@ -449,7 +449,7 @@ fn get_assertion_inter(
     let response_cbor = match ctaphid::ctaphid_cbor(&device, &cid, &send_payload) {
         Ok(n) => n,
         Err(err) => {
-            let msg = format!("get_assertion_command err = 0x{:02x}", err);
+            let msg = format!("get_assertion_command err = {}", util::get_ctap_status_message(err));
             return Err(msg);
         }
     };
@@ -478,11 +478,11 @@ pub fn get_next_assertion(
     let response_cbor = match ctaphid::ctaphid_cbor(&device, &cid, &send_payload) {
         Ok(n) => n,
         Err(err) => {
-            let msg = format!("get_next_assertion_command err = 0x{:02x}", err);
+            let msg = format!("get_next_assertion_command err = {}", util::get_ctap_status_message(err));
             return Err(msg);
         }
     };
-    println!("- response_cbor({:02})    = {:?}", response_cbor.len(),util::to_hex_str(&response_cbor));
+    //println!("- response_cbor({:02})    = {:?}", response_cbor.len(),util::to_hex_str(&response_cbor));
 
     let ass = get_assertion_response::parse_cbor(&response_cbor).unwrap();
     Ok(ass)
@@ -516,7 +516,7 @@ fn get_pin_token(
         let response_cbor = match ctaphid::ctaphid_cbor(&device, &cid, &send_payload) {
             Ok(result) => result,
             Err(err) => {
-                let msg = format!("get_pin_token_command err = 0x{:02x}", err);
+                let msg = format!("get_pin_token_command err = {}", util::get_ctap_status_message(err));
                 return Err(msg);
             }
         };
@@ -577,7 +577,7 @@ mod tests {
     #[test]
     fn test_client_pin_get_keyagreement() {
         let params = HidParam::get_default_params();
-        let device = ctaphid::connect_device(&params, 0xf1d0).unwrap();
+        let device = ctaphid::connect_device(&params, ctaphid::USAGE_PAGE_FIDO).unwrap();
         let cid = ctaphid::ctaphid_init(&device);
 
         let send_payload =
