@@ -18,7 +18,7 @@ pub fn print_typename<T>(_: T) {
 //
 
 #[allow(dead_code)]
-pub(crate) fn cbor_cast_value<T:NumCast>(value: &Value) -> Option<T> {
+pub(crate) fn cbor_cast_value<T: NumCast>(value: &Value) -> Option<T> {
     if let Value::Integer(x) = value {
         Some(NumCast::from(*x).unwrap())
     } else {

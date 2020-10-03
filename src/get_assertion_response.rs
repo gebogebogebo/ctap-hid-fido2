@@ -37,7 +37,10 @@ fn parse_cbor_authdata(authdata: Vec<u8>, ass: &mut get_assertion_params::Assert
     //index = ret.1;
 }
 
-fn parse_cbor_public_key_credential_user_entity(obj: &Value, ass: &mut get_assertion_params::Assertion) {
+fn parse_cbor_public_key_credential_user_entity(
+    obj: &Value,
+    ass: &mut get_assertion_params::Assertion,
+) {
     if let Value::Map(xs) = obj {
         for (key, val) in xs {
             if let Value::Text(s) = key {
@@ -92,7 +95,7 @@ fn parse_cbor_member(member: i128, val: &Value, ass: &mut get_assertion_params::
         }
         4 => {
             // 0x04:user
-            parse_cbor_public_key_credential_user_entity(val,ass);
+            parse_cbor_public_key_credential_user_entity(val, ass);
         }
         5 => {
             // 0x05:numberOfCredentials
