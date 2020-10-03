@@ -12,6 +12,19 @@ pub struct Info {
     pub pin_protocols: Vec<i32>,
 }
 
+impl Info{
+    #[allow(dead_code)]
+    pub fn print(self: &Info, title: &str) {
+        println!("{}", title);
+        println!("- versions      = {:?}", self.versions);
+        println!("- extensions    = {:?}", self.extensions);
+        println!("- aaguid({:?})    = {:?}", self.aaguid.len(),util::to_hex_str(&self.aaguid));
+        println!("- options       = {:?}", self.options);
+        println!("- max_msg_size  = {:?}", self.max_msg_size);
+        println!("- pin_protocols = {:?}", self.pin_protocols);
+    }
+}
+
 fn parse_cbor_member(member: i128, val: &Value, info: &mut Info) {
     match member {
         1 => info.versions = util::cbor_value_to_vec_string(val).unwrap(),

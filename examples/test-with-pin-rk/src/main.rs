@@ -39,21 +39,25 @@ fn main() {
     );
     */
 
-    println!("get_assertion_rk()");
-    let att = match ctap_hid_fido2::get_assertion_rk(
+    println!("get_assertions_rk()");
+    let asss = match ctap_hid_fido2::get_assertions_rk(
         &ctap_hid_fido2::HidParam::get_default_params(),
         rpid,
         &challenge,
         pin,
     ) {
-        Ok(result) => result,
+        Ok(asss) => asss,
         Err(err) => {
             println!("- Authenticate Error {:?}", err);
             return;
         }
     };
-    println!("- Authenticate Success!!");
-    att.print("Assertion");
+    println!("Authenticate Success!!");
+
+    println!("- Assertion Num = {:?}",asss.len());
+    for ass in asss {
+        ass.print("Assertion");
+    }    
 
     println!("----- test-with-pin-rk end -----");
 }
