@@ -31,10 +31,6 @@ fn parse_cbor_authdata(authdata: Vec<u8>, ass: &mut get_assertion_params::Assert
     ass.sign_count = ret.0;
     //index = ret.1;
 
-    // aaguid(16)
-    //let ret = clo_vec(index,16);
-    //ass.aaguid = ret.0;
-    //index = ret.1;
 }
 
 fn parse_cbor_public_key_credential_user_entity(
