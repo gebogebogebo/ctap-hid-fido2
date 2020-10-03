@@ -45,7 +45,7 @@ pub fn create_payload(params: Params) -> Vec<u8> {
             let tmp = Value::Map(allow_list_val);
             let allow_list = Value::Array(vec![tmp]);
             Some(allow_list)
-        }else{
+        } else {
             None
         }
     };
@@ -72,7 +72,7 @@ pub fn create_payload(params: Params) -> Vec<u8> {
     let mut get_assertion = BTreeMap::new();
     get_assertion.insert(Value::Integer(0x01), rpid);
     get_assertion.insert(Value::Integer(0x02), cdh);
-    if let Some(obj) = allow_list{
+    if let Some(obj) = allow_list {
         get_assertion.insert(Value::Integer(0x03), obj);
     }
     get_assertion.insert(Value::Integer(0x05), options);
@@ -88,4 +88,3 @@ pub fn create_payload(params: Params) -> Vec<u8> {
 
     payload
 }
-

@@ -33,18 +33,45 @@ pub struct Attestation {
     pub attstmt_x5c: Vec<u8>,
 }
 
-impl Attestation{
+impl Attestation {
     #[allow(dead_code)]
     pub fn print(self: &Attestation, title: &str) {
         println!("{}", title);
         println!("- fmt                                     = {:?}", self.fmt);
-        println!("- rpid_hash({:02})                           = {:?}", self.rpid_hash.len(),util::to_hex_str(&self.rpid_hash));
-        println!("- flags_user_present_result               = {:?}", self.flags_user_present_result);
-        println!("- flags_user_verified_result              = {:?}", self.flags_user_verified_result);
-        println!("- flags_attested_credential_data_included = {:?}", self.flags_attested_credential_data_included);
-        println!("- flags_extensiondata_included            = {:?}", self.flags_extension_data_included);
-        println!("- sign_count                              = {:?}", self.sign_count);
-        println!("- aaguid({:02})                              = {:?}", self.aaguid.len(),util::to_hex_str(&self.aaguid));
-        println!("- credential_id({:02})                       = {:?}", self.credential_id.len(),util::to_hex_str(&self.credential_id));
+        println!(
+            "- rpid_hash({:02})                           = {:?}",
+            self.rpid_hash.len(),
+            util::to_hex_str(&self.rpid_hash)
+        );
+        println!(
+            "- flags_user_present_result               = {:?}",
+            self.flags_user_present_result
+        );
+        println!(
+            "- flags_user_verified_result              = {:?}",
+            self.flags_user_verified_result
+        );
+        println!(
+            "- flags_attested_credential_data_included = {:?}",
+            self.flags_attested_credential_data_included
+        );
+        println!(
+            "- flags_extensiondata_included            = {:?}",
+            self.flags_extension_data_included
+        );
+        println!(
+            "- sign_count                              = {:?}",
+            self.sign_count
+        );
+        println!(
+            "- aaguid({:02})                              = {:?}",
+            self.aaguid.len(),
+            util::to_hex_str(&self.aaguid)
+        );
+        println!(
+            "- credential_id({:02})                       = {:?}",
+            self.credential_id.len(),
+            util::to_hex_str(&self.credential_id)
+        );
     }
 }

@@ -14,7 +14,7 @@ fn main() {
             println!("error: {:?}", error);
             return;
         },
-    };    
+    };
     for (key, value) in infos {
         println!("- {} / {}", key, value);
     }
@@ -52,7 +52,7 @@ fn main() {
             println!("error: {:?}", error);
             return;
         },
-    };    
+    };
     println!("- pin retry = {}", retry);
 }
 ```
@@ -172,9 +172,9 @@ mod ctaphid;
 mod get_assertion_command;
 pub mod get_assertion_params;
 mod get_assertion_response;
-mod get_next_assertion_command;
 mod get_info_command;
 mod get_info_response;
+mod get_next_assertion_command;
 mod make_credential_command;
 pub mod make_credential_params;
 mod make_credential_response;
@@ -302,7 +302,7 @@ pub fn make_credential(
     challenge: &[u8],
     pin: &str,
 ) -> Result<make_credential_params::Attestation, String> {
-    let result = make_credential_inter(hid_params, rpid, challenge, pin, false, true,None)?;
+    let result = make_credential_inter(hid_params, rpid, challenge, pin, false, true, None)?;
     Ok(result)
 }
 
@@ -314,7 +314,8 @@ pub fn make_credential_rk(
     pin: &str,
     rkparam: &make_credential_params::RkParam,
 ) -> Result<make_credential_params::Attestation, String> {
-    let result = make_credential_inter(hid_params, rpid, challenge, pin, true, true,Some(rkparam))?;
+    let result =
+        make_credential_inter(hid_params, rpid, challenge, pin, true, true, Some(rkparam))?;
     Ok(result)
 }
 
@@ -324,7 +325,7 @@ pub fn make_credential_without_pin(
     rpid: &str,
     challenge: &[u8],
 ) -> Result<make_credential_params::Attestation, String> {
-    let result = make_credential_inter(hid_params, rpid, challenge, "", false, false,None)?;
+    let result = make_credential_inter(hid_params, rpid, challenge, "", false, false, None)?;
     Ok(result)
 }
 
@@ -342,21 +343,20 @@ fn make_credential_inter(
     let cid = ctaphid::ctaphid_init(&device);
 
     let user_id = {
-        if let Some(rkp) = rkparam{
+        if let Some(rkp) = rkparam {
             rkp.user_id.to_vec()
-        }else{
+        } else {
             [].to_vec()
         }
     };
 
     // create cmmand
     let send_payload = {
-        let mut params =
-            make_credential_command::Params::new(rpid, challenge.to_vec(), user_id);
+        let mut params = make_credential_command::Params::new(rpid, challenge.to_vec(), user_id);
         params.option_rk = rk;
         params.option_uv = uv;
 
-        if let Some(rkp) = rkparam{
+        if let Some(rkp) = rkparam {
             params.user_name = rkp.user_name.to_string();
             params.user_display_name = rkp.user_display_name.to_string();
         }
@@ -374,13 +374,20 @@ fn make_credential_inter(
 
         make_credential_command::create_payload(params)
     };
-    println!("- make_credential({:02})    = {:?}", send_payload.len(),util::to_hex_str(&send_payload));
+    println!(
+        "- make_credential({:02})    = {:?}",
+        send_payload.len(),
+        util::to_hex_str(&send_payload)
+    );
 
     // send & response
     let response_cbor = match ctaphid::ctaphid_cbor(&device, &cid, &send_payload) {
         Ok(n) => n,
         Err(err) => {
-            let msg = format!("make_credential_command err = {}", util::get_ctap_status_message(err));
+            let msg = format!(
+                "make_credential_command err = {}",
+                util::get_ctap_status_message(err)
+            );
             return Err(msg);
         }
     };
@@ -401,17 +408,17 @@ pub fn get_assertion(
     Ok(asss[0].clone())
 }
 
+/// Authentication command(with PIN , Resident Key)
 pub fn get_assertions_rk(
     hid_params: &[HidParam],
     rpid: &str,
     challenge: &[u8],
     pin: &str,
 ) -> Result<Vec<get_assertion_params::Assertion>, String> {
-    let dmy:[u8;0] = [];
+    let dmy: [u8; 0] = [];
     let asss = get_assertion_inter(hid_params, rpid, challenge, &dmy, pin, true, true)?;
     Ok(asss)
 }
-
 
 fn get_assertion_inter(
     hid_params: &[HidParam],
@@ -449,17 +456,24 @@ fn get_assertion_inter(
     let response_cbor = match ctaphid::ctaphid_cbor(&device, &cid, &send_payload) {
         Ok(n) => n,
         Err(err) => {
-            let msg = format!("get_assertion_command err = {}", util::get_ctap_status_message(err));
+            let msg = format!(
+                "get_assertion_command err = {}",
+                util::get_ctap_status_message(err)
+            );
             return Err(msg);
         }
     };
-    println!("- response_cbor({:02})    = {:?}", response_cbor.len(),util::to_hex_str(&response_cbor));
+    println!(
+        "- response_cbor({:02})    = {:?}",
+        response_cbor.len(),
+        util::to_hex_str(&response_cbor)
+    );
 
     let ass = get_assertion_response::parse_cbor(&response_cbor).unwrap();
 
     let mut asss = vec![ass];
 
-    for _ in 0..(asss[0].number_of_credentials-1){
+    for _ in 0..(asss[0].number_of_credentials - 1) {
         let ass = get_next_assertion(&device, &cid).unwrap();
         asss.push(ass);
     }
@@ -467,18 +481,20 @@ fn get_assertion_inter(
     Ok(asss)
 }
 
-pub fn get_next_assertion(    
+pub fn get_next_assertion(
     device: &hidapi::HidDevice,
     cid: &[u8],
 ) -> Result<get_assertion_params::Assertion, String> {
-
     let send_payload = get_next_assertion_command::create_payload();
 
     // send & response
     let response_cbor = match ctaphid::ctaphid_cbor(&device, &cid, &send_payload) {
         Ok(n) => n,
         Err(err) => {
-            let msg = format!("get_next_assertion_command err = {}", util::get_ctap_status_message(err));
+            let msg = format!(
+                "get_next_assertion_command err = {}",
+                util::get_ctap_status_message(err)
+            );
             return Err(msg);
         }
     };
@@ -516,7 +532,10 @@ fn get_pin_token(
         let response_cbor = match ctaphid::ctaphid_cbor(&device, &cid, &send_payload) {
             Ok(result) => result,
             Err(err) => {
-                let msg = format!("get_pin_token_command err = {}", util::get_ctap_status_message(err));
+                let msg = format!(
+                    "get_pin_token_command err = {}",
+                    util::get_ctap_status_message(err)
+                );
                 return Err(msg);
             }
         };
@@ -607,7 +626,7 @@ mod tests {
 
         let ass = get_assertion(&params, rpid, &challenge, &att.credential_id, pin).unwrap();
         ass.print("Assertion");
-        
+
         assert!(true);
     }
 
