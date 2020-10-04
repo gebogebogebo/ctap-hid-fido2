@@ -182,6 +182,7 @@ mod p256;
 mod pintoken;
 mod ss;
 pub mod util;
+pub mod verifier;
 
 /// HID device vendor ID , product ID
 pub struct HidParam {

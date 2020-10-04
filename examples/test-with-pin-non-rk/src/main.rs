@@ -1,5 +1,6 @@
 use ctap_hid_fido2;
 use ctap_hid_fido2::util;
+use ctap_hid_fido2::verifier;
 
 fn main() {
     println!("----- test-with-pin-non-rk start -----");
@@ -26,6 +27,8 @@ fn main() {
     println!("- Register Success!!");
     att.print("Attestation");
 
+    verifier::verify_attestation(rpid, &challenge, &att);
+    
     println!("get_assertion_with_pin()");
     let att = match ctap_hid_fido2::get_assertion(
         &ctap_hid_fido2::HidParam::get_default_params(),

@@ -88,14 +88,12 @@ impl Attestation {
             self.attstmt_x5c.len()
         );
 
-        for x in &self.attstmt_x5c{
+        for x in &self.attstmt_x5c {
             println!(
                 "- attstmt_x5c({:04})                       = {:?}",
                 x.len(),
                 util::to_hex_str(x)
             );
-    
         }
-        
     }
 }
