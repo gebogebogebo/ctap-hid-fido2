@@ -473,7 +473,7 @@ fn get_assertion_inter(
 
     let mut asss = vec![ass];
 
-    for _ in 0..(asss[0].number_of_credentials-1) {
+    for _ in 0..(asss[0].number_of_credentials - 1) {
         let ass = get_next_assertion(&device, &cid).unwrap();
         asss.push(ass);
     }

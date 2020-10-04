@@ -1,7 +1,24 @@
 use crate::make_credential_params;
+use crate::util;
 use byteorder::{BigEndian, ReadBytesExt};
 use serde_cbor::Value;
 use std::io::Cursor;
+
+fn parse_cbor_att_stmt(obj: &Value, att: &mut make_credential_params::Attestation) {
+    if let Value::Map(xs) = obj {
+        for (key, val) in xs {
+            if let Value::Text(s) = key {
+                let ss = s.as_str();
+                match ss {
+                    "alg" => att.attstmt_alg = util::cbor_cast_value(val).unwrap(),
+                    "sig" => att.attstmt_sig = util::cbor_value_to_vec_u8(val).unwrap(),
+                    "x5c" => att.attstmt_x5c = util::cbor_value_to_vec_bytes(val).unwrap(),
+                    _ => {}
+                }
+            }
+        }
+    }
+}
 
 fn parse_cbor_member(
     member: i128,
@@ -23,6 +40,7 @@ fn parse_cbor_member(
         }
         3 => {
             // attStmt (0x03)
+            parse_cbor_att_stmt(val, attestation);
         }
         _ => println!("- anything error"),
     }

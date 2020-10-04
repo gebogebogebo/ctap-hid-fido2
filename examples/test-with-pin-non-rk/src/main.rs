@@ -10,13 +10,13 @@ fn main() {
     let pin = "1234";
 
     println!("make_credential()");
-    let cre_id = match ctap_hid_fido2::make_credential(
+    let att = match ctap_hid_fido2::make_credential(
         &ctap_hid_fido2::HidParam::get_default_params(),
         rpid,
         &challenge,
         pin,
     ) {
-        Ok(result) => result.credential_id,
+        Ok(result) => result,
         Err(err) => {
             println!("- Register Error {:?}", err);
             return;
@@ -24,18 +24,14 @@ fn main() {
     };
 
     println!("- Register Success!!");
-    println!(
-        "- credential_id({:02}) = {:?}",
-        cre_id.len(),
-        util::to_hex_str(&cre_id)
-    );
+    att.print("Attestation");
 
     println!("get_assertion_with_pin()");
     let att = match ctap_hid_fido2::get_assertion(
         &ctap_hid_fido2::HidParam::get_default_params(),
         rpid,
         &challenge,
-        &cre_id,
+        &att.credential_id,
         pin,
     ) {
         Ok(result) => result,

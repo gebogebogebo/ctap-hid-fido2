@@ -51,12 +51,28 @@ pub(crate) fn cbor_value_to_vec_string(value: &Value) -> Option<Vec<String>> {
 }
 
 #[allow(dead_code)]
+pub(crate) fn cbor_value_to_vec_bytes(value: &Value) -> Option<Vec<Vec<u8>>> {
+    if let Value::Array(xs) = value {
+        let mut bytes = [].to_vec();
+        for x in xs {
+            if let Value::Bytes(b) = x {
+                bytes.push(b.to_vec());
+            }
+        }
+        Some(bytes)
+    } else {
+        None
+    }
+}
+
+#[allow(dead_code)]
 pub(crate) fn cbor_value_print(value: &Value) {
     match value {
         Value::Bytes(s) => print_typename(s),
         Value::Text(s) => print_typename(s),
         Value::Integer(s) => print_typename(s),
         Value::Map(s) => print_typename(s),
+        Value::Array(s) => print_typename(s),
         _ => println!("unknown Value type"),
     };
 }
