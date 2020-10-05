@@ -7,11 +7,11 @@ use x509_parser::parse_x509_der;
 
 #[derive(Debug)]
 enum MyError {
-   #[cfg(all(feature = "rsa_signing", feature = "use_heap"))]
-   IO(std::io::Error),
-   BadPrivateKey,
-   OOM,
-   BadSignature,
+    #[cfg(all(feature = "rsa_signing", feature = "use_heap"))]
+    IO(std::io::Error),
+    BadPrivateKey,
+    OOM,
+    BadSignature,
 }
 
 pub fn verify_attestation(
@@ -49,7 +49,6 @@ pub fn verify_attestation(
         &attestation.attstmt_sig,
     );
 
-
     /*
     // Verifyの結果によらず
     {
@@ -63,12 +62,7 @@ pub fn verify_attestation(
     */
 }
 
-fn verify_sig(
-    public_key_der: &untrusted::Input,
-    challenge: &[u8],
-    auth_data: &[u8],
-    sig: &[u8],
-) {
+fn verify_sig(public_key_der: &untrusted::Input, challenge: &[u8], auth_data: &[u8], sig: &[u8]) {
     // message = authData + SHA256(challenge)
     let message = {
         let mut base: Vec<u8> = vec![];
@@ -83,20 +77,42 @@ fn verify_sig(
     // sig
     let sig = untrusted::Input::from(&sig);
 
-    let result = signature::verify(&signature::ED25519, *public_key_der, message, sig);
+    println!("Verify");
+    println!(
+        "- public_key_der({:02})  = {:?}",
+        public_key_der.len(),
+        util::to_hex_str(public_key_der.as_slice_less_safe())
+    );
+    println!(
+        "- challenge({:02})  = {:?}",
+        challenge.len(),
+        util::to_hex_str(challenge)
+    );
+    println!(
+        "- authdata({:02})  = {:?}",
+        auth_data.len(),
+        util::to_hex_str(auth_data)
+    );
+    println!(
+        "- sig({:02})  = {:?}",
+        sig.len(),
+        util::to_hex_str(sig.as_slice_less_safe())
+    );
+    println!(
+        "- message({:02})  = {:?}",
+        message.len(),
+        util::to_hex_str(message.as_slice_less_safe())
+    );
 
-    /*
-    // veriry
+    // verify
     let result = signature::verify(
-        &signature::RSA_PKCS1_2048_8192_SHA256,
+        &signature::ECDSA_P256_SHA256_ASN1,
         *public_key_der,
         message,
         sig,
-    )
-    .map_err(|ring::error::Unspecified| MyError::BadSignature);
-    */
+    );
 
-    println!("verify result = {:?}",result);
+    println!("verify result = {:?}", result);
 }
 
 fn verify_rpid(rpid: &str, rpid_hash: &[u8]) -> bool {

@@ -11,6 +11,8 @@ fn main() {
     let pin = "1234";
 
     println!("make_credential()");
+    println!("- rpid = {:?}",rpid);
+
     let att = match ctap_hid_fido2::make_credential(
         &ctap_hid_fido2::HidParam::get_default_params(),
         rpid,
@@ -29,6 +31,7 @@ fn main() {
 
     verifier::verify_attestation(rpid, &challenge, &att);
     
+    /*
     println!("get_assertion_with_pin()");
     let att = match ctap_hid_fido2::get_assertion(
         &ctap_hid_fido2::HidParam::get_default_params(),
@@ -50,6 +53,7 @@ fn main() {
         att.signature.len(),
         util::to_hex_str(&att.signature)
     );
+    */
 
     println!("----- test-with-pin-non-rk end -----");
 }
