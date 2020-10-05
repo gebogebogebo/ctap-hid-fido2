@@ -47,6 +47,10 @@ fn parse_cbor_member(
 }
 
 fn parse_cbor_authdata(authdata: &[u8], attestation: &mut make_credential_params::Attestation) {
+
+    // copy
+    attestation.authdata = authdata.to_vec();
+
     let mut index = 0;
 
     // rpIdHash	(32)
