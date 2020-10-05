@@ -1,7 +1,18 @@
 use crate::make_credential_params;
 use crate::util;
 use ring::digest;
+use ring::signature;
+use untrusted::Input;
 use x509_parser::parse_x509_der;
+
+#[derive(Debug)]
+enum MyError {
+   #[cfg(all(feature = "rsa_signing", feature = "use_heap"))]
+   IO(std::io::Error),
+   BadPrivateKey,
+   OOM,
+   BadSignature,
+}
 
 pub fn verify_attestation(
     rpid: &str,
@@ -21,23 +32,25 @@ pub fn verify_attestation(
                     //
                     assert_eq!(cert.tbs_certificate.version, 2);
                     cert
-                },
+                }
                 _ => panic!("x509 parsing failed: {:?}", res),
             }
         };
         cert.tbs_certificate.subject_pki.subject_public_key
     };
 
+    // Verify the signature.
+    let public_key_der = untrusted::Input::from(public_key.as_ref());
 
-    let a = 0;
+    verify_sig(
+        &public_key_der,
+        challenge,
+        &attestation.authdata,
+        &attestation.attstmt_sig,
+    );
+
+
     /*
-    var result = new Result();
-    var cert = DerConverter.ToPemCertificate(att.AttStmtX5c);
-    var publicKeyforVerify = CryptoBC.GetPublicKeyPEMfromCert(cert);
-    if (!string.IsNullOrEmpty(publicKeyforVerify)) {
-        result.IsSuccess = VerifyPublicKey(publicKeyforVerify, challenge, att.AuthData, att.AttStmtSig);
-    }
-
     // Verifyの結果によらず
     {
         var decAuthdata = new DecodedAuthData();
@@ -48,11 +61,45 @@ pub fn verify_attestation(
 
     return result;
     */
+}
 
+fn verify_sig(
+    public_key_der: &untrusted::Input,
+    challenge: &[u8],
+    auth_data: &[u8],
+    sig: &[u8],
+) {
+    // message = authData + SHA256(challenge)
+    let message = {
+        let mut base: Vec<u8> = vec![];
+        base.append(&mut auth_data.to_vec());
+
+        let cdh = digest::digest(&digest::SHA256, challenge);
+        base.append(&mut cdh.as_ref().to_vec());
+        base
+    };
+    let message = untrusted::Input::from(&message);
+
+    // sig
+    let sig = untrusted::Input::from(&sig);
+
+    let result = signature::verify(&signature::ED25519, *public_key_der, message, sig);
+
+    /*
+    // veriry
+    let result = signature::verify(
+        &signature::RSA_PKCS1_2048_8192_SHA256,
+        *public_key_der,
+        message,
+        sig,
+    )
+    .map_err(|ring::error::Unspecified| MyError::BadSignature);
+    */
+
+    println!("verify result = {:?}",result);
 }
 
 fn verify_rpid(rpid: &str, rpid_hash: &[u8]) -> bool {
-
     // SHA-256(rpid) == attestation.RpIdHash
     let rpid_hash_a = {
         let hash = digest::digest(&digest::SHA256, rpid.as_bytes());
@@ -60,11 +107,10 @@ fn verify_rpid(rpid: &str, rpid_hash: &[u8]) -> bool {
     };
 
     let rpid_hash_b = util::to_hex_str(rpid_hash);
-    
+
     if rpid_hash_a == rpid_hash_b {
         true
-    }else{
+    } else {
         false
     }
 }
-
