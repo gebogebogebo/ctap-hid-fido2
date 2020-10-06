@@ -103,7 +103,7 @@ fn parse_cbor_authdata(authdata: &[u8], attestation: &mut make_credential_params
 }
 
 pub fn parse_cbor(bytes: &[u8]) -> Result<make_credential_params::Attestation, String> {
-    let mut attestation = Default::default();
+    let mut attestation = make_credential_params::Attestation::default();
 
     let cbor: Value = serde_cbor::from_slice(bytes).unwrap();
     if let Value::Map(map) = cbor {
