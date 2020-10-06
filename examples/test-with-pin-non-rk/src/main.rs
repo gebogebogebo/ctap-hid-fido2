@@ -30,15 +30,14 @@ fn main() {
     att.print("Attestation");
 
     let verify_result = verifier::verify_attestation(rpid, &challenge, &att);
-    println!("- Verify Result = {:?}",verify_result);
+    println!("- Verify Result = {:?}",verify_result.is_verify);
     
-    /*
     println!("get_assertion_with_pin()");
     let att = match ctap_hid_fido2::get_assertion(
         &ctap_hid_fido2::HidParam::get_default_params(),
         rpid,
         &challenge,
-        &att.credential_id,
+        &verify_result.credential_id,
         pin,
     ) {
         Ok(result) => result,
@@ -54,7 +53,6 @@ fn main() {
         att.signature.len(),
         util::to_hex_str(&att.signature)
     );
-    */
 
     println!("----- test-with-pin-non-rk end -----");
 }
