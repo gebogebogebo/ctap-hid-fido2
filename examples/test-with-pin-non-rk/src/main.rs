@@ -29,7 +29,8 @@ fn main() {
     println!("- Register Success!!");
     att.print("Attestation");
 
-    verifier::verify_attestation(rpid, &challenge, &att);
+    let verify_result = verifier::verify_attestation(rpid, &challenge, &att);
+    println!("- Verify Result = {:?}",verify_result);
     
     /*
     println!("get_assertion_with_pin()");

@@ -2,25 +2,22 @@ use crate::make_credential_params;
 use crate::util;
 use ring::digest;
 use ring::signature;
-use untrusted::Input;
 use x509_parser::parse_x509_der;
 
-#[derive(Debug)]
-enum MyError {
-    #[cfg(all(feature = "rsa_signing", feature = "use_heap"))]
-    IO(std::io::Error),
-    BadPrivateKey,
-    OOM,
-    BadSignature,
+#[derive(Debug, Default)]
+pub struct AttestationVerifyResult {
+    pub is_verify:bool,
+    pub credential_id: Vec<u8>,
+    pub credential_publickey: Vec<u8>,
 }
 
 pub fn verify_attestation(
     rpid: &str,
     challenge: &[u8],
     attestation: &make_credential_params::Attestation,
-) {
+) -> AttestationVerifyResult{
     if verify_rpid(rpid, &attestation.rpid_hash) == false {
-        return;
+        return AttestationVerifyResult::default();
     }
 
     let public_key = {
@@ -42,27 +39,21 @@ pub fn verify_attestation(
     // Verify the signature.
     let public_key_der = untrusted::Input::from(public_key.as_ref());
 
-    verify_sig(
+    let result = verify_sig(
         &public_key_der,
         challenge,
         &attestation.authdata,
         &attestation.attstmt_sig,
     );
 
-    /*
-    // Verifyの結果によらず
-    {
-        var decAuthdata = new DecodedAuthData();
-        decAuthdata.Decode(att.AuthData);
-        result.CredentialID = decAuthdata.CredentialId;
-        result.PublicKeyPem = decAuthdata.PublicKeyPem;
-    }
-
-    return result;
-    */
+    let mut att_result = AttestationVerifyResult::default();
+    att_result.is_verify = result;
+    att_result.credential_id = attestation.credential_id.to_vec();
+    att_result.credential_publickey = attestation.credential_publickey_byte.to_vec();
+    att_result
 }
 
-fn verify_sig(public_key_der: &untrusted::Input, challenge: &[u8], auth_data: &[u8], sig: &[u8]) {
+fn verify_sig(public_key_der: &untrusted::Input, challenge: &[u8], auth_data: &[u8], sig: &[u8]) -> bool{
     // message = authData + SHA256(challenge)
     let message = {
         let mut base: Vec<u8> = vec![];
@@ -77,6 +68,7 @@ fn verify_sig(public_key_der: &untrusted::Input, challenge: &[u8], auth_data: &[
     // sig
     let sig = untrusted::Input::from(&sig);
 
+    /*
     println!("Verify");
     println!(
         "- public_key_der({:02})  = {:?}",
@@ -103,6 +95,7 @@ fn verify_sig(public_key_der: &untrusted::Input, challenge: &[u8], auth_data: &[
         message.len(),
         util::to_hex_str(message.as_slice_less_safe())
     );
+    */
 
     // verify
     let result = signature::verify(
@@ -112,7 +105,12 @@ fn verify_sig(public_key_der: &untrusted::Input, challenge: &[u8], auth_data: &[
         sig,
     );
 
-    println!("verify result = {:?}", result);
+    //println!("verify result = {:?}", result);
+
+    match result {
+        Ok(()) => true,
+        Err(ring::error::Unspecified) => false,
+    }
 }
 
 fn verify_rpid(rpid: &str, rpid_hash: &[u8]) -> bool {
