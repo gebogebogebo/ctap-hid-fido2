@@ -112,9 +112,17 @@ fn parse_cbor_authdata(authdata: &[u8], attestation: &mut make_credential_params
 
         let cbor = serde_cbor::from_slice(&slice).unwrap();        
         let cose_key = cose::CoseKey::decode(&cbor).unwrap();
-        let p256_key = p256::P256Key::from_cose(&cose_key).unwrap();
 
-        attestation.credential_publickey = p256_key.bytes().to_vec();
+        let der_key = cose_key.convert_to_publickey_der();
+        println!(
+            "- public_key_der({:02})  = {:?}",
+            der_key.len(),
+            util::to_hex_str(&der_key)
+        );
+
+        //let p256_key = p256::P256Key::from_cose(&cose_key).unwrap();
+
+        //attestation.credential_publickey = p256_key.bytes().to_vec();
 
     }
 }
