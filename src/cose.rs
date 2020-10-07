@@ -3,6 +3,7 @@ use num::NumCast;
 use serde_cbor::Value;
 use std::collections::HashMap;
 use byteorder::{BigEndian, WriteBytesExt};
+use base64;
 
 #[derive(Debug, Default)]
 pub struct CoseKey {
@@ -117,12 +118,18 @@ impl CoseKey {
         pub_key
     }
 
-    pub fn convert_to_publickey_pem(&self){
+    pub fn convert_to_publickey_pem(&self,public_key_der:&[u8]){
         // DER形式の公開鍵をPEM形式に変換する
         // 1.Base64エンコード
         // 2.64文字ごとに改行コードをいれる
         // 3.ヘッダとフッタを入れる
 
+        // 1.
+        let base64 = base64::encode(public_key_der);
+
+
+        // 2.
+        //base64
     }
     /*
         // Publick Key
