@@ -24,9 +24,8 @@ pub struct Attestation {
     pub sign_count: u32,
     pub aaguid: Vec<u8>,
     pub credential_id: Vec<u8>,
-    pub credential_publickey: String,
-    pub credential_publickey_byte: Vec<u8>,
-    pub authdata: Vec<u8>,
+    pub credential_publickey: Vec<u8>,
+    pub auth_data: Vec<u8>,
 
     pub attstmt_alg: i32,
     pub attstmt_sig: Vec<u8>,
@@ -72,6 +71,11 @@ impl Attestation {
             "- credential_id({:02})                       = {:?}",
             self.credential_id.len(),
             util::to_hex_str(&self.credential_id)
+        );
+        println!(
+            "- credential_publickey({:02})                = {:?}",
+            self.credential_publickey.len(),
+            util::to_hex_str(&self.credential_publickey)
         );
         println!(
             "- attstmt_alg                             = {:?}",

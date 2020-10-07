@@ -1,5 +1,8 @@
 use crate::make_credential_params;
 use crate::util;
+use crate::cose;
+use crate::p256;
+
 use byteorder::{BigEndian, ReadBytesExt};
 use serde_cbor::Value;
 use std::io::Cursor;
@@ -48,7 +51,7 @@ fn parse_cbor_member(
 
 fn parse_cbor_authdata(authdata: &[u8], attestation: &mut make_credential_params::Attestation) {
     // copy
-    attestation.authdata = authdata.to_vec();
+    attestation.auth_data = authdata.to_vec();
 
     let mut index = 0;
 
@@ -94,12 +97,26 @@ fn parse_cbor_authdata(authdata: &[u8], attestation: &mut make_credential_params
     // credentialId(credentialIdLength)
     let ret = clo_vec(index, len as usize);
     attestation.credential_id = ret.0;
-    //index = ret.1;
+    index = ret.1;
 
-    /* PEND
-    if (attestation.flags_attested_credentialdata_included) {
+    if attestation.flags_attested_credential_data_included {
+        let slice = authdata[index..authdata.len()].to_vec();
+
+        /*
+        println!(
+            "- public_key({:02})  = {:?}",
+            slice.len(),
+            util::to_hex_str(&slice)
+        );
+        */
+
+        let cbor = serde_cbor::from_slice(&slice).unwrap();        
+        let cose_key = cose::CoseKey::decode(&cbor).unwrap();
+        let p256_key = p256::P256Key::from_cose(&cose_key).unwrap();
+
+        attestation.credential_publickey = p256_key.bytes().to_vec();
+
     }
-    */
 }
 
 pub fn parse_cbor(bytes: &[u8]) -> Result<make_credential_params::Attestation, String> {

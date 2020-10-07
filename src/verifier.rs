@@ -42,14 +42,14 @@ pub fn verify_attestation(
     let result = verify_sig(
         &public_key_der,
         challenge,
-        &attestation.authdata,
+        &attestation.auth_data,
         &attestation.attstmt_sig,
     );
 
     let mut att_result = AttestationVerifyResult::default();
     att_result.is_verify = result;
     att_result.credential_id = attestation.credential_id.to_vec();
-    att_result.credential_publickey = attestation.credential_publickey_byte.to_vec();
+    att_result.credential_publickey = attestation.credential_publickey.to_vec();
     att_result
 }
 
