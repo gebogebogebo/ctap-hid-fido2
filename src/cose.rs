@@ -1,9 +1,9 @@
 use crate::util;
+use base64;
+use byteorder::{BigEndian, WriteBytesExt};
 use num::NumCast;
 use serde_cbor::Value;
 use std::collections::HashMap;
-use byteorder::{BigEndian, WriteBytesExt};
-use base64;
 
 #[derive(Debug, Default)]
 pub struct CoseKey {
@@ -72,7 +72,6 @@ impl CoseKey {
     }
 
     pub fn encode(&self) -> Vec<u8> {
-
         let mut wtr = vec![];
 
         // key type
@@ -93,11 +92,12 @@ impl CoseKey {
         wtr
     }
 
-    fn convert_to_publickey_der(&self) -> Vec<u8>{
+    pub fn convert_to_publickey_der(&self) -> Vec<u8> {
         let mut pub_key = vec![];
 
         // 1.metadata(26byte)
-        let meta_header = hex::decode("3059301306072a8648ce3d020106082a8648ce3d030107034200").unwrap();
+        let meta_header =
+            hex::decode("3059301306072a8648ce3d020106082a8648ce3d030107034200").unwrap();
         pub_key.append(&mut meta_header.to_vec());
 
         // 2.0x04
@@ -115,7 +115,7 @@ impl CoseKey {
         pub_key
     }
 
-    pub fn convert_to_publickey_pem(&self) -> String{
+    pub fn convert_to_publickey_pem(&self) -> String {
         let public_key_der = self.convert_to_publickey_der();
 
         // 1.encode Base64
@@ -124,22 +124,23 @@ impl CoseKey {
         // 2. /n　every 64 characters
         let pem_base = {
             let mut pem_base = "".to_string();
-            let mut counter=0;
+            let mut counter = 0;
             for c in base64_str.chars() {
                 pem_base = pem_base + &c.to_string();
-                if counter == 64-1 {
+                if counter == 64 - 1 {
                     pem_base = pem_base + &"\n".to_string();
-                    counter=0;
-                }else{
-                    counter=counter+1;
+                    counter = 0;
+                } else {
+                    counter = counter + 1;
                 }
             }
             pem_base + &"\n".to_string()
         };
 
-
         // 3. Header and footer
-        let pem_data = "-----BEGIN PUBLIC KEY-----\n".to_string() + &pem_base + &"-----END PUBLIC KEY-----".to_string();
+        let pem_data = "-----BEGIN PUBLIC KEY-----\n".to_string()
+            + &pem_base
+            + &"-----END PUBLIC KEY-----".to_string();
 
         /*
         println!(

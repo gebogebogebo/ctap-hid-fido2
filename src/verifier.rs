@@ -1,3 +1,4 @@
+use crate::get_assertion_params;
 use crate::make_credential_params;
 use crate::util;
 use ring::digest;
@@ -6,16 +7,17 @@ use x509_parser::parse_x509_der;
 
 #[derive(Debug, Default)]
 pub struct AttestationVerifyResult {
-    pub is_verify:bool,
+    pub is_verify: bool,
     pub credential_id: Vec<u8>,
     pub credential_publickey_pem: String,
+    pub credential_publickey_der: Vec<u8>,
 }
 
 pub fn verify_attestation(
     rpid: &str,
     challenge: &[u8],
     attestation: &make_credential_params::Attestation,
-) -> AttestationVerifyResult{
+) -> AttestationVerifyResult {
     if verify_rpid(rpid, &attestation.rpid_hash) == false {
         return AttestationVerifyResult::default();
     }
@@ -50,10 +52,16 @@ pub fn verify_attestation(
     att_result.is_verify = result;
     att_result.credential_id = attestation.credential_id.to_vec();
     att_result.credential_publickey_pem = attestation.credential_publickey_pem.to_string();
+    att_result.credential_publickey_der = attestation.credential_publickey_der.to_vec();
     att_result
 }
 
-fn verify_sig(public_key_der: &untrusted::Input, challenge: &[u8], auth_data: &[u8], sig: &[u8]) -> bool{
+fn verify_sig(
+    public_key_der: &untrusted::Input,
+    challenge: &[u8],
+    auth_data: &[u8],
+    sig: &[u8],
+) -> bool {
     // message = authData + SHA256(challenge)
     let message = {
         let mut base: Vec<u8> = vec![];
@@ -127,4 +135,26 @@ fn verify_rpid(rpid: &str, rpid_hash: &[u8]) -> bool {
     } else {
         false
     }
+}
+
+pub fn verify_assertion(
+    rpid: &str,
+    publickey: &[u8],
+    challenge: &[u8],
+    assertion: &get_assertion_params::Assertion,
+) -> bool {
+
+    if verify_rpid(rpid, &assertion.rpid_hash) == false {
+        return false;
+    }
+
+    // Verify the signature.
+    let public_key_der = untrusted::Input::from(publickey.as_ref());
+
+    verify_sig(
+        &public_key_der,
+        challenge,
+        &assertion.auth_data,
+        &assertion.signature,
+    )
 }
