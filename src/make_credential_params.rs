@@ -25,6 +25,7 @@ pub struct Attestation {
     pub aaguid: Vec<u8>,
     pub credential_id: Vec<u8>,
     pub credential_publickey_pem: String,
+    pub credential_publickey_der: Vec<u8>,
     pub auth_data: Vec<u8>,
 
     pub attstmt_alg: i32,

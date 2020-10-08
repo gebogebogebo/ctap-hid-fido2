@@ -5,6 +5,9 @@ use serde_cbor::Value;
 use std::io::Cursor;
 
 fn parse_cbor_authdata(authdata: Vec<u8>, ass: &mut get_assertion_params::Assertion) {
+    // copy
+    ass.auth_data = authdata.to_vec();
+
     let mut index = 0;
 
     let clo_vec = |idx: usize, x: usize| (authdata[idx..idx + x].to_vec(), idx + x);

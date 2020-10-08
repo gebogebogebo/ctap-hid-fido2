@@ -63,5 +63,13 @@ fn main() {
         util::to_hex_str(&att.signature)
     );
 
+    let is_verify = verifier::verify_assertion(
+        rpid,
+        &verify_result.credential_publickey_der,
+        &challenge,
+        &att,
+    );
+    println!("- is_verify                = {:?}", is_verify);
+
     println!("----- test-with-pin-non-rk end -----");
 }

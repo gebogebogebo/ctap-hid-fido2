@@ -1,6 +1,6 @@
+use crate::cose;
 use crate::make_credential_params;
 use crate::util;
-use crate::cose;
 
 use byteorder::{BigEndian, ReadBytesExt};
 use serde_cbor::Value;
@@ -101,9 +101,10 @@ fn parse_cbor_authdata(authdata: &[u8], attestation: &mut make_credential_params
     if attestation.flags_attested_credential_data_included {
         let slice = authdata[index..authdata.len()].to_vec();
 
-        let cbor = serde_cbor::from_slice(&slice).unwrap();        
+        let cbor = serde_cbor::from_slice(&slice).unwrap();
         let cose_key = cose::CoseKey::decode(&cbor).unwrap();
 
+        attestation.credential_publickey_der = cose_key.convert_to_publickey_der();
         attestation.credential_publickey_pem = cose_key.convert_to_publickey_pem();
     }
 }
