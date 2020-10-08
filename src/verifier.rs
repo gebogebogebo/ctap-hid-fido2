@@ -8,7 +8,7 @@ use x509_parser::parse_x509_der;
 pub struct AttestationVerifyResult {
     pub is_verify:bool,
     pub credential_id: Vec<u8>,
-    pub credential_publickey: Vec<u8>,
+    pub credential_publickey_pem: String,
 }
 
 pub fn verify_attestation(
@@ -49,7 +49,7 @@ pub fn verify_attestation(
     let mut att_result = AttestationVerifyResult::default();
     att_result.is_verify = result;
     att_result.credential_id = attestation.credential_id.to_vec();
-    att_result.credential_publickey = attestation.credential_publickey.to_vec();
+    att_result.credential_publickey_pem = attestation.credential_publickey_pem.to_string();
     att_result
 }
 
@@ -68,8 +68,8 @@ fn verify_sig(public_key_der: &untrusted::Input, challenge: &[u8], auth_data: &[
     // sig
     let sig = untrusted::Input::from(&sig);
 
-    /*
     println!("Verify");
+    /*
     println!(
         "- public_key_der({:02})  = {:?}",
         public_key_der.len(),
