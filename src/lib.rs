@@ -519,7 +519,13 @@ fn get_pin_token(
         let send_payload =
             client_pin_command::create_payload(client_pin_command::SubCommand::GetKeyAgreement)
                 .unwrap();
-        let response_cbor = ctaphid::ctaphid_cbor(device, cid, &send_payload).unwrap();
+        let response_cbor = match ctaphid::ctaphid_cbor(device, cid, &send_payload){
+            Ok(result) => result,
+            Err(err) => {
+                let msg = format!("ctaphid_cbor err = 0x{:02X}",err);
+                return Err(msg);
+            }
+        };
 
         let key_agreement =
             client_pin_response::parse_cbor_client_pin_get_keyagreement(&response_cbor).unwrap();
