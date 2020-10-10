@@ -50,7 +50,7 @@ fn main() {
 }
 ```
 
-console
+**console**
 
 ```sh
 get_info()
@@ -87,7 +87,7 @@ fn main() {
 }
 ```
 
-console
+**console**
 
 ```sh
 get_pin_retries()
@@ -97,8 +97,10 @@ get_pin_retries()
 
 
 #### make_credential()
-
 #### get_assertion()
+#### verifier::create_challenge()
+#### verifier::verify_attestation()
+#### verifier::verify_assertion()
 
 ```Rust
 use ctap_hid_fido2;
@@ -191,7 +193,7 @@ fn main() {
 }
 ```
 
-console
+**console**
 
 ```sh
 ----- test-with-pin-non-rk start -----
@@ -234,5 +236,158 @@ fn main() {
     }
     println!("----- wink end -----");
 }
+```
+
+
+
+#### make_credential_rk()
+
+```Rust
+use ctap_hid_fido2;
+use ctap_hid_fido2::make_credential_params;
+use ctap_hid_fido2::util;
+use ctap_hid_fido2::verifier;
+
+fn main() {
+    println!("----- test-with-pin-rk start -----");
+
+    // parameter
+    let rpid = "ge.com";
+    let pin = "1234";
+    let challenge = verifier::create_challenge();
+
+    let mut rkparam = make_credential_params::RkParam::default();
+    rkparam.user_id = b"11111".to_vec();
+    rkparam.user_name = "gebo".to_string();
+    rkparam.user_display_name = "GEBO GEBO".to_string();
+
+    println!("Register - make_credential()");
+    println!("- rpid          = {:?}", rpid);
+    println!(
+        "- challenge({:02}) = {:?}",
+        challenge.len(),
+        util::to_hex_str(&challenge)
+    );
+    rkparam.print("RkParam");
+
+    let att = match ctap_hid_fido2::make_credential_rk(
+        &ctap_hid_fido2::HidParam::get_default_params(),
+        rpid,
+        &challenge,
+        pin,
+        &rkparam
+        ) {
+        Ok(result) => result,
+        Err(err) => {
+            println!("- Register Error {:?}", err);
+            return;
+        }
+    };
+
+    println!("- Register Success!!");
+    att.print("Attestation");
+
+    println!("Verify");
+    let verify_result = verifier::verify_attestation(rpid, &challenge, &att);
+    println!(
+        "- is_success                   = {:?}",
+        verify_result.is_success
+    );
+    println!(
+        "- credential_publickey_der({:02}) = {:?}",
+        verify_result.credential_publickey_der.len(),
+        util::to_hex_str(&verify_result.credential_publickey_der)
+    );
+
+    println!("----- test-with-pin-rk end -----");
+}
+```
+
+**console**
+
+```sh
+----- test-with-pin-rk start -----
+
+Register - make_credential()
+- rpid          = "ge.com"
+- challenge(32) = "FC0644242F0C3FADFD4E5EBEEF4B0CED629C7E76D50417148E5BF5D59EE67298"
+
+RkParam
+- user_id(05)       = "3131313131"
+- user_name         = "gebo"
+- user_display_name = "GEBO GEBO"
+
+- touch fido key
+- Register Success!!
+
+Verify
+- is_success                   = true
+- credential_publickey_der(65) = "045751B33677185635A8136668A64EABEED8DB7350C19E1804B67E66350B297BE0B64EE29ADBF64FE74DA684A2E8BB7F87314BD301C512E660E3C258FDA93C5C5D"
+
+----- test-with-pin-rk end -----
+```
+
+
+
+#### get_assertions_rk()
+
+```Rust
+use ctap_hid_fido2;
+use ctap_hid_fido2::util;
+use ctap_hid_fido2::verifier;
+
+fn main() {
+    println!("----- test-with-pin-rk start -----");
+
+    // parameter
+    let rpid = "ge.com";
+    let pin = "1234";
+
+    println!("Authenticate - get_assertions_rk()");
+
+    let challenge = verifier::create_challenge();
+    let asss = match ctap_hid_fido2::get_assertions_rk(
+        &ctap_hid_fido2::HidParam::get_default_params(),
+        rpid,
+        &challenge,
+        pin,
+    ) {
+        Ok(asss) => asss,
+        Err(err) => {
+            println!("- Authenticate Error {:?}", err);
+            return;
+        }
+    };
+    println!("Authenticate Success!!");
+
+    println!("- Assertion Num = {:?}",asss.len());
+    for ass in asss {
+        ass.print("Assertion");
+        println!(
+            "- user_id({:02})       = {:?}",
+            ass.user_id.len(),
+            util::to_hex_str(&ass.user_id)
+        );
+    }
+
+    println!("----- test-with-pin-rk end -----");
+}
+```
+
+**console**
+
+user_name and user_display_name are set only when multiple Assertions are acquired.
+
+```sh
+----- test-with-pin-rk start -----
+Authenticate - get_assertions_rk()
+- touch fido key
+
+Authenticate Success!!
+- Assertion Num = 1
+- user_id(05)       = "3131313131"
+- user_name         = ""
+- user_display_name = ""
+----- test-with-pin-rk end -----
 ```
 
