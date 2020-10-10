@@ -7,11 +7,16 @@ fn main() {
 
     // parameter
     let rpid = "test.com";
-    let challenge = b"this is challenge".to_vec();
     let pin = "1234";
+    let challenge = verifier::create_challenge();
 
     println!("Register - make_credential()");
-    println!("- rpid = {:?}", rpid);
+    println!("- rpid          = {:?}", rpid);
+    println!(
+        "- challenge({:02}) = {:?}",
+        challenge.len(),
+        util::to_hex_str(&challenge)
+    );
 
     let att = match ctap_hid_fido2::make_credential(
         &ctap_hid_fido2::HidParam::get_default_params(),
@@ -31,7 +36,10 @@ fn main() {
 
     println!("Verify");
     let verify_result = verifier::verify_attestation(rpid, &challenge, &att);
-    println!("- is_success                   = {:?}", verify_result.is_success);
+    println!(
+        "- is_success                   = {:?}",
+        verify_result.is_success
+    );
     println!(
         "- credential_id({:02})            = {:?}",
         verify_result.credential_id.len(),
@@ -44,6 +52,13 @@ fn main() {
     );
 
     println!("Authenticate - get_assertion_with_pin()");
+    let challenge = verifier::create_challenge();
+    println!(
+        "- challenge({:02}) = {:?}",
+        challenge.len(),
+        util::to_hex_str(&challenge)
+    );
+
     let ass = match ctap_hid_fido2::get_assertion(
         &ctap_hid_fido2::HidParam::get_default_params(),
         rpid,
@@ -67,7 +82,7 @@ fn main() {
         &challenge,
         &ass,
     );
-    println!("- is_success              = {:?}", is_success);
+    println!("- is_success = {:?}", is_success);
 
     println!("----- test-with-pin-non-rk end -----");
 }
