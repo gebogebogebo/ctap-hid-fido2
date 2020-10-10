@@ -368,10 +368,14 @@ pub fn ctaphid_cbor(
     let mut keep_alive_msg_flag = false;
     let mut st: (u8, u16, u8) = (0, 0, 0);
     for _ in 0..100 {
-        let _res = device.read(&mut buf[..]).unwrap();
+        let _res = match device.read(&mut buf[..]){
+            Ok(_)=>{},
+            Err(_error) => {
+                return Err(0xfe);
+            }
+        };
         //println!("Read: {:?} byte", res);
 
-        // PEND Result型にする
         st = ctaphid_cbor_responce_status(&buf);
         if st.0 == CTAPHID_CBOR {
             break;
@@ -421,7 +425,7 @@ pub fn ctaphid_cbor(
         }
 
         // get CBOR
-        let mut cbor_data: Vec<u8> = vec![]; // 空のVec生成
+        let mut cbor_data: Vec<u8> = vec![];
         for n in 1..payload_size {
             let index: usize = n.into();
             let dat = payload[index];
