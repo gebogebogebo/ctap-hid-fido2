@@ -36,6 +36,8 @@ pub struct Attestation {
 impl Attestation {
     #[allow(dead_code)]
     pub fn print(self: &Attestation, title: &str) {
+        if util::is_debug() == false {return;}
+        
         println!("{}", title);
         println!("- fmt                                     = {:?}", self.fmt);
         println!(
@@ -78,6 +80,7 @@ impl Attestation {
             self.credential_publickey_pem.len(),
             self.credential_publickey_pem
         );
+
         println!(
             "- attstmt_alg                             = {:?}",
             self.attstmt_alg

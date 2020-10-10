@@ -367,7 +367,6 @@ fn make_credential_inter(
         if pin.len() > 0 {
             let pin_auth =
                 get_pin_token(&device, &cid, pin.to_string())?.auth(&params.client_data_hash);
-            //let pin_auth = hex::decode("FF95E70BB8008BB1B0EE8296C0A16130").unwrap();
 
             //println!("- pin_auth({:02})    = {:?}", pin_auth.len(),util::to_hex_str(&pin_auth));
             params.pin_auth = pin_auth.to_vec();
@@ -375,11 +374,14 @@ fn make_credential_inter(
 
         make_credential_command::create_payload(params)
     };
-    println!(
-        "- make_credential({:02})    = {:?}",
-        send_payload.len(),
-        util::to_hex_str(&send_payload)
-    );
+
+    if util::is_debug() == true {
+        println!(
+            "- make_credential({:02})    = {:?}",
+            send_payload.len(),
+            util::to_hex_str(&send_payload)
+        );
+    }
 
     // send & response
     let response_cbor = match ctaphid::ctaphid_cbor(&device, &cid, &send_payload) {
@@ -464,11 +466,14 @@ fn get_assertion_inter(
             return Err(msg);
         }
     };
-    println!(
-        "- response_cbor({:02})    = {:?}",
-        response_cbor.len(),
-        util::to_hex_str(&response_cbor)
-    );
+
+    if util::is_debug() == true {
+        println!(
+            "- response_cbor({:02})    = {:?}",
+            response_cbor.len(),
+            util::to_hex_str(&response_cbor)
+        );
+    }
 
     let ass = get_assertion_response::parse_cbor(&response_cbor).unwrap();
 
