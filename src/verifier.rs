@@ -1,3 +1,7 @@
+/*!
+Verify Attestation Assertion API
+*/
+
 use crate::get_assertion_params;
 use crate::make_credential_params;
 use crate::util;
