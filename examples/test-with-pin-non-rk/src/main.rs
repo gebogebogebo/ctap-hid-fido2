@@ -30,7 +30,7 @@ fn main() {
     att.print("Attestation");
 
     let verify_result = verifier::verify_attestation(rpid, &challenge, &att);
-    println!("- is_verify                = {:?}", verify_result.is_verify);
+    println!("- is_success               = {:?}", verify_result.is_success);
     println!(
         "- credential_id({:02})        = {:?}",
         verify_result.credential_id.len(),
@@ -42,7 +42,7 @@ fn main() {
     );
 
     println!("get_assertion_with_pin()");
-    let att = match ctap_hid_fido2::get_assertion(
+    let ass = match ctap_hid_fido2::get_assertion(
         &ctap_hid_fido2::HidParam::get_default_params(),
         rpid,
         &challenge,
@@ -59,15 +59,15 @@ fn main() {
     println!("- sign_count = {:?}", att.sign_count);
     println!(
         "- signature({:02}) = {:?}",
-        att.signature.len(),
-        util::to_hex_str(&att.signature)
+        ass.signature.len(),
+        util::to_hex_str(&ass.signature)
     );
 
     let is_verify = verifier::verify_assertion(
         rpid,
         &verify_result.credential_publickey_der,
         &challenge,
-        &att,
+        &ass,
     );
     println!("- is_verify                = {:?}", is_verify);
 
