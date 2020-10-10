@@ -1,5 +1,4 @@
 use crate::util;
-use base64;
 use byteorder::{BigEndian, WriteBytesExt};
 use num::NumCast;
 use serde_cbor::Value;
@@ -37,6 +36,7 @@ impl CoseKey {
         }
     }
 
+    #[allow(dead_code)]
     pub fn decode(cbor: &Value) -> Result<Self, String> {
         let mut cose = CoseKey::default();
 
@@ -71,6 +71,7 @@ impl CoseKey {
         Ok(cose)
     }
 
+    #[allow(dead_code)]
     pub fn encode(&self) -> Vec<u8> {
         let mut wtr = vec![];
 
@@ -92,62 +93,22 @@ impl CoseKey {
         wtr
     }
 
+    #[allow(dead_code)]
     pub fn convert_to_publickey_der(&self) -> Vec<u8> {
         let mut pub_key = vec![];
 
-        // 1.metadata(26byte)
-        let meta_header =
-            hex::decode("3059301306072a8648ce3d020106082a8648ce3d030107034200").unwrap();
-        pub_key.append(&mut meta_header.to_vec());
-
-        // 2.0x04
+        // 1.0x04
         pub_key.push(0x04);
 
-        // 3.add X
+        // 2.add X
         if let Some(Value::Bytes(bytes)) = self.parameters.get(&-2) {
             pub_key.append(&mut bytes.to_vec());
         }
-        // 4.add Y
+        // 3.add Y
         if let Some(Value::Bytes(bytes)) = self.parameters.get(&-3) {
             pub_key.append(&mut bytes.to_vec());
         }
 
         pub_key
-    }
-
-    pub fn convert_to_publickey_pem(&self) -> String {
-        let public_key_der = self.convert_to_publickey_der();
-
-        // 1.encode Base64
-        let base64_str = base64::encode(public_key_der);
-
-        // 2. /n　every 64 characters
-        let pem_base = {
-            let mut pem_base = "".to_string();
-            let mut counter = 0;
-            for c in base64_str.chars() {
-                pem_base = pem_base + &c.to_string();
-                if counter == 64 - 1 {
-                    pem_base = pem_base + &"\n".to_string();
-                    counter = 0;
-                } else {
-                    counter = counter + 1;
-                }
-            }
-            pem_base + &"\n".to_string()
-        };
-
-        // 3. Header and footer
-        let pem_data = "-----BEGIN PUBLIC KEY-----\n".to_string()
-            + &pem_base
-            + &"-----END PUBLIC KEY-----".to_string();
-
-        /*
-        println!(
-            "- public_key_pem  = {:?}",pem_data
-        );
-        */
-
-        pem_data
     }
 }

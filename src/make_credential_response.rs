@@ -105,7 +105,8 @@ fn parse_cbor_authdata(authdata: &[u8], attestation: &mut make_credential_params
         let cose_key = cose::CoseKey::decode(&cbor).unwrap();
 
         attestation.credential_publickey_der = cose_key.convert_to_publickey_der();
-        attestation.credential_publickey_pem = cose_key.convert_to_publickey_pem();
+        attestation.credential_publickey_pem =
+            util::convert_to_publickey_pem(&attestation.credential_publickey_der);
     }
 }
 

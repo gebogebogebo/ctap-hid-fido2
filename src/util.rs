@@ -17,6 +17,12 @@ pub fn print_typename<T>(_: T) {
 // pub crate
 //
 
+// for debug
+#[allow(dead_code)]
+pub(crate) fn is_debug()->bool{
+    false
+}
+
 #[allow(dead_code)]
 pub(crate) fn cbor_cast_value<T: NumCast>(value: &Value) -> Option<T> {
     if let Value::Integer(x) = value {
@@ -86,6 +92,7 @@ pub(crate) fn create_clientdata_hash(challenge: Vec<u8>) -> Vec<u8> {
     result.to_vec()
 }
 
+#[allow(dead_code)]
 pub(crate) fn get_ctap_status_message(status: u8) -> String {
     match status {
         0x00 => "0x00 CTAP1_ERR_SUCCESS Indicates successful response.".to_string(),
@@ -140,4 +147,47 @@ pub(crate) fn get_ctap_status_message(status: u8) -> String {
         0x6A => "0x6A BioPass UnKnown Error.".to_string(),
         _ => format!("0x{:X}", status),
     }
+}
+
+#[allow(dead_code)]
+pub(crate) fn convert_to_publickey_pem(public_key_der: &[u8]) -> String {
+    let mut tmp = vec![];
+
+    // 1.metadata(26byte)
+    let meta_header = hex::decode("3059301306072a8648ce3d020106082a8648ce3d030107034200").unwrap();
+    tmp.append(&mut meta_header.to_vec());
+
+    tmp.append(&mut public_key_der.to_vec());
+
+    // 1.encode Base64
+    let base64_str = base64::encode(tmp);
+
+    // 2. /n　every 64 characters
+    let pem_base = {
+        let mut pem_base = "".to_string();
+        let mut counter = 0;
+        for c in base64_str.chars() {
+            pem_base = pem_base + &c.to_string();
+            if counter == 64 - 1 {
+                pem_base = pem_base + &"\n".to_string();
+                counter = 0;
+            } else {
+                counter = counter + 1;
+            }
+        }
+        pem_base + &"\n".to_string()
+    };
+
+    // 3. Header and footer
+    let pem_data = "-----BEGIN PUBLIC KEY-----\n".to_string()
+        + &pem_base
+        + &"-----END PUBLIC KEY-----".to_string();
+
+    /*
+    println!(
+        "- public_key_pem  = {:?}",pem_data
+    );
+    */
+
+    pem_data
 }

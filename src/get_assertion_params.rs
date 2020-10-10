@@ -25,7 +25,7 @@ pub struct Assertion {
     pub user_display_name: String,
 
     pub credential_id: Vec<u8>,
-    
+
     pub auth_data: Vec<u8>,
 }
 
