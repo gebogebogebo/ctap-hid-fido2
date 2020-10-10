@@ -3,7 +3,17 @@ use crate::make_credential_params;
 use crate::util;
 use ring::digest;
 use ring::signature;
+use ring::rand::SecureRandom;
 use x509_parser::parse_x509_der;
+
+// Create Random Data
+pub fn create_challenge() -> [u8;32]
+{
+    let rnd = ring::rand::SystemRandom::new();
+    let mut tmp = [0; 32];
+    rnd.fill(&mut tmp).unwrap();
+    tmp
+}
 
 /// Attestation Verify Result
 #[derive(Debug, Default)]
