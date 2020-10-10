@@ -11,6 +11,28 @@ pub struct RkParam {
     pub user_display_name: String,
 }
 
+impl RkParam {
+    #[allow(dead_code)]
+    pub fn print(self: &RkParam, title: &str) {
+        //if util::is_debug() == false {return;}
+        
+        println!("{}", title);
+        println!(
+            "- user_id({:02})       = {:?}",
+            self.user_id.len(),
+            util::to_hex_str(&self.user_id)
+        );
+        println!(
+            "- user_name         = {:?}",
+            self.user_name
+        );
+        println!(
+            "- user_display_name = {:?}",
+            self.user_display_name
+        );
+    }
+}
+
 /// Attestation Object
 /// [https://www.w3.org/TR/webauthn/#sctn-attestation](https://www.w3.org/TR/webauthn/#sctn-attestation)
 #[derive(Debug, Default)]
