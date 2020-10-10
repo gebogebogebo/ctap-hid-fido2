@@ -110,7 +110,6 @@ pub fn parse_cbor(bytes: &[u8]) -> Result<get_assertion_params::Assertion, Strin
     if let Value::Map(map) = cbor {
         for (key, val) in &map {
             if let Value::Integer(member) = key {
-                //println!("member = {}",member);
                 parse_cbor_member(*member, val, &mut ass);
             }
         }

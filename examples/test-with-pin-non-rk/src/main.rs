@@ -10,7 +10,7 @@ fn main() {
     let challenge = b"this is challenge".to_vec();
     let pin = "1234";
 
-    println!("make_credential()");
+    println!("Register - make_credential()");
     println!("- rpid = {:?}", rpid);
 
     let att = match ctap_hid_fido2::make_credential(
@@ -21,7 +21,7 @@ fn main() {
     ) {
         Ok(result) => result,
         Err(err) => {
-            println!("- Register Error {:?}", err);
+            println!("- error {:?}", err);
             return;
         }
     };
@@ -29,19 +29,21 @@ fn main() {
     println!("- Register Success!!");
     att.print("Attestation");
 
+    println!("Verify");
     let verify_result = verifier::verify_attestation(rpid, &challenge, &att);
-    println!("- is_success               = {:?}", verify_result.is_success);
+    println!("- is_success                   = {:?}", verify_result.is_success);
     println!(
-        "- credential_id({:02})        = {:?}",
+        "- credential_id({:02})            = {:?}",
         verify_result.credential_id.len(),
         util::to_hex_str(&verify_result.credential_id)
     );
     println!(
-        "- credential_publickey_pem = {:?}",
-        verify_result.credential_publickey_pem
+        "- credential_publickey_der({:02}) = {:?}",
+        verify_result.credential_publickey_der.len(),
+        util::to_hex_str(&verify_result.credential_publickey_der)
     );
 
-    println!("get_assertion_with_pin()");
+    println!("Authenticate - get_assertion_with_pin()");
     let ass = match ctap_hid_fido2::get_assertion(
         &ctap_hid_fido2::HidParam::get_default_params(),
         rpid,
@@ -56,20 +58,16 @@ fn main() {
         }
     };
     println!("- Authenticate Success!!");
-    println!("- sign_count = {:?}", att.sign_count);
-    println!(
-        "- signature({:02}) = {:?}",
-        ass.signature.len(),
-        util::to_hex_str(&ass.signature)
-    );
+    ass.print("Assertion");
 
-    let is_verify = verifier::verify_assertion(
+    println!("Verify");
+    let is_success = verifier::verify_assertion(
         rpid,
         &verify_result.credential_publickey_der,
         &challenge,
         &ass,
     );
-    println!("- is_verify                = {:?}", is_verify);
+    println!("- is_success              = {:?}", is_success);
 
     println!("----- test-with-pin-non-rk end -----");
 }
