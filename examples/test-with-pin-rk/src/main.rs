@@ -30,7 +30,7 @@ fn main() {
         &ctap_hid_fido2::HidParam::get_default_params(),
         rpid,
         &challenge,
-        pin,
+        Some(pin),
         &rkparam
         ) {
         Ok(result) => result,
@@ -62,7 +62,7 @@ fn main() {
         &ctap_hid_fido2::HidParam::get_default_params(),
         rpid,
         &challenge,
-        pin,
+        Some(pin),
     ) {
         Ok(asss) => asss,
         Err(err) => {

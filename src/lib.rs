@@ -61,6 +61,10 @@ impl HidParam {
                 vid: 0x0483,
                 pid: 0xa2ca,
             }, // solokey
+            HidParam {
+                vid: 0x096e,
+                pid: 0x0858,
+            }, // ePass FIDO(A4B)
         ]
     }
 }
@@ -141,9 +145,9 @@ pub fn make_credential(
     hid_params: &[HidParam],
     rpid: &str,
     challenge: &[u8],
-    pin: &str,
+    pin: Option<&str>,
 ) -> Result<make_credential_params::Attestation, String> {
-    let result = make_credential_inter(hid_params, rpid, challenge, pin, false, true, None)?;
+    let result = make_credential_inter(hid_params, rpid, challenge, pin, false, None)?;
     Ok(result)
 }
 
@@ -152,11 +156,11 @@ pub fn make_credential_rk(
     hid_params: &[HidParam],
     rpid: &str,
     challenge: &[u8],
-    pin: &str,
+    pin: Option<&str>,
     rkparam: &make_credential_params::RkParam,
 ) -> Result<make_credential_params::Attestation, String> {
     let result =
-        make_credential_inter(hid_params, rpid, challenge, pin, true, true, Some(rkparam))?;
+        make_credential_inter(hid_params, rpid, challenge, pin, true, Some(rkparam))?;
     Ok(result)
 }
 
@@ -166,7 +170,7 @@ pub fn make_credential_without_pin(
     rpid: &str,
     challenge: &[u8],
 ) -> Result<make_credential_params::Attestation, String> {
-    let result = make_credential_inter(hid_params, rpid, challenge, "", false, false, None)?;
+    let result = make_credential_inter(hid_params, rpid, challenge, None, false, None)?;
     Ok(result)
 }
 
@@ -174,14 +178,21 @@ fn make_credential_inter(
     hid_params: &[HidParam],
     rpid: &str,
     challenge: &[u8],
-    pin: &str,
+    pin: Option<&str>,
     rk: bool,
-    uv: bool,
     rkparam: Option<&make_credential_params::RkParam>,
 ) -> Result<make_credential_params::Attestation, String> {
     // init
     let device = ctaphid::connect_device(hid_params, ctaphid::USAGE_PAGE_FIDO)?;
     let cid = ctaphid::ctaphid_init(&device);
+
+    // uv
+    let uv ={
+        match pin {
+            Some(_) => false,
+            None => true,
+        }
+    };
 
     let user_id = {
         if let Some(rkp) = rkparam {
@@ -204,12 +215,14 @@ fn make_credential_inter(
         //println!("- client_data_hash({:02})    = {:?}", params.client_data_hash.len(),util::to_hex_str(&params.client_data_hash));
 
         // get pintoken & create pin auth
-        if pin.len() > 0 {
-            let pin_auth =
-                get_pin_token(&device, &cid, pin.to_string())?.auth(&params.client_data_hash);
-
-            //println!("- pin_auth({:02})    = {:?}", pin_auth.len(),util::to_hex_str(&pin_auth));
-            params.pin_auth = pin_auth.to_vec();
+        if let Some(pin) = pin {
+            if pin.len() > 0 {
+                let pin_auth =
+                    get_pin_token(&device, &cid, pin.to_string())?.auth(&params.client_data_hash);
+    
+                //println!("- pin_auth({:02})    = {:?}", pin_auth.len(),util::to_hex_str(&pin_auth));
+                params.pin_auth = pin_auth.to_vec();
+            }
         }
 
         make_credential_command::create_payload(params)
@@ -245,9 +258,9 @@ pub fn get_assertion(
     rpid: &str,
     challenge: &[u8],
     credential_id: &[u8],
-    pin: &str,
+    pin: Option<&str>,
 ) -> Result<get_assertion_params::Assertion, String> {
-    let asss = get_assertion_inter(hid_params, rpid, challenge, credential_id, pin, true, true)?;
+    let asss = get_assertion_inter(hid_params, rpid, challenge, credential_id, pin, true)?;
     Ok(asss[0].clone())
 }
 
@@ -256,10 +269,10 @@ pub fn get_assertions_rk(
     hid_params: &[HidParam],
     rpid: &str,
     challenge: &[u8],
-    pin: &str,
+    pin: Option<&str>,
 ) -> Result<Vec<get_assertion_params::Assertion>, String> {
     let dmy: [u8; 0] = [];
-    let asss = get_assertion_inter(hid_params, rpid, challenge, &dmy, pin, true, true)?;
+    let asss = get_assertion_inter(hid_params, rpid, challenge, &dmy, pin, true)?;
     Ok(asss)
 }
 
@@ -268,16 +281,31 @@ fn get_assertion_inter(
     rpid: &str,
     challenge: &[u8],
     credential_id: &[u8],
-    pin: &str,
+    pin: Option<&str>,
     up: bool,
-    uv: bool,
 ) -> Result<Vec<get_assertion_params::Assertion>, String> {
     // init
     let device = ctaphid::connect_device(hid_params, ctaphid::USAGE_PAGE_FIDO)?;
     let cid = ctaphid::ctaphid_init(&device);
 
+    // uv
+    let uv ={
+        match pin {
+            Some(_) => false,
+            None => true,
+        }
+    };
+
     // pin token
-    let pin_token = get_pin_token(&device, &cid, pin.to_string())?;
+    let pin_token = {
+        if let Some(pin) = pin {
+            Some(get_pin_token(&device, &cid, pin.to_string())?)
+        }else{
+            None
+        }
+    };
+
+    //let pin_token = get_pin_token(&device, &cid, pin.to_string())?;
 
     // create cmmand
     let send_payload = {
@@ -287,9 +315,11 @@ fn get_assertion_inter(
         params.option_uv = uv;
 
         // create pin auth
-        let pin_auth = pin_token.auth(&params.client_data_hash);
-        //println!("- pin_auth({:02})    = {:?}", pin_auth.len(),util::to_hex_str(&pin_auth));
-        params.pin_auth = pin_auth.to_vec();
+        if let Some(pin_token) = pin_token {
+            let pin_auth = pin_token.auth(&params.client_data_hash);
+            //println!("- pin_auth({:02})    = {:?}", pin_auth.len(),util::to_hex_str(&pin_auth));
+            params.pin_auth = pin_auth.to_vec();
+        }
 
         get_assertion_command::create_payload(params)
     };
@@ -473,10 +503,10 @@ mod tests {
 
         let params = HidParam::get_default_params();
 
-        let att = make_credential(&params, rpid, &challenge, pin).unwrap();
+        let att = make_credential(&params, rpid, &challenge, Some(pin)).unwrap();
         att.print("Attestation");
 
-        let ass = get_assertion(&params, rpid, &challenge, &att.credential_id, pin).unwrap();
+        let ass = get_assertion(&params, rpid, &challenge, &att.credential_id, Some(pin)).unwrap();
         ass.print("Assertion");
 
         assert!(true);
