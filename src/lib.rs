@@ -34,8 +34,9 @@ pub struct HidParam {
 
 impl HidParam {
     /// Generate HID parameters for FIDO key devices
-    /// - yubikey black = vid:0x1050 , pid:0x0402
-    /// - yubikey blue = vid:0x1050 , pid:0x0120
+    /// - yubikey 4/5 u2f = vid:0x1050 , pid:0x0402
+    /// - yubikey 4/5 otp+u2f+ccid = vid:0x1050, pid:0x0407
+    /// - yubikey touch u2f = vid:0x1050 , pid:0x0120
     /// - biopass = vid:0x096E , pid:0x085D
     /// - all in pass = vid:0x096E , pid:0x0866
     /// - solokey = vid:0x0483 , pid:0xa2ca
@@ -44,11 +45,15 @@ impl HidParam {
             HidParam {
                 vid: 0x1050,
                 pid: 0x0402,
-            }, // yubikey black
+            }, // yubikey 4/5 u2f
+            HidParam {
+                vid: 0x1050,
+                pid: 0x0407,
+            }, // yubikey 4/5 otp+u2f+ccid
             HidParam {
                 vid: 0x1050,
                 pid: 0x0120,
-            }, // yubikey blue
+            }, // yubikey touch u2f
             HidParam {
                 vid: 0x096E,
                 pid: 0x085D,
@@ -159,8 +164,7 @@ pub fn make_credential_rk(
     pin: Option<&str>,
     rkparam: &make_credential_params::RkParam,
 ) -> Result<make_credential_params::Attestation, String> {
-    let result =
-        make_credential_inter(hid_params, rpid, challenge, pin, true, Some(rkparam))?;
+    let result = make_credential_inter(hid_params, rpid, challenge, pin, true, Some(rkparam))?;
     Ok(result)
 }
 
@@ -187,7 +191,7 @@ fn make_credential_inter(
     let cid = ctaphid::ctaphid_init(&device);
 
     // uv
-    let uv ={
+    let uv = {
         match pin {
             Some(_) => false,
             None => true,
@@ -219,7 +223,7 @@ fn make_credential_inter(
             if pin.len() > 0 {
                 let pin_auth =
                     get_pin_token(&device, &cid, pin.to_string())?.auth(&params.client_data_hash);
-    
+
                 //println!("- pin_auth({:02})    = {:?}", pin_auth.len(),util::to_hex_str(&pin_auth));
                 params.pin_auth = pin_auth.to_vec();
             }
@@ -289,7 +293,7 @@ fn get_assertion_inter(
     let cid = ctaphid::ctaphid_init(&device);
 
     // uv
-    let uv ={
+    let uv = {
         match pin {
             Some(_) => false,
             None => true,
@@ -300,7 +304,7 @@ fn get_assertion_inter(
     let pin_token = {
         if let Some(pin) = pin {
             Some(get_pin_token(&device, &cid, pin.to_string())?)
-        }else{
+        } else {
             None
         }
     };
@@ -389,10 +393,10 @@ fn get_pin_token(
         let send_payload =
             client_pin_command::create_payload(client_pin_command::SubCommand::GetKeyAgreement)
                 .unwrap();
-        let response_cbor = match ctaphid::ctaphid_cbor(device, cid, &send_payload){
+        let response_cbor = match ctaphid::ctaphid_cbor(device, cid, &send_payload) {
             Ok(result) => result,
             Err(err) => {
-                let msg = format!("ctaphid_cbor err = 0x{:02X}",err);
+                let msg = format!("ctaphid_cbor err = 0x{:02X}", err);
                 return Err(msg);
             }
         };
