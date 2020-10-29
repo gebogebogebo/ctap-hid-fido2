@@ -127,7 +127,7 @@ fn main() {
         &ctap_hid_fido2::HidParam::get_default_params(),
         rpid,
         &challenge,
-        pin,
+        Some(pin),
     ) {
         Ok(result) => result,
         Err(err) => {
@@ -169,7 +169,7 @@ fn main() {
         rpid,
         &challenge,
         &verify_result.credential_id,
-        pin,
+        Some(pin),
     ) {
         Ok(result) => result,
         Err(err) => {
@@ -274,7 +274,7 @@ fn main() {
         &ctap_hid_fido2::HidParam::get_default_params(),
         rpid,
         &challenge,
-        pin,
+        Some(pin),
         &rkparam
         ) {
         Ok(result) => result,
@@ -350,7 +350,7 @@ fn main() {
         &ctap_hid_fido2::HidParam::get_default_params(),
         rpid,
         &challenge,
-        pin,
+        Some(pin),
     ) {
         Ok(asss) => asss,
         Err(err) => {
@@ -391,3 +391,36 @@ Authenticate Success!!
 ----- test-with-pin-rk end -----
 ```
 
+
+
+If you want to enable UV-user verification, please specify None instead of a PIN.
+make_credential(),get_assertion()
+
+```
+    let att = match ctap_hid_fido2::make_credential(
+        &ctap_hid_fido2::HidParam::get_default_params(),
+        rpid,
+        &challenge,
+        None,
+    ) {
+        Ok(result) => result,
+        Err(err) => {
+            println!("- error {:?}", err);
+            return;
+        }
+    };
+
+    let ass = match ctap_hid_fido2::get_assertion(
+        &ctap_hid_fido2::HidParam::get_default_params(),
+        rpid,
+        &challenge,
+        &verify_result.credential_id,
+        None,
+    ) {
+        Ok(result) => result,
+        Err(err) => {
+            println!("- Authenticate Error {:?}", err);
+            return;
+        }
+    };
+```
