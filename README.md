@@ -2,6 +2,7 @@
 
 # ctap-hid-fido2
 Rust FIDO2 CTAP library
+for Mac & Win
 
 ## Description
 - Implements FIDO2 CTAP (HID)
@@ -9,6 +10,7 @@ Rust FIDO2 CTAP library
 - Confirmed operation FIDO key
   - Yubikey Blue (Security Key Series)
   - Yubikey Black (YubiKey 5)
+  - FEITIAN ePass FIDO(A4B)
   - FEITIAN BioPass K27 USB Security Key
   - FEITIAN AllinPass FIDO2 K33
   - SoloKey
