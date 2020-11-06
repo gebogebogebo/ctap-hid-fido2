@@ -4,6 +4,8 @@
 Rust FIDO2 CTAP library
 for Mac & Win
 
+Sorry, Linux is not yet supported.
+
 ## Description
 - Implements FIDO2 CTAP (HID)
 - [Client to Authenticator Protocol (CTAP)](https://fidoalliance.org/specs/fido-v2.0-ps-20190130/fido-client-to-authenticator-protocol-v2.0-ps-20190130.html)
