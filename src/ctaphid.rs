@@ -1,6 +1,6 @@
 use hidapi::HidApi;
 use std::{thread, time};
-//use crate::util;
+use crate::util;
 
 pub const USAGE_PAGE_FIDO: u16 = 0xf1d0;
 
@@ -438,7 +438,7 @@ pub fn ctaphid_cbor(
         println!("{}", util::to_hex_str(&cbor_data));
         println!("##");
         */
-
+        
         Ok(cbor_data)
     }
 }

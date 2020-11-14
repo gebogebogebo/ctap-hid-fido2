@@ -70,6 +70,10 @@ impl HidParam {
                 vid: 0x096e,
                 pid: 0x0858,
             }, // ePass FIDO(A4B)
+            HidParam {
+                vid: 0x20a0,
+                pid: 0x42b1,
+            }, // Nitrokey FIDO2 2.0.0
         ]
     }
 }
