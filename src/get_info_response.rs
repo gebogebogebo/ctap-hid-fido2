@@ -55,7 +55,9 @@ fn parse_cbor_member(member: i128, val: &Value, info: &mut Info) {
                 }
             }
         }
-        _ => println!("- anything error"),
+        _ => {
+            println!("parse_cbor_member - unknown info {:?}",member)
+        }
     }
 }
 
