@@ -14,6 +14,9 @@
 		},
 		{
 			"path": "examples/test-with-pin-rk"
+		},
+		{
+			"path": "examples/nitro"
 		}
 	],
 	"settings": {}

@@ -445,6 +445,14 @@ fn get_pin_token(
     }
 }
 
+/// Nitrokey Custom GETVERSION
+pub fn nitro_get_version(hid_params: &[HidParam]) -> Result<(), &'static str> {
+    let device = ctaphid::connect_device(hid_params, ctaphid::USAGE_PAGE_FIDO)?;
+    let cid = ctaphid::ctaphid_init(&device);
+    //ctaphid::ctaphid_wink(&device, &cid);
+    Ok(())
+}
+
 //
 // cargo test -- --test-threads=1
 //
