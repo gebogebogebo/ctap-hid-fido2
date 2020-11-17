@@ -24,7 +24,7 @@ const CTAPHID_KEEPALIVE: u8 = CTAP_FRAME_INIT | 0x3B;
 //#define CTAPHID_ENTERBOOT       (TYPE_INIT | 0x51)
 //#define CTAPHID_ENTERSTBOOT     (TYPE_INIT | 0x52)
 //#define CTAPHID_REBOOT          (TYPE_INIT | 0x53)
-//#define CTAPHID_GETRNG          (TYPE_INIT | 0x60)
+const CTAPHID_GETRNG: u8 = CTAP_FRAME_INIT | 0x60;
 const CTAPHID_GETVERSION: u8 = CTAP_FRAME_INIT | 0x61;
 //#define CTAPHID_LOADKEY         (TYPE_INIT | 0x62)
 // reserved for debug, not implemented except for HACKER and DEBUG_LEVEl > 0
@@ -471,6 +471,15 @@ pub fn ctaphid_nitro_get_version(device: &hidapi::HidDevice, cid: &[u8])
     }
     let version = format!("{}.{}.{}.{}",version[0],version[1],version[2],version[3]);
     Ok(version)
+}
+
+// GETRNG
+pub fn ctaphid_nitro_get_rng(device: &hidapi::HidDevice, cid: &[u8])
+-> Result<String, u8> {
+    match ctaphid_nitro_send_and_response(device,cid,CTAPHID_GETRNG){
+        Ok(result) => Ok(util::to_hex_str(&result)),
+        Err(err) => Err(err),
+    }
 }
 
 // GETSTATUS

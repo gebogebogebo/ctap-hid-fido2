@@ -12,5 +12,12 @@ fn main() {
         Err(err) => println!("status = {}",err),
     };
     println!("----- Nitrokey GETSTATUS end -----");
+
+    println!("----- Nitrokey GETRNG start -----");
+    let result = match ctap_hid_fido2::nitro_get_rng(&ctap_hid_fido2::HidParam::get_default_params()){
+        Ok(rng) => println!("rng = {}",rng),
+        Err(err) => println!("rng = {}",err),
+    };
+    println!("----- Nitrokey GETRNG end -----");
     
 }
