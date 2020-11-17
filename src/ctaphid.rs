@@ -460,7 +460,8 @@ pub fn ctaphid_cbor(
 // GETVERSION
 pub fn ctaphid_nitro_get_version(device: &hidapi::HidDevice, cid: &[u8])
 -> Result<String, u8> {
-    let version = match ctaphid_nitro_send_and_response(device,cid,CTAPHID_GETVERSION){
+    let payload: Vec<u8> = Vec::new();
+    let version = match ctaphid_nitro_send_and_response(device,cid,CTAPHID_GETVERSION,&payload){
         Ok(version) => version,
         Err(err) => return Err(err),
     };
@@ -474,9 +475,10 @@ pub fn ctaphid_nitro_get_version(device: &hidapi::HidDevice, cid: &[u8])
 }
 
 // GETRNG
-pub fn ctaphid_nitro_get_rng(device: &hidapi::HidDevice, cid: &[u8])
+pub fn ctaphid_nitro_get_rng(device: &hidapi::HidDevice, cid: &[u8],rng_byte:u8)
 -> Result<String, u8> {
-    match ctaphid_nitro_send_and_response(device,cid,CTAPHID_GETRNG){
+    let payload: Vec<u8> = vec![rng_byte];
+    match ctaphid_nitro_send_and_response(device,cid,CTAPHID_GETRNG,&payload){
         Ok(result) => Ok(util::to_hex_str(&result)),
         Err(err) => Err(err),
     }
@@ -485,81 +487,42 @@ pub fn ctaphid_nitro_get_rng(device: &hidapi::HidDevice, cid: &[u8])
 // GETSTATUS
 pub fn ctaphid_nitro_get_status(device: &hidapi::HidDevice, cid: &[u8])
 -> Result<String, u8> {
-    match ctaphid_nitro_send_and_response(device,cid,CTAPHID_GETSTATUS){
+    let payload: Vec<u8> = vec![8];
+    match ctaphid_nitro_send_and_response(device,cid,CTAPHID_GETSTATUS,&payload){
         Ok(result) => Ok(util::to_hex_str(&result)),
         Err(err) => Err(err),
     }
 }
 
-pub fn ctaphid_nitro_send_and_response(device: &hidapi::HidDevice, cid: &[u8],command: u8)
+pub fn ctaphid_nitro_send_and_response(device: &hidapi::HidDevice, cid: &[u8],command: u8,payload: &Vec<u8>)
 -> Result<Vec<u8>, u8> {
-    let cmd: [u8; 65] = [
-        0x00,
-        cid[0],
-        cid[1],
-        cid[2],
-        cid[3],
-        command,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-    ];
+
+    let mut cmd: Vec<u8> = vec![0; PACKET_SIZE];
+
+    // Report ID
+    // The first byte of data must contain the Report ID.
+    // For devices which only support a single report, this must be set to 0x0.
+    cmd[0] = 0x00;
+
+    // cid
+    cmd[1] = cid[0];
+    cmd[2] = cid[1];
+    cmd[3] = cid[2];
+    cmd[4] = cid[3];
+
+    // Command identifier (bit 7 always set)
+    cmd[5] = command;
+
+    if payload.len() > 0{
+        // High part of payload length
+        cmd[6] = (((payload.len() as u16) >> 8) as u8) & 0xff;
+        // Low part of payload length
+        cmd[7] = (payload.len() as u8) & 0xff;
+
+        for counter in 0..payload.len() {
+            cmd[8 + counter] = payload[counter];
+        }
+    }
 
     // Write data to device
     let _res = device.write(&cmd).unwrap();
