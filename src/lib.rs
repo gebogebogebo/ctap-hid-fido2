@@ -461,6 +461,22 @@ pub fn nitro_get_version(hid_params: &[HidParam]) -> Result<String, String> {
     Ok(version)
 }
 
+// Nitrokey Custom GETRNG
+pub fn nitro_get_rng(hid_params: &[HidParam]) -> Result<String, String> {
+    let device = ctaphid::connect_device(hid_params, ctaphid::USAGE_PAGE_FIDO)?;
+    let cid = ctaphid::ctaphid_init(&device);
+
+    let status = match ctaphid::ctaphid_nitro_get_rng(&device, &cid){
+        Ok(result) => result,
+        Err(err) => {
+            let msg = format!("nitro_get_rng err = 0x{:02X}", err);
+            return Err(msg);
+        }
+    };
+
+    Ok(status)
+}
+
 // Nitrokey Custom GETSTATUS
 pub fn nitro_get_status(hid_params: &[HidParam]) -> Result<String, String> {
     let device = ctaphid::connect_device(hid_params, ctaphid::USAGE_PAGE_FIDO)?;
