@@ -486,10 +486,10 @@ pub fn ctaphid_nitro_get_rng(device: &hidapi::HidDevice, cid: &[u8],rng_byte:u8)
 
 // GETSTATUS
 pub fn ctaphid_nitro_get_status(device: &hidapi::HidDevice, cid: &[u8])
--> Result<String, u8> {
+-> Result<Vec<u8>, u8> {
     let payload: Vec<u8> = vec![8];
     match ctaphid_nitro_send_and_response(device,cid,CTAPHID_GETSTATUS,&payload){
-        Ok(result) => Ok(util::to_hex_str(&result)),
+        Ok(result) => Ok(result),
         Err(err) => Err(err),
     }
 }

@@ -10,7 +10,7 @@ fn main() {
     println!("----- Nitrokey GETSTATUS start -----");
     // get 8byte payload
     match ctap_hid_fido2::nitro_get_status(&ctap_hid_fido2::HidParam::get_default_params()){
-        Ok(status) => println!("status = {}",status),
+        Ok(status) => status.print("status"),
         Err(err) => println!("status = {}",err),
     };
     println!("----- Nitrokey GETSTATUS end -----");
