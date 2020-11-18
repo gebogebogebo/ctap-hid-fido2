@@ -23,6 +23,7 @@ mod pintoken;
 mod ss;
 pub mod util;
 pub mod verifier;
+pub mod nitro_get_status_params;
 
 /// HID device vendor ID , product ID
 pub struct HidParam {
@@ -478,7 +479,7 @@ pub fn nitro_get_rng(hid_params: &[HidParam],rng_byte:u8) -> Result<String, Stri
 }
 
 // Nitrokey Custom GETSTATUS
-pub fn nitro_get_status(hid_params: &[HidParam]) -> Result<String, String> {
+pub fn nitro_get_status(hid_params: &[HidParam]) -> Result<nitro_get_status_params::NitrokeyStatus, String> {
     let device = ctaphid::connect_device(hid_params, ctaphid::USAGE_PAGE_FIDO)?;
     let cid = ctaphid::ctaphid_init(&device);
 
@@ -490,7 +491,21 @@ pub fn nitro_get_status(hid_params: &[HidParam]) -> Result<String, String> {
         }
     };
 
-    Ok(status)
+    let mut ret = nitro_get_status_params::NitrokeyStatus::default();
+    if status[0] == 1{
+        ret.is_button_pressed_raw = true;
+    }
+    ret.button_state = status[1];
+    ret.last_button_cleared_time_delta = status[2];
+    ret.last_button_pushed_time_delta = status[3];
+    if status[4] == 1{
+        ret.led_is_blinking = true;
+    }
+    ret.u2f_ms_clear_button_period = status[5];
+    ret.u2f_ms_init_button_period = status[6];
+    ret.button_min_press_t_ms = status[7];
+
+    Ok(ret)
 }
 
 //
