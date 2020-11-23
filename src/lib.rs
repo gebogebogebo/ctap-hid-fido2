@@ -23,7 +23,7 @@ mod pintoken;
 mod ss;
 pub mod util;
 pub mod verifier;
-pub mod nitro_get_status_params;
+pub mod nitrokey;
 
 /// HID device vendor ID , product ID
 pub struct HidParam {
@@ -444,68 +444,6 @@ fn get_pin_token(
     } else {
         Err("pin not set".to_string())
     }
-}
-
-// Nitrokey Custom GETVERSION
-pub fn nitro_get_version(hid_params: &[HidParam]) -> Result<String, String> {
-    let device = ctaphid::connect_device(hid_params, ctaphid::USAGE_PAGE_FIDO)?;
-    let cid = ctaphid::ctaphid_init(&device);
-
-    let version = match ctaphid::ctaphid_nitro_get_version(&device, &cid){
-        Ok(result) => result,
-        Err(err) => {
-            let msg = format!("nitro_get_version err = 0x{:02X}", err);
-            return Err(msg);
-        }
-    };
-
-    Ok(version)
-}
-
-// Nitrokey Custom GETRNG
-pub fn nitro_get_rng(hid_params: &[HidParam],rng_byte:u8) -> Result<String, String> {
-    let device = ctaphid::connect_device(hid_params, ctaphid::USAGE_PAGE_FIDO)?;
-    let cid = ctaphid::ctaphid_init(&device);
-
-    let status = match ctaphid::ctaphid_nitro_get_rng(&device, &cid,rng_byte){
-        Ok(result) => result,
-        Err(err) => {
-            let msg = format!("nitro_get_rng err = 0x{:02X}", err);
-            return Err(msg);
-        }
-    };
-
-    Ok(status)
-}
-
-// Nitrokey Custom GETSTATUS
-pub fn nitro_get_status(hid_params: &[HidParam]) -> Result<nitro_get_status_params::NitrokeyStatus, String> {
-    let device = ctaphid::connect_device(hid_params, ctaphid::USAGE_PAGE_FIDO)?;
-    let cid = ctaphid::ctaphid_init(&device);
-
-    let status = match ctaphid::ctaphid_nitro_get_status(&device, &cid){
-        Ok(result) => result,
-        Err(err) => {
-            let msg = format!("nitro_get_status err = 0x{:02X}", err);
-            return Err(msg);
-        }
-    };
-
-    let mut ret = nitro_get_status_params::NitrokeyStatus::default();
-    if status[0] == 1{
-        ret.is_button_pressed_raw = true;
-    }
-    ret.button_state = status[1];
-    ret.last_button_cleared_time_delta = status[2];
-    ret.last_button_pushed_time_delta = status[3];
-    if status[4] == 1{
-        ret.led_is_blinking = true;
-    }
-    ret.u2f_ms_clear_button_period = status[5];
-    ret.u2f_ms_init_button_period = status[6];
-    ret.button_min_press_t_ms = status[7];
-
-    Ok(ret)
 }
 
 //
