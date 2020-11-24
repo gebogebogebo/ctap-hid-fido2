@@ -1,4 +1,5 @@
 use crate::ctaphid;
+use crate::ctapihd_nitro;
 
 #[derive(Debug)]
 pub enum ButtonStateT{
@@ -53,7 +54,7 @@ pub fn get_version(hid_params: &[crate::HidParam]) -> Result<String, String> {
     let device = ctaphid::connect_device(hid_params, ctaphid::USAGE_PAGE_FIDO)?;
     let cid = ctaphid::ctaphid_init(&device);
 
-    let version = match ctaphid::ctaphid_nitro_get_version(&device, &cid){
+    let version = match ctapihd_nitro::ctaphid_nitro_get_version(&device, &cid){
         Ok(result) => result,
         Err(err) => {
             let msg = format!("nitrokey::get_version err = 0x{:02X}", err);
@@ -69,7 +70,7 @@ pub fn get_rng(hid_params: &[crate::HidParam],rng_byte:u8) -> Result<String, Str
     let device = ctaphid::connect_device(hid_params, ctaphid::USAGE_PAGE_FIDO)?;
     let cid = ctaphid::ctaphid_init(&device);
 
-    let status = match ctaphid::ctaphid_nitro_get_rng(&device, &cid,rng_byte){
+    let status = match ctapihd_nitro::ctaphid_nitro_get_rng(&device, &cid,rng_byte){
         Ok(result) => result,
         Err(err) => {
             let msg = format!("nitrokey::get_rng err = 0x{:02X}", err);
@@ -85,7 +86,7 @@ pub fn get_status(hid_params: &[crate::HidParam]) -> Result<NitrokeyStatus, Stri
     let device = ctaphid::connect_device(hid_params, ctaphid::USAGE_PAGE_FIDO)?;
     let cid = ctaphid::ctaphid_init(&device);
 
-    let status = match ctaphid::ctaphid_nitro_get_status(&device, &cid){
+    let status = match ctapihd_nitro::ctaphid_nitro_get_status(&device, &cid){
         Ok(result) => result,
         Err(err) => {
             let msg = format!("nitrokey::get_status err = 0x{:02X}", err);

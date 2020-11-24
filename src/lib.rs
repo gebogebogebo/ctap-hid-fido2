@@ -24,6 +24,7 @@ mod ss;
 pub mod util;
 pub mod verifier;
 pub mod nitrokey;
+mod ctapihd_nitro;
 
 /// HID device vendor ID , product ID
 pub struct HidParam {
