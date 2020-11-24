@@ -2,22 +2,21 @@ use crate::ctaphid;
 
 #[derive(Debug)]
 pub enum ButtonStateT{
-	BST_INITIALIZING,			// wait for the charge to settle down
-	BST_INITIALIZING_READY_TO_CLEAR,	// ready for clearing
-	BST_META_READY_TO_USE,			// META state (never used), to ease testing,
-								// if button is ready (e.g. >READY) or not (<READY)
-	BST_UNPRESSED,				// ready to use
-	BST_PRESSED_RECENTLY,		// touch registration is started
-	BST_PRESSED_REGISTERED,		// touch registered, normal press period
-	BST_PRESSED_REGISTERED_TRANSITIONAL,		// touch registered, normal press, but timeouted
-	BST_PRESSED_REGISTERED_EXT, // touch registered, extended press period
-	BST_PRESSED_REGISTERED_EXT_INVALID, // touch registered, extended press period, invalidated
-    BST_PRESSED_CONSUMED_ACTIVE,		// BST_PRESSED_CONSUMED, but accepts requests
-	BST_PRESSED_CONSUMED,		// touch registered and consumed, button still not released, does not accept requests
-	BST_MAX_NUM,
+	BstInitializing,			// wait for the charge to settle down
+	BstInitializingReadyToClear,	// ready for clearing
+	BstMetaReadyToUse,			// META state (never used), to ease testing,if button is ready (e.g. >READY) or not (<READY)
+	BstUnpressed,				// ready to use
+	BstPressedRecently,		// touch registration is started
+	BstPressedRegistered,		// touch registered, normal press period
+	BstPressedRegisteredTransitional,		// touch registered, normal press, but timeouted
+	BstPressedRegisteredExt, // touch registered, extended press period
+	BstPressedRegisteredExtInvalid, // touch registered, extended press period, invalidated
+    BstPressedConsumedActive,		// BST_PRESSED_CONSUMED, but accepts requests
+	BstPressedConsumed,		// touch registered and consumed, button still not released, does not accept requests
+	BstMaxNum,
 }
 impl Default for ButtonStateT {
-    fn default() -> Self { ButtonStateT::BST_INITIALIZING }
+    fn default() -> Self { ButtonStateT::BstInitializing }
 }
 
 #[derive(Debug, Default)]
@@ -39,6 +38,7 @@ impl NitrokeyStatus {
         println!("{}", title);
         println!("- is_button_pressed_raw          = {:?}", self.is_button_pressed_raw);
         println!("- button_state                   = {:?}", self.button_state);
+        println!("- button_state                   = {:?}", self.button_state_t);
         println!("- last_button_cleared_time_delta = {:?}", self.last_button_cleared_time_delta);
         println!("- last_button_pushed_time_delta  = {:?}", self.last_button_pushed_time_delta);
         println!("- led_is_blinking                = {:?}", self.led_is_blinking);
@@ -98,6 +98,21 @@ pub fn get_status(hid_params: &[crate::HidParam]) -> Result<NitrokeyStatus, Stri
         ret.is_button_pressed_raw = true;
     }
     ret.button_state = status[1];
+    ret.button_state_t = match ret.button_state {
+        0 => ButtonStateT::BstInitializing,
+        1 => ButtonStateT::BstInitializingReadyToClear,
+        2 => ButtonStateT::BstMetaReadyToUse,
+        3 => ButtonStateT::BstUnpressed,
+        4 => ButtonStateT::BstPressedRecently,
+        5 => ButtonStateT::BstPressedRegistered,
+        6 => ButtonStateT::BstPressedRegisteredTransitional,
+        7 => ButtonStateT::BstPressedRegisteredExt,
+        8 => ButtonStateT::BstPressedRegisteredExtInvalid,
+        9 => ButtonStateT::BstPressedConsumedActive,
+        10 => ButtonStateT::BstPressedConsumed,
+        _ => ButtonStateT::BstMaxNum,
+    };
+
     ret.last_button_cleared_time_delta = status[2];
     ret.last_button_pushed_time_delta = status[3];
     if status[4] == 1{
