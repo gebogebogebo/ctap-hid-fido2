@@ -400,7 +400,7 @@ Authenticate Success!!
 If you want to enable UV-user verification, please specify None instead of a PIN.
 make_credential(),get_assertion()
 
-```
+```rust
     let att = match ctap_hid_fido2::make_credential(
         &ctap_hid_fido2::HidParam::get_default_params(),
         rpid,
@@ -428,3 +428,94 @@ make_credential(),get_assertion()
         }
     };
 ```
+
+
+
+## Nitrokey Custom Command
+
+for Nitrokey FIDO2 only.
+
+
+
+#### nitrokey::get_vertion()
+Query the firmware version of Nitrokey.
+
+```rust
+fn main() {
+    println!("----- Nitrokey GETVERSION start -----");
+    // get 4byte payload "2001" -> ver 2.0.0.1
+    match ctap_hid_fido2::nitrokey::get_version(&ctap_hid_fido2::HidParam::get_default_params()) {
+        Ok(version) => println!("version = {}", version),
+        Err(err) => println!("version = {}", err),
+    };
+    println!("----- Nitrokey GETVERSION end -----");
+}
+```
+
+**console**
+
+``` sh
+----- Nitrokey GETVERSION start -----
+version = 2.2.0.1
+----- Nitrokey GETVERSION end -----
+```
+
+
+
+#### nitrokey::get_status()
+Query the Status of Nitrokey.
+
+```rust
+fn main() {
+    println!("----- Nitrokey GETSTATUS start -----");
+    match ctap_hid_fido2::nitrokey::get_status(&ctap_hid_fido2::HidParam::get_default_params()) {
+        Ok(status) => status.print("status"),
+        Err(err) => println!("status = {}", err),
+    };
+    println!("----- Nitrokey GETSTATUS end -----");
+}
+```
+
+**console**
+
+```sh
+----- Nitrokey GETSTATUS start -----
+status
+- is_button_pressed_raw          = false
+- button_state                   = 3
+- button_state                   = BstUnpressed
+- last_button_cleared_time_delta = 131
+- last_button_pushed_time_delta  = 131
+- led_is_blinking                = false
+- u2f_ms_clear_button_period     = 200
+- u2f_ms_init_button_period      = 5
+- button_min_press_t_ms          = 100
+----- Nitrokey GETSTATUS end -----
+```
+
+
+
+#### nitrokey::get_rng()
+
+Generate a random number.
+
+```rust
+fn main() {
+    println!("----- Nitrokey GETRNG start -----");
+    // get 8 byte rundom data
+    match ctap_hid_fido2::nitrokey::get_rng(&ctap_hid_fido2::HidParam::get_default_params(), 8) {
+        Ok(rng) => println!("rng = {}", rng),
+        Err(err) => println!("rng = {}", err),
+    };
+    println!("----- Nitrokey GETRNG end -----");
+}
+```
+
+**console**
+
+```sh
+----- Nitrokey GETRNG start -----
+rng = D93C4D39DAA8FEF8
+----- Nitrokey GETRNG end -----
+```
+
