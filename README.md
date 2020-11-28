@@ -16,6 +16,7 @@ Sorry, Linux is not yet supported.
   - FEITIAN BioPass K27 USB Security Key
   - FEITIAN AllinPass FIDO2 K33
   - SoloKey
+  - Nitrokey FIDO2
 - Rust Version
   - cargo 1.45.1 (f242df6ed 2020-07-22)
   - rustc 1.45.2 (d3fb005a3 2020-07-31)
