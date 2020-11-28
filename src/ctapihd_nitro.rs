@@ -15,45 +15,52 @@ const CTAPHID_GETSTATUS: u8 = ctaphid::CTAP_FRAME_INIT | 0x71;
 
 // Nitrokey
 // GETVERSION
-pub fn ctaphid_nitro_get_version(device: &hidapi::HidDevice, cid: &[u8])
--> Result<String, u8> {
+pub fn ctaphid_nitro_get_version(device: &hidapi::HidDevice, cid: &[u8]) -> Result<String, u8> {
     let payload: Vec<u8> = Vec::new();
-    let version = match ctaphid_nitro_send_and_response(device,cid,CTAPHID_GETVERSION,&payload){
+    let version = match ctaphid_nitro_send_and_response(device, cid, CTAPHID_GETVERSION, &payload) {
         Ok(version) => version,
         Err(err) => return Err(err),
     };
 
     // version - 4byte
-    if version.len() != 4{
+    if version.len() != 4 {
         return Err(0x02);
     }
-    let version = format!("{}.{}.{}.{}",version[0],version[1],version[2],version[3]);
+    let version = format!(
+        "{}.{}.{}.{}",
+        version[0], version[1], version[2], version[3]
+    );
     Ok(version)
 }
 
 // GETRNG
-pub fn ctaphid_nitro_get_rng(device: &hidapi::HidDevice, cid: &[u8],rng_byte:u8)
--> Result<String, u8> {
+pub fn ctaphid_nitro_get_rng(
+    device: &hidapi::HidDevice,
+    cid: &[u8],
+    rng_byte: u8,
+) -> Result<String, u8> {
     let payload: Vec<u8> = vec![rng_byte];
-    match ctaphid_nitro_send_and_response(device,cid,CTAPHID_GETRNG,&payload){
+    match ctaphid_nitro_send_and_response(device, cid, CTAPHID_GETRNG, &payload) {
         Ok(result) => Ok(util::to_hex_str(&result)),
         Err(err) => Err(err),
     }
 }
 
 // GETSTATUS
-pub fn ctaphid_nitro_get_status(device: &hidapi::HidDevice, cid: &[u8])
--> Result<Vec<u8>, u8> {
+pub fn ctaphid_nitro_get_status(device: &hidapi::HidDevice, cid: &[u8]) -> Result<Vec<u8>, u8> {
     let payload: Vec<u8> = vec![8];
-    match ctaphid_nitro_send_and_response(device,cid,CTAPHID_GETSTATUS,&payload){
+    match ctaphid_nitro_send_and_response(device, cid, CTAPHID_GETSTATUS, &payload) {
         Ok(result) => Ok(result),
         Err(err) => Err(err),
     }
 }
 
-pub fn ctaphid_nitro_send_and_response(device: &hidapi::HidDevice, cid: &[u8],command: u8,payload: &Vec<u8>)
--> Result<Vec<u8>, u8> {
-
+pub fn ctaphid_nitro_send_and_response(
+    device: &hidapi::HidDevice,
+    cid: &[u8],
+    command: u8,
+    payload: &Vec<u8>,
+) -> Result<Vec<u8>, u8> {
     let mut cmd: Vec<u8> = vec![0; ctaphid::PACKET_SIZE];
 
     // Report ID
@@ -70,7 +77,7 @@ pub fn ctaphid_nitro_send_and_response(device: &hidapi::HidDevice, cid: &[u8],co
     // Command identifier (bit 7 always set)
     cmd[5] = command;
 
-    if payload.len() > 0{
+    if payload.len() > 0 {
         // High part of payload length
         cmd[6] = (((payload.len() as u16) >> 8) as u8) & 0xff;
         // Low part of payload length
@@ -98,7 +105,7 @@ pub fn ctaphid_nitro_send_and_response(device: &hidapi::HidDevice, cid: &[u8],co
     */
 
     let st = ctaphid_cbor_responce_nitro(&buf);
-    if st.0 != command{
+    if st.0 != command {
         return Err(0x01);
     }
 
@@ -115,7 +122,7 @@ fn ctaphid_cbor_responce_nitro(packet: &[u8; 64]) -> (u8, Vec<u8>) {
     let payload_size: usize = (((packet[5] as u16) << 8) + packet[6] as u16).into();
 
     // dataを抽出
-    let data = &packet[7..7+payload_size];
+    let data = &packet[7..7 + payload_size];
 
     (packet[4], data.to_vec())
 }

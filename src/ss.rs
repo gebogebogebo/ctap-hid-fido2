@@ -18,7 +18,6 @@ pub struct SharedSecret {
 
 impl SharedSecret {
     pub fn new(peer_key: &cose::CoseKey) -> Result<Self, String> {
-
         let rng = rand::SystemRandom::new();
         let private =
             agreement::EphemeralPrivateKey::generate(&agreement::ECDH_P256, &rng).unwrap();

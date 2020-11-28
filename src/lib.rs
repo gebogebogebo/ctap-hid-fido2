@@ -9,6 +9,7 @@ mod client_pin_command;
 mod client_pin_response;
 mod cose;
 mod ctaphid;
+mod ctapihd_nitro;
 mod get_assertion_command;
 pub mod get_assertion_params;
 mod get_assertion_response;
@@ -18,13 +19,12 @@ mod get_next_assertion_command;
 mod make_credential_command;
 pub mod make_credential_params;
 mod make_credential_response;
+pub mod nitrokey;
 mod p256;
 mod pintoken;
 mod ss;
 pub mod util;
 pub mod verifier;
-pub mod nitrokey;
-mod ctapihd_nitro;
 
 /// HID device vendor ID , product ID
 pub struct HidParam {

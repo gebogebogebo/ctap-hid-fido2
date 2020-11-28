@@ -431,7 +431,7 @@ make_credential(),get_assertion()
 
 
 
-## Nitrokey Custom Command
+## Nitrokey Custom Commands
 
 for Nitrokey FIDO2 only.
 
