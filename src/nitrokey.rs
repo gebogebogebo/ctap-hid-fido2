@@ -1,25 +1,44 @@
+/*!
+## Nitrokey Custom Commands
+for Nitrokey FIDO2 only.
+*/
+
 use crate::ctaphid;
 use crate::ctapihd_nitro;
 
 #[derive(Debug)]
-pub enum ButtonStateT{
-	BstInitializing,			// wait for the charge to settle down
-	BstInitializingReadyToClear,	// ready for clearing
-	BstMetaReadyToUse,			// META state (never used), to ease testing,if button is ready (e.g. >READY) or not (<READY)
-	BstUnpressed,				// ready to use
-	BstPressedRecently,		// touch registration is started
-	BstPressedRegistered,		// touch registered, normal press period
-	BstPressedRegisteredTransitional,		// touch registered, normal press, but timeouted
-	BstPressedRegisteredExt, // touch registered, extended press period
-	BstPressedRegisteredExtInvalid, // touch registered, extended press period, invalidated
-    BstPressedConsumedActive,		// BST_PRESSED_CONSUMED, but accepts requests
-	BstPressedConsumed,		// touch registered and consumed, button still not released, does not accept requests
-	BstMaxNum,
+pub enum ButtonStateT {
+    /// wait for the charge to settle down
+    BstInitializing,
+    /// ready for clearing
+    BstInitializingReadyToClear,
+    /// META state (never used), to ease testing,if button is ready (e.g. >READY) or not (<READY)
+    BstMetaReadyToUse, 
+    /// ready to use
+    BstUnpressed,
+    /// touch registration is started
+    BstPressedRecently,
+    /// touch registered, normal press period
+    BstPressedRegistered,
+    /// touch registered, normal press, but timeouted
+    BstPressedRegisteredTransitional,
+    /// touch registered, extended press period
+    BstPressedRegisteredExt,
+    /// touch registered, extended press period, invalidated
+    BstPressedRegisteredExtInvalid,
+    /// BST_PRESSED_CONSUMED, but accepts requests
+    BstPressedConsumedActive,
+    /// touch registered and consumed, button still not released, does not accept requests
+    BstPressedConsumed,
+    BstMaxNum,
 }
 impl Default for ButtonStateT {
-    fn default() -> Self { ButtonStateT::BstInitializing }
+    fn default() -> Self {
+        ButtonStateT::BstInitializing
+    }
 }
 
+/// Result of get_status().
 #[derive(Debug, Default)]
 pub struct NitrokeyStatus {
     pub is_button_pressed_raw: bool,
@@ -37,24 +56,48 @@ impl NitrokeyStatus {
     #[allow(dead_code)]
     pub fn print(self: &NitrokeyStatus, title: &str) {
         println!("{}", title);
-        println!("- is_button_pressed_raw          = {:?}", self.is_button_pressed_raw);
+        println!(
+            "- is_button_pressed_raw          = {:?}",
+            self.is_button_pressed_raw
+        );
         println!("- button_state                   = {:?}", self.button_state);
-        println!("- button_state                   = {:?}", self.button_state_t);
-        println!("- last_button_cleared_time_delta = {:?}", self.last_button_cleared_time_delta);
-        println!("- last_button_pushed_time_delta  = {:?}", self.last_button_pushed_time_delta);
-        println!("- led_is_blinking                = {:?}", self.led_is_blinking);
-        println!("- u2f_ms_clear_button_period     = {:?}", self.u2f_ms_clear_button_period);
-        println!("- u2f_ms_init_button_period      = {:?}", self.u2f_ms_init_button_period);
-        println!("- button_min_press_t_ms          = {:?}", self.button_min_press_t_ms);
+        println!(
+            "- button_state                   = {:?}",
+            self.button_state_t
+        );
+        println!(
+            "- last_button_cleared_time_delta = {:?}",
+            self.last_button_cleared_time_delta
+        );
+        println!(
+            "- last_button_pushed_time_delta  = {:?}",
+            self.last_button_pushed_time_delta
+        );
+        println!(
+            "- led_is_blinking                = {:?}",
+            self.led_is_blinking
+        );
+        println!(
+            "- u2f_ms_clear_button_period     = {:?}",
+            self.u2f_ms_clear_button_period
+        );
+        println!(
+            "- u2f_ms_init_button_period      = {:?}",
+            self.u2f_ms_init_button_period
+        );
+        println!(
+            "- button_min_press_t_ms          = {:?}",
+            self.button_min_press_t_ms
+        );
     }
 }
 
-/// Nitrokey Custom GETVERSION
+/// Query the firmware version of Nitrokey.
 pub fn get_version(hid_params: &[crate::HidParam]) -> Result<String, String> {
     let device = ctaphid::connect_device(hid_params, ctaphid::USAGE_PAGE_FIDO)?;
     let cid = ctaphid::ctaphid_init(&device);
 
-    let version = match ctapihd_nitro::ctaphid_nitro_get_version(&device, &cid){
+    let version = match ctapihd_nitro::ctaphid_nitro_get_version(&device, &cid) {
         Ok(result) => result,
         Err(err) => {
             let msg = format!("nitrokey::get_version err = 0x{:02X}", err);
@@ -65,12 +108,13 @@ pub fn get_version(hid_params: &[crate::HidParam]) -> Result<String, String> {
     Ok(version)
 }
 
-/// Nitrokey Custom GETRNG
-pub fn get_rng(hid_params: &[crate::HidParam],rng_byte:u8) -> Result<String, String> {
+/// Generate a random number.
+/// - rng_byte : The number of digits of random numbers to generate.
+pub fn get_rng(hid_params: &[crate::HidParam],rng_byte: u8) -> Result<String, String> {
     let device = ctaphid::connect_device(hid_params, ctaphid::USAGE_PAGE_FIDO)?;
     let cid = ctaphid::ctaphid_init(&device);
 
-    let status = match ctapihd_nitro::ctaphid_nitro_get_rng(&device, &cid,rng_byte){
+    let status = match ctapihd_nitro::ctaphid_nitro_get_rng(&device, &cid, rng_byte) {
         Ok(result) => result,
         Err(err) => {
             let msg = format!("nitrokey::get_rng err = 0x{:02X}", err);
@@ -81,12 +125,12 @@ pub fn get_rng(hid_params: &[crate::HidParam],rng_byte:u8) -> Result<String, Str
     Ok(status)
 }
 
-/// Nitrokey Custom GETSTATUS
+/// Query the Status of Nitrokey.
 pub fn get_status(hid_params: &[crate::HidParam]) -> Result<NitrokeyStatus, String> {
     let device = ctaphid::connect_device(hid_params, ctaphid::USAGE_PAGE_FIDO)?;
     let cid = ctaphid::ctaphid_init(&device);
 
-    let status = match ctapihd_nitro::ctaphid_nitro_get_status(&device, &cid){
+    let status = match ctapihd_nitro::ctaphid_nitro_get_status(&device, &cid) {
         Ok(result) => result,
         Err(err) => {
             let msg = format!("nitrokey::get_status err = 0x{:02X}", err);
@@ -95,7 +139,7 @@ pub fn get_status(hid_params: &[crate::HidParam]) -> Result<NitrokeyStatus, Stri
     };
 
     let mut ret = NitrokeyStatus::default();
-    if status[0] == 1{
+    if status[0] == 1 {
         ret.is_button_pressed_raw = true;
     }
     ret.button_state = status[1];
@@ -116,7 +160,7 @@ pub fn get_status(hid_params: &[crate::HidParam]) -> Result<NitrokeyStatus, Stri
 
     ret.last_button_cleared_time_delta = status[2];
     ret.last_button_pushed_time_delta = status[3];
-    if status[4] == 1{
+    if status[4] == 1 {
         ret.led_is_blinking = true;
     }
     ret.u2f_ms_clear_button_period = status[5];

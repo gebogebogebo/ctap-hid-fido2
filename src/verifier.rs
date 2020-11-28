@@ -6,13 +6,12 @@ use crate::get_assertion_params;
 use crate::make_credential_params;
 use crate::util;
 use ring::digest;
-use ring::signature;
 use ring::rand::SecureRandom;
+use ring::signature;
 use x509_parser::parse_x509_der;
 
 // Create Random Data
-pub fn create_challenge() -> [u8;32]
-{
+pub fn create_challenge() -> [u8; 32] {
     let rnd = ring::rand::SystemRandom::new();
     let mut tmp = [0; 32];
     rnd.fill(&mut tmp).unwrap();
@@ -91,12 +90,7 @@ pub fn verify_assertion(
     )
 }
 
-fn verify_sig(
-    public_key_der: &[u8],
-    challenge: &[u8],
-    auth_data: &[u8],
-    sig: &[u8],
-) -> bool {
+fn verify_sig(public_key_der: &[u8], challenge: &[u8], auth_data: &[u8], sig: &[u8]) -> bool {
     // public key
     let public_key_der = untrusted::Input::from(public_key_der);
 
@@ -156,7 +150,9 @@ fn print_verify_info(
     sig: &[u8],
     verify_result: &Result<(), ring::error::Unspecified>,
 ) {
-    if util::is_debug() == false {return;}
+    if util::is_debug() == false {
+        return;
+    }
 
     let public_key_pem = util::convert_to_publickey_pem(public_key_der);
 

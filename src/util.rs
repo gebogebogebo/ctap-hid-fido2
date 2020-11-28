@@ -1,3 +1,7 @@
+/*!
+Utility API
+*/
+
 use num::NumCast;
 use serde_cbor::Value;
 use sha2::{Digest, Sha256};
@@ -19,7 +23,7 @@ pub fn print_typename<T>(_: T) {
 
 // for debug
 #[allow(dead_code)]
-pub(crate) fn is_debug()->bool{
+pub(crate) fn is_debug() -> bool {
     false
 }
 

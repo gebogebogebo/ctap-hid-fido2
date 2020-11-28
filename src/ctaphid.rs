@@ -370,8 +370,8 @@ pub fn ctaphid_cbor(
     let mut keep_alive_msg_flag = false;
     let mut st: (u8, u16, u8) = (0, 0, 0);
     for _ in 0..100 {
-        let _res = match device.read(&mut buf[..]){
-            Ok(_)=>{},
+        let _res = match device.read(&mut buf[..]) {
+            Ok(_) => {}
             Err(_error) => {
                 return Err(0xfe);
             }
@@ -440,7 +440,7 @@ pub fn ctaphid_cbor(
         println!("{}", util::to_hex_str(&cbor_data));
         println!("##");
         */
-        
+
         Ok(cbor_data)
     }
 }

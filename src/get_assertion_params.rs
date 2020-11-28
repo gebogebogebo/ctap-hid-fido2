@@ -1,5 +1,5 @@
 /*!
-get_assertion API parameters()
+get_assertion API parameters
 */
 
 use crate::util;
@@ -32,8 +32,10 @@ pub struct Assertion {
 impl Assertion {
     #[allow(dead_code)]
     pub fn print(self: &Assertion, title: &str) {
-        if util::is_debug() == false {return;}
-        
+        if util::is_debug() == false {
+            return;
+        }
+
         println!("{}", title);
         println!(
             "- rpid_hash({:02})                          = {:?}",
