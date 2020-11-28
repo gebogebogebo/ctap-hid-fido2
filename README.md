@@ -437,7 +437,7 @@ for Nitrokey FIDO2 only.
 
 
 
-#### nitrokey::get_vertion()
+#### nitrokey::get_version()
 Query the firmware version of Nitrokey.
 
 ```rust
