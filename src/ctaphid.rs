@@ -82,73 +82,34 @@ pub fn connect_device(
 
 pub fn ctaphid_init(device: &hidapi::HidDevice) -> [u8; 4] {
     // CTAPHID_INIT
-    let cmd: [u8; 65] = [
-        0x00,
-        0xff,
-        0xff,
-        0xff,
-        0xff,
-        CTAPHID_INIT,
-        0x00,
-        0x08,
-        0xfc,
-        0x8c,
-        0xc9,
-        0x91,
-        0x14,
-        0xb5,
-        0x3b,
-        0x12,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-    ];
+    let mut cmd: [u8; 65] = [0; 65];
+
+    // Report ID
+    cmd[0]=0x00;
+
+    // cid-dmy
+    cmd[1]=0xff;
+    cmd[2]=0xff;
+    cmd[3]=0xff;
+    cmd[4]=0xff;
+
+    // command
+    cmd[5]=CTAPHID_INIT;
+
+    // len
+    cmd[6]=0x00;
+    cmd[7]=0x08;
+
+    // nonce
+    cmd[8]=0xfc;
+    cmd[9]=0x8c;
+    cmd[10]=0xc9;
+    cmd[11]=0x91;
+    cmd[12]=0x14;
+    cmd[13]=0xb5;
+    cmd[14]=0x3b;
+    cmd[15]=0x12;
+
     //println!("CTAPHID_INIT = {}", util::to_hex_str(&cmd));
 
     // Write data to device
@@ -257,74 +218,26 @@ fn create_continuation_packet(seqno: u8, cid: &[u8], payload: &Vec<u8>) -> (Vec<
 }
 
 pub fn ctaphid_wink(device: &hidapi::HidDevice, cid: &[u8]) {
+
     // CTAPHID_WINK
-    let cmd: [u8; 65] = [
-        0x00,
-        cid[0],
-        cid[1],
-        cid[2],
-        cid[3],
-        CTAPHID_WINK,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-    ];
+    let mut cmd: [u8; 65] = [0; 65];
+
+    // Report ID
+    cmd[0]=0x00;
+
+    // cid-dmy
+    cmd[1]=cid[0];
+    cmd[2]=cid[1];
+    cmd[3]=cid[2];
+    cmd[4]=cid[3];
+
+    // command
+    cmd[5]=CTAPHID_WINK;
+
+    // len
+    cmd[6]=0x00;
+    cmd[7]=0x00;
+    
     //println!("CTAPHID_WINK = {}", util::to_hex_str(&cmd));
 
     // Write data to device
