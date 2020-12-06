@@ -93,9 +93,16 @@ pub fn get_fidokey_devices() -> Vec<(String, HidParam)> {
 
 /// Lights the LED on the FIDO key
 pub fn wink(hid_params: &[HidParam]) -> Result<(), &'static str> {
+    /*
     let device = ctaphid::connect_device(hid_params, ctaphid::USAGE_PAGE_FIDO)?;
     let cid = ctaphid::ctaphid_init(&device);
     ctaphid::ctaphid_wink(&device, &cid);
+    */
+
+    let mut device = fidokey::FidoKeyHid::new(&HidParam::get_default_params())?;
+    let cid = ctaphid::ctaphid_init_new(device);
+    //ctaphid::ctaphid_wink_new(device, &cid);
+
     Ok(())
 }
 
