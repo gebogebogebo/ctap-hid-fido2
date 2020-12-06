@@ -138,14 +138,14 @@ pub fn get_info(hid_params: &[HidParam]) -> Result<Vec<(String, String)>, &'stat
 
 /// Get PIN retry count
 pub fn get_pin_retries(hid_params: &[HidParam]) -> Result<i32, &'static str> {
-    let device = ctaphid::connect_device(hid_params, ctaphid::USAGE_PAGE_FIDO)?;
-    let cid = ctaphid::ctaphid_init(&device);
+    let device = fidokey::FidoKeyHid::new(hid_params)?;
+    let cid = ctaphid::ctaphid_init_new(&device);
 
     let send_payload =
         client_pin_command::create_payload(client_pin_command::SubCommand::GetRetries).unwrap();
     //println!("{}",util::to_hex_str(&send_payload));
 
-    let response_cbor = ctaphid::ctaphid_cbor(&device, &cid, &send_payload).unwrap();
+    let response_cbor = ctaphid::ctaphid_cbor_new(&device, &cid, &send_payload).unwrap();
 
     let pin = client_pin_response::parse_cbor_client_pin_get_retries(&response_cbor).unwrap();
     //println!("authenticatorClientPIN (0x06) - getRetries");
