@@ -40,8 +40,12 @@ impl FidoKeyHid {
         Ok(self.device.write(cmd).unwrap())
     }
 
-    pub fn read(&self, buf: &mut [u8]) -> Result<usize, std::io::Error> {
-        Ok(self.device.read(&mut buf[..]).unwrap())
-    }    
+    pub fn read(&self) -> Result<Vec<u8>, &'static str> {
+        let mut buf: Vec<u8> = vec![0; 64];
+        match self.device.read(&mut buf[..]) {
+            Ok(_) => Ok(buf),
+            Err(_) => Err("read error"),
+        }
+    }
 
 }

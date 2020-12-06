@@ -159,9 +159,7 @@ pub fn ctaphid_init_new(device: &fidokey::FidoKeyHid) -> [u8; 4] {
     //println!("CTAPHID_INIT = {}", util::to_hex_str(&cmd));
 
     device.write(&cmd).unwrap();
-
-    let mut buf: Vec<u8> = vec![0; 64];
-    let _res = device.read(&mut buf).unwrap();
+    let buf = device.read().unwrap();
 
     // CID
     [buf[15], buf[16], buf[17], buf[18]]
@@ -284,9 +282,7 @@ pub fn ctaphid_wink(device: &fidokey::FidoKeyHid, cid: &[u8]) {
     //println!("CTAPHID_WINK = {}", util::to_hex_str(&cmd));
 
     device.write(&cmd).unwrap();
-
-    let mut buf: Vec<u8> = vec![0; 64];
-    let _res = device.read(&mut buf).unwrap();
+    let _buf = device.read().unwrap();
 }
 
 pub fn ctaphid_cbor(
