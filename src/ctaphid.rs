@@ -285,7 +285,7 @@ pub fn ctaphid_wink(device: &fidokey::FidoKeyHid, cid: &[u8]) {
     let _buf = device.read().unwrap();
 }
 
-pub fn ctaphid_cbor_new(
+pub fn ctaphid_cbor(
     device: &fidokey::FidoKeyHid,
     cid: &[u8],
     payload: &Vec<u8>,
@@ -358,113 +358,6 @@ pub fn ctaphid_cbor_new(
                     Ok(res) => res,
                     Err(_error) => return Err(0xfe),
                 };
-                //println!("Read: {:?} byte", &buf[..res]);
-
-                let mut p2 = ctaphid_cbor_responce_get_payload_2(&buf);
-
-                // payloadに連結
-                payload.append(&mut p2);
-
-                // 次のパケットがある?
-                if (payload.len() as u16) >= payload_size {
-                    break;
-                }
-            }
-        }
-
-        // get CBOR
-        let mut cbor_data: Vec<u8> = vec![];
-        for n in 1..payload_size {
-            let index: usize = n.into();
-            let dat = payload[index];
-            cbor_data.push(dat);
-        }
-
-        /*
-        println!("");
-        println!("## Cbor Data");
-        println!("{}", util::to_hex_str(&cbor_data));
-        println!("##");
-        */
-
-        Ok(cbor_data)
-    }
-}
-
-
-pub fn ctaphid_cbor(
-    device: &hidapi::HidDevice,
-    cid: &[u8],
-    payload: &Vec<u8>,
-) -> Result<Vec<u8>, u8> {
-    // initialization_packet
-    let res = create_initialization_packet(cid, payload);
-    //println!("CTAPHID_CBOR(0) = {}", util::to_hex_str(&res.0));
-
-    // Write data to device
-    let _res = device.write(&res.0).unwrap();
-    //println!("Wrote: {:?} byte", res);
-
-    // next
-    if res.1 == true {
-        for seqno in 0..100 {
-            let res = create_continuation_packet(seqno, cid, payload);
-            //println!("CTAPHID_CBOR(1) = {}", util::to_hex_str(&res.0));
-            let _res = device.write(&res.0).unwrap();
-            if res.1 == false {
-                break;
-            }
-        }
-    }
-
-    // read - 1st packet
-    let mut buf = [0u8; 64];
-
-    let mut keep_alive_msg_flag = false;
-    let mut st: (u8, u16, u8) = (0, 0, 0);
-    for _ in 0..100 {
-        let _res = match device.read(&mut buf[..]) {
-            Ok(_) => {}
-            Err(_error) => {
-                return Err(0xfe);
-            }
-        };
-        //println!("Read: {:?} byte", res);
-
-        st = ctaphid_cbor_responce_status(&buf);
-        if st.0 == CTAPHID_CBOR {
-            break;
-        } else if st.0 == CTAPHID_KEEPALIVE {
-            if keep_alive_msg_flag == false {
-                println!("- touch fido key");
-                keep_alive_msg_flag = true;
-            }
-            thread::sleep(time::Duration::from_millis(100));
-        } else if st.0 == CTAPHID_ERROR {
-            println!("CTAPHID_ERROR Error code = 0x{:02x}", st.2);
-            break;
-        } else {
-            println!("err");
-            break;
-        }
-    }
-
-    let payload_size = st.1;
-    let response_status = st.2;
-    //println!("payload_size = {:?} byte", payload_size);
-    //println!("response_status = 0x{:02X}", response_status);
-
-    if response_status != 0x00 {
-        Err(response_status)
-    } else {
-        let mut payload = ctaphid_cbor_responce_get_payload_1(&buf);
-
-        // 次のパケットがある?
-        if (payload.len() as u16) < payload_size {
-            for _ in 1..=100 {
-                // read next packet
-                let mut buf = [0u8; 64];
-                let _res = device.read(&mut buf[..]).unwrap();
                 //println!("Read: {:?} byte", &buf[..res]);
 
                 let mut p2 = ctaphid_cbor_responce_get_payload_2(&buf);
