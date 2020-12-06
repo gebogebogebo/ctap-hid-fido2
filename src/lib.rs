@@ -102,13 +102,14 @@ pub fn wink(hid_params: &[HidParam]) -> Result<(), &'static str> {
 
 /// Get FIDO key information
 pub fn get_info(hid_params: &[HidParam]) -> Result<Vec<(String, String)>, &'static str> {
-    let device = ctaphid::connect_device(hid_params, ctaphid::USAGE_PAGE_FIDO)?;
-    let cid = ctaphid::ctaphid_init(&device);
 
+    let device = fidokey::FidoKeyHid::new(hid_params)?;
+    let cid = ctaphid::ctaphid_init_new(&device);
+    
     let send_payload = get_info_command::create_payload();
     //println!("{}",util::to_hex_str(&send_payload));
 
-    let response_cbor = ctaphid::ctaphid_cbor(&device, &cid, &send_payload).unwrap();
+    let response_cbor = ctaphid::ctaphid_cbor_new(&device, &cid, &send_payload).unwrap();
 
     let info = get_info_response::parse_cbor(&response_cbor).unwrap();
 
