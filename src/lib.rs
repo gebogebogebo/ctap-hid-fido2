@@ -109,7 +109,7 @@ pub fn get_info(hid_params: &[HidParam]) -> Result<Vec<(String, String)>, &'stat
     let send_payload = get_info_command::create_payload();
     //println!("{}",util::to_hex_str(&send_payload));
 
-    let response_cbor = ctaphid::ctaphid_cbor_new(&device, &cid, &send_payload).unwrap();
+    let response_cbor = ctaphid::ctaphid_cbor(&device, &cid, &send_payload).unwrap();
 
     let info = get_info_response::parse_cbor(&response_cbor).unwrap();
 
@@ -145,7 +145,7 @@ pub fn get_pin_retries(hid_params: &[HidParam]) -> Result<i32, &'static str> {
         client_pin_command::create_payload(client_pin_command::SubCommand::GetRetries).unwrap();
     //println!("{}",util::to_hex_str(&send_payload));
 
-    let response_cbor = ctaphid::ctaphid_cbor_new(&device, &cid, &send_payload).unwrap();
+    let response_cbor = ctaphid::ctaphid_cbor(&device, &cid, &send_payload).unwrap();
 
     let pin = client_pin_response::parse_cbor_client_pin_get_retries(&response_cbor).unwrap();
     //println!("authenticatorClientPIN (0x06) - getRetries");
@@ -196,8 +196,8 @@ fn make_credential_inter(
     rkparam: Option<&make_credential_params::RkParam>,
 ) -> Result<make_credential_params::Attestation, String> {
     // init
-    let device = ctaphid::connect_device(hid_params, ctaphid::USAGE_PAGE_FIDO)?;
-    let cid = ctaphid::ctaphid_init(&device);
+    let device = fidokey::FidoKeyHid::new(hid_params)?;
+    let cid = ctaphid::ctaphid_init_new(&device);
 
     // uv
     let uv = {
@@ -298,8 +298,8 @@ fn get_assertion_inter(
     up: bool,
 ) -> Result<Vec<get_assertion_params::Assertion>, String> {
     // init
-    let device = ctaphid::connect_device(hid_params, ctaphid::USAGE_PAGE_FIDO)?;
-    let cid = ctaphid::ctaphid_init(&device);
+    let device = fidokey::FidoKeyHid::new(hid_params)?;
+    let cid = ctaphid::ctaphid_init_new(&device);
 
     // uv
     let uv = {
@@ -371,7 +371,7 @@ fn get_assertion_inter(
 }
 
 fn get_next_assertion(
-    device: &hidapi::HidDevice,
+    device: &fidokey::FidoKeyHid,
     cid: &[u8],
 ) -> Result<get_assertion_params::Assertion, String> {
     let send_payload = get_next_assertion_command::create_payload();
@@ -394,7 +394,7 @@ fn get_next_assertion(
 }
 
 fn get_pin_token(
-    device: &hidapi::HidDevice,
+    device: &fidokey::FidoKeyHid,
     cid: &[u8],
     pin: String,
 ) -> Result<pintoken::PinToken, String> {
@@ -490,10 +490,10 @@ mod tests {
 
     #[test]
     fn test_client_pin_get_keyagreement() {
-        let params = HidParam::get_default_params();
-        let device = ctaphid::connect_device(&params, ctaphid::USAGE_PAGE_FIDO).unwrap();
-        let cid = ctaphid::ctaphid_init(&device);
-
+        let hid_params = HidParam::get_default_params();
+        let device = fidokey::FidoKeyHid::new(&hid_params).unwrap();
+        let cid = ctaphid::ctaphid_init_new(&device);
+    
         let send_payload =
             client_pin_command::create_payload(client_pin_command::SubCommand::GetKeyAgreement)
                 .unwrap();
