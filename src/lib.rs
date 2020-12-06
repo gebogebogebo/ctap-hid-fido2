@@ -23,6 +23,7 @@ pub mod nitrokey;
 mod p256;
 mod pintoken;
 mod ss;
+mod fidokey;
 pub mod util;
 pub mod verifier;
 
