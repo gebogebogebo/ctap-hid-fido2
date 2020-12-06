@@ -1,5 +1,3 @@
-use std::io::Write;
-use std::io::Read;
 use hidapi::HidApi;
 
 pub struct FidoKeyHid {
@@ -38,19 +36,12 @@ impl FidoKeyHid {
         None
     }
 
-}
-
-impl Write for FidoKeyHid {
-    fn write(&mut self, cmd: &[u8]) -> Result<usize,std::io::Error> {
+    pub fn write(&self, cmd: &[u8]) -> Result<usize,std::io::Error> {
         Ok(self.device.write(cmd).unwrap())
     }
-    fn flush(&mut self) -> Result<(),std::io::Error> {
-        Ok(())
-    }
-}
 
-impl Read for FidoKeyHid {
-    fn read(&mut self, buf: &mut [u8]) -> Result<usize, std::io::Error> {
+    pub fn read(&self, buf: &mut [u8]) -> Result<usize, std::io::Error> {
         Ok(self.device.read(&mut buf[..]).unwrap())
-    }
+    }    
+
 }
