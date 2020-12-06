@@ -3,6 +3,9 @@ use crate::util;
 
 use hidapi::HidApi;
 use std::{thread, time};
+use crate::fidokey;
+use std::io::Write;
+use std::io::Read;
 
 pub const USAGE_PAGE_FIDO: u16 = 0xf1d0;
 
@@ -122,6 +125,60 @@ pub fn ctaphid_init(device: &hidapi::HidDevice) -> [u8; 4] {
 
     // CID
     [buf[15], buf[16], buf[17], buf[18]]
+}
+
+fn write_to_device<W: Write>(
+    cmd: &[u8],    
+    mut writer: W,
+){
+    writer.write_all(&cmd).unwrap();
+}
+
+pub fn read_from_device<R: Read>(mut reader: R) -> Vec<u8>  {
+    let mut buf = Vec::with_capacity(64);
+    buf.resize(64, 0);
+    reader.read_exact(&mut buf[0..64]).unwrap();
+    buf
+}
+
+pub fn ctaphid_init_new(mut device: fidokey::FidoKeyHid) -> [u8; 4] {
+
+    // CTAPHID_INIT
+    let mut cmd: [u8; 65] = [0; 65];
+
+    // Report ID
+    cmd[0]=0x00;
+
+    // cid-dmy
+    cmd[1]=0xff;
+    cmd[2]=0xff;
+    cmd[3]=0xff;
+    cmd[4]=0xff;
+
+    // command
+    cmd[5]=CTAPHID_INIT;
+
+    // len
+    cmd[6]=0x00;
+    cmd[7]=0x08;
+
+    // nonce
+    cmd[8]=0xfc;
+    cmd[9]=0x8c;
+    cmd[10]=0xc9;
+    cmd[11]=0x91;
+    cmd[12]=0x14;
+    cmd[13]=0xb5;
+    cmd[14]=0x3b;
+    cmd[15]=0x12;
+
+    //println!("CTAPHID_INIT = {}", util::to_hex_str(&cmd));
+
+    write_to_device(&cmd,&mut device);
+    let res = read_from_device(device);
+
+    // CID
+    [res[15], res[16], res[17], res[18]]
 }
 
 fn ctaphid_cbor_responce_status(packet: &[u8; 64]) -> (u8, u16, u8) {
@@ -250,6 +307,34 @@ pub fn ctaphid_wink(device: &hidapi::HidDevice, cid: &[u8]) {
     //println!("Read: {:?}", &buf[..res]);
 
     //buf.to_vec()
+}
+
+pub fn ctaphid_wink_new(mut device: fidokey::FidoKeyHid, cid: &[u8]) {
+
+    // CTAPHID_WINK
+    let mut cmd: [u8; 65] = [0; 65];
+
+    // Report ID
+    cmd[0]=0x00;
+
+    // cid-dmy
+    cmd[1]=cid[0];
+    cmd[2]=cid[1];
+    cmd[3]=cid[2];
+    cmd[4]=cid[3];
+
+    // command
+    cmd[5]=CTAPHID_WINK;
+
+    // len
+    cmd[6]=0x00;
+    cmd[7]=0x00;
+    
+    //println!("CTAPHID_WINK = {}", util::to_hex_str(&cmd));
+
+    write_to_device(&cmd,&mut device);
+    read_from_device(device);
+
 }
 
 pub fn ctaphid_cbor(
