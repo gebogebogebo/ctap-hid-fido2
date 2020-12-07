@@ -64,8 +64,11 @@ impl FidoKeyHid {
         res
     }
     
-    pub fn write(&self, cmd: &[u8]) -> Result<usize,std::io::Error> {
-        Ok(self.device.write(cmd).unwrap())
+    pub fn write(&self, cmd: &[u8]) -> Result<usize,&'static str> {
+        match self.device.write(cmd){
+            Ok(size) => Ok(size),
+            Err(_) => Err("write error"),
+        }
     }
 
     pub fn read(&self) -> Result<Vec<u8>, &'static str> {
