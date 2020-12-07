@@ -10,6 +10,7 @@ mod client_pin_response;
 mod cose;
 mod ctaphid;
 mod ctapihd_nitro;
+mod fidokey;
 mod get_assertion_command;
 pub mod get_assertion_params;
 mod get_assertion_response;
@@ -23,7 +24,6 @@ pub mod nitrokey;
 mod p256;
 mod pintoken;
 mod ss;
-mod fidokey;
 pub mod util;
 pub mod verifier;
 
@@ -102,14 +102,14 @@ pub fn wink(hid_params: &[HidParam]) -> Result<(), String> {
 
 /// Get FIDO key information
 pub fn get_info(hid_params: &[HidParam]) -> Result<Vec<(String, String)>, String> {
-
     let device = fidokey::FidoKeyHid::new(hid_params)?;
     let cid = ctaphid::ctaphid_init(&device);
-    
+
     let send_payload = get_info_command::create_payload();
     //println!("{}",util::to_hex_str(&send_payload));
 
-    let response_cbor = ctaphid::ctaphid_cbor(&device, &cid, &send_payload).unwrap_or("ctaphid_cbor".into());
+    let response_cbor =
+        ctaphid::ctaphid_cbor(&device, &cid, &send_payload).unwrap_or("ctaphid_cbor".into());
 
     let info = get_info_response::parse_cbor(&response_cbor)?;
 
@@ -435,8 +435,14 @@ fn get_pin_token(
             }
         };
         */
-        let response_cbor = ctaphid::ctaphid_cbor(&device, &cid, &send_payload)
-            .unwrap_or_else(|err|format!("get_pin_token_command err = {}",util::get_ctap_status_message(err)).into());
+        let response_cbor =
+            ctaphid::ctaphid_cbor(&device, &cid, &send_payload).unwrap_or_else(|err| {
+                format!(
+                    "get_pin_token_command err = {}",
+                    util::get_ctap_status_message(err)
+                )
+                .into()
+            });
 
         // get pin_token (enc)
         let mut pin_token_enc =
@@ -496,7 +502,7 @@ mod tests {
         let hid_params = HidParam::get_default_params();
         let device = fidokey::FidoKeyHid::new(&hid_params).unwrap();
         let cid = ctaphid::ctaphid_init(&device);
-    
+
         let send_payload =
             client_pin_command::create_payload(client_pin_command::SubCommand::GetKeyAgreement)
                 .unwrap();

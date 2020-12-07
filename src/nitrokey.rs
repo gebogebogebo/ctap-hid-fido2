@@ -14,7 +14,7 @@ pub enum ButtonStateT {
     /// ready for clearing
     BstInitializingReadyToClear,
     /// META state (never used), to ease testing,if button is ready (e.g. >READY) or not (<READY)
-    BstMetaReadyToUse, 
+    BstMetaReadyToUse,
     /// ready to use
     BstUnpressed,
     /// touch registration is started
@@ -111,7 +111,7 @@ pub fn get_version(hid_params: &[crate::HidParam]) -> Result<String, String> {
 
 /// Generate a random number.
 /// - rng_byte : The number of digits of random numbers to generate.
-pub fn get_rng(hid_params: &[crate::HidParam],rng_byte: u8) -> Result<String, String> {
+pub fn get_rng(hid_params: &[crate::HidParam], rng_byte: u8) -> Result<String, String> {
     let device = fidokey::FidoKeyHid::new(hid_params)?;
     let cid = ctaphid::ctaphid_init(&device);
 

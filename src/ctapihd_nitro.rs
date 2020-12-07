@@ -1,6 +1,6 @@
 use crate::ctaphid;
-use crate::util;
 use crate::fidokey;
+use crate::util;
 
 // Nitrokey Custom commands between 0x40-0x7f
 //#define CTAPHID_BOOT            (TYPE_INIT | 0x50)
