@@ -5,7 +5,7 @@ use hidapi::HidApi;
 use std::{thread, time};
 use crate::fidokey;
 
-pub const USAGE_PAGE_FIDO: u16 = 0xf1d0;
+//pub const USAGE_PAGE_FIDO: u16 = 0xf1d0;
 
 pub const CTAP_FRAME_INIT: u8 = 0x80;
 pub const PACKET_SIZE: usize = 1 + 64;
@@ -21,35 +21,6 @@ const CTAPHID_ERROR: u8 = CTAP_FRAME_INIT | 0x3F;
 const CTAPHID_KEEPALIVE: u8 = CTAP_FRAME_INIT | 0x3B;
 //const CTAPHID_KEEPALIVE_STATUS_PROCESSING = 1;     // The authenticator is still processing the current request.
 //const CTAPHID_KEEPALIVE_STATUS_UPNEEDED = 2;       // The authenticator is waiting for user presence.
-
-#[allow(deprecated)]
-pub fn get_hid_devices(usage_page: Option<u16>) -> Vec<(String, crate::HidParam)> {
-    let api = HidApi::new().expect("Failed to create AcaPI instance");
-    let mut res = vec![];
-
-    let devices = api.devices();
-    for dev in devices.clone() {
-        if usage_page == None || usage_page.unwrap() == dev.usage_page {
-            let mut memo = "".to_string();
-            if let Some(n) = dev.product_string {
-                memo = n.to_string();
-            }
-
-            res.push((
-                memo,
-                crate::HidParam {
-                    vid: dev.vendor_id,
-                    pid: dev.product_id,
-                },
-            ));
-        }
-
-        //println!("product_string = {:?}", dev.product_string);
-        //println!("- vendor_id = 0x{:2x}", dev.vendor_id);
-        //println!("- product_id = 0x{:2x}", dev.product_id);
-    }
-    res
-}
 
 pub fn ctaphid_init(device: &fidokey::FidoKeyHid) -> [u8; 4] {
 
