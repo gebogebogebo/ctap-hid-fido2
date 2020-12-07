@@ -422,6 +422,8 @@ fn get_pin_token(
             &shared_secret.public_key,
             pin_hash_enc.to_vec(),
         );
+
+        /*
         let response_cbor = match ctaphid::ctaphid_cbor(&device, &cid, &send_payload) {
             Ok(result) => result,
             Err(err) => {
@@ -432,6 +434,9 @@ fn get_pin_token(
                 return Err(msg);
             }
         };
+        */
+        let response_cbor = ctaphid::ctaphid_cbor(&device, &cid, &send_payload)
+            .unwrap_or_else(|err|format!("get_pin_token_command err = {}",util::get_ctap_status_message(err)).into());
 
         // get pin_token (enc)
         let mut pin_token_enc =
