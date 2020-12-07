@@ -109,9 +109,9 @@ pub fn get_info(hid_params: &[HidParam]) -> Result<Vec<(String, String)>, String
     let send_payload = get_info_command::create_payload();
     //println!("{}",util::to_hex_str(&send_payload));
 
-    let response_cbor = ctaphid::ctaphid_cbor(&device, &cid, &send_payload).unwrap();
+    let response_cbor = ctaphid::ctaphid_cbor(&device, &cid, &send_payload).unwrap_or("ctaphid_cbor".into());
 
-    let info = get_info_response::parse_cbor(&response_cbor).unwrap();
+    let info = get_info_response::parse_cbor(&response_cbor)?;
 
     let mut result: Vec<(String, String)> = vec![];
 
@@ -142,12 +142,12 @@ pub fn get_pin_retries(hid_params: &[HidParam]) -> Result<i32, String> {
     let cid = ctaphid::ctaphid_init(&device);
 
     let send_payload =
-        client_pin_command::create_payload(client_pin_command::SubCommand::GetRetries).unwrap();
+        client_pin_command::create_payload(client_pin_command::SubCommand::GetRetries)?;
     //println!("{}",util::to_hex_str(&send_payload));
 
     let response_cbor = ctaphid::ctaphid_cbor(&device, &cid, &send_payload).unwrap();
 
-    let pin = client_pin_response::parse_cbor_client_pin_get_retries(&response_cbor).unwrap();
+    let pin = client_pin_response::parse_cbor_client_pin_get_retries(&response_cbor)?;
     //println!("authenticatorClientPIN (0x06) - getRetries");
     //println!("- retries       = {:?}", pin.retries);
 
@@ -358,12 +358,12 @@ fn get_assertion_inter(
         );
     }
 
-    let ass = get_assertion_response::parse_cbor(&response_cbor).unwrap();
+    let ass = get_assertion_response::parse_cbor(&response_cbor)?;
 
     let mut asss = vec![ass];
 
     for _ in 0..(asss[0].number_of_credentials - 1) {
-        let ass = get_next_assertion(&device, &cid).unwrap();
+        let ass = get_next_assertion(&device, &cid)?;
         asss.push(ass);
     }
 
@@ -389,7 +389,7 @@ fn get_next_assertion(
     };
     //println!("- response_cbor({:02})    = {:?}", response_cbor.len(),util::to_hex_str(&response_cbor));
 
-    let ass = get_assertion_response::parse_cbor(&response_cbor).unwrap();
+    let ass = get_assertion_response::parse_cbor(&response_cbor)?;
     Ok(ass)
 }
 
@@ -400,8 +400,7 @@ fn get_pin_token(
 ) -> Result<pintoken::PinToken, String> {
     if pin.len() > 0 {
         let send_payload =
-            client_pin_command::create_payload(client_pin_command::SubCommand::GetKeyAgreement)
-                .unwrap();
+            client_pin_command::create_payload(client_pin_command::SubCommand::GetKeyAgreement)?;
         let response_cbor = match ctaphid::ctaphid_cbor(device, cid, &send_payload) {
             Ok(result) => result,
             Err(err) => {
@@ -411,13 +410,12 @@ fn get_pin_token(
         };
 
         let key_agreement =
-            client_pin_response::parse_cbor_client_pin_get_keyagreement(&response_cbor).unwrap();
-        //key_agreement.print("authenticatorClientPIN (0x06) - getKeyAgreement");
+            client_pin_response::parse_cbor_client_pin_get_keyagreement(&response_cbor)?;
 
-        let shared_secret = ss::SharedSecret::new(&key_agreement).unwrap();
+        let shared_secret = ss::SharedSecret::new(&key_agreement)?;
         //shared_secret.public_key.print("SharedSecret  - Public Key");
 
-        let pin_hash_enc = shared_secret.encrypt_pin(&pin).unwrap();
+        let pin_hash_enc = shared_secret.encrypt_pin(&pin)?;
         //println!("- PIN hash enc({:?})       = {:?}", pin_hash_enc.len(), util::to_hex_str(&pin_hash_enc));
 
         let send_payload = client_pin_command::create_payload_get_pin_token(
@@ -437,11 +435,11 @@ fn get_pin_token(
 
         // get pin_token (enc)
         let mut pin_token_enc =
-            client_pin_response::parse_cbor_client_pin_get_pin_token(&response_cbor).unwrap();
+            client_pin_response::parse_cbor_client_pin_get_pin_token(&response_cbor)?;
         //println!("- pin_token_enc({:?})       = {:?}", pin_token_enc.len(), util::to_hex_str(&pin_token_enc));
 
         // pintoken -> dec(pintoken)
-        let pin_token_dec = shared_secret.decrypt_token(&mut pin_token_enc).unwrap();
+        let pin_token_dec = shared_secret.decrypt_token(&mut pin_token_enc)?;
         //println!("- pin_token_dec({:?})       = {:?}", pin_token_dec.len(), util::to_hex_str(&pin_token_dec));
 
         Ok(pin_token_dec)
