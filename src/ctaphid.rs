@@ -1,7 +1,6 @@
 #[allow(unused_imports)]
 use crate::util;
 
-use hidapi::HidApi;
 use std::{thread, time};
 use crate::fidokey;
 
