@@ -6,7 +6,7 @@ pub struct FidoKeyHid {
 
 impl FidoKeyHid {
 
-    pub fn new(params: &[crate::HidParam])->Result<FidoKeyHid,&'static str> {
+    pub fn new(params: &[crate::HidParam])->Result<FidoKeyHid,String> {
         let api = HidApi::new().expect("Failed to create HidApi instance");
         for param in params {
             if let Some(dev_info) = FidoKeyHid::get_path(&api, &param, 0xf1d0) {
@@ -18,7 +18,7 @@ impl FidoKeyHid {
                 }
             }    
         }
-        Err("Failed to open device")
+        Err("Failed to open device".into())
     }
 
     fn get_path(
@@ -64,18 +64,18 @@ impl FidoKeyHid {
         res
     }
     
-    pub fn write(&self, cmd: &[u8]) -> Result<usize,&'static str> {
+    pub fn write(&self, cmd: &[u8]) -> Result<usize,String> {
         match self.device.write(cmd){
             Ok(size) => Ok(size),
-            Err(_) => Err("write error"),
+            Err(_) => Err("write error".into()),
         }
     }
 
-    pub fn read(&self) -> Result<Vec<u8>, &'static str> {
+    pub fn read(&self) -> Result<Vec<u8>, String> {
         let mut buf: Vec<u8> = vec![0; 64];
         match self.device.read(&mut buf[..]) {
             Ok(_) => Ok(buf),
-            Err(_) => Err("read error"),
+            Err(_) => Err("read error".into()),
         }
     }
 

@@ -92,7 +92,7 @@ pub fn get_fidokey_devices() -> Vec<(String, HidParam)> {
 }
 
 /// Lights the LED on the FIDO key
-pub fn wink(hid_params: &[HidParam]) -> Result<(), &'static str> {
+pub fn wink(hid_params: &[HidParam]) -> Result<(), String> {
     let device = fidokey::FidoKeyHid::new(hid_params)?;
     let cid = ctaphid::ctaphid_init(&device);
     ctaphid::ctaphid_wink(&device, &cid);
@@ -101,7 +101,7 @@ pub fn wink(hid_params: &[HidParam]) -> Result<(), &'static str> {
 }
 
 /// Get FIDO key information
-pub fn get_info(hid_params: &[HidParam]) -> Result<Vec<(String, String)>, &'static str> {
+pub fn get_info(hid_params: &[HidParam]) -> Result<Vec<(String, String)>, String> {
 
     let device = fidokey::FidoKeyHid::new(hid_params)?;
     let cid = ctaphid::ctaphid_init(&device);
@@ -137,7 +137,7 @@ pub fn get_info(hid_params: &[HidParam]) -> Result<Vec<(String, String)>, &'stat
 }
 
 /// Get PIN retry count
-pub fn get_pin_retries(hid_params: &[HidParam]) -> Result<i32, &'static str> {
+pub fn get_pin_retries(hid_params: &[HidParam]) -> Result<i32, String> {
     let device = fidokey::FidoKeyHid::new(hid_params)?;
     let cid = ctaphid::ctaphid_init(&device);
 
