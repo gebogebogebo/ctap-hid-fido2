@@ -36,6 +36,35 @@ impl FidoKeyHid {
         None
     }
 
+    #[allow(deprecated)]
+    pub fn get_hid_devices(usage_page: Option<u16>) -> Vec<(String, crate::HidParam)> {
+        let api = HidApi::new().expect("Failed to create AcaPI instance");
+        let mut res = vec![];
+    
+        let devices = api.devices();
+        for dev in devices.clone() {
+            if usage_page == None || usage_page.unwrap() == dev.usage_page {
+                let mut memo = "".to_string();
+                if let Some(n) = dev.product_string {
+                    memo = n.to_string();
+                }
+    
+                res.push((
+                    memo,
+                    crate::HidParam {
+                        vid: dev.vendor_id,
+                        pid: dev.product_id,
+                    },
+                ));
+            }
+    
+            //println!("product_string = {:?}", dev.product_string);
+            //println!("- vendor_id = 0x{:2x}", dev.vendor_id);
+            //println!("- product_id = 0x{:2x}", dev.product_id);
+        }
+        res
+    }
+    
     pub fn write(&self, cmd: &[u8]) -> Result<usize,std::io::Error> {
         Ok(self.device.write(cmd).unwrap())
     }

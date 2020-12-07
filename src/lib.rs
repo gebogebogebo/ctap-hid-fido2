@@ -83,12 +83,12 @@ impl HidParam {
 
 /// Get HID devices
 pub fn get_hid_devices() -> Vec<(String, HidParam)> {
-    ctaphid::get_hid_devices(None)
+    fidokey::FidoKeyHid::get_hid_devices(None)
 }
 
 /// Get HID FIDO devices
 pub fn get_fidokey_devices() -> Vec<(String, HidParam)> {
-    ctaphid::get_hid_devices(Some(ctaphid::USAGE_PAGE_FIDO))
+    fidokey::FidoKeyHid::get_hid_devices(Some(0xf1d0))
 }
 
 /// Lights the LED on the FIDO key
