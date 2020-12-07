@@ -1,8 +1,8 @@
 #[allow(unused_imports)]
 use crate::util;
 
-use std::{thread, time};
 use crate::fidokey;
+use std::{thread, time};
 
 //pub const USAGE_PAGE_FIDO: u16 = 0xf1d0;
 
@@ -22,35 +22,34 @@ const CTAPHID_KEEPALIVE: u8 = CTAP_FRAME_INIT | 0x3B;
 //const CTAPHID_KEEPALIVE_STATUS_UPNEEDED = 2;       // The authenticator is waiting for user presence.
 
 pub fn ctaphid_init(device: &fidokey::FidoKeyHid) -> [u8; 4] {
-
     // CTAPHID_INIT
     let mut cmd: [u8; 65] = [0; 65];
 
     // Report ID
-    cmd[0]=0x00;
+    cmd[0] = 0x00;
 
     // cid-dmy
-    cmd[1]=0xff;
-    cmd[2]=0xff;
-    cmd[3]=0xff;
-    cmd[4]=0xff;
+    cmd[1] = 0xff;
+    cmd[2] = 0xff;
+    cmd[3] = 0xff;
+    cmd[4] = 0xff;
 
     // command
-    cmd[5]=CTAPHID_INIT;
+    cmd[5] = CTAPHID_INIT;
 
     // len
-    cmd[6]=0x00;
-    cmd[7]=0x08;
+    cmd[6] = 0x00;
+    cmd[7] = 0x08;
 
     // nonce
-    cmd[8]=0xfc;
-    cmd[9]=0x8c;
-    cmd[10]=0xc9;
-    cmd[11]=0x91;
-    cmd[12]=0x14;
-    cmd[13]=0xb5;
-    cmd[14]=0x3b;
-    cmd[15]=0x12;
+    cmd[8] = 0xfc;
+    cmd[9] = 0x8c;
+    cmd[10] = 0xc9;
+    cmd[11] = 0x91;
+    cmd[12] = 0x14;
+    cmd[13] = 0xb5;
+    cmd[14] = 0x3b;
+    cmd[15] = 0x12;
 
     //println!("CTAPHID_INIT = {}", util::to_hex_str(&cmd));
 
@@ -155,26 +154,25 @@ fn create_continuation_packet(seqno: u8, cid: &[u8], payload: &Vec<u8>) -> (Vec<
 }
 
 pub fn ctaphid_wink(device: &fidokey::FidoKeyHid, cid: &[u8]) {
-
     // CTAPHID_WINK
     let mut cmd: [u8; 65] = [0; 65];
 
     // Report ID
-    cmd[0]=0x00;
+    cmd[0] = 0x00;
 
     // cid-dmy
-    cmd[1]=cid[0];
-    cmd[2]=cid[1];
-    cmd[3]=cid[2];
-    cmd[4]=cid[3];
+    cmd[1] = cid[0];
+    cmd[2] = cid[1];
+    cmd[3] = cid[2];
+    cmd[4] = cid[3];
 
     // command
-    cmd[5]=CTAPHID_WINK;
+    cmd[5] = CTAPHID_WINK;
 
     // len
-    cmd[6]=0x00;
-    cmd[7]=0x00;
-    
+    cmd[6] = 0x00;
+    cmd[7] = 0x00;
+
     //println!("CTAPHID_WINK = {}", util::to_hex_str(&cmd));
 
     device.write(&cmd).unwrap();
