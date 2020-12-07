@@ -94,7 +94,7 @@ pub fn get_fidokey_devices() -> Vec<(String, HidParam)> {
 /// Lights the LED on the FIDO key
 pub fn wink(hid_params: &[HidParam]) -> Result<(), &'static str> {
     let device = fidokey::FidoKeyHid::new(hid_params)?;
-    let cid = ctaphid::ctaphid_init_new(&device);
+    let cid = ctaphid::ctaphid_init(&device);
     ctaphid::ctaphid_wink(&device, &cid);
 
     Ok(())
@@ -104,7 +104,7 @@ pub fn wink(hid_params: &[HidParam]) -> Result<(), &'static str> {
 pub fn get_info(hid_params: &[HidParam]) -> Result<Vec<(String, String)>, &'static str> {
 
     let device = fidokey::FidoKeyHid::new(hid_params)?;
-    let cid = ctaphid::ctaphid_init_new(&device);
+    let cid = ctaphid::ctaphid_init(&device);
     
     let send_payload = get_info_command::create_payload();
     //println!("{}",util::to_hex_str(&send_payload));
@@ -139,7 +139,7 @@ pub fn get_info(hid_params: &[HidParam]) -> Result<Vec<(String, String)>, &'stat
 /// Get PIN retry count
 pub fn get_pin_retries(hid_params: &[HidParam]) -> Result<i32, &'static str> {
     let device = fidokey::FidoKeyHid::new(hid_params)?;
-    let cid = ctaphid::ctaphid_init_new(&device);
+    let cid = ctaphid::ctaphid_init(&device);
 
     let send_payload =
         client_pin_command::create_payload(client_pin_command::SubCommand::GetRetries).unwrap();
@@ -197,7 +197,7 @@ fn make_credential_inter(
 ) -> Result<make_credential_params::Attestation, String> {
     // init
     let device = fidokey::FidoKeyHid::new(hid_params)?;
-    let cid = ctaphid::ctaphid_init_new(&device);
+    let cid = ctaphid::ctaphid_init(&device);
 
     // uv
     let uv = {
@@ -299,7 +299,7 @@ fn get_assertion_inter(
 ) -> Result<Vec<get_assertion_params::Assertion>, String> {
     // init
     let device = fidokey::FidoKeyHid::new(hid_params)?;
-    let cid = ctaphid::ctaphid_init_new(&device);
+    let cid = ctaphid::ctaphid_init(&device);
 
     // uv
     let uv = {
@@ -492,7 +492,7 @@ mod tests {
     fn test_client_pin_get_keyagreement() {
         let hid_params = HidParam::get_default_params();
         let device = fidokey::FidoKeyHid::new(&hid_params).unwrap();
-        let cid = ctaphid::ctaphid_init_new(&device);
+        let cid = ctaphid::ctaphid_init(&device);
     
         let send_payload =
             client_pin_command::create_payload(client_pin_command::SubCommand::GetKeyAgreement)
