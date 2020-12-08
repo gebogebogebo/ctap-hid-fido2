@@ -95,8 +95,7 @@ pub fn get_fidokey_devices() -> Vec<(String, HidParam)> {
 pub fn wink(hid_params: &[HidParam]) -> Result<(), String> {
     let device = fidokey::FidoKeyHid::new(hid_params)?;
     let cid = ctaphid::ctaphid_init(&device)?;
-    ctaphid::ctaphid_wink(&device, &cid);
-
+    ctaphid::ctaphid_wink(&device, &cid)?;
     Ok(())
 }
 

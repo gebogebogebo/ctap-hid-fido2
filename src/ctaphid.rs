@@ -153,7 +153,7 @@ fn create_continuation_packet(seqno: u8, cid: &[u8], payload: &Vec<u8>) -> (Vec<
     (cmd, next)
 }
 
-pub fn ctaphid_wink(device: &fidokey::FidoKeyHid, cid: &[u8]) {
+pub fn ctaphid_wink(device: &fidokey::FidoKeyHid, cid: &[u8]) -> Result<(), String>  {
     // CTAPHID_WINK
     let mut cmd: [u8; 65] = [0; 65];
 
@@ -175,8 +175,10 @@ pub fn ctaphid_wink(device: &fidokey::FidoKeyHid, cid: &[u8]) {
 
     //println!("CTAPHID_WINK = {}", util::to_hex_str(&cmd));
 
-    device.write(&cmd).unwrap();
-    let _buf = device.read().unwrap();
+    device.write(&cmd)?;
+    let _buf = device.read()?;
+
+    Ok(())
 }
 
 pub fn ctaphid_cbor(
@@ -189,7 +191,7 @@ pub fn ctaphid_cbor(
     //println!("CTAPHID_CBOR(0) = {}", util::to_hex_str(&res.0));
 
     // Write data to device
-    let _res = device.write(&res.0).unwrap();
+    let _res = device.write(&res.0)?;
     //println!("Wrote: {:?} byte", res);
 
     // next
@@ -197,7 +199,7 @@ pub fn ctaphid_cbor(
         for seqno in 0..100 {
             let res = create_continuation_packet(seqno, cid, payload);
             //println!("CTAPHID_CBOR(1) = {}", util::to_hex_str(&res.0));
-            let _res = device.write(&res.0).unwrap();
+            let _res = device.write(&res.0)?;
             if res.1 == false {
                 break;
             }

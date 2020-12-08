@@ -16,7 +16,7 @@ const CTAPHID_GETSTATUS: u8 = ctaphid::CTAP_FRAME_INIT | 0x71;
 
 // Nitrokey
 // GETVERSION
-pub fn ctaphid_nitro_get_version(device: &fidokey::FidoKeyHid, cid: &[u8]) -> Result<String, u8> {
+pub fn ctaphid_nitro_get_version(device: &fidokey::FidoKeyHid, cid: &[u8]) -> Result<String, String> {
     let payload: Vec<u8> = Vec::new();
     let version = match ctaphid_nitro_send_and_response(device, cid, CTAPHID_GETVERSION, &payload) {
         Ok(version) => version,
@@ -25,7 +25,7 @@ pub fn ctaphid_nitro_get_version(device: &fidokey::FidoKeyHid, cid: &[u8]) -> Re
 
     // version - 4byte
     if version.len() != 4 {
-        return Err(0x02);
+        return Err("Version format Error".into());
     }
     let version = format!(
         "{}.{}.{}.{}",
@@ -39,7 +39,7 @@ pub fn ctaphid_nitro_get_rng(
     device: &fidokey::FidoKeyHid,
     cid: &[u8],
     rng_byte: u8,
-) -> Result<String, u8> {
+) -> Result<String, String> {
     let payload: Vec<u8> = vec![rng_byte];
     match ctaphid_nitro_send_and_response(device, cid, CTAPHID_GETRNG, &payload) {
         Ok(result) => Ok(util::to_hex_str(&result)),
@@ -48,7 +48,7 @@ pub fn ctaphid_nitro_get_rng(
 }
 
 // GETSTATUS
-pub fn ctaphid_nitro_get_status(device: &fidokey::FidoKeyHid, cid: &[u8]) -> Result<Vec<u8>, u8> {
+pub fn ctaphid_nitro_get_status(device: &fidokey::FidoKeyHid, cid: &[u8]) -> Result<Vec<u8>, String> {
     let payload: Vec<u8> = vec![8];
     match ctaphid_nitro_send_and_response(device, cid, CTAPHID_GETSTATUS, &payload) {
         Ok(result) => Ok(result),
@@ -61,7 +61,7 @@ pub fn ctaphid_nitro_send_and_response(
     cid: &[u8],
     command: u8,
     payload: &Vec<u8>,
-) -> Result<Vec<u8>, u8> {
+) -> Result<Vec<u8>, String> {
     let mut cmd: Vec<u8> = vec![0; ctaphid::PACKET_SIZE];
 
     // Report ID
@@ -90,11 +90,10 @@ pub fn ctaphid_nitro_send_and_response(
     }
 
     // Write data to device
-    let _res = device.write(&cmd).unwrap();
+    let _res = device.write(&cmd)?;
     //println!("Wrote: {:?} byte", _res);
 
-    let buf = device.read().unwrap();
-    //let err = device.check_error();
+    let buf = device.read()?;
     //println!("Read: {:?}", &buf[.._res]);
 
     /*
@@ -106,7 +105,7 @@ pub fn ctaphid_nitro_send_and_response(
 
     let st = ctaphid_cbor_responce_nitro(&buf);
     if st.0 != command {
-        return Err(0x01);
+        return Err("ctaphid_cbor_responce_nitro".into());
     }
 
     Ok(st.1)
