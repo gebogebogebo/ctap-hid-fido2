@@ -21,7 +21,7 @@ const CTAPHID_KEEPALIVE: u8 = CTAP_FRAME_INIT | 0x3B;
 //const CTAPHID_KEEPALIVE_STATUS_PROCESSING = 1;     // The authenticator is still processing the current request.
 //const CTAPHID_KEEPALIVE_STATUS_UPNEEDED = 2;       // The authenticator is waiting for user presence.
 
-pub fn ctaphid_init(device: &fidokey::FidoKeyHid) -> [u8; 4] {
+pub fn ctaphid_init(device: &fidokey::FidoKeyHid) -> Result<[u8; 4],String> {
     // CTAPHID_INIT
     let mut cmd: [u8; 65] = [0; 65];
 
@@ -53,11 +53,11 @@ pub fn ctaphid_init(device: &fidokey::FidoKeyHid) -> [u8; 4] {
 
     //println!("CTAPHID_INIT = {}", util::to_hex_str(&cmd));
 
-    device.write(&cmd).unwrap();
-    let buf = device.read().unwrap();
+    device.write(&cmd)?;
+    let buf = device.read()?;
 
     // CID
-    [buf[15], buf[16], buf[17], buf[18]]
+    Ok([buf[15], buf[16], buf[17], buf[18]])
 }
 
 fn ctaphid_cbor_responce_status(packet: &[u8]) -> (u8, u16, u8) {
