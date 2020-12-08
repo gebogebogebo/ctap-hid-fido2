@@ -109,7 +109,14 @@ pub fn get_info(hid_params: &[HidParam]) -> Result<Vec<(String, String)>, String
     //println!("{}",util::to_hex_str(&send_payload));
 
     let response_cbor =
-        ctaphid::ctaphid_cbor(&device, &cid, &send_payload).unwrap_or("ctaphid_cbor".into());
+        ctaphid::ctaphid_cbor(&device, &cid, &send_payload)
+            .unwrap_or_else(|err| {
+                format!(
+                    "get_info err = {}",
+                    util::get_ctap_status_message(err)
+                )
+                .into()
+            });        
 
     let info = get_info_response::parse_cbor(&response_cbor)?;
 
@@ -145,7 +152,14 @@ pub fn get_pin_retries(hid_params: &[HidParam]) -> Result<i32, String> {
         client_pin_command::create_payload(client_pin_command::SubCommand::GetRetries)?;
     //println!("{}",util::to_hex_str(&send_payload));
 
-    let response_cbor = ctaphid::ctaphid_cbor(&device, &cid, &send_payload).unwrap();
+    let response_cbor = ctaphid::ctaphid_cbor(&device, &cid, &send_payload)
+        .unwrap_or_else(|err| {
+            format!(
+                "get_pin_retries err = {}",
+                util::get_ctap_status_message(err)
+            )
+            .into()
+        });        
 
     let pin = client_pin_response::parse_cbor_client_pin_get_retries(&response_cbor)?;
     //println!("authenticatorClientPIN (0x06) - getRetries");
@@ -250,18 +264,16 @@ fn make_credential_inter(
     }
 
     // send & response
-    let response_cbor = match ctaphid::ctaphid_cbor(&device, &cid, &send_payload) {
-        Ok(n) => n,
-        Err(err) => {
-            let msg = format!(
-                "make_credential_command err = {}",
+    let response_cbor = ctaphid::ctaphid_cbor(&device, &cid, &send_payload)
+        .unwrap_or_else(|err| {
+            format!(
+                "make_credential_inter err = {}",
                 util::get_ctap_status_message(err)
-            );
-            return Err(msg);
-        }
-    };
+            )
+            .into()
+        });        
 
-    let att = make_credential_response::parse_cbor(&response_cbor).unwrap();
+    let att = make_credential_response::parse_cbor(&response_cbor)?;
     Ok(att)
 }
 
@@ -339,16 +351,14 @@ fn get_assertion_inter(
     //println!("- get_assertion({:02})    = {:?}", send_payload.len(),util::to_hex_str(&send_payload));
 
     // send & response
-    let response_cbor = match ctaphid::ctaphid_cbor(&device, &cid, &send_payload) {
-        Ok(n) => n,
-        Err(err) => {
-            let msg = format!(
-                "get_assertion_command err = {}",
+    let response_cbor = ctaphid::ctaphid_cbor(&device, &cid, &send_payload)
+        .unwrap_or_else(|err| {
+            format!(
+                "get_assertion_inter err = {}",
                 util::get_ctap_status_message(err)
-            );
-            return Err(msg);
-        }
-    };
+            )
+            .into()
+        });        
 
     if util::is_debug() == true {
         println!(
@@ -377,16 +387,15 @@ fn get_next_assertion(
     let send_payload = get_next_assertion_command::create_payload();
 
     // send & response
-    let response_cbor = match ctaphid::ctaphid_cbor(&device, &cid, &send_payload) {
-        Ok(n) => n,
-        Err(err) => {
-            let msg = format!(
-                "get_next_assertion_command err = {}",
-                util::get_ctap_status_message(err)
-            );
-            return Err(msg);
-        }
-    };
+    let response_cbor = ctaphid::ctaphid_cbor(&device, &cid, &send_payload)
+    .unwrap_or_else(|err| {
+        format!(
+            "get_next_assertion err = {}",
+            util::get_ctap_status_message(err)
+        )
+        .into()
+    });        
+
     //println!("- response_cbor({:02})    = {:?}", response_cbor.len(),util::to_hex_str(&response_cbor));
 
     let ass = get_assertion_response::parse_cbor(&response_cbor)?;
@@ -401,14 +410,15 @@ fn get_pin_token(
     if pin.len() > 0 {
         let send_payload =
             client_pin_command::create_payload(client_pin_command::SubCommand::GetKeyAgreement)?;
-        let response_cbor = match ctaphid::ctaphid_cbor(device, cid, &send_payload) {
-            Ok(result) => result,
-            Err(err) => {
-                let msg = format!("ctaphid_cbor err = 0x{:02X}", err);
-                return Err(msg);
-            }
-        };
-
+        let response_cbor = ctaphid::ctaphid_cbor(device, cid, &send_payload)
+        .unwrap_or_else(|err| {
+            format!(
+                "get_pin_token err = {}",
+                util::get_ctap_status_message(err)
+            )
+            .into()
+        });        
+    
         let key_agreement =
             client_pin_response::parse_cbor_client_pin_get_keyagreement(&response_cbor)?;
 
@@ -423,18 +433,6 @@ fn get_pin_token(
             pin_hash_enc.to_vec(),
         );
 
-        /*
-        let response_cbor = match ctaphid::ctaphid_cbor(&device, &cid, &send_payload) {
-            Ok(result) => result,
-            Err(err) => {
-                let msg = format!(
-                    "get_pin_token_command err = {}",
-                    util::get_ctap_status_message(err)
-                );
-                return Err(msg);
-            }
-        };
-        */
         let response_cbor =
             ctaphid::ctaphid_cbor(&device, &cid, &send_payload).unwrap_or_else(|err| {
                 format!(
@@ -506,7 +504,14 @@ mod tests {
         let send_payload =
             client_pin_command::create_payload(client_pin_command::SubCommand::GetKeyAgreement)
                 .unwrap();
-        let response_cbor = ctaphid::ctaphid_cbor(&device, &cid, &send_payload).unwrap();
+        let response_cbor = ctaphid::ctaphid_cbor(&device, &cid, &send_payload)
+            .unwrap_or_else(|err| {
+                format!(
+                    "test_client_pin_get_keyagreement err = {}",
+                    util::get_ctap_status_message(err)
+                )
+                .into()
+            });        
         //println!("{}",util::to_hex_str(&send_payload));
 
         let key_agreement =
