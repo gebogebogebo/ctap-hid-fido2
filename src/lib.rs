@@ -10,6 +10,7 @@ mod client_pin_response;
 mod cose;
 mod ctaphid;
 mod ctapihd_nitro;
+mod fidokey;
 mod get_assertion_command;
 pub mod get_assertion_params;
 mod get_assertion_response;
@@ -82,33 +83,33 @@ impl HidParam {
 
 /// Get HID devices
 pub fn get_hid_devices() -> Vec<(String, HidParam)> {
-    ctaphid::get_hid_devices(None)
+    fidokey::FidoKeyHid::get_hid_devices(None)
 }
 
 /// Get HID FIDO devices
 pub fn get_fidokey_devices() -> Vec<(String, HidParam)> {
-    ctaphid::get_hid_devices(Some(ctaphid::USAGE_PAGE_FIDO))
+    fidokey::FidoKeyHid::get_hid_devices(Some(0xf1d0))
 }
 
 /// Lights the LED on the FIDO key
-pub fn wink(hid_params: &[HidParam]) -> Result<(), &'static str> {
-    let device = ctaphid::connect_device(hid_params, ctaphid::USAGE_PAGE_FIDO)?;
-    let cid = ctaphid::ctaphid_init(&device);
-    ctaphid::ctaphid_wink(&device, &cid);
+pub fn wink(hid_params: &[HidParam]) -> Result<(), String> {
+    let device = fidokey::FidoKeyHid::new(hid_params)?;
+    let cid = ctaphid::ctaphid_init(&device)?;
+    ctaphid::ctaphid_wink(&device, &cid)?;
     Ok(())
 }
 
 /// Get FIDO key information
-pub fn get_info(hid_params: &[HidParam]) -> Result<Vec<(String, String)>, &'static str> {
-    let device = ctaphid::connect_device(hid_params, ctaphid::USAGE_PAGE_FIDO)?;
-    let cid = ctaphid::ctaphid_init(&device);
+pub fn get_info(hid_params: &[HidParam]) -> Result<Vec<(String, String)>, String> {
+    let device = fidokey::FidoKeyHid::new(hid_params)?;
+    let cid = ctaphid::ctaphid_init(&device)?;
 
     let send_payload = get_info_command::create_payload();
     //println!("{}",util::to_hex_str(&send_payload));
 
-    let response_cbor = ctaphid::ctaphid_cbor(&device, &cid, &send_payload).unwrap();
+    let response_cbor = ctaphid::ctaphid_cbor(&device, &cid, &send_payload)?;
 
-    let info = get_info_response::parse_cbor(&response_cbor).unwrap();
+    let info = get_info_response::parse_cbor(&response_cbor)?;
 
     let mut result: Vec<(String, String)> = vec![];
 
@@ -134,17 +135,17 @@ pub fn get_info(hid_params: &[HidParam]) -> Result<Vec<(String, String)>, &'stat
 }
 
 /// Get PIN retry count
-pub fn get_pin_retries(hid_params: &[HidParam]) -> Result<i32, &'static str> {
-    let device = ctaphid::connect_device(hid_params, ctaphid::USAGE_PAGE_FIDO)?;
-    let cid = ctaphid::ctaphid_init(&device);
+pub fn get_pin_retries(hid_params: &[HidParam]) -> Result<i32, String> {
+    let device = fidokey::FidoKeyHid::new(hid_params)?;
+    let cid = ctaphid::ctaphid_init(&device)?;
 
     let send_payload =
-        client_pin_command::create_payload(client_pin_command::SubCommand::GetRetries).unwrap();
+        client_pin_command::create_payload(client_pin_command::SubCommand::GetRetries)?;
     //println!("{}",util::to_hex_str(&send_payload));
 
-    let response_cbor = ctaphid::ctaphid_cbor(&device, &cid, &send_payload).unwrap();
+    let response_cbor = ctaphid::ctaphid_cbor(&device, &cid, &send_payload)?;
 
-    let pin = client_pin_response::parse_cbor_client_pin_get_retries(&response_cbor).unwrap();
+    let pin = client_pin_response::parse_cbor_client_pin_get_retries(&response_cbor)?;
     //println!("authenticatorClientPIN (0x06) - getRetries");
     //println!("- retries       = {:?}", pin.retries);
 
@@ -193,8 +194,8 @@ fn make_credential_inter(
     rkparam: Option<&make_credential_params::RkParam>,
 ) -> Result<make_credential_params::Attestation, String> {
     // init
-    let device = ctaphid::connect_device(hid_params, ctaphid::USAGE_PAGE_FIDO)?;
-    let cid = ctaphid::ctaphid_init(&device);
+    let device = fidokey::FidoKeyHid::new(hid_params)?;
+    let cid = ctaphid::ctaphid_init(&device)?;
 
     // uv
     let uv = {
@@ -247,18 +248,9 @@ fn make_credential_inter(
     }
 
     // send & response
-    let response_cbor = match ctaphid::ctaphid_cbor(&device, &cid, &send_payload) {
-        Ok(n) => n,
-        Err(err) => {
-            let msg = format!(
-                "make_credential_command err = {}",
-                util::get_ctap_status_message(err)
-            );
-            return Err(msg);
-        }
-    };
+    let response_cbor = ctaphid::ctaphid_cbor(&device, &cid, &send_payload)?;
 
-    let att = make_credential_response::parse_cbor(&response_cbor).unwrap();
+    let att = make_credential_response::parse_cbor(&response_cbor)?;
     Ok(att)
 }
 
@@ -295,8 +287,8 @@ fn get_assertion_inter(
     up: bool,
 ) -> Result<Vec<get_assertion_params::Assertion>, String> {
     // init
-    let device = ctaphid::connect_device(hid_params, ctaphid::USAGE_PAGE_FIDO)?;
-    let cid = ctaphid::ctaphid_init(&device);
+    let device = fidokey::FidoKeyHid::new(hid_params)?;
+    let cid = ctaphid::ctaphid_init(&device)?;
 
     // uv
     let uv = {
@@ -336,16 +328,7 @@ fn get_assertion_inter(
     //println!("- get_assertion({:02})    = {:?}", send_payload.len(),util::to_hex_str(&send_payload));
 
     // send & response
-    let response_cbor = match ctaphid::ctaphid_cbor(&device, &cid, &send_payload) {
-        Ok(n) => n,
-        Err(err) => {
-            let msg = format!(
-                "get_assertion_command err = {}",
-                util::get_ctap_status_message(err)
-            );
-            return Err(msg);
-        }
-    };
+    let response_cbor = ctaphid::ctaphid_cbor(&device, &cid, &send_payload)?;
 
     if util::is_debug() == true {
         println!(
@@ -355,12 +338,12 @@ fn get_assertion_inter(
         );
     }
 
-    let ass = get_assertion_response::parse_cbor(&response_cbor).unwrap();
+    let ass = get_assertion_response::parse_cbor(&response_cbor)?;
 
     let mut asss = vec![ass];
 
     for _ in 0..(asss[0].number_of_credentials - 1) {
-        let ass = get_next_assertion(&device, &cid).unwrap();
+        let ass = get_next_assertion(&device, &cid)?;
         asss.push(ass);
     }
 
@@ -368,77 +351,53 @@ fn get_assertion_inter(
 }
 
 fn get_next_assertion(
-    device: &hidapi::HidDevice,
+    device: &fidokey::FidoKeyHid,
     cid: &[u8],
 ) -> Result<get_assertion_params::Assertion, String> {
     let send_payload = get_next_assertion_command::create_payload();
 
     // send & response
-    let response_cbor = match ctaphid::ctaphid_cbor(&device, &cid, &send_payload) {
-        Ok(n) => n,
-        Err(err) => {
-            let msg = format!(
-                "get_next_assertion_command err = {}",
-                util::get_ctap_status_message(err)
-            );
-            return Err(msg);
-        }
-    };
+    let response_cbor = ctaphid::ctaphid_cbor(&device, &cid, &send_payload)?;
+
     //println!("- response_cbor({:02})    = {:?}", response_cbor.len(),util::to_hex_str(&response_cbor));
 
-    let ass = get_assertion_response::parse_cbor(&response_cbor).unwrap();
+    let ass = get_assertion_response::parse_cbor(&response_cbor)?;
     Ok(ass)
 }
 
 fn get_pin_token(
-    device: &hidapi::HidDevice,
+    device: &fidokey::FidoKeyHid,
     cid: &[u8],
     pin: String,
 ) -> Result<pintoken::PinToken, String> {
     if pin.len() > 0 {
         let send_payload =
-            client_pin_command::create_payload(client_pin_command::SubCommand::GetKeyAgreement)
-                .unwrap();
-        let response_cbor = match ctaphid::ctaphid_cbor(device, cid, &send_payload) {
-            Ok(result) => result,
-            Err(err) => {
-                let msg = format!("ctaphid_cbor err = 0x{:02X}", err);
-                return Err(msg);
-            }
-        };
+            client_pin_command::create_payload(client_pin_command::SubCommand::GetKeyAgreement)?;
+        let response_cbor = ctaphid::ctaphid_cbor(device, cid, &send_payload)?;
 
         let key_agreement =
-            client_pin_response::parse_cbor_client_pin_get_keyagreement(&response_cbor).unwrap();
-        //key_agreement.print("authenticatorClientPIN (0x06) - getKeyAgreement");
+            client_pin_response::parse_cbor_client_pin_get_keyagreement(&response_cbor)?;
 
-        let shared_secret = ss::SharedSecret::new(&key_agreement).unwrap();
+        let shared_secret = ss::SharedSecret::new(&key_agreement)?;
         //shared_secret.public_key.print("SharedSecret  - Public Key");
 
-        let pin_hash_enc = shared_secret.encrypt_pin(&pin).unwrap();
+        let pin_hash_enc = shared_secret.encrypt_pin(&pin)?;
         //println!("- PIN hash enc({:?})       = {:?}", pin_hash_enc.len(), util::to_hex_str(&pin_hash_enc));
 
         let send_payload = client_pin_command::create_payload_get_pin_token(
             &shared_secret.public_key,
             pin_hash_enc.to_vec(),
         );
-        let response_cbor = match ctaphid::ctaphid_cbor(&device, &cid, &send_payload) {
-            Ok(result) => result,
-            Err(err) => {
-                let msg = format!(
-                    "get_pin_token_command err = {}",
-                    util::get_ctap_status_message(err)
-                );
-                return Err(msg);
-            }
-        };
+
+        let response_cbor = ctaphid::ctaphid_cbor(&device, &cid, &send_payload)?;
 
         // get pin_token (enc)
         let mut pin_token_enc =
-            client_pin_response::parse_cbor_client_pin_get_pin_token(&response_cbor).unwrap();
+            client_pin_response::parse_cbor_client_pin_get_pin_token(&response_cbor)?;
         //println!("- pin_token_enc({:?})       = {:?}", pin_token_enc.len(), util::to_hex_str(&pin_token_enc));
 
         // pintoken -> dec(pintoken)
-        let pin_token_dec = shared_secret.decrypt_token(&mut pin_token_enc).unwrap();
+        let pin_token_dec = shared_secret.decrypt_token(&mut pin_token_enc)?;
         //println!("- pin_token_dec({:?})       = {:?}", pin_token_dec.len(), util::to_hex_str(&pin_token_dec));
 
         Ok(pin_token_dec)
@@ -487,9 +446,9 @@ mod tests {
 
     #[test]
     fn test_client_pin_get_keyagreement() {
-        let params = HidParam::get_default_params();
-        let device = ctaphid::connect_device(&params, ctaphid::USAGE_PAGE_FIDO).unwrap();
-        let cid = ctaphid::ctaphid_init(&device);
+        let hid_params = HidParam::get_default_params();
+        let device = fidokey::FidoKeyHid::new(&hid_params).unwrap();
+        let cid = ctaphid::ctaphid_init(&device).unwrap();
 
         let send_payload =
             client_pin_command::create_payload(client_pin_command::SubCommand::GetKeyAgreement)
@@ -542,9 +501,6 @@ mod tests {
                 params.client_data_hash.len(),
                 util::to_hex_str(&params.client_data_hash)
             );
-
-            // create pin auth
-            //let pin_auth = pin_token.unwrap().auth(&params.client_data_hash);
 
             params.pin_auth = pin_auth.to_vec();
 
