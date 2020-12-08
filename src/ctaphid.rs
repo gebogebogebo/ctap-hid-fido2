@@ -183,7 +183,7 @@ pub fn ctaphid_cbor(
     device: &fidokey::FidoKeyHid,
     cid: &[u8],
     payload: &Vec<u8>,
-) -> Result<Vec<u8>, u8> {
+) -> Result<Vec<u8>, String> {
     // initialization_packet
     let res = create_initialization_packet(cid, payload);
     //println!("CTAPHID_CBOR(0) = {}", util::to_hex_str(&res.0));
@@ -211,7 +211,12 @@ pub fn ctaphid_cbor(
     for _ in 0..100 {
         let buf = match device.read() {
             Ok(res) => res,
-            Err(_error) => return Err(0xfe),
+            Err(_error) => {
+                return Err(format!(
+                    "read err = {}",
+                    util::get_ctap_status_message(0xfe)
+                ));
+            }
         };
         //println!("Read: {:?} byte", res);
 
@@ -240,7 +245,10 @@ pub fn ctaphid_cbor(
     //println!("response_status = 0x{:02X}", response_status);
 
     if response_status != 0x00 {
-        Err(response_status)
+        Err(format!(
+            "response_status err = {}",
+            util::get_ctap_status_message(response_status)
+        ))
     } else {
         let mut payload = ctaphid_cbor_responce_get_payload_1(&packet_1st);
 
@@ -250,7 +258,12 @@ pub fn ctaphid_cbor(
                 // read next packet
                 let buf = match device.read() {
                     Ok(res) => res,
-                    Err(_error) => return Err(0xfe),
+                    Err(_error) => {
+                        return Err(format!(
+                            "read err = {}",
+                            util::get_ctap_status_message(0xfe)
+                        ));
+                    }
                 };
                 //println!("Read: {:?} byte", &buf[..res]);
 
