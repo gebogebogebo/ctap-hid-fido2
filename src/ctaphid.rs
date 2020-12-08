@@ -1,10 +1,10 @@
 #[allow(unused_imports)]
 use crate::util;
 
-use hidapi::HidApi;
+use crate::fidokey;
 use std::{thread, time};
 
-pub const USAGE_PAGE_FIDO: u16 = 0xf1d0;
+//pub const USAGE_PAGE_FIDO: u16 = 0xf1d0;
 
 pub const CTAP_FRAME_INIT: u8 = 0x80;
 pub const PACKET_SIZE: usize = 1 + 64;
@@ -21,110 +21,46 @@ const CTAPHID_KEEPALIVE: u8 = CTAP_FRAME_INIT | 0x3B;
 //const CTAPHID_KEEPALIVE_STATUS_PROCESSING = 1;     // The authenticator is still processing the current request.
 //const CTAPHID_KEEPALIVE_STATUS_UPNEEDED = 2;       // The authenticator is waiting for user presence.
 
-#[allow(deprecated)]
-pub fn get_hid_devices(usage_page: Option<u16>) -> Vec<(String, crate::HidParam)> {
-    let api = HidApi::new().expect("Failed to create AcaPI instance");
-    let mut res = vec![];
-
-    let devices = api.devices();
-    for dev in devices.clone() {
-        if usage_page == None || usage_page.unwrap() == dev.usage_page {
-            let mut memo = "".to_string();
-            if let Some(n) = dev.product_string {
-                memo = n.to_string();
-            }
-
-            res.push((
-                memo,
-                crate::HidParam {
-                    vid: dev.vendor_id,
-                    pid: dev.product_id,
-                },
-            ));
-        }
-
-        //println!("product_string = {:?}", dev.product_string);
-        //println!("- vendor_id = 0x{:2x}", dev.vendor_id);
-        //println!("- product_id = 0x{:2x}", dev.product_id);
-    }
-    res
-}
-
-fn get_path(
-    api: &hidapi::HidApi,
-    param: &crate::HidParam,
-    usage_page: u16,
-) -> Option<hidapi::DeviceInfo> {
-    let devices = api.device_list();
-    for x in devices.cloned() {
-        if x.vendor_id() == param.vid && x.product_id() == param.pid && x.usage_page() == usage_page
-        {
-            return Some(x);
-        }
-    }
-    None
-}
-
-pub fn connect_device(
-    params: &[crate::HidParam],
-    usage_page: u16,
-) -> Result<hidapi::HidDevice, &'static str> {
-    let api = HidApi::new().expect("Failed to create AcaPI instance");
-    for param in params {
-        if let Some(dev_info) = get_path(&api, &param, usage_page) {
-            if let Ok(dev) = api.open_path(&dev_info.path()) {
-                return Ok(dev);
-            }
-        }
-    }
-    Err("Failed to open device")
-}
-
-pub fn ctaphid_init(device: &hidapi::HidDevice) -> [u8; 4] {
+pub fn ctaphid_init(device: &fidokey::FidoKeyHid) -> Result<[u8; 4],String> {
     // CTAPHID_INIT
     let mut cmd: [u8; 65] = [0; 65];
 
     // Report ID
-    cmd[0]=0x00;
+    cmd[0] = 0x00;
 
     // cid-dmy
-    cmd[1]=0xff;
-    cmd[2]=0xff;
-    cmd[3]=0xff;
-    cmd[4]=0xff;
+    cmd[1] = 0xff;
+    cmd[2] = 0xff;
+    cmd[3] = 0xff;
+    cmd[4] = 0xff;
 
     // command
-    cmd[5]=CTAPHID_INIT;
+    cmd[5] = CTAPHID_INIT;
 
     // len
-    cmd[6]=0x00;
-    cmd[7]=0x08;
+    cmd[6] = 0x00;
+    cmd[7] = 0x08;
 
     // nonce
-    cmd[8]=0xfc;
-    cmd[9]=0x8c;
-    cmd[10]=0xc9;
-    cmd[11]=0x91;
-    cmd[12]=0x14;
-    cmd[13]=0xb5;
-    cmd[14]=0x3b;
-    cmd[15]=0x12;
+    cmd[8] = 0xfc;
+    cmd[9] = 0x8c;
+    cmd[10] = 0xc9;
+    cmd[11] = 0x91;
+    cmd[12] = 0x14;
+    cmd[13] = 0xb5;
+    cmd[14] = 0x3b;
+    cmd[15] = 0x12;
 
     //println!("CTAPHID_INIT = {}", util::to_hex_str(&cmd));
 
-    // Write data to device
-    let _res = device.write(&cmd).unwrap();
-    //println!("Wrote: {:?} byte", res);
-
-    let mut buf = [0u8; 64];
-    let _res = device.read(&mut buf[..]).unwrap();
-    //println!("Read: {:?} byte", &buf[..res]);
+    device.write(&cmd)?;
+    let buf = device.read()?;
 
     // CID
-    [buf[15], buf[16], buf[17], buf[18]]
+    Ok([buf[15], buf[16], buf[17], buf[18]])
 }
 
-fn ctaphid_cbor_responce_status(packet: &[u8; 64]) -> (u8, u16, u8) {
+fn ctaphid_cbor_responce_status(packet: &[u8]) -> (u8, u16, u8) {
     // cid
     //println!("- cid: {:?}", &packet[0..4]);
     // cmd
@@ -138,11 +74,11 @@ fn ctaphid_cbor_responce_status(packet: &[u8; 64]) -> (u8, u16, u8) {
     (packet[4], payload_size, response_status)
 }
 
-fn ctaphid_cbor_responce_get_payload_1(packet: &[u8; 64]) -> Vec<u8> {
+fn ctaphid_cbor_responce_get_payload_1(packet: &[u8]) -> Vec<u8> {
     (&packet[7..64]).to_vec()
 }
 
-fn ctaphid_cbor_responce_get_payload_2(packet: &[u8; 64]) -> Vec<u8> {
+fn ctaphid_cbor_responce_get_payload_2(packet: &[u8]) -> Vec<u8> {
     (&packet[5..64]).to_vec()
 }
 
@@ -217,52 +153,45 @@ fn create_continuation_packet(seqno: u8, cid: &[u8], payload: &Vec<u8>) -> (Vec<
     (cmd, next)
 }
 
-pub fn ctaphid_wink(device: &hidapi::HidDevice, cid: &[u8]) {
-
+pub fn ctaphid_wink(device: &fidokey::FidoKeyHid, cid: &[u8]) -> Result<(), String>  {
     // CTAPHID_WINK
     let mut cmd: [u8; 65] = [0; 65];
 
     // Report ID
-    cmd[0]=0x00;
+    cmd[0] = 0x00;
 
     // cid-dmy
-    cmd[1]=cid[0];
-    cmd[2]=cid[1];
-    cmd[3]=cid[2];
-    cmd[4]=cid[3];
+    cmd[1] = cid[0];
+    cmd[2] = cid[1];
+    cmd[3] = cid[2];
+    cmd[4] = cid[3];
 
     // command
-    cmd[5]=CTAPHID_WINK;
+    cmd[5] = CTAPHID_WINK;
 
     // len
-    cmd[6]=0x00;
-    cmd[7]=0x00;
-    
+    cmd[6] = 0x00;
+    cmd[7] = 0x00;
+
     //println!("CTAPHID_WINK = {}", util::to_hex_str(&cmd));
 
-    // Write data to device
-    let _res = device.write(&cmd).unwrap();
-    //println!("Wrote: {:?} byte", res);
+    device.write(&cmd)?;
+    let _buf = device.read()?;
 
-    let mut buf = [0u8; 64];
-    let _res = device.read_timeout(&mut buf[..], 1000).unwrap();
-    //let err = device.check_error();
-    //println!("Read: {:?}", &buf[..res]);
-
-    //buf.to_vec()
+    Ok(())
 }
 
 pub fn ctaphid_cbor(
-    device: &hidapi::HidDevice,
+    device: &fidokey::FidoKeyHid,
     cid: &[u8],
     payload: &Vec<u8>,
-) -> Result<Vec<u8>, u8> {
+) -> Result<Vec<u8>, String> {
     // initialization_packet
     let res = create_initialization_packet(cid, payload);
     //println!("CTAPHID_CBOR(0) = {}", util::to_hex_str(&res.0));
 
     // Write data to device
-    let _res = device.write(&res.0).unwrap();
+    let _res = device.write(&res.0)?;
     //println!("Wrote: {:?} byte", res);
 
     // next
@@ -270,7 +199,7 @@ pub fn ctaphid_cbor(
         for seqno in 0..100 {
             let res = create_continuation_packet(seqno, cid, payload);
             //println!("CTAPHID_CBOR(1) = {}", util::to_hex_str(&res.0));
-            let _res = device.write(&res.0).unwrap();
+            let _res = device.write(&res.0)?;
             if res.1 == false {
                 break;
             }
@@ -278,21 +207,24 @@ pub fn ctaphid_cbor(
     }
 
     // read - 1st packet
-    let mut buf = [0u8; 64];
-
     let mut keep_alive_msg_flag = false;
     let mut st: (u8, u16, u8) = (0, 0, 0);
+    let mut packet_1st = vec![];
     for _ in 0..100 {
-        let _res = match device.read(&mut buf[..]) {
-            Ok(_) => {}
+        let buf = match device.read() {
+            Ok(res) => res,
             Err(_error) => {
-                return Err(0xfe);
+                return Err(format!(
+                    "read err = {}",
+                    util::get_ctap_status_message(0xfe)
+                ));
             }
         };
         //println!("Read: {:?} byte", res);
 
         st = ctaphid_cbor_responce_status(&buf);
         if st.0 == CTAPHID_CBOR {
+            packet_1st = buf;
             break;
         } else if st.0 == CTAPHID_KEEPALIVE {
             if keep_alive_msg_flag == false {
@@ -315,16 +247,26 @@ pub fn ctaphid_cbor(
     //println!("response_status = 0x{:02X}", response_status);
 
     if response_status != 0x00 {
-        Err(response_status)
+        Err(format!(
+            "response_status err = {}",
+            util::get_ctap_status_message(response_status)
+        ))
     } else {
-        let mut payload = ctaphid_cbor_responce_get_payload_1(&buf);
+        let mut payload = ctaphid_cbor_responce_get_payload_1(&packet_1st);
 
         // 次のパケットがある?
         if (payload.len() as u16) < payload_size {
             for _ in 1..=100 {
                 // read next packet
-                let mut buf = [0u8; 64];
-                let _res = device.read(&mut buf[..]).unwrap();
+                let buf = match device.read() {
+                    Ok(res) => res,
+                    Err(_error) => {
+                        return Err(format!(
+                            "read err = {}",
+                            util::get_ctap_status_message(0xfe)
+                        ));
+                    }
+                };
                 //println!("Read: {:?} byte", &buf[..res]);
 
                 let mut p2 = ctaphid_cbor_responce_get_payload_2(&buf);

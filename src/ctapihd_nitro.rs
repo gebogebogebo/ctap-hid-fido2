@@ -1,4 +1,5 @@
 use crate::ctaphid;
+use crate::fidokey;
 use crate::util;
 
 // Nitrokey Custom commands between 0x40-0x7f
@@ -15,7 +16,7 @@ const CTAPHID_GETSTATUS: u8 = ctaphid::CTAP_FRAME_INIT | 0x71;
 
 // Nitrokey
 // GETVERSION
-pub fn ctaphid_nitro_get_version(device: &hidapi::HidDevice, cid: &[u8]) -> Result<String, u8> {
+pub fn ctaphid_nitro_get_version(device: &fidokey::FidoKeyHid, cid: &[u8]) -> Result<String, String> {
     let payload: Vec<u8> = Vec::new();
     let version = match ctaphid_nitro_send_and_response(device, cid, CTAPHID_GETVERSION, &payload) {
         Ok(version) => version,
@@ -24,7 +25,7 @@ pub fn ctaphid_nitro_get_version(device: &hidapi::HidDevice, cid: &[u8]) -> Resu
 
     // version - 4byte
     if version.len() != 4 {
-        return Err(0x02);
+        return Err("Version format Error".into());
     }
     let version = format!(
         "{}.{}.{}.{}",
@@ -35,10 +36,10 @@ pub fn ctaphid_nitro_get_version(device: &hidapi::HidDevice, cid: &[u8]) -> Resu
 
 // GETRNG
 pub fn ctaphid_nitro_get_rng(
-    device: &hidapi::HidDevice,
+    device: &fidokey::FidoKeyHid,
     cid: &[u8],
     rng_byte: u8,
-) -> Result<String, u8> {
+) -> Result<String, String> {
     let payload: Vec<u8> = vec![rng_byte];
     match ctaphid_nitro_send_and_response(device, cid, CTAPHID_GETRNG, &payload) {
         Ok(result) => Ok(util::to_hex_str(&result)),
@@ -47,7 +48,7 @@ pub fn ctaphid_nitro_get_rng(
 }
 
 // GETSTATUS
-pub fn ctaphid_nitro_get_status(device: &hidapi::HidDevice, cid: &[u8]) -> Result<Vec<u8>, u8> {
+pub fn ctaphid_nitro_get_status(device: &fidokey::FidoKeyHid, cid: &[u8]) -> Result<Vec<u8>, String> {
     let payload: Vec<u8> = vec![8];
     match ctaphid_nitro_send_and_response(device, cid, CTAPHID_GETSTATUS, &payload) {
         Ok(result) => Ok(result),
@@ -56,11 +57,11 @@ pub fn ctaphid_nitro_get_status(device: &hidapi::HidDevice, cid: &[u8]) -> Resul
 }
 
 pub fn ctaphid_nitro_send_and_response(
-    device: &hidapi::HidDevice,
+    device: &fidokey::FidoKeyHid,
     cid: &[u8],
     command: u8,
     payload: &Vec<u8>,
-) -> Result<Vec<u8>, u8> {
+) -> Result<Vec<u8>, String> {
     let mut cmd: Vec<u8> = vec![0; ctaphid::PACKET_SIZE];
 
     // Report ID
@@ -89,12 +90,10 @@ pub fn ctaphid_nitro_send_and_response(
     }
 
     // Write data to device
-    let _res = device.write(&cmd).unwrap();
+    let _res = device.write(&cmd)?;
     //println!("Wrote: {:?} byte", _res);
 
-    let mut buf = [0u8; 64];
-    let _res = device.read_timeout(&mut buf[..], 1000).unwrap();
-    //let err = device.check_error();
+    let buf = device.read()?;
     //println!("Read: {:?}", &buf[.._res]);
 
     /*
@@ -106,13 +105,13 @@ pub fn ctaphid_nitro_send_and_response(
 
     let st = ctaphid_cbor_responce_nitro(&buf);
     if st.0 != command {
-        return Err(0x01);
+        return Err("ctaphid_cbor_responce_nitro".into());
     }
 
     Ok(st.1)
 }
 
-fn ctaphid_cbor_responce_nitro(packet: &[u8; 64]) -> (u8, Vec<u8>) {
+fn ctaphid_cbor_responce_nitro(packet: &[u8]) -> (u8, Vec<u8>) {
     // cid
     //println!("- cid: {:?}", &packet[0..4]);
     // cmd

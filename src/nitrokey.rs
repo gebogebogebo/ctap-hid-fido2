@@ -5,6 +5,7 @@ for Nitrokey FIDO2 only.
 
 use crate::ctaphid;
 use crate::ctapihd_nitro;
+use crate::fidokey;
 
 #[derive(Debug)]
 pub enum ButtonStateT {
@@ -13,7 +14,7 @@ pub enum ButtonStateT {
     /// ready for clearing
     BstInitializingReadyToClear,
     /// META state (never used), to ease testing,if button is ready (e.g. >READY) or not (<READY)
-    BstMetaReadyToUse, 
+    BstMetaReadyToUse,
     /// ready to use
     BstUnpressed,
     /// touch registration is started
@@ -94,49 +95,26 @@ impl NitrokeyStatus {
 
 /// Query the firmware version of Nitrokey.
 pub fn get_version(hid_params: &[crate::HidParam]) -> Result<String, String> {
-    let device = ctaphid::connect_device(hid_params, ctaphid::USAGE_PAGE_FIDO)?;
-    let cid = ctaphid::ctaphid_init(&device);
-
-    let version = match ctapihd_nitro::ctaphid_nitro_get_version(&device, &cid) {
-        Ok(result) => result,
-        Err(err) => {
-            let msg = format!("nitrokey::get_version err = 0x{:02X}", err);
-            return Err(msg);
-        }
-    };
-
+    let device = fidokey::FidoKeyHid::new(hid_params)?;
+    let cid = ctaphid::ctaphid_init(&device)?;
+    let version = ctapihd_nitro::ctaphid_nitro_get_version(&device, &cid)?;
     Ok(version)
 }
 
 /// Generate a random number.
 /// - rng_byte : The number of digits of random numbers to generate.
-pub fn get_rng(hid_params: &[crate::HidParam],rng_byte: u8) -> Result<String, String> {
-    let device = ctaphid::connect_device(hid_params, ctaphid::USAGE_PAGE_FIDO)?;
-    let cid = ctaphid::ctaphid_init(&device);
-
-    let status = match ctapihd_nitro::ctaphid_nitro_get_rng(&device, &cid, rng_byte) {
-        Ok(result) => result,
-        Err(err) => {
-            let msg = format!("nitrokey::get_rng err = 0x{:02X}", err);
-            return Err(msg);
-        }
-    };
-
+pub fn get_rng(hid_params: &[crate::HidParam], rng_byte: u8) -> Result<String, String> {
+    let device = fidokey::FidoKeyHid::new(hid_params)?;
+    let cid = ctaphid::ctaphid_init(&device)?;
+    let status = ctapihd_nitro::ctaphid_nitro_get_rng(&device, &cid, rng_byte)?;
     Ok(status)
 }
 
 /// Query the Status of Nitrokey.
 pub fn get_status(hid_params: &[crate::HidParam]) -> Result<NitrokeyStatus, String> {
-    let device = ctaphid::connect_device(hid_params, ctaphid::USAGE_PAGE_FIDO)?;
-    let cid = ctaphid::ctaphid_init(&device);
-
-    let status = match ctapihd_nitro::ctaphid_nitro_get_status(&device, &cid) {
-        Ok(result) => result,
-        Err(err) => {
-            let msg = format!("nitrokey::get_status err = 0x{:02X}", err);
-            return Err(msg);
-        }
-    };
+    let device = fidokey::FidoKeyHid::new(hid_params)?;
+    let cid = ctaphid::ctaphid_init(&device)?;
+    let status = ctapihd_nitro::ctaphid_nitro_get_status(&device, &cid)?;
 
     let mut ret = NitrokeyStatus::default();
     if status[0] == 1 {
