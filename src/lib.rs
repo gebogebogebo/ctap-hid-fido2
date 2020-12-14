@@ -10,7 +10,6 @@ mod client_pin_response;
 mod cose;
 mod ctaphid;
 mod ctapihd_nitro;
-mod fidokey;
 mod get_assertion_command;
 pub mod get_assertion_params;
 mod get_assertion_response;
@@ -26,6 +25,18 @@ mod pintoken;
 mod ss;
 pub mod util;
 pub mod verifier;
+
+#[cfg(not(target_os = "linux"))]
+mod fidokey;
+
+// for pi
+#[cfg(target_os = "linux")]
+mod fidokey_pi;
+
+#[cfg(target_os = "linux")]
+mod hid_common;
+#[cfg(target_os = "linux")]
+mod hid_linux;
 
 /// HID device vendor ID , product ID
 pub struct HidParam {
@@ -80,6 +91,16 @@ impl HidParam {
         ]
     }
 }
+
+/// check Platform 
+#[cfg(target_os = "windows")]
+pub fn hello() { println!("Hello, I'm Windows!"); }
+
+#[cfg(target_os = "linux")]
+pub fn hello() { println!("Hello, I'm Linux!"); }
+
+#[cfg(target_os = "macos")]
+pub fn hello() { println!("hello, I'm MacOS."); }
 
 /// Get HID devices
 pub fn get_hid_devices() -> Vec<(String, HidParam)> {
