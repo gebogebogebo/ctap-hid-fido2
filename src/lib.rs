@@ -10,7 +10,6 @@ mod client_pin_response;
 mod cose;
 mod ctaphid;
 mod ctapihd_nitro;
-mod fidokey;
 mod get_assertion_command;
 pub mod get_assertion_params;
 mod get_assertion_response;
@@ -26,6 +25,26 @@ mod pintoken;
 mod ss;
 pub mod util;
 pub mod verifier;
+
+#[cfg(not(target_os = "linux"))]
+mod fidokey;
+
+// for pi
+#[cfg(target_os = "linux")]
+mod fidokey_pi;
+
+#[cfg(target_os = "linux")]
+mod hid_common;
+#[cfg(target_os = "linux")]
+mod hid_linux;
+
+
+#[cfg(not(target_os = "linux"))]
+use crate::fidokey::*;
+
+// for pi
+#[cfg(target_os = "linux")]
+use crate::fidokey_pi::*;
 
 /// HID device vendor ID , product ID
 pub struct HidParam {
@@ -81,19 +100,29 @@ impl HidParam {
     }
 }
 
+/// check Platform 
+#[cfg(target_os = "windows")]
+pub fn hello() { println!("Hello, I'm Windows!"); }
+
+#[cfg(target_os = "linux")]
+pub fn hello() { println!("Hello, I'm Linux!"); }
+
+#[cfg(target_os = "macos")]
+pub fn hello() { println!("hello, I'm MacOS."); }
+
 /// Get HID devices
 pub fn get_hid_devices() -> Vec<(String, HidParam)> {
-    fidokey::FidoKeyHid::get_hid_devices(None)
+    FidoKeyHid::get_hid_devices(None)
 }
 
 /// Get HID FIDO devices
 pub fn get_fidokey_devices() -> Vec<(String, HidParam)> {
-    fidokey::FidoKeyHid::get_hid_devices(Some(0xf1d0))
+    FidoKeyHid::get_hid_devices(Some(0xf1d0))
 }
 
 /// Lights the LED on the FIDO key
 pub fn wink(hid_params: &[HidParam]) -> Result<(), String> {
-    let device = fidokey::FidoKeyHid::new(hid_params)?;
+    let device = FidoKeyHid::new(hid_params)?;
     let cid = ctaphid::ctaphid_init(&device)?;
     ctaphid::ctaphid_wink(&device, &cid)?;
     Ok(())
@@ -101,7 +130,7 @@ pub fn wink(hid_params: &[HidParam]) -> Result<(), String> {
 
 /// Get FIDO key information
 pub fn get_info(hid_params: &[HidParam]) -> Result<Vec<(String, String)>, String> {
-    let device = fidokey::FidoKeyHid::new(hid_params)?;
+    let device = FidoKeyHid::new(hid_params)?;
     let cid = ctaphid::ctaphid_init(&device)?;
 
     let send_payload = get_info_command::create_payload();
@@ -136,7 +165,7 @@ pub fn get_info(hid_params: &[HidParam]) -> Result<Vec<(String, String)>, String
 
 /// Get PIN retry count
 pub fn get_pin_retries(hid_params: &[HidParam]) -> Result<i32, String> {
-    let device = fidokey::FidoKeyHid::new(hid_params)?;
+    let device = FidoKeyHid::new(hid_params)?;
     let cid = ctaphid::ctaphid_init(&device)?;
 
     let send_payload =
@@ -194,7 +223,7 @@ fn make_credential_inter(
     rkparam: Option<&make_credential_params::RkParam>,
 ) -> Result<make_credential_params::Attestation, String> {
     // init
-    let device = fidokey::FidoKeyHid::new(hid_params)?;
+    let device = FidoKeyHid::new(hid_params)?;
     let cid = ctaphid::ctaphid_init(&device)?;
 
     // uv
@@ -287,7 +316,7 @@ fn get_assertion_inter(
     up: bool,
 ) -> Result<Vec<get_assertion_params::Assertion>, String> {
     // init
-    let device = fidokey::FidoKeyHid::new(hid_params)?;
+    let device = FidoKeyHid::new(hid_params)?;
     let cid = ctaphid::ctaphid_init(&device)?;
 
     // uv
@@ -351,7 +380,7 @@ fn get_assertion_inter(
 }
 
 fn get_next_assertion(
-    device: &fidokey::FidoKeyHid,
+    device: &FidoKeyHid,
     cid: &[u8],
 ) -> Result<get_assertion_params::Assertion, String> {
     let send_payload = get_next_assertion_command::create_payload();
@@ -366,7 +395,7 @@ fn get_next_assertion(
 }
 
 fn get_pin_token(
-    device: &fidokey::FidoKeyHid,
+    device: &FidoKeyHid,
     cid: &[u8],
     pin: String,
 ) -> Result<pintoken::PinToken, String> {
@@ -447,7 +476,7 @@ mod tests {
     #[test]
     fn test_client_pin_get_keyagreement() {
         let hid_params = HidParam::get_default_params();
-        let device = fidokey::FidoKeyHid::new(&hid_params).unwrap();
+        let device = FidoKeyHid::new(&hid_params).unwrap();
         let cid = ctaphid::ctaphid_init(&device).unwrap();
 
         let send_payload =

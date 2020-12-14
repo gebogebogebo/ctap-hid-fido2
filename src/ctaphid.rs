@@ -1,7 +1,13 @@
 #[allow(unused_imports)]
 use crate::util;
 
-use crate::fidokey;
+#[cfg(not(target_os = "linux"))]
+use crate::fidokey::*;
+
+// for pi
+#[cfg(target_os = "linux")]
+use crate::fidokey_pi::*;
+
 use std::{thread, time};
 
 //pub const USAGE_PAGE_FIDO: u16 = 0xf1d0;
@@ -21,7 +27,7 @@ const CTAPHID_KEEPALIVE: u8 = CTAP_FRAME_INIT | 0x3B;
 //const CTAPHID_KEEPALIVE_STATUS_PROCESSING = 1;     // The authenticator is still processing the current request.
 //const CTAPHID_KEEPALIVE_STATUS_UPNEEDED = 2;       // The authenticator is waiting for user presence.
 
-pub fn ctaphid_init(device: &fidokey::FidoKeyHid) -> Result<[u8; 4],String> {
+pub fn ctaphid_init(device: &FidoKeyHid) -> Result<[u8; 4],String> {
     // CTAPHID_INIT
     let mut cmd: [u8; 65] = [0; 65];
 
@@ -153,7 +159,7 @@ fn create_continuation_packet(seqno: u8, cid: &[u8], payload: &Vec<u8>) -> (Vec<
     (cmd, next)
 }
 
-pub fn ctaphid_wink(device: &fidokey::FidoKeyHid, cid: &[u8]) -> Result<(), String>  {
+pub fn ctaphid_wink(device: &FidoKeyHid, cid: &[u8]) -> Result<(), String>  {
     // CTAPHID_WINK
     let mut cmd: [u8; 65] = [0; 65];
 
@@ -182,7 +188,7 @@ pub fn ctaphid_wink(device: &fidokey::FidoKeyHid, cid: &[u8]) -> Result<(), Stri
 }
 
 pub fn ctaphid_cbor(
-    device: &fidokey::FidoKeyHid,
+    device: &FidoKeyHid,
     cid: &[u8],
     payload: &Vec<u8>,
 ) -> Result<Vec<u8>, String> {
