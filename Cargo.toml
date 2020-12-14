@@ -13,7 +13,7 @@ keywords=["FIDO2","CTAP"]
 readme="README.md"
 
 [dependencies]
-hidapi = "1.2.3"
+# hidapi = "1.2.3"
 serde_cbor = "0.11.1"
 serde_derive = "1.0.116"
 num = "0.3.0"
