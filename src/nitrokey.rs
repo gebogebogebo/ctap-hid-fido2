@@ -5,7 +5,13 @@ for Nitrokey FIDO2 only.
 
 use crate::ctaphid;
 use crate::ctapihd_nitro;
-use crate::fidokey;
+
+#[cfg(not(target_os = "linux"))]
+use crate::fidokey::*;
+
+// for pi
+#[cfg(target_os = "linux")]
+use crate::fidokey_pi::*;
 
 #[derive(Debug)]
 pub enum ButtonStateT {
@@ -95,7 +101,7 @@ impl NitrokeyStatus {
 
 /// Query the firmware version of Nitrokey.
 pub fn get_version(hid_params: &[crate::HidParam]) -> Result<String, String> {
-    let device = fidokey::FidoKeyHid::new(hid_params)?;
+    let device = FidoKeyHid::new(hid_params)?;
     let cid = ctaphid::ctaphid_init(&device)?;
     let version = ctapihd_nitro::ctaphid_nitro_get_version(&device, &cid)?;
     Ok(version)
@@ -104,7 +110,7 @@ pub fn get_version(hid_params: &[crate::HidParam]) -> Result<String, String> {
 /// Generate a random number.
 /// - rng_byte : The number of digits of random numbers to generate.
 pub fn get_rng(hid_params: &[crate::HidParam], rng_byte: u8) -> Result<String, String> {
-    let device = fidokey::FidoKeyHid::new(hid_params)?;
+    let device = FidoKeyHid::new(hid_params)?;
     let cid = ctaphid::ctaphid_init(&device)?;
     let status = ctapihd_nitro::ctaphid_nitro_get_rng(&device, &cid, rng_byte)?;
     Ok(status)
@@ -112,7 +118,7 @@ pub fn get_rng(hid_params: &[crate::HidParam], rng_byte: u8) -> Result<String, S
 
 /// Query the Status of Nitrokey.
 pub fn get_status(hid_params: &[crate::HidParam]) -> Result<NitrokeyStatus, String> {
-    let device = fidokey::FidoKeyHid::new(hid_params)?;
+    let device = FidoKeyHid::new(hid_params)?;
     let cid = ctaphid::ctaphid_init(&device)?;
     let status = ctapihd_nitro::ctaphid_nitro_get_status(&device, &cid)?;
 
