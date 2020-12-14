@@ -47,6 +47,14 @@ Cargo.toml modified and build
 serde_cbor = "0.11.1"
 ```
 
+Run as sudo
+
+
+```
+$ chmod +x test_for_pi.sh
+$ ./test_for_pi.sh
+```
+
 ## Examples
 
 #### get_info()
