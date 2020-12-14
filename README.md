@@ -36,10 +36,10 @@ gebo
 ## Build and run
 
 #### Windows
-Run as administrator
+- Run as administrator
 
 #### raspberry Pi
-Cargo.toml modified and build
+- Cargo.toml modified and build
 
 ```
 [dependencies]
@@ -47,7 +47,7 @@ Cargo.toml modified and build
 serde_cbor = "0.11.1"
 ```
 
-Run as sudo
+- Run as sudo
 
 
 ```
