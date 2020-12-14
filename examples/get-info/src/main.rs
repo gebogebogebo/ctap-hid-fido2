@@ -1,6 +1,8 @@
 use ctap_hid_fido2;
 
 fn main() {
+    ctap_hid_fido2::hello();
+
     println!("----- get-info start -----");
 
     println!("get_hid_devices()");
