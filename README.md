@@ -2,7 +2,9 @@
 
 # ctap-hid-fido2
 Rust FIDO2 CTAP library
+
 for Mac & Win & raspberry Pi
+
 The raspberry Pi is now supported. However, it needs to be build.
 
 ## Description
