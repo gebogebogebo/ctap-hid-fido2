@@ -344,6 +344,55 @@ pub fn ctaphid_msg(
     Ok(buf)
 }
 
+pub fn send_apdu(
+    device: &FidoKeyHid,
+    cid: &[u8],
+    cla: u8,
+    ins: u8,
+    p1: u8,
+    p2: u8,
+    data: &Vec<u8>,
+) -> Result<Vec<u8>, String> {
+    /*
+    Packs and sends an APDU for use in CTAP1 commands.
+    This is a low-level method mainly used internally. Avoid calling it
+    directly if possible, and use the get_version, register, and
+    authenticate methods if possible instead.
+    :param cla: The CLA parameter of the request.
+    :param ins: The INS parameter of the request.
+    :param p1: The P1 parameter of the request.
+    :param p2: The P2 parameter of the request.
+    :param data: The body of the request.
+    :return: The response APDU data of a successful request.
+    :raise: ApduError
+    */
+
+    let mut apdu: Vec<u8> = vec![0; PACKET_SIZE];
+    // reserved
+    apdu[0]=cla;
+    // U2F Command
+    apdu[1]=ins;
+    // param-1
+    apdu[2]=p1;
+    // param-2
+    apdu[3]=p2;
+
+    // data-len(3byte)
+    apdu[4]=0;
+    // High part of payload length
+    apdu[5] = (((data.len() as u16) >> 8) as u8) & 0xff;
+    // Low part of payload length
+    apdu[6] = (data.len() as u8) & 0xff;
+
+    // data
+    let size = data.len();
+    for counter in 0..size {
+        apdu[7 + counter] = data[counter];
+    }
+
+    ctaphid_msg(device,cid,&apdu)
+}
+
 /*
 https://github.com/Yubico/python-fido2/blob/master/fido2/ctap1.py#L214
     def send_apdu(self, cla=0, ins=0, p1=0, p2=0, data=b""):

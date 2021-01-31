@@ -160,3 +160,12 @@ pub fn enter_boot(hid_params: &[crate::HidParam]) -> Result<(), String> {
     let result = ctapihd_nitro::ctaphid_nitro_enter_boot(&device, &cid)?;
     Ok(result)
 }
+
+pub fn solo_bootloader(hid_params: &[crate::HidParam]) -> Result<(), String> {
+    let device = FidoKeyHid::new(hid_params)?;
+    let cid = ctaphid::ctaphid_init(&device)?;
+
+    let mut data: Vec<u8> = vec![0; 16];
+    let resut = ctaphid::send_apdu(&device,&cid,0,0,0,0,&data)?;
+    Ok(())
+}
