@@ -10,7 +10,7 @@ use crate::fidokey_pi::*;
 
 // Nitrokey Custom commands between 0x40-0x7f
 //#define CTAPHID_BOOT            (TYPE_INIT | 0x50)
-//#define CTAPHID_ENTERBOOT       (TYPE_INIT | 0x51)
+const CTAPHID_ENTERBOOT: u8 = ctaphid::CTAP_FRAME_INIT | 0x51;
 //#define CTAPHID_ENTERSTBOOT     (TYPE_INIT | 0x52)
 //#define CTAPHID_REBOOT          (TYPE_INIT | 0x53)
 const CTAPHID_GETRNG: u8 = ctaphid::CTAP_FRAME_INIT | 0x60;
@@ -62,6 +62,15 @@ pub fn ctaphid_nitro_get_status(device: &FidoKeyHid, cid: &[u8]) -> Result<Vec<u
     }
 }
 
+// ENTERBOOT
+pub fn ctaphid_nitro_enter_boot(device: &FidoKeyHid, cid: &[u8]) -> Result<(), String> {
+    let payload: Vec<u8> = Vec::new();
+    match ctaphid_nitro_send_and_response(device, cid, CTAPHID_ENTERBOOT, &payload) {
+        Ok(_) => Ok(()),
+        Err(err) => return Err(err),
+    }
+}
+
 pub fn ctaphid_nitro_send_and_response(
     device: &FidoKeyHid,
     cid: &[u8],
@@ -105,10 +114,10 @@ pub fn ctaphid_nitro_send_and_response(
     /*
     println!("");
     println!("## res");
-    println!("{}", util::to_hex_str(&buf[.._res]));
+    println!("{}", util::to_hex_str(&buf[..64]));
     println!("##");
     */
-
+    
     let st = ctaphid_cbor_responce_nitro(&buf);
     if st.0 != command {
         return Err("ctaphid_cbor_responce_nitro".into());

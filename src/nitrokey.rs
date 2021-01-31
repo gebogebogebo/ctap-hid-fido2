@@ -153,3 +153,10 @@ pub fn get_status(hid_params: &[crate::HidParam]) -> Result<NitrokeyStatus, Stri
 
     Ok(ret)
 }
+
+pub fn enter_boot(hid_params: &[crate::HidParam]) -> Result<(), String> {
+    let device = FidoKeyHid::new(hid_params)?;
+    let cid = ctaphid::ctaphid_init(&device)?;
+    let result = ctapihd_nitro::ctaphid_nitro_enter_boot(&device, &cid)?;
+    Ok(result)
+}
