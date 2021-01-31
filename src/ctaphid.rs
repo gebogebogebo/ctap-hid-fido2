@@ -18,6 +18,7 @@ const PAYLOAD_SIZE_AN_INITIALIZATION_PACKET: usize = 64 - 7;
 const PAYLOAD_SIZE_A_CONTINUATION_PACKET: usize = 64 - 5;
 
 // CTAP Command
+const CTAPHID_MSG: u8 = CTAP_FRAME_INIT | 0x03;
 const CTAPHID_INIT: u8 = CTAP_FRAME_INIT | 0x06;
 const CTAPHID_WINK: u8 = CTAP_FRAME_INIT | 0x08;
 const CTAPHID_CBOR: u8 = CTAP_FRAME_INIT | 0x10;
@@ -305,3 +306,65 @@ pub fn ctaphid_cbor(
         Ok(cbor_data)
     }
 }
+
+pub fn ctaphid_msg(
+    device: &FidoKeyHid,
+    cid: &[u8],
+    payload: &Vec<u8>,
+) -> Result<Vec<u8>, String> {
+    // CTAPHID_MSG
+    let mut cmd: [u8; 65] = [0; 65];
+
+    // Report ID
+    cmd[0] = 0x00;
+
+    // cid-dmy
+    cmd[1] = cid[0];
+    cmd[2] = cid[1];
+    cmd[3] = cid[2];
+    cmd[4] = cid[3];
+
+    // command
+    cmd[5] = CTAPHID_MSG;
+
+    // High part of payload length
+    cmd[6] = (((payload.len() as u16) >> 8) as u8) & 0xff;
+    // Low part of payload length
+    cmd[7] = (payload.len() as u8) & 0xff;
+
+    // payload
+    let size = payload.len();
+    for counter in 0..size {
+        cmd[8 + counter] = payload[counter];
+    }
+
+    device.write(&cmd)?;
+    let buf = device.read()?;
+
+    Ok(buf)
+}
+
+/*
+https://github.com/Yubico/python-fido2/blob/master/fido2/ctap1.py#L214
+    def send_apdu(self, cla=0, ins=0, p1=0, p2=0, data=b""):
+        """Packs and sends an APDU for use in CTAP1 commands.
+        This is a low-level method mainly used internally. Avoid calling it
+        directly if possible, and use the get_version, register, and
+        authenticate methods if possible instead.
+        :param cla: The CLA parameter of the request.
+        :param ins: The INS parameter of the request.
+        :param p1: The P1 parameter of the request.
+        :param p2: The P2 parameter of the request.
+        :param data: The body of the request.
+        :return: The response APDU data of a successful request.
+        :raise: ApduError
+        """
+        apdu = struct.pack(">BBBBBH", cla, ins, p1, p2, 0, len(data)) + data + b"\0\0"
+
+        response = self.device.call(CTAPHID.MSG, apdu)
+        status = struct.unpack(">H", response[-2:])[0]
+        data = response[:-2]
+        if status != APDU.OK:
+            raise ApduError(status, data)
+        return data
+*/
