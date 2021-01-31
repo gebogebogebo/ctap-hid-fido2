@@ -17,6 +17,9 @@
 		},
 		{
 			"path": "examples/nitro"
+		},
+		{
+			"path": "examples/nitro-update"
 		}
 	],
 	"settings": {}
