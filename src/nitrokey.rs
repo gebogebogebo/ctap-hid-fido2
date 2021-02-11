@@ -165,6 +165,54 @@ pub fn solo_bootloader(hid_params: &[crate::HidParam]) -> Result<(), String> {
     let device = FidoKeyHid::new(hid_params)?;
     let cid = ctaphid::ctaphid_init(&device)?;
 
+    // format_request
+    // \x44 \x00 \x00 \x00 \x8c \x27 \x90 \xf6 \x00 \x10 AAAAAAAAAAAAAAAA
+    let solo_bootloader_version = 0x44;
+    let mut format_request: Vec<u8> = vec![0; 26];
+    format_request[0] = solo_bootloader_version;
+    format_request[1] = 0;
+    format_request[2] = 0;
+    format_request[3] = 0;
+
+    // TAG
+    format_request[4] = 0x8c;
+    format_request[5] = 0x27;
+    format_request[6] = 0x90;
+    format_request[7] = 0xf6;
+
+    // length
+    format_request[8] = 0;
+    format_request[9] = 16;
+
+    // data(A x 16)
+    for counter in 0..16 {
+        format_request[10 + counter] = 0x41;
+    }
+    // format_request
+
+    // authenticate
+    /*
+    client_param = b"B" * 32
+    app_param = b"A" * 32
+    key_handle = format_request
+    
+    def authenticate(self, client_param, app_param, key_handle, check_only=False):
+        """Authenticate a previously registered credential.
+        :param client_param: SHA256 hash of the ClientData used for the request.
+        :param app_param: SHA256 hash of the app ID used for the request.
+        :param key_handle: The binary key handle of the credential.
+        :param check_only: True to send a "check-only" request, which is used to
+            determine if a key handle is known.
+        :return: The authentication response from the authenticator.
+        """
+        data = (
+            client_param + app_param + struct.pack(">B", len(key_handle)) + key_handle
+        )
+        p1 = 0x07 if check_only else 0x03
+        response = self.send_apdu(ins=Ctap1.INS.AUTHENTICATE, p1=p1, data=data)
+        return SignatureData(response)
+    */
+
     let mut data: Vec<u8> = vec![0; 16];
     let resut = ctaphid::send_apdu(&device,&cid,0,0,0,0,&data)?;
     Ok(())
