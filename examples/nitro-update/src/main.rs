@@ -10,6 +10,4 @@ fn main() {
     };
     println!("----- Nitrokey ENTERBOOT end -----");
 
-    // test
-    ctap_hid_fido2::nitrokey::solo_bootloader(&ctap_hid_fido2::HidParam::get_default_params());
 }
