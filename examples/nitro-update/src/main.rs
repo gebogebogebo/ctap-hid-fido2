@@ -1,7 +1,7 @@
 fn main() {
 
     // test
-    ctap_hid_fido2::nitrokey::solo_bootloader(&ctap_hid_fido2::HidParam::get_default_params());
+    //ctap_hid_fido2::nitrokey::solo_bootloader(&ctap_hid_fido2::HidParam::get_default_params());
 
     // ブートローダーモードに遷移する
     // キーをタッチしてグリーンのランプが点灯した状態で実行すると成功しやすい

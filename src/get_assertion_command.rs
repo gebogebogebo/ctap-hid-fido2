@@ -2,6 +2,7 @@ use crate::util;
 use serde_cbor::to_vec;
 use serde_cbor::Value;
 use std::collections::BTreeMap;
+use crate::ctapdef;
 
 #[derive(Debug, Default)]
 pub struct Params {
@@ -83,7 +84,7 @@ pub fn create_payload(params: Params) -> Vec<u8> {
     let cbor = Value::Map(get_assertion);
 
     // Command - authenticatorGetAssertion (0x02)
-    let mut payload = [0x02].to_vec();
+    let mut payload = [ctapdef::AUTHENTICATOR_GET_ASSERTION].to_vec();
     payload.append(&mut to_vec(&cbor).unwrap());
 
     payload
