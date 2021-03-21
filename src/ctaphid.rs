@@ -367,7 +367,7 @@ pub fn send_apdu(
     :raise: ApduError
     */
 
-    let mut apdu: Vec<u8> = vec![0; PACKET_SIZE];
+    let mut apdu: Vec<u8> = vec![0; 7+data.len()];
     // reserved
     apdu[0]=cla;
     // U2F Command
@@ -384,11 +384,13 @@ pub fn send_apdu(
     // Low part of payload length
     apdu[6] = (data.len() as u8) & 0xff;
 
+    /*PEND
     // data
     let size = data.len();
     for counter in 0..size {
         apdu[7 + counter] = data[counter];
     }
+    */
 
     ctaphid_msg(device,cid,&apdu)
 }
