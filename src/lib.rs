@@ -5,6 +5,7 @@
 
 */
 
+mod ctapdef;
 mod client_pin_command;
 mod client_pin_response;
 mod cose;
@@ -139,7 +140,8 @@ pub fn get_info(hid_params: &[HidParam]) -> Result<Vec<(String, String)>, String
     let response_cbor = ctaphid::ctaphid_cbor(&device, &cid, &send_payload)?;
 
     let info = get_info_response::parse_cbor(&response_cbor)?;
-
+    info.print("Debug");
+    
     let mut result: Vec<(String, String)> = vec![];
 
     for i in info.versions {
@@ -156,8 +158,8 @@ pub fn get_info(hid_params: &[HidParam]) -> Result<Vec<(String, String)>, String
 
     result.push(("max_msg_size".to_string(), info.max_msg_size.to_string()));
 
-    for i in info.pin_protocols {
-        result.push(("pin_protocols".to_string(), i.to_string()));
+    for i in info.pin_uv_auth_protocols {
+        result.push(("pin_uv_auth_protocols".to_string(), i.to_string()));
     }
 
     Ok(result)

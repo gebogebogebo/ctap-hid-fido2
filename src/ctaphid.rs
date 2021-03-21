@@ -17,7 +17,7 @@ pub const PACKET_SIZE: usize = 1 + 64;
 const PAYLOAD_SIZE_AN_INITIALIZATION_PACKET: usize = 64 - 7;
 const PAYLOAD_SIZE_A_CONTINUATION_PACKET: usize = 64 - 5;
 
-// CTAP Command
+// CTAPHID Command
 const CTAPHID_MSG: u8 = CTAP_FRAME_INIT | 0x03;
 const CTAPHID_INIT: u8 = CTAP_FRAME_INIT | 0x06;
 const CTAPHID_WINK: u8 = CTAP_FRAME_INIT | 0x08;
@@ -302,7 +302,7 @@ pub fn ctaphid_cbor(
         println!("{}", util::to_hex_str(&cbor_data));
         println!("##");
         */
-
+        
         Ok(cbor_data)
     }
 }

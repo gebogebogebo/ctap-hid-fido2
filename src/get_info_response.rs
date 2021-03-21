@@ -4,12 +4,19 @@ use serde_cbor::Value;
 
 #[derive(Debug, Default)]
 pub struct Info {
+    // CTAP 2.0
     pub versions: Vec<String>,
     pub extensions: Vec<String>,
     pub aaguid: Vec<u8>,
     pub options: Vec<(String, bool)>,
     pub max_msg_size: i32,
-    pub pin_protocols: Vec<i32>,
+    //pub pin_protocols: Vec<i32>,
+    // CTAP 2.1
+    pub pin_uv_auth_protocols: Vec<u32>,
+    pub max_credential_count_in_list: u32,
+    pub max_credential_id_length: u32,
+    pub transports: Vec<String>,
+    pub algorithms: Vec<(String, String)>,
 }
 
 impl Info {
@@ -25,16 +32,22 @@ impl Info {
         );
         println!("- options       = {:?}", self.options);
         println!("- max_msg_size  = {:?}", self.max_msg_size);
-        println!("- pin_protocols = {:?}", self.pin_protocols);
+        println!("- pin_uv_auth_protocols = {:?}", self.pin_uv_auth_protocols);
+        println!("- max_credential_count_in_list = {:?}", self.max_credential_count_in_list);
+        println!("- max_credential_id_length = {:?}", self.max_credential_id_length);
+        println!("- algorithms    = {:?}", self.algorithms);
+
+        println!("");
     }
 }
 
 fn parse_cbor_member(member: i128, val: &Value, info: &mut Info) {
+
     match member {
-        1 => info.versions = util::cbor_value_to_vec_string(val).unwrap(),
-        2 => info.extensions = util::cbor_value_to_vec_string(val).unwrap(),
-        3 => info.aaguid = util::cbor_value_to_vec_u8(val).unwrap(),
-        4 => {
+        0x01 => info.versions = util::cbor_value_to_vec_string(val).unwrap(),
+        0x02 => info.extensions = util::cbor_value_to_vec_string(val).unwrap(),
+        0x03 => info.aaguid = util::cbor_value_to_vec_u8(val).unwrap(),
+        0x04 => {
             if let Value::Map(xs) = val {
                 for (key, val) in xs {
                     if let Value::Text(s) = key {
@@ -45,12 +58,38 @@ fn parse_cbor_member(member: i128, val: &Value, info: &mut Info) {
                 }
             }
         }
-        5 => info.max_msg_size = util::cbor_cast_value(val).unwrap(),
-        6 => {
+        0x05 => info.max_msg_size = util::cbor_cast_value(val).unwrap(),
+        0x06 => {
             if let Value::Array(xs) = val {
                 for x in xs {
                     if let Value::Integer(v) = x {
-                        info.pin_protocols.push(NumCast::from(*v).unwrap());
+                        info.pin_uv_auth_protocols.push(NumCast::from(*v).unwrap());
+                    }
+                }
+            }
+        }
+        0x07 => info.max_credential_count_in_list = util::cbor_cast_value(val).unwrap(),
+        0x08 => info.max_credential_id_length = util::cbor_cast_value(val).unwrap(),
+        0x09 => info.transports = util::cbor_value_to_vec_string(val).unwrap(),
+        0x0A => {
+            if let Value::Array(xs) = val {
+                for x in xs {
+                    if let Value::Map(n) = x {
+                        for (key, val) in n {
+                            let mut setkey = "";
+                            let mut setval = "";
+                            if let Value::Text(keystr) = key {
+                                setkey = keystr;
+                                if let Value::Text(valstr) = val {
+                                    setval = valstr;
+                                }else if let Value::Integer(valint) = val {
+                                    //let tmp = valint.to_string();
+                                    //setval = String::from(tmp);
+                                    setval = "??";
+                                }
+                            }
+                            info.algorithms.push((setkey.to_string(),setval.to_string()));
+                        }
                     }
                 }
             }

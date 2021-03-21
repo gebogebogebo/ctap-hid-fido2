@@ -213,7 +213,9 @@ pub fn solo_bootloader(hid_params: &[crate::HidParam]) -> Result<(), String> {
         return SignatureData(response)
     */
 
-    let mut data: Vec<u8> = vec![0; 16];
-    let resut = ctaphid::send_apdu(&device,&cid,0,0,0,0,&data)?;
+    // send
+    let _data: Vec<u8> = vec![0; 16];
+    let _resut = ctaphid::send_apdu(&device,&cid,0,0,0,0,&_data)?;
+
     Ok(())
 }

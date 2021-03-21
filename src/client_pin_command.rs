@@ -2,6 +2,7 @@ use crate::cose;
 use serde_cbor::to_vec;
 use serde_cbor::Value;
 use std::collections::BTreeMap;
+use crate::ctapdef;
 
 #[allow(dead_code)]
 pub enum SubCommand {
@@ -26,7 +27,7 @@ fn create_payload_get_keyagreement() -> Vec<u8> {
     let cbor = Value::Map(map);
 
     // Command - authenticatorClientPIN (0x06)
-    let mut payload = [0x06].to_vec();
+    let mut payload = [ctapdef::AUTHENTICATOR_CLIENT_PIN].to_vec();
     payload.append(&mut to_vec(&cbor).unwrap());
     payload
 }
