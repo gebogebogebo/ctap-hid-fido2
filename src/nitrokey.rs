@@ -214,8 +214,13 @@ pub fn solo_bootloader(hid_params: &[crate::HidParam]) -> Result<(), String> {
     */
 
     // send
-    let _data: Vec<u8> = vec![0; 16];
-    let _resut = ctaphid::send_apdu(&device,&cid,0,0,0,0,&_data)?;
+    //let resut = ctaphid::send_apdu(&device,&cid,0,0,0,0,&format_request)?;
+
+    // CTAP1_INS.Version = 3
+    // result = 0x55 32 46 5F 56 32 90 -> U2F_V2
+    // http://web-apps.nbookmark.com/ascii-converter/
+    let _data: Vec<u8> = Vec::new();
+    let result = ctaphid::send_apdu(&device,&cid,0,3,0,0,&_data)?;
 
     Ok(())
 }
