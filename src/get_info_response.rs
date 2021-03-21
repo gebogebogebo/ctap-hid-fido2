@@ -76,19 +76,26 @@ fn parse_cbor_member(member: i128, val: &Value, info: &mut Info) {
                 for x in xs {
                     if let Value::Map(n) = x {
                         for (key, val) in n {
-                            let mut setkey = "";
-                            let mut setval = "";
-                            if let Value::Text(keystr) = key {
-                                setkey = keystr;
-                                if let Value::Text(valstr) = val {
-                                    setval = valstr;
-                                }else if let Value::Integer(valint) = val {
-                                    //let tmp = valint.to_string();
-                                    //setval = String::from(tmp);
-                                    setval = "??";
+
+                            let setkey = {
+                                if let Value::Text(keystr) = key {
+                                    keystr.to_string()
+                                } else{
+                                    "".to_string()
                                 }
-                            }
-                            info.algorithms.push((setkey.to_string(),setval.to_string()));
+                            };
+                            
+                            let setval = {
+                                if let Value::Text(valstr) = val {
+                                    valstr.to_string()
+                                }else if let Value::Integer(valint) = val {
+                                    valint.to_string()
+                                }else{
+                                    "".to_string()
+                                }
+                            };
+
+                            info.algorithms.push((setkey,setval));
                         }
                     }
                 }
