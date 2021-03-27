@@ -153,6 +153,18 @@ pub(crate) fn get_ctap_status_message(status: u8) -> String {
     }
 }
 
+pub(crate) fn get_u2f_status_message(status: u8) -> String {
+    match status {
+        0x90 => "SW_NO_ERROR (0x9000): The command completed successfully without error.".to_string(),
+        0x69 => "SW_CONDITIONS_NOT_SATISFIED (0x6985): The request was rejected due to test-of-user-presence being required.".to_string(),
+        0x6A => "SW_WRONG_DATA (0x6A80): The request was rejected due to an invalid key handle.".to_string(),
+        0x67 => "SW_WRONG_LENGTH (0x6700): The length of the request was invalid.".to_string(),
+        0x6E => "SW_CLA_NOT_SUPPORTED (0x6E00): The Class byte of the request is not supported.".to_string(),
+        0x6D => "SW_INS_NOT_SUPPORTED (0x6D00): The Instruction of the request is not supported.".to_string(),
+        _ => format!("0x{:X}", status),
+    }
+}
+
 #[allow(dead_code)]
 pub(crate) fn convert_to_publickey_pem(public_key_der: &[u8]) -> String {
     let mut tmp = vec![];

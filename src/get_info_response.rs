@@ -33,8 +33,14 @@ impl Info {
         println!("- options       = {:?}", self.options);
         println!("- max_msg_size  = {:?}", self.max_msg_size);
         println!("- pin_uv_auth_protocols = {:?}", self.pin_uv_auth_protocols);
-        println!("- max_credential_count_in_list = {:?}", self.max_credential_count_in_list);
-        println!("- max_credential_id_length = {:?}", self.max_credential_id_length);
+        println!(
+            "- max_credential_count_in_list = {:?}",
+            self.max_credential_count_in_list
+        );
+        println!(
+            "- max_credential_id_length = {:?}",
+            self.max_credential_id_length
+        );
         println!("- algorithms    = {:?}", self.algorithms);
 
         println!("");
@@ -42,7 +48,6 @@ impl Info {
 }
 
 fn parse_cbor_member(member: i128, val: &Value, info: &mut Info) {
-
     match member {
         0x01 => info.versions = util::cbor_value_to_vec_string(val).unwrap(),
         0x02 => info.extensions = util::cbor_value_to_vec_string(val).unwrap(),
@@ -76,26 +81,25 @@ fn parse_cbor_member(member: i128, val: &Value, info: &mut Info) {
                 for x in xs {
                     if let Value::Map(n) = x {
                         for (key, val) in n {
-
                             let setkey = {
                                 if let Value::Text(keystr) = key {
                                     keystr.to_string()
-                                } else{
-                                    "".to_string()
-                                }
-                            };
-                            
-                            let setval = {
-                                if let Value::Text(valstr) = val {
-                                    valstr.to_string()
-                                }else if let Value::Integer(valint) = val {
-                                    valint.to_string()
-                                }else{
+                                } else {
                                     "".to_string()
                                 }
                             };
 
-                            info.algorithms.push((setkey,setval));
+                            let setval = {
+                                if let Value::Text(valstr) = val {
+                                    valstr.to_string()
+                                } else if let Value::Integer(valint) = val {
+                                    valint.to_string()
+                                } else {
+                                    "".to_string()
+                                }
+                            };
+
+                            info.algorithms.push((setkey, setval));
                         }
                     }
                 }

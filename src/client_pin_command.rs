@@ -1,8 +1,8 @@
 use crate::cose;
+use crate::ctapdef;
 use serde_cbor::to_vec;
 use serde_cbor::Value;
 use std::collections::BTreeMap;
-use crate::ctapdef;
 
 #[allow(dead_code)]
 pub enum SubCommand {

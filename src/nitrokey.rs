@@ -209,7 +209,7 @@ pub fn solo_bootloader(hid_params: &[crate::HidParam]) -> Result<(), String> {
     client_param = b"B" * 32
     app_param = b"A" * 32
     key_handle = format_request
-    
+
     def authenticate(self, client_param, app_param, key_handle, check_only=False):
         """Authenticate a previously registered credential.
         :param client_param: SHA256 hash of the ClientData used for the request.
@@ -228,38 +228,40 @@ pub fn solo_bootloader(hid_params: &[crate::HidParam]) -> Result<(), String> {
     */
 
     // data
-    let mut data: Vec<u8> = vec![0; client_param.len()+app_param.len()+1+format_request.len()];
+    let mut data: Vec<u8> =
+        vec![0; client_param.len() + app_param.len() + 1 + format_request.len()];
     let mut index = 0;
     for counter in 0..client_param.len() {
         data[index] = client_param[counter];
-        index=index+1
+        index = index + 1
     }
     for counter in 0..app_param.len() {
         data[index] = app_param[counter];
-        index=index+1;
+        index = index + 1;
     }
 
     data[index] = 26;
-    index=index+1;
+    index = index + 1;
 
     for counter in 0..format_request.len() {
         data[index] = format_request[counter];
-        index=index+1;
+        index = index + 1;
     }
 
     // send
-    //let result = ctaphid::send_apdu(&device,&cid,0,0,0,0,&data)?;
+    let result = ctaphid::send_apdu(&device, &cid, 0, 0, 0, 0, &data);
 
+    let a = 0;
     {
         // CTAP1_INS.Version = 3
         //　　　 　　　　U  2  F  _  V  2
         // result = 0x55 32 46 5F 56 32 90 -> U2F_V2
-        //            85 50 70 95 86 50 
+        //            85 50 70 95 86 50
         // http://web-apps.nbookmark.com/ascii-converter/
         let _data: Vec<u8> = Vec::new();
-        let result = ctaphid::send_apdu(&device,&cid,0,3,0,0,&_data)?;
+        let result = ctaphid::send_apdu(&device, &cid, 0, 3, 0, 0, &_data)?;
         let version: String = String::from_utf8(result).unwrap();
-        println!("U2F version = {}",version);
+        println!("U2F version = {}", version);
     }
 
     Ok(())

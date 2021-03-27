@@ -28,7 +28,7 @@ const CTAPHID_KEEPALIVE: u8 = CTAP_FRAME_INIT | 0x3B;
 //const CTAPHID_KEEPALIVE_STATUS_PROCESSING = 1;     // The authenticator is still processing the current request.
 //const CTAPHID_KEEPALIVE_STATUS_UPNEEDED = 2;       // The authenticator is waiting for user presence.
 
-pub fn ctaphid_init(device: &FidoKeyHid) -> Result<[u8; 4],String> {
+pub fn ctaphid_init(device: &FidoKeyHid) -> Result<[u8; 4], String> {
     // CTAPHID_INIT
     let mut cmd: [u8; 65] = [0; 65];
 
@@ -81,7 +81,7 @@ fn get_responce_status(packet: &[u8]) -> (u8, u16, u8) {
     // status
     let response_status = if command == CTAPHID_MSG {
         // U2F(last byte of data)
-        packet[(4+2+payload_size-1) as usize]
+        packet[(4 + 2 + payload_size - 1) as usize]
     } else {
         // CTAP(first byte of data)
         packet[7]
@@ -90,16 +90,24 @@ fn get_responce_status(packet: &[u8]) -> (u8, u16, u8) {
     (command, payload_size, response_status)
 }
 
-fn is_responce_error(status:(u8, u16, u8)) -> bool{
+fn is_responce_error(status: (u8, u16, u8)) -> bool {
     if status.0 == CTAPHID_MSG {
-        !status.2 == 0x90
-    }else{
-        !status.2 == 0x00
+        !(status.2 == 0x90)
+    } else {
+        !(status.2 == 0x00)
     }
 }
 
-fn get_data(status:(u8, u16, u8),payload: Vec<u8>) -> Vec<u8>{
-    let statindex = if status.0 == CTAPHID_MSG {0} else {1};
+fn get_status_message(status: (u8, u16, u8)) -> String {
+    if status.0 == CTAPHID_MSG {
+        util::get_u2f_status_message(status.2)
+    } else {
+        util::get_ctap_status_message(status.2)
+    }
+}
+
+fn get_data(status: (u8, u16, u8), payload: Vec<u8>) -> Vec<u8> {
+    let statindex = if status.0 == CTAPHID_MSG { 0 } else { 1 };
 
     // data size
     let datasize = if status.0 == CTAPHID_MSG {
@@ -127,7 +135,7 @@ fn ctaphid_cbor_responce_get_payload_2(packet: &[u8]) -> Vec<u8> {
     (&packet[5..64]).to_vec()
 }
 
-fn create_initialization_packet(cid: &[u8], commoand: u8,payload: &Vec<u8>) -> (Vec<u8>, bool) {
+fn create_initialization_packet(cid: &[u8], commoand: u8, payload: &Vec<u8>) -> (Vec<u8>, bool) {
     let mut cmd: Vec<u8> = vec![0; PACKET_SIZE];
 
     // Report ID
@@ -198,7 +206,7 @@ fn create_continuation_packet(seqno: u8, cid: &[u8], payload: &Vec<u8>) -> (Vec<
     (cmd, next)
 }
 
-pub fn ctaphid_wink(device: &FidoKeyHid, cid: &[u8]) -> Result<(), String>  {
+pub fn ctaphid_wink(device: &FidoKeyHid, cid: &[u8]) -> Result<(), String> {
     // CTAPHID_WINK
     let mut cmd: [u8; 65] = [0; 65];
 
@@ -287,20 +295,16 @@ fn ctaphid_cbormsg(
         }
     }
 
-    let payload_size = st.1;
-
     //println!("payload_size = {:?} byte", payload_size);
     //println!("response_status = 0x{:02X}", st.2);
 
     if is_responce_error(st) {
-        Err(format!(
-            "response_status err = {}",
-            util::get_ctap_status_message(st.2)
-        ))
+        Err(format!("response_status err = {}", get_status_message(st)))
     } else {
         let mut payload = ctaphid_cbor_responce_get_payload_1(&packet_1st);
 
-        // 次のパケットがある?
+        // Is Exists Next Packet?
+        let payload_size = st.1;
         if (payload.len() as u16) < payload_size {
             for _ in 1..=100 {
                 // read next packet
@@ -328,7 +332,7 @@ fn ctaphid_cbormsg(
         }
 
         // get data
-        let data = get_data(st,payload);
+        let data = get_data(st, payload);
 
         /*
         println!("");
@@ -336,25 +340,17 @@ fn ctaphid_cbormsg(
         println!("{}", util::to_hex_str(&cbor_data));
         println!("##");
         */
-        
+
         Ok(data)
     }
 }
 
-pub fn ctaphid_cbor(
-    device: &FidoKeyHid,
-    cid: &[u8],
-    payload: &Vec<u8>,
-) -> Result<Vec<u8>, String> {
-    ctaphid_cbormsg(device,cid,CTAPHID_CBOR,payload)
+pub fn ctaphid_cbor(device: &FidoKeyHid, cid: &[u8], payload: &Vec<u8>) -> Result<Vec<u8>, String> {
+    ctaphid_cbormsg(device, cid, CTAPHID_CBOR, payload)
 }
 
-pub fn ctaphid_msg(
-    device: &FidoKeyHid,
-    cid: &[u8],
-    payload: &Vec<u8>,
-) -> Result<Vec<u8>, String> {
-    ctaphid_cbormsg(device,cid,CTAPHID_MSG,payload)
+pub fn ctaphid_msg(device: &FidoKeyHid, cid: &[u8], payload: &Vec<u8>) -> Result<Vec<u8>, String> {
+    ctaphid_cbormsg(device, cid, CTAPHID_MSG, payload)
 }
 
 pub fn send_apdu(
@@ -380,18 +376,18 @@ pub fn send_apdu(
     :raise: ApduError
     */
 
-    let mut apdu: Vec<u8> = vec![0; 7+data.len()];
+    let mut apdu: Vec<u8> = vec![0; 7 + data.len()];
     // reserved
-    apdu[0]=cla;
+    apdu[0] = cla;
     // U2F Command
-    apdu[1]=ins;
+    apdu[1] = ins;
     // param-1
-    apdu[2]=p1;
+    apdu[2] = p1;
     // param-2
-    apdu[3]=p2;
+    apdu[3] = p2;
 
     // data-len(3byte)
-    apdu[4]=0;
+    apdu[4] = 0;
     // High part of payload length
     apdu[5] = (((data.len() as u16) >> 8) as u8) & 0xff;
     // Low part of payload length
@@ -403,7 +399,7 @@ pub fn send_apdu(
         apdu[7 + counter] = data[counter];
     }
 
-    ctaphid_msg(device,cid,&apdu)
+    ctaphid_msg(device, cid, &apdu)
 }
 
 /*
