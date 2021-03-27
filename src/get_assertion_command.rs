@@ -1,8 +1,8 @@
+use crate::ctapdef;
 use crate::util;
 use serde_cbor::to_vec;
 use serde_cbor::Value;
 use std::collections::BTreeMap;
-use crate::ctapdef;
 
 #[derive(Debug, Default)]
 pub struct Params {

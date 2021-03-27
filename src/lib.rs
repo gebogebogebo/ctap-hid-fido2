@@ -5,10 +5,10 @@
 
 */
 
-mod ctapdef;
 mod client_pin_command;
 mod client_pin_response;
 mod cose;
+mod ctapdef;
 mod ctaphid;
 mod ctapihd_nitro;
 mod get_assertion_command;
@@ -38,7 +38,6 @@ mod fidokey_pi;
 mod hid_common;
 #[cfg(target_os = "linux")]
 mod hid_linux;
-
 
 #[cfg(not(target_os = "linux"))]
 use crate::fidokey::*;
@@ -101,15 +100,21 @@ impl HidParam {
     }
 }
 
-/// check Platform 
+/// check Platform
 #[cfg(target_os = "windows")]
-pub fn hello() { println!("Hello, I'm Windows!"); }
+pub fn hello() {
+    println!("Hello, I'm Windows!");
+}
 
 #[cfg(target_os = "linux")]
-pub fn hello() { println!("Hello, I'm Linux!"); }
+pub fn hello() {
+    println!("Hello, I'm Linux!");
+}
 
 #[cfg(target_os = "macos")]
-pub fn hello() { println!("hello, I'm MacOS."); }
+pub fn hello() {
+    println!("hello, I'm MacOS.");
+}
 
 /// Get HID devices
 pub fn get_hid_devices() -> Vec<(String, HidParam)> {
@@ -141,7 +146,7 @@ pub fn get_info(hid_params: &[HidParam]) -> Result<Vec<(String, String)>, String
 
     let info = get_info_response::parse_cbor(&response_cbor)?;
     //info.print("Debug");
-    
+
     let mut result: Vec<(String, String)> = vec![];
 
     for i in info.versions {
@@ -162,8 +167,14 @@ pub fn get_info(hid_params: &[HidParam]) -> Result<Vec<(String, String)>, String
         result.push(("pin_uv_auth_protocols".to_string(), i.to_string()));
     }
 
-    result.push(("max_credential_count_in_list".to_string(), info.max_credential_count_in_list.to_string()));
-    result.push(("max_credential_id_length".to_string(), info.max_credential_id_length.to_string()));
+    result.push((
+        "max_credential_count_in_list".to_string(),
+        info.max_credential_count_in_list.to_string(),
+    ));
+    result.push((
+        "max_credential_id_length".to_string(),
+        info.max_credential_id_length.to_string(),
+    ));
     for i in info.algorithms {
         result.push((format!("algorithms-{}", i.0), i.1.to_string()));
     }
