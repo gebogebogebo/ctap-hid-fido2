@@ -67,18 +67,56 @@ pub fn ctaphid_init(device: &FidoKeyHid) -> Result<[u8; 4],String> {
     Ok([buf[15], buf[16], buf[17], buf[18]])
 }
 
-fn ctaphid_cbor_responce_status(packet: &[u8]) -> (u8, u16, u8) {
+fn get_responce_status(packet: &[u8]) -> (u8, u16, u8) {
     // cid
     //println!("- cid: {:?}", &packet[0..4]);
     // cmd
     //println!("- cmd: 0x{:2X}", packet[4]);
 
-    // 応答データ全体のサイズ packet[5],[6]
-    let payload_size = ((packet[5] as u16) << 8) + packet[6] as u16;
-    // CTAP Status
-    let response_status = packet[7];
+    let command = packet[4];
 
-    (packet[4], payload_size, response_status)
+    // response size
+    let payload_size = ((packet[5] as u16) << 8) + packet[6] as u16;
+
+    // status
+    let response_status = if command == CTAPHID_MSG {
+        // U2F(last byte of data)
+        packet[(4+2+payload_size-1) as usize]
+    } else {
+        // CTAP(first byte of data)
+        packet[7]
+    };
+
+    (command, payload_size, response_status)
+}
+
+fn is_responce_error(status:(u8, u16, u8)) -> bool{
+    if status.0 == CTAPHID_MSG {
+        !status.2 == 0x90
+    }else{
+        !status.2 == 0x00
+    }
+}
+
+fn get_data(status:(u8, u16, u8),payload: Vec<u8>) -> Vec<u8>{
+    let statindex = if status.0 == CTAPHID_MSG {0} else {1};
+
+    // data size
+    let datasize = if status.0 == CTAPHID_MSG {
+        // remove SW1 , SW2
+        status.1 - 2
+    } else {
+        status.1
+    };
+
+    // get CBOR
+    let mut data: Vec<u8> = vec![];
+    for n in statindex..datasize {
+        let index: usize = n.into();
+        let dat = payload[index];
+        data.push(dat);
+    }
+    data
 }
 
 fn ctaphid_cbor_responce_get_payload_1(packet: &[u8]) -> Vec<u8> {
@@ -89,7 +127,7 @@ fn ctaphid_cbor_responce_get_payload_2(packet: &[u8]) -> Vec<u8> {
     (&packet[5..64]).to_vec()
 }
 
-fn create_initialization_packet(cid: &[u8], payload: &Vec<u8>) -> (Vec<u8>, bool) {
+fn create_initialization_packet(cid: &[u8], commoand: u8,payload: &Vec<u8>) -> (Vec<u8>, bool) {
     let mut cmd: Vec<u8> = vec![0; PACKET_SIZE];
 
     // Report ID
@@ -104,8 +142,8 @@ fn create_initialization_packet(cid: &[u8], payload: &Vec<u8>) -> (Vec<u8>, bool
     cmd[4] = cid[3];
 
     // Command identifier (bit 7 always set)
-    // CTAP_FRAME_INIT(0x80) | CTAPHID_CBOR (0x10)
-    cmd[5] = CTAPHID_CBOR;
+    // ex. CTAP_FRAME_INIT(0x80) | CTAPHID_CBOR (0x10)
+    cmd[5] = commoand;
 
     // High part of payload length
     cmd[6] = (((payload.len() as u16) >> 8) as u8) & 0xff;
@@ -188,13 +226,14 @@ pub fn ctaphid_wink(device: &FidoKeyHid, cid: &[u8]) -> Result<(), String>  {
     Ok(())
 }
 
-pub fn ctaphid_cbor(
+fn ctaphid_cbormsg(
     device: &FidoKeyHid,
     cid: &[u8],
+    command: u8,
     payload: &Vec<u8>,
 ) -> Result<Vec<u8>, String> {
     // initialization_packet
-    let res = create_initialization_packet(cid, payload);
+    let res = create_initialization_packet(cid, command, payload);
     //println!("CTAPHID_CBOR(0) = {}", util::to_hex_str(&res.0));
 
     // Write data to device
@@ -229,8 +268,8 @@ pub fn ctaphid_cbor(
         };
         //println!("Read: {:?} byte", res);
 
-        st = ctaphid_cbor_responce_status(&buf);
-        if st.0 == CTAPHID_CBOR {
+        st = get_responce_status(&buf);
+        if st.0 == CTAPHID_CBOR || st.0 == CTAPHID_MSG {
             packet_1st = buf;
             break;
         } else if st.0 == CTAPHID_KEEPALIVE {
@@ -249,14 +288,14 @@ pub fn ctaphid_cbor(
     }
 
     let payload_size = st.1;
-    let response_status = st.2;
-    //println!("payload_size = {:?} byte", payload_size);
-    //println!("response_status = 0x{:02X}", response_status);
 
-    if response_status != 0x00 {
+    //println!("payload_size = {:?} byte", payload_size);
+    //println!("response_status = 0x{:02X}", st.2);
+
+    if is_responce_error(st) {
         Err(format!(
             "response_status err = {}",
-            util::get_ctap_status_message(response_status)
+            util::get_ctap_status_message(st.2)
         ))
     } else {
         let mut payload = ctaphid_cbor_responce_get_payload_1(&packet_1st);
@@ -288,13 +327,8 @@ pub fn ctaphid_cbor(
             }
         }
 
-        // get CBOR
-        let mut cbor_data: Vec<u8> = vec![];
-        for n in 1..payload_size {
-            let index: usize = n.into();
-            let dat = payload[index];
-            cbor_data.push(dat);
-        }
+        // get data
+        let data = get_data(st,payload);
 
         /*
         println!("");
@@ -303,8 +337,16 @@ pub fn ctaphid_cbor(
         println!("##");
         */
         
-        Ok(cbor_data)
+        Ok(data)
     }
+}
+
+pub fn ctaphid_cbor(
+    device: &FidoKeyHid,
+    cid: &[u8],
+    payload: &Vec<u8>,
+) -> Result<Vec<u8>, String> {
+    ctaphid_cbormsg(device,cid,CTAPHID_CBOR,payload)
 }
 
 pub fn ctaphid_msg(
@@ -312,36 +354,7 @@ pub fn ctaphid_msg(
     cid: &[u8],
     payload: &Vec<u8>,
 ) -> Result<Vec<u8>, String> {
-    // CTAPHID_MSG
-    let mut cmd: [u8; 65] = [0; 65];
-
-    // Report ID
-    cmd[0] = 0x00;
-
-    // cid-dmy
-    cmd[1] = cid[0];
-    cmd[2] = cid[1];
-    cmd[3] = cid[2];
-    cmd[4] = cid[3];
-
-    // command
-    cmd[5] = CTAPHID_MSG;
-
-    // High part of payload length
-    cmd[6] = (((payload.len() as u16) >> 8) as u8) & 0xff;
-    // Low part of payload length
-    cmd[7] = (payload.len() as u8) & 0xff;
-
-    // payload
-    let size = payload.len();
-    for counter in 0..size {
-        cmd[8 + counter] = payload[counter];
-    }
-
-    device.write(&cmd)?;
-    let buf = device.read()?;
-
-    Ok(buf)
+    ctaphid_cbormsg(device,cid,CTAPHID_MSG,payload)
 }
 
 pub fn send_apdu(
@@ -384,13 +397,11 @@ pub fn send_apdu(
     // Low part of payload length
     apdu[6] = (data.len() as u8) & 0xff;
 
-    /*PEND
     // data
     let size = data.len();
     for counter in 0..size {
         apdu[7 + counter] = data[counter];
     }
-    */
 
     ctaphid_msg(device,cid,&apdu)
 }

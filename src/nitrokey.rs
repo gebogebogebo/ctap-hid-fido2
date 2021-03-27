@@ -165,14 +165,28 @@ pub fn solo_bootloader(hid_params: &[crate::HidParam]) -> Result<(), String> {
     let device = FidoKeyHid::new(hid_params)?;
     let cid = ctaphid::ctaphid_init(&device)?;
 
-    // format_request
+    // client param
+    // (B * 32)
+    let mut client_param: Vec<u8> = vec![0; 32];
+    for counter in 0..32 {
+        client_param[counter] = 0x42;
+    }
+
+    // app param
+    // (A * 32)
+    let mut app_param: Vec<u8> = vec![0; 32];
+    for counter in 0..32 {
+        app_param[counter] = 0x41;
+    }
+
+    // create format_request
     // \x44 \x00 \x00 \x00 \x8c \x27 \x90 \xf6 \x00 \x10 AAAAAAAAAAAAAAAA
     let solo_bootloader_version = 0x44;
     let mut format_request: Vec<u8> = vec![0; 26];
     format_request[0] = solo_bootloader_version;
-    format_request[1] = 0;
-    format_request[2] = 0;
-    format_request[3] = 0;
+    format_request[1] = 0x00;
+    format_request[2] = 0x00;
+    format_request[3] = 0x00;
 
     // TAG
     format_request[4] = 0x8c;
@@ -181,8 +195,8 @@ pub fn solo_bootloader(hid_params: &[crate::HidParam]) -> Result<(), String> {
     format_request[7] = 0xf6;
 
     // length
-    format_request[8] = 0;
-    format_request[9] = 16;
+    format_request[8] = 0x0;
+    format_request[9] = 0x10;
 
     // data(A x 16)
     for counter in 0..16 {
@@ -213,14 +227,40 @@ pub fn solo_bootloader(hid_params: &[crate::HidParam]) -> Result<(), String> {
         return SignatureData(response)
     */
 
-    // send
-    //let resut = ctaphid::send_apdu(&device,&cid,0,0,0,0,&format_request)?;
+    // data
+    let mut data: Vec<u8> = vec![0; client_param.len()+app_param.len()+1+format_request.len()];
+    let mut index = 0;
+    for counter in 0..client_param.len() {
+        data[index] = client_param[counter];
+        index=index+1
+    }
+    for counter in 0..app_param.len() {
+        data[index] = app_param[counter];
+        index=index+1;
+    }
 
-    // CTAP1_INS.Version = 3
-    // result = 0x55 32 46 5F 56 32 90 -> U2F_V2
-    // http://web-apps.nbookmark.com/ascii-converter/
-    let _data: Vec<u8> = Vec::new();
-    let result = ctaphid::send_apdu(&device,&cid,0,3,0,0,&_data)?;
+    data[index] = 26;
+    index=index+1;
+
+    for counter in 0..format_request.len() {
+        data[index] = format_request[counter];
+        index=index+1;
+    }
+
+    // send
+    //let result = ctaphid::send_apdu(&device,&cid,0,0,0,0,&data)?;
+
+    {
+        // CTAP1_INS.Version = 3
+        //　　　 　　　　U  2  F  _  V  2
+        // result = 0x55 32 46 5F 56 32 90 -> U2F_V2
+        //            85 50 70 95 86 50 
+        // http://web-apps.nbookmark.com/ascii-converter/
+        let _data: Vec<u8> = Vec::new();
+        let result = ctaphid::send_apdu(&device,&cid,0,3,0,0,&_data)?;
+        let version: String = String::from_utf8(result).unwrap();
+        println!("U2F version = {}",version);
+    }
 
     Ok(())
 }
