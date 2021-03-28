@@ -25,6 +25,7 @@ const CTAPHID_CBOR: u8 = CTAP_FRAME_INIT | 0x10;
 //This command code is used in response messages only.
 const CTAPHID_ERROR: u8 = CTAP_FRAME_INIT | 0x3F;
 const CTAPHID_KEEPALIVE: u8 = CTAP_FRAME_INIT | 0x3B;
+
 //const CTAPHID_KEEPALIVE_STATUS_PROCESSING = 1;     // The authenticator is still processing the current request.
 //const CTAPHID_KEEPALIVE_STATUS_UPNEEDED = 2;       // The authenticator is waiting for user presence.
 
