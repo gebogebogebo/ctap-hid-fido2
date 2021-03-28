@@ -18,7 +18,7 @@ fn create_payload_get_keyagreement() -> Vec<u8> {
     let pin_prot = Value::Integer(1);
 
     // 0x02 : subCommand
-    let sub_cmd = Value::Integer(2);
+    let sub_cmd = Value::Integer(SubCommand::GetKeyAgreement as i128);
 
     // create cbor
     let mut map = BTreeMap::new();
@@ -37,7 +37,7 @@ fn create_payload_get_retries() -> Vec<u8> {
     let pin_prot = Value::Integer(1);
 
     // 0x02 : subCommand
-    let sub_cmd = Value::Integer(1);
+    let sub_cmd = Value::Integer(SubCommand::GetRetries as i128);
 
     // create cbor
     let mut map = BTreeMap::new();
@@ -46,7 +46,7 @@ fn create_payload_get_retries() -> Vec<u8> {
     let cbor = Value::Map(map);
 
     // Command - authenticatorClientPIN (0x06)
-    let mut payload = [0x06].to_vec();
+    let mut payload = [ctapdef::AUTHENTICATOR_CLIENT_PIN].to_vec();
     payload.append(&mut to_vec(&cbor).unwrap());
     payload
 }
@@ -59,7 +59,7 @@ pub fn create_payload_get_pin_token(
     let pin_prot = Value::Integer(1);
 
     // 0x02 : subCommand
-    let sub_cmd = Value::Integer(5);
+    let sub_cmd = Value::Integer(SubCommand::GetPINToken as i128);
 
     // 0x03:keyAgreement : COSE_Key
     let mut ka_val = BTreeMap::new();

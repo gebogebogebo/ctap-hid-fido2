@@ -26,6 +26,9 @@ mod pintoken;
 mod ss;
 pub mod util;
 pub mod verifier;
+mod credential_management_command;
+mod selection_command;
+mod config_command;
 
 #[cfg(not(target_os = "linux"))]
 mod fidokey;
@@ -180,6 +183,90 @@ pub fn get_info(hid_params: &[HidParam]) -> Result<Vec<(String, String)>, String
     }
 
     Ok(result)
+}
+
+/// Get Info U2F
+pub fn get_info_u2f(hid_params: &[HidParam]) -> Result<String, String> {
+    let device = FidoKeyHid::new(hid_params)?;
+    let cid = ctaphid::ctaphid_init(&device)?;
+
+    let _data: Vec<u8> = Vec::new();
+
+    // CTAP1_INS.Version = 3
+    match ctaphid::send_apdu(&device, &cid, 0, 3, 0, 0, &_data) {
+        Ok(result) =>{
+            let version: String = String::from_utf8(result).unwrap();
+            Ok(version)
+        }
+        Err(error) =>{
+            Err(error)
+        }
+    }
+}
+
+/// CredentialManagement
+pub fn credential_management(
+        hid_params: &[HidParam],
+        pin: Option<&str>
+) -> Result<String, String> {
+    let device = FidoKeyHid::new(hid_params)?;
+    let cid = ctaphid::ctaphid_init(&device)?;
+
+    //let pin = "1234";
+    let challenge = verifier::create_challenge();
+
+    // pin token
+    let pin_token = {
+        if let Some(pin) = pin {
+            Some(get_pin_token(&device, &cid, pin.to_string())?)
+        } else {
+            None
+        }
+    };
+
+    // create pin auth
+    if let Some(pin_token) = pin_token {
+        let pin_auth = pin_token.auth(&util::create_clientdata_hash(challenge.to_vec()));
+        println!("- pin_auth({:02})    = {:?}", pin_auth.len(),util::to_hex_str(&pin_auth));
+        //params.pin_auth = pin_auth.to_vec();
+
+        let send_payload = credential_management_command::create_payload_get_creds_metadata(pin_auth.to_vec());
+        println!("{}",util::to_hex_str(&send_payload));
+    
+        let _response_cbor = ctaphid::ctaphid_cbor(&device, &cid, &send_payload)?;
+
+        let a = 0;
+    }
+
+        
+    Ok("".to_string())
+}
+
+/// Selection
+pub fn selection(hid_params: &[HidParam]) -> Result<String, String> {
+    let device = FidoKeyHid::new(hid_params)?;
+    let cid = ctaphid::ctaphid_init(&device)?;
+
+    let send_payload = selection_command::create_payload();
+    println!("{}",util::to_hex_str(&send_payload));
+
+    let _response_cbor = ctaphid::ctaphid_cbor(&device, &cid, &send_payload)?;
+        
+    Ok("".to_string())
+}
+
+/// Get Config
+pub fn config(hid_params: &[HidParam]) -> Result<String, String> {
+    let device = FidoKeyHid::new(hid_params)?;
+    let cid = ctaphid::ctaphid_init(&device)?;
+
+    let send_payload = 
+        config_command::create_payload_enable_enterprise_attestation();
+    println!("{}",util::to_hex_str(&send_payload));
+
+    let _response_cbor = ctaphid::ctaphid_cbor(&device, &cid, &send_payload)?;
+        
+    Ok("".to_string())
 }
 
 /// Get PIN retry count
