@@ -213,7 +213,8 @@ pub fn credential_management(
     let cid = ctaphid::ctaphid_init(&device)?;
 
     //let pin = "1234";
-    let challenge = verifier::create_challenge();
+    //let challenge = verifier::create_challenge();
+    let challenge = vec![0x01];
 
     // pin token
     let pin_token = {
@@ -226,12 +227,19 @@ pub fn credential_management(
 
     // create pin auth
     if let Some(pin_token) = pin_token {
-        let pin_auth = pin_token.auth(&util::create_clientdata_hash(challenge.to_vec()));
+        let pin_auth = pin_token.auth(&util::create_clientdata_hash(challenge));
         println!("- pin_auth({:02})    = {:?}", pin_auth.len(),util::to_hex_str(&pin_auth));
         //params.pin_auth = pin_auth.to_vec();
 
         let send_payload = credential_management_command::create_payload_get_creds_metadata(pin_auth.to_vec());
         println!("{}",util::to_hex_str(&send_payload));
+        /* send_pay_load
+            {
+            1: 1, 
+            3: 1, 
+            4: h'DCD318E71907CBFD3A593589A8EB2324'
+            }        
+        */
     
         let _response_cbor = ctaphid::ctaphid_cbor(&device, &cid, &send_payload)?;
 
