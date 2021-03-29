@@ -25,7 +25,7 @@ pub fn credential_management(
     if let Some(pin_token) = pin_token {
         // pinUvAuthParam (0x04): authenticate(pinUvAuthToken, getCredsMetadata (0x01)).
         // First 16 bytes of HMAC-SHA-256 of contents using pinUvAuthToken.
-        let pin_auth = pin_token.authenticate(&vec![0x01],16);
+        let pin_auth = pin_token.authenticate_v2(&vec![0x01],16);
         //println!("- pin_auth({:02})    = {:?}", pin_auth.len(),util::to_hex_str(&pin_auth));
 
         //let pin_auth = pin_token.sign(&util::create_clientdata_hash(challenge));

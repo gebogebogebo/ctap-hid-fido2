@@ -1,10 +1,11 @@
-use ring;
-use crate::util;
+//use crate::util;
 
-// PEND
+// v1
+use ring;
+
+// v2
 use sha2::Sha256;
 use hmac::{Hmac, Mac, NewMac};
-// PEND
 
 pub struct PinToken {
     pub signing_key : ring::hmac::SigningKey,
@@ -12,14 +13,14 @@ pub struct PinToken {
 }
 
 impl PinToken {
-    pub fn sign(&self, data: &[u8]) -> [u8; 16] {
+    pub fn authenticate_v1(&self, data: &[u8]) -> [u8; 16] {
         let signature = ring::hmac::sign(&self.signing_key, &data);
         let mut out = [0; 16];
         out.copy_from_slice(&signature.as_ref()[0..16]);
         out
     }
 
-    pub fn authenticate(&self, message: &[u8],firstbyte: usize) -> Vec<u8> {
+    pub fn authenticate_v2(&self, message: &[u8],firstbyte: usize) -> Vec<u8> {
         // Create alias for HMAC-SHA256
         type HmacSha256 = Hmac<Sha256>;
 
