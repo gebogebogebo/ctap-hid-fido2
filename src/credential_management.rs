@@ -9,7 +9,7 @@ use crate::util;
 pub fn credential_management(
     hid_params: &[HidParam],
     pin: Option<&str>,
-    sub_command: u8,
+    sub_command: credential_management_command::SubCommand,
 ) -> Result<String, String> {
     let device = FidoKeyHid::new(hid_params)?;
     let cid = ctaphid::ctaphid_init(&device)?;
@@ -27,13 +27,14 @@ pub fn credential_management(
     if let Some(pin_token) = pin_token {
         // pinUvAuthParam (0x04): authenticate(pinUvAuthToken, getCredsMetadata (0x01)).
         // First 16 bytes of HMAC-SHA-256 of contents using pinUvAuthToken.
-        let pin_auth = pin_token.authenticate_v2(&vec![sub_command],16);
+        let pin_auth = pin_token.authenticate_v2(&vec![sub_command as u8],16);
         //println!("- pin_auth({:02})    = {:?}", pin_auth.len(),util::to_hex_str(&pin_auth));
 
         //let pin_auth = pin_token.sign(&util::create_clientdata_hash(challenge));
         //println!("- pin_auth({:02})    = {:?}", pin_auth.len(),util::to_hex_str(&pin_auth));
 
-        let send_payload = credential_management_command::create_payload_get_creds_metadata(pin_auth.to_vec());
+        let send_payload = credential_management_command::create_payload(pin_auth.to_vec(),sub_command);
+
         println!("send(cbor) = {}",util::to_hex_str(&send_payload));
 
         let response_cbor = ctaphid::ctaphid_cbor(&device, &cid, &send_payload)?;

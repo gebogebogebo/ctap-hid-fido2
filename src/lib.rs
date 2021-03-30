@@ -164,13 +164,20 @@ pub fn get_info_u2f(hid_params: &[HidParam]) -> Result<String, String> {
     }
 }
 
-/// CredentialManagement
+/// CredentialManagement - getCredsMetadata
 pub fn credential_management_get_creds_metadata(
         hid_params: &[HidParam],
         pin: Option<&str>
 ) -> Result<String, String> {
-    credential_management::credential_management(hid_params,pin,0x01)
-    //credential_management::credential_management(hid_params,pin,0x02)
+    credential_management::credential_management(hid_params,pin,credential_management_command::SubCommand::GetCredsMetadata)
+}
+
+/// CredentialManagement - enumerateRPsBegin
+pub fn credential_management_enumerate_rps_begin(
+    hid_params: &[HidParam],
+    pin: Option<&str>
+) -> Result<String, String> {
+    credential_management::credential_management(hid_params,pin,credential_management_command::SubCommand::EnumerateRPsBegin)
 }
 
 /// Selection
