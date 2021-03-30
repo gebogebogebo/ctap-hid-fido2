@@ -14,6 +14,7 @@ mod ctapihd_nitro;
 mod get_assertion_command;
 pub mod get_assertion_params;
 mod get_assertion_response;
+mod get_info;
 mod get_info_command;
 mod get_info_response;
 mod get_next_assertion_command;
@@ -28,6 +29,7 @@ pub mod util;
 pub mod verifier;
 mod credential_management;
 mod credential_management_command;
+mod credential_management_response;
 mod selection_command;
 mod config_command;
 
@@ -140,50 +142,7 @@ pub fn wink(hid_params: &[HidParam]) -> Result<(), String> {
 
 /// Get FIDO key information
 pub fn get_info(hid_params: &[HidParam]) -> Result<Vec<(String, String)>, String> {
-    let device = FidoKeyHid::new(hid_params)?;
-    let cid = ctaphid::ctaphid_init(&device)?;
-
-    let send_payload = get_info_command::create_payload();
-    //println!("{}",util::to_hex_str(&send_payload));
-
-    let response_cbor = ctaphid::ctaphid_cbor(&device, &cid, &send_payload)?;
-
-    let info = get_info_response::parse_cbor(&response_cbor)?;
-    //info.print("Debug");
-
-    let mut result: Vec<(String, String)> = vec![];
-
-    for i in info.versions {
-        result.push(("versions".to_string(), i));
-    }
-    for i in info.extensions {
-        result.push(("extensions".to_string(), i));
-    }
-    result.push(("aaguid".to_string(), util::to_hex_str(&info.aaguid)));
-
-    for i in info.options {
-        result.push((format!("options-{}", i.0), i.1.to_string()));
-    }
-
-    result.push(("max_msg_size".to_string(), info.max_msg_size.to_string()));
-
-    for i in info.pin_uv_auth_protocols {
-        result.push(("pin_uv_auth_protocols".to_string(), i.to_string()));
-    }
-
-    result.push((
-        "max_credential_count_in_list".to_string(),
-        info.max_credential_count_in_list.to_string(),
-    ));
-    result.push((
-        "max_credential_id_length".to_string(),
-        info.max_credential_id_length.to_string(),
-    ));
-    for i in info.algorithms {
-        result.push((format!("algorithms-{}", i.0), i.1.to_string()));
-    }
-
-    Ok(result)
+    get_info::get_info(hid_params)
 }
 
 /// Get Info U2F
@@ -206,11 +165,12 @@ pub fn get_info_u2f(hid_params: &[HidParam]) -> Result<String, String> {
 }
 
 /// CredentialManagement
-pub fn credential_management(
+pub fn credential_management_get_creds_metadata(
         hid_params: &[HidParam],
         pin: Option<&str>
 ) -> Result<String, String> {
-    credential_management::credential_management(hid_params,pin)
+    credential_management::credential_management(hid_params,pin,0x01)
+    //credential_management::credential_management(hid_params,pin,0x02)
 }
 
 /// Selection
