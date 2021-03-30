@@ -4,6 +4,7 @@ use serde_cbor::Value;
 use std::collections::BTreeMap;
 
 #[allow(dead_code)]
+#[derive(Debug, Copy, Clone)]
 pub enum SubCommand {
     GetCredsMetadata = 0x01,
     EnumerateRPsBegin = 0x02,
@@ -14,9 +15,12 @@ pub enum SubCommand {
     UpdateUserInformation = 0x07,
 }
 
-pub fn create_payload_get_creds_metadata(param_pin_auth: Vec<u8>) -> Vec<u8> {
+pub fn create_payload(
+    param_pin_auth: Vec<u8>,
+    sub_command: SubCommand,
+) -> Vec<u8> {
     // subCommand
-    let sub_cmd = Value::Integer(SubCommand::GetCredsMetadata as i128);
+    let sub_cmd = Value::Integer(sub_command as i128);
 
     // pinProtocol
     let pin_protocol = Value::Integer(1);
@@ -43,3 +47,4 @@ pub fn create_payload_get_creds_metadata(param_pin_auth: Vec<u8>) -> Vec<u8> {
     payload.append(&mut to_vec(&cbor).unwrap());
     payload
 }
+
