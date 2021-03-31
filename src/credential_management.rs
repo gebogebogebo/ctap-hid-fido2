@@ -2,6 +2,7 @@ use crate::FidoKeyHid;
 use crate::get_pin_token;
 use crate::HidParam;
 use crate::ctaphid;
+use crate::credential_management_params;
 use crate::credential_management_command;
 use crate::credential_management_response;
 use crate::util;
@@ -10,7 +11,7 @@ pub fn credential_management(
     hid_params: &[HidParam],
     pin: Option<&str>,
     sub_command: credential_management_command::SubCommand,
-) -> Result<String, String> {
+) -> Result<credential_management_params::CredsMetadata, String> {
     let device = FidoKeyHid::new(hid_params)?;
     let cid = ctaphid::ctaphid_init(&device)?;
 
@@ -40,10 +41,10 @@ pub fn credential_management(
         let response_cbor = ctaphid::ctaphid_cbor(&device, &cid, &send_payload)?;
         println!("response(cbor) = {}",util::to_hex_str(&response_cbor));
 
-        let data = credential_management_response::parse_cbor(&response_cbor)?;
-        data.print("Debug");
-
+        Ok(credential_management_response::parse_cbor(&response_cbor)?)
+        //data.print("Debug");
+    }else{
+        Err("PIN Token Error".to_string())
     }
         
-    Ok("".to_string())
 }
