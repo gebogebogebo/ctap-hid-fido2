@@ -173,7 +173,7 @@ pub fn credential_management_get_creds_metadata(
     credential_management::credential_management(hid_params,pin,credential_management_command::SubCommand::GetCredsMetadata)
 }
 
-/// CredentialManagement - enumerateRPsBegin
+/// CredentialManagement - enumerateRPsBegin & enumerateRPsNext
 pub fn credential_management_enumerate_rps(
     hid_params: &[HidParam],
     pin: Option<&str>
@@ -188,6 +188,23 @@ pub fn credential_management_enumerate_rps(
     }
     Ok(datas)
 }
+
+/// CredentialManagement - enumerateCredentialsBegin & enumerateCredentialsNext
+pub fn credential_management_enumerate_credentials(
+    hid_params: &[HidParam],
+    pin: Option<&str>
+) -> Result<Vec<credential_management_params::CredsMetadata>, String> {
+    let mut datas:Vec<credential_management_params::CredsMetadata> = Vec::new();
+    let data = credential_management::credential_management(hid_params,pin,credential_management_command::SubCommand::EnumerateCredentialsBegin)?;
+    let roop_n = data.total_rps-1;
+    datas.push(data);
+    for _ in 0..roop_n {
+        let data = credential_management::credential_management(hid_params,pin,credential_management_command::SubCommand::EnumerateRPsGetNextRP)?;
+        datas.push(data);
+    }
+    Ok(datas)
+}
+
 
 /// Selection
 pub fn selection(hid_params: &[HidParam]) -> Result<String, String> {

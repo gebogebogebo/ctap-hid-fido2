@@ -35,7 +35,6 @@ pub fn credential_management(
         //println!("- pin_auth({:02})    = {:?}", pin_auth.len(),util::to_hex_str(&pin_auth));
 
         let send_payload = credential_management_command::create_payload(pin_auth.to_vec(),sub_command);
-
         println!("send(cbor) = {}",util::to_hex_str(&send_payload));
 
         let response_cbor = ctaphid::ctaphid_cbor(&device, &cid, &send_payload)?;
