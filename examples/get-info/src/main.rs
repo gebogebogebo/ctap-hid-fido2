@@ -5,6 +5,18 @@ fn main() {
     ctap_hid_fido2::hello();
 
     // PEND
+    println!("credential_management_enumerate_credentials()");
+    match ctap_hid_fido2::credential_management_enumerate_credentials(&ctap_hid_fido2::HidParam::get_default_params(),Some("1234")) {
+        Ok(results) => {
+            for data in results{
+                data.print("- credentials");
+            }
+        }
+        Err(error) => {
+            println!("- enumerate credentials error: {:?}", error);
+        }
+    };
+
     println!("credential_management_get_creds_metadata()");
     match ctap_hid_fido2::credential_management_get_creds_metadata(&ctap_hid_fido2::HidParam::get_default_params(),Some("1234")) {
         Ok(result) => {
@@ -14,15 +26,15 @@ fn main() {
             println!("- creds metadata error: {:?}", error);
         }
     };
-    println!("credential_management_enumerate_rps_begin()");
+    println!("credential_management_enumerate_rps()");
     match ctap_hid_fido2::credential_management_enumerate_rps(&ctap_hid_fido2::HidParam::get_default_params(),Some("1234")) {
         Ok(results) => {
             for data in results{
-                data.print("- rps begin");
+                data.print("- rps");
             }
         }
         Err(error) => {
-            println!("- rps begin error: {:?}", error);
+            println!("- enumerate rps error: {:?}", error);
         }
     };
     // PEND
