@@ -26,15 +26,7 @@ pub fn credential_management(
 
     // create pin auth
     if let Some(pin_token) = pin_token {
-        // pinUvAuthParam (0x04): authenticate(pinUvAuthToken, getCredsMetadata (0x01)).
-        // First 16 bytes of HMAC-SHA-256 of contents using pinUvAuthToken.
-        let pin_auth = pin_token.authenticate_v2(&vec![sub_command as u8],16);
-        //println!("- pin_auth({:02})    = {:?}", pin_auth.len(),util::to_hex_str(&pin_auth));
-
-        //let pin_auth = pin_token.sign(&util::create_clientdata_hash(challenge));
-        //println!("- pin_auth({:02})    = {:?}", pin_auth.len(),util::to_hex_str(&pin_auth));
-
-        let send_payload = credential_management_command::create_payload(pin_auth.to_vec(),sub_command);
+        let send_payload = credential_management_command::create_payload(pin_token,sub_command);
         println!("send(cbor) = {}",util::to_hex_str(&send_payload));
 
         let response_cbor = ctaphid::ctaphid_cbor(&device, &cid, &send_payload)?;

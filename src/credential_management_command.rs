@@ -1,7 +1,8 @@
-use crate::ctapdef;
 use serde_cbor::to_vec;
 use serde_cbor::Value;
 use std::collections::BTreeMap;
+use crate::ctapdef;
+use crate::pintoken;
 
 #[allow(dead_code)]
 #[derive(Debug, Copy, Clone, PartialEq)]
@@ -16,9 +17,18 @@ pub enum SubCommand {
 }
 
 pub fn create_payload(
-    param_pin_auth: Vec<u8>,
+    pin_token: pintoken::PinToken,
     sub_command: SubCommand,
 ) -> Vec<u8> {
+
+    // pinUvAuthParam (0x04): authenticate(pinUvAuthToken, getCredsMetadata (0x01)).
+    // First 16 bytes of HMAC-SHA-256 of contents using pinUvAuthToken.
+    // pinUvAuthParam (0x04): authenticate(pinUvAuthToken, enumerateCredentialsBegin (0x04) || subCommandParams).
+    let param_pin_auth = pin_token.authenticate_v2(&vec![sub_command as u8],16);
+    //println!("- pin_auth({:02})    = {:?}", pin_auth.len(),util::to_hex_str(&pin_auth));
+
+    //let pin_auth = pin_token.sign(&util::create_clientdata_hash(challenge));
+    //println!("- pin_auth({:02})    = {:?}", pin_auth.len(),util::to_hex_str(&pin_auth));
 
     let mut map = BTreeMap::new();
     
