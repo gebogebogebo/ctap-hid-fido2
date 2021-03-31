@@ -15,9 +15,11 @@ fn main() {
         }
     };
     println!("credential_management_enumerate_rps_begin()");
-    match ctap_hid_fido2::credential_management_enumerate_rps_begin(&ctap_hid_fido2::HidParam::get_default_params(),Some("1234")) {
-        Ok(result) => {
-            result.print("- rps begin");
+    match ctap_hid_fido2::credential_management_enumerate_rps(&ctap_hid_fido2::HidParam::get_default_params(),Some("1234")) {
+        Ok(results) => {
+            for data in results{
+                data.print("- rps begin");
+            }
         }
         Err(error) => {
             println!("- rps begin error: {:?}", error);
