@@ -28,6 +28,7 @@ mod ss;
 pub mod util;
 pub mod verifier;
 mod credential_management;
+pub mod credential_management_params;
 mod credential_management_command;
 mod credential_management_response;
 mod selection_command;
@@ -168,7 +169,7 @@ pub fn get_info_u2f(hid_params: &[HidParam]) -> Result<String, String> {
 pub fn credential_management_get_creds_metadata(
         hid_params: &[HidParam],
         pin: Option<&str>
-) -> Result<String, String> {
+) -> Result<credential_management_params::CredsMetadata, String> {
     credential_management::credential_management(hid_params,pin,credential_management_command::SubCommand::GetCredsMetadata)
 }
 
@@ -176,7 +177,7 @@ pub fn credential_management_get_creds_metadata(
 pub fn credential_management_enumerate_rps_begin(
     hid_params: &[HidParam],
     pin: Option<&str>
-) -> Result<String, String> {
+) -> Result<credential_management_params::CredsMetadata, String> {
     credential_management::credential_management(hid_params,pin,credential_management_command::SubCommand::EnumerateRPsBegin)
 }
 
