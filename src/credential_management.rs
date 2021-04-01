@@ -27,7 +27,7 @@ pub fn credential_management(
 
     // create pin auth
     if let Some(pin_token) = pin_token {
-        let send_payload = credential_management_command::create_payload(pin_token,sub_command);
+        let send_payload = credential_management_command::create_payload(pin_token,sub_command,rpid_hash);
         println!("send(cbor) = {}",util::to_hex_str(&send_payload));
 
         let response_cbor = ctaphid::ctaphid_cbor(&device, &cid, &send_payload)?;
