@@ -19,18 +19,8 @@ pub enum SubCommand {
 pub fn create_payload(
     pin_token: pintoken::PinToken,
     sub_command: SubCommand,
+    sub_command_params: Vec<u8>,
 ) -> Vec<u8> {
-
-    // pinUvAuthParam (0x04): authenticate(pinUvAuthToken, getCredsMetadata (0x01)).
-    // First 16 bytes of HMAC-SHA-256 of contents using pinUvAuthToken.
-    // 
-    // pinUvAuthParam (0x04): authenticate(pinUvAuthToken, 
-    // enumerateCredentialsBegin (0x04) || subCommandParams).
-    let param_pin_auth = pin_token.authenticate_v2(&vec![sub_command as u8],16);
-    //println!("- pin_auth({:02})    = {:?}", pin_auth.len(),util::to_hex_str(&pin_auth));
-
-    //let pin_auth = pin_token.sign(&util::create_clientdata_hash(challenge));
-    //println!("- pin_auth({:02})    = {:?}", pin_auth.len(),util::to_hex_str(&pin_auth));
 
     let mut map = BTreeMap::new();
     
@@ -40,10 +30,17 @@ pub fn create_payload(
         map.insert(Value::Integer(0x01), sub_cmd);
     }
 
-    // subCommandParams(0x02)
+    // subCommandParams (0x02): Map containing following parameters
+    //let mut tmp = Vec::new();
+    let mut sub_command_params_cbor = Vec::new();
     if sub_command == SubCommand::EnumerateCredentialsBegin || sub_command == SubCommand::EnumerateCredentialsGetNextCredential{
-        // subCommandParams (0x02): Map containing following parameters
         // rpIDHash (0x01): RPID SHA-256 hash.
+        let mut param = BTreeMap::new();
+        param.insert(Value::Integer(0x01), Value::Bytes(sub_command_params.to_vec()));
+        let val = Value::Map(param);
+        map.insert(Value::Integer(0x02), val.clone());
+
+        sub_command_params_cbor = to_vec(&val).unwrap();
     }
 
     // pinProtocol(0x03)
@@ -53,7 +50,20 @@ pub fn create_payload(
     }
 
     // pinUvAuthParam(0x04)
-    if param_pin_auth.len() > 0 {
+    {
+        // pinUvAuthParam (0x04): authenticate(pinUvAuthToken, getCredsMetadata (0x01)).
+        // First 16 bytes of HMAC-SHA-256 of contents using pinUvAuthToken.
+        // 
+        // pinUvAuthParam (0x04): authenticate(pinUvAuthToken, 
+        // enumerateCredentialsBegin (0x04) || subCommandParams).
+        let mut message = vec![sub_command as u8];
+        message.append(&mut sub_command_params_cbor.to_vec());
+        let param_pin_auth = pin_token.authenticate_v2(&message,16);
+        //println!("- pin_auth({:02})    = {:?}", pin_auth.len(),util::to_hex_str(&pin_auth));
+
+        //let pin_auth = pin_token.sign(&util::create_clientdata_hash(challenge));
+        //println!("- pin_auth({:02})    = {:?}", pin_auth.len(),util::to_hex_str(&pin_auth));
+        
         let pin_auth = Value::Bytes(param_pin_auth);
         map.insert(Value::Integer(0x04), pin_auth);
     }

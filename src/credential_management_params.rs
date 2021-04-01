@@ -1,13 +1,13 @@
 
 use crate::util;
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone)]
 pub struct PublicKeyCredentialRpEntity{
     pub id: String,
     pub name: String,
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone)]
 pub struct CredsMetadata {
     pub existing_resident_credentials_count: u32,
     pub max_possible_remaining_resident_credentials_count: u32,
