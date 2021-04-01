@@ -170,7 +170,7 @@ pub fn credential_management_get_creds_metadata(
         hid_params: &[HidParam],
         pin: Option<&str>
 ) -> Result<credential_management_params::CredsMetadata, String> {
-    credential_management::credential_management(hid_params,pin,credential_management_command::SubCommand::GetCredsMetadata)
+    credential_management::credential_management(hid_params,pin,Vec::new(),credential_management_command::SubCommand::GetCredsMetadata)
 }
 
 /// CredentialManagement - enumerateRPsBegin & enumerateRPsNext
@@ -179,11 +179,11 @@ pub fn credential_management_enumerate_rps(
     pin: Option<&str>
 ) -> Result<Vec<credential_management_params::CredsMetadata>, String> {
     let mut datas:Vec<credential_management_params::CredsMetadata> = Vec::new();
-    let data = credential_management::credential_management(hid_params,pin,credential_management_command::SubCommand::EnumerateRPsBegin)?;
+    let data = credential_management::credential_management(hid_params,pin,Vec::new(),credential_management_command::SubCommand::EnumerateRPsBegin)?;
     let roop_n = data.total_rps-1;
     datas.push(data);
     for _ in 0..roop_n {
-        let data = credential_management::credential_management(hid_params,pin,credential_management_command::SubCommand::EnumerateRPsGetNextRP)?;
+        let data = credential_management::credential_management(hid_params,pin,Vec::new(),credential_management_command::SubCommand::EnumerateRPsGetNextRP)?;
         datas.push(data);
     }
     Ok(datas)
@@ -192,15 +192,16 @@ pub fn credential_management_enumerate_rps(
 /// CredentialManagement - enumerateCredentialsBegin & enumerateCredentialsNext
 pub fn credential_management_enumerate_credentials(
     hid_params: &[HidParam],
-    pin: Option<&str>
+    pin: Option<&str>,
+    rpid_hash: Vec<u8>
 ) -> Result<Vec<credential_management_params::CredsMetadata>, String> {
     let mut datas:Vec<credential_management_params::CredsMetadata> = Vec::new();
-    let data = credential_management::credential_management(hid_params,pin,credential_management_command::SubCommand::EnumerateCredentialsBegin)?;
+    let data = credential_management::credential_management(hid_params,pin,rpid_hash,credential_management_command::SubCommand::EnumerateCredentialsBegin)?;
     let roop_n = data.total_rps-1;
     datas.push(data);
     for _ in 0..roop_n {
-        let data = credential_management::credential_management(hid_params,pin,credential_management_command::SubCommand::EnumerateRPsGetNextRP)?;
-        datas.push(data);
+        //let data = credential_management::credential_management(hid_params,pin,rpid_hash,credential_management_command::SubCommand::EnumerateRPsGetNextRP)?;
+        //datas.push(data);
     }
     Ok(datas)
 }

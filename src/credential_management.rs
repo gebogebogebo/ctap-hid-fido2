@@ -10,6 +10,7 @@ use crate::util;
 pub fn credential_management(
     hid_params: &[HidParam],
     pin: Option<&str>,
+    rpid_hash: Vec<u8>,
     sub_command: credential_management_command::SubCommand,
 ) -> Result<credential_management_params::CredsMetadata, String> {
     let device = FidoKeyHid::new(hid_params)?;

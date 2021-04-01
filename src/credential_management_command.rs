@@ -23,7 +23,9 @@ pub fn create_payload(
 
     // pinUvAuthParam (0x04): authenticate(pinUvAuthToken, getCredsMetadata (0x01)).
     // First 16 bytes of HMAC-SHA-256 of contents using pinUvAuthToken.
-    // pinUvAuthParam (0x04): authenticate(pinUvAuthToken, enumerateCredentialsBegin (0x04) || subCommandParams).
+    // 
+    // pinUvAuthParam (0x04): authenticate(pinUvAuthToken, 
+    // enumerateCredentialsBegin (0x04) || subCommandParams).
     let param_pin_auth = pin_token.authenticate_v2(&vec![sub_command as u8],16);
     //println!("- pin_auth({:02})    = {:?}", pin_auth.len(),util::to_hex_str(&pin_auth));
 

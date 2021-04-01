@@ -1,4 +1,5 @@
 use ctap_hid_fido2;
+use ctap_hid_fido2::util;
 //use ctap_hid_fido2::credential_management_params;
 
 fn main() {
@@ -6,7 +7,8 @@ fn main() {
 
     // PEND
     println!("credential_management_enumerate_credentials()");
-    match ctap_hid_fido2::credential_management_enumerate_credentials(&ctap_hid_fido2::HidParam::get_default_params(),Some("1234")) {
+    let rpid_hash:Vec<u8> = util::to_str_hex("0BDF390F1237B556DB51AF378D5795D5531385CCECDB4499D6BAFBD8918460CA".to_string());
+    match ctap_hid_fido2::credential_management_enumerate_credentials(&ctap_hid_fido2::HidParam::get_default_params(),Some("1234"),rpid_hash) {
         Ok(results) => {
             for data in results{
                 data.print("- credentials");
