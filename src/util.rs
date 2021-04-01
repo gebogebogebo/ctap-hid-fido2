@@ -13,6 +13,10 @@ pub fn to_hex_str(bytes: &[u8]) -> String {
         .collect::<String>()
 }
 
+pub fn to_str_hex(hexstr: String) -> Vec<u8> {
+    hex::decode(hexstr).unwrap()
+}
+
 pub fn print_typename<T>(_: T) {
     println!("{}", std::any::type_name::<T>());
 }
