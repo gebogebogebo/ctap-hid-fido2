@@ -54,6 +54,11 @@ fn main() {
         verify_result.credential_publickey_der.len(),
         util::to_hex_str(&verify_result.credential_publickey_der)
     );
+    println!(
+        "- credential_id({:02}) = {:?}",
+        verify_result.credential_id.len(),
+        util::to_hex_str(&verify_result.credential_id)
+    );
 
     println!("Authenticate - get_assertions_rk()");
 

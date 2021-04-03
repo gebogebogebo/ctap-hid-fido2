@@ -217,19 +217,7 @@ pub fn credential_management_delete_credential(
     pin: Option<&str>,
     credential_id: Vec<u8>
 ) -> Result<credential_management_params::CredsMetadata, String> {
-    //let mut datas:Vec<credential_management_params::CredsMetadata> = Vec::new();
-    let data = credential_management::credential_management(hid_params,pin,credential_id.to_vec(),credential_management_command::SubCommand::DeleteCredential)?;
-    /*
-    datas.push(data.clone());
-    if data.total_credentials > 0 {
-        let roop_n = data.total_credentials-1;
-        for _ in 0..roop_n {
-            let data = credential_management::credential_management(hid_params,pin,rpid_hash.to_vec(),credential_management_command::SubCommand::EnumerateCredentialsGetNextCredential)?;
-            datas.push(data);
-        }
-    }
-    */
-    Ok(data)
+    credential_management::credential_management(hid_params,pin,credential_id.to_vec(),credential_management_command::SubCommand::DeleteCredential)
 }
 
 /// Selection

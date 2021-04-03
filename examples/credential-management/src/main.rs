@@ -14,6 +14,8 @@ fn metadata(){
             println!("- creds metadata error: {:?}", error);
         }
     };
+    println!("");
+    println!("");
 }
 
 fn rps(){
@@ -31,13 +33,15 @@ fn rps(){
             println!("- enumerate rps error: {:?}", error);
         }
     };
+    println!("");
+    println!("");
 }
 
 fn credentials(){
     println!("credential_management_enumerate_credentials()");
     let rpid_hash: Vec<u8> = util::to_str_hex(
 //        "0BDF390F1237B556DB51AF378D5795D5531385CCECDB4499D6BAFBD8918460CA".to_string(),
-        "8C5D729B193185CD17AC242C85E6BD23D3990ABB1C65336559524882A6EACA33".to_string(),
+        "0BDF390F1237B556DB51AF378D5795D5531385CCECDB4499D6BAFBD8918460CA".to_string(),
     );
     match ctap_hid_fido2::credential_management_enumerate_credentials(
         &ctap_hid_fido2::HidParam::get_default_params(),
@@ -53,12 +57,15 @@ fn credentials(){
             println!("- enumerate credentials error: {:?}", error);
         }
     };
+    println!("");
+    println!("");
 }
 
 fn delete(){
     println!("credential_management_delete_credential()");
     let cre_id: Vec<u8> = util::to_str_hex(
-        "01BF8A2F9DC667CB3DE31DBB155CC3824BBD57910E7FE4D0DB86FF36DE0CDC1E00258C5D729B193185CD17AC242C85E6BD23D3990ABB1C65336559524882A6EACA3302020000".to_string(),
+        "B4513B9A83EDBE7EF1C651FFF7384C6510E446E34D0C92747DDEF841DAF7C395BE940BDF390F1237B556DB51AF378D5795D5531385CCECDB4499D6BAFBD8918460CAA7010000".to_string(),
+        //"FFFF".to_string(),
     );
     match ctap_hid_fido2::credential_management_delete_credential(
         &ctap_hid_fido2::HidParam::get_default_params(),
@@ -76,6 +83,8 @@ fn delete(){
             println!("- credential_management_delete_credential error: {:?}", error);
         }
     };
+    println!("");
+    println!("");
 }
 
 fn main() {
