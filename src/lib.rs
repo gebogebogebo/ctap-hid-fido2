@@ -220,6 +220,16 @@ pub fn credential_management_delete_credential(
     credential_management::credential_management(hid_params,pin,credential_id.to_vec(),credential_management_command::SubCommand::DeleteCredential)
 }
 
+/// CredentialManagement - updateUserInformation
+pub fn credential_management_update_user_information(
+    hid_params: &[HidParam],
+    pin: Option<&str>,
+    credential_id: Vec<u8>
+) -> Result<credential_management_params::CredsMetadata, String> {
+    credential_management::credential_management(hid_params,pin,credential_id.to_vec(),credential_management_command::SubCommand::UpdateUserInformation)
+}
+
+
 /// Selection
 pub fn selection(hid_params: &[HidParam]) -> Result<String, String> {
     let device = FidoKeyHid::new(hid_params)?;

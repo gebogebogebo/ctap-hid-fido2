@@ -39,5 +39,4 @@ pub fn credential_management(
     }else{
         Err("PIN Token Error".to_string())
     }
-        
 }

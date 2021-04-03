@@ -65,7 +65,6 @@ fn delete() {
     println!("credential_management_delete_credential()");
     let cre_id: Vec<u8> = util::to_str_hex(
         "7B35F2828BDDD31301295E98BDAB1ABB4E8639774DA4D447A9C1067C6F318B1AC4318C5D729B193185CD17AC242C85E6BD23D3990ABB1C65336559524882A6EACA3376010000".to_string(),
-        //"FFFF".to_string(),
     );
     match ctap_hid_fido2::credential_management_delete_credential(
         &ctap_hid_fido2::HidParam::get_default_params(),
@@ -82,6 +81,26 @@ fn delete() {
     println!("");
 }
 
+fn update() {
+    println!("credential_management_update_user_information()");
+    let cre_id: Vec<u8> = util::to_str_hex(
+        "7B35F2828BDDD31301295E98BDAB1ABB4E8639774DA4D447A9C1067C6F318B1AC4318C5D729B193185CD17AC242C85E6BD23D3990ABB1C65336559524882A6EACA3376010000".to_string(),
+    );
+    match ctap_hid_fido2::credential_management_update_user_information(
+        &ctap_hid_fido2::HidParam::get_default_params(),
+        Some("1234"),
+        cre_id,
+    ) {
+        Ok(_) => println!("- credential_management_update_user_information Success"),
+        Err(error) => println!(
+            "- credential_management_update_user_information error: {:?}",
+            error
+        ),
+    };
+    println!("");
+    println!("");
+}
+
 fn main() {
     ctap_hid_fido2::hello();
 
@@ -90,6 +109,7 @@ fn main() {
     rps();
     credentials();
     delete();
+    update();
     println!("----- credential-management end -----");
 
     /* Test for CTAP 2.1
