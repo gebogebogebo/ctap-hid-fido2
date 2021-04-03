@@ -20,6 +20,9 @@
 		},
 		{
 			"path": "examples/nitro-update"
+		},
+		{
+			"path": "examples/credential-management"
 		}
 	],
 	"settings": {}

@@ -199,18 +199,38 @@ pub fn credential_management_enumerate_credentials(
     rpid_hash: Vec<u8>
 ) -> Result<Vec<credential_management_params::CredsMetadata>, String> {
     let mut datas:Vec<credential_management_params::CredsMetadata> = Vec::new();
-    let data = credential_management::credential_management(hid_params,pin,rpid_hash,credential_management_command::SubCommand::EnumerateCredentialsBegin)?;
+    let data = credential_management::credential_management(hid_params,pin,rpid_hash.to_vec(),credential_management_command::SubCommand::EnumerateCredentialsBegin)?;
     datas.push(data.clone());
-    if data.total_rps > 0 {
-        let roop_n = data.total_rps-1;
+    if data.total_credentials > 0 {
+        let roop_n = data.total_credentials-1;
         for _ in 0..roop_n {
-            //let data = credential_management::credential_management(hid_params,pin,rpid_hash,credential_management_command::SubCommand::EnumerateRPsGetNextRP)?;
-            //datas.push(data);
+            let data = credential_management::credential_management(hid_params,pin,rpid_hash.to_vec(),credential_management_command::SubCommand::EnumerateCredentialsGetNextCredential)?;
+            datas.push(data);
         }
     }
     Ok(datas)
 }
 
+/// CredentialManagement - deleteCredential
+pub fn credential_management_delete_credential(
+    hid_params: &[HidParam],
+    pin: Option<&str>,
+    credential_id: Vec<u8>
+) -> Result<credential_management_params::CredsMetadata, String> {
+    //let mut datas:Vec<credential_management_params::CredsMetadata> = Vec::new();
+    let data = credential_management::credential_management(hid_params,pin,credential_id.to_vec(),credential_management_command::SubCommand::DeleteCredential)?;
+    /*
+    datas.push(data.clone());
+    if data.total_credentials > 0 {
+        let roop_n = data.total_credentials-1;
+        for _ in 0..roop_n {
+            let data = credential_management::credential_management(hid_params,pin,rpid_hash.to_vec(),credential_management_command::SubCommand::EnumerateCredentialsGetNextCredential)?;
+            datas.push(data);
+        }
+    }
+    */
+    Ok(data)
+}
 
 /// Selection
 pub fn selection(hid_params: &[HidParam]) -> Result<String, String> {
