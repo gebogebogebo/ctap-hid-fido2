@@ -31,6 +31,35 @@ pub(crate) fn is_debug() -> bool {
     false
 }
 
+// for cbor
+pub(crate) fn cbor_get_string_from_map(cbor_map: &Value,get_key: &str)-> Option<String>{
+    if let Value::Map(xs) = cbor_map {
+        for (key, val) in xs {
+            if let Value::Text(s) = key {
+                if s.as_str() == get_key {
+                    if let Value::Text(s) = val {
+                        return Some(s.to_string());
+                    }
+                }
+            }
+        }
+    }
+    None
+}
+
+pub(crate) fn cbor_get_bytes_from_map(cbor_map: &Value,get_key: &str)-> Option<Vec<u8>>{
+    if let Value::Map(xs) = cbor_map {
+        for (key, val) in xs {
+            if let Value::Text(s) = key {
+                if s.as_str() == get_key {
+                    return cbor_value_to_vec_u8(val);
+                }
+            }
+        }
+    }
+    None
+}
+
 #[allow(dead_code)]
 pub(crate) fn cbor_cast_value<T: NumCast>(value: &Value) -> Option<T> {
     if let Value::Integer(x) = value {
