@@ -5,6 +5,8 @@ use crate::ctaphid;
 use crate::credential_management_params;
 use crate::credential_management_command;
 use crate::credential_management_response;
+
+#[allow(unused_imports)]
 use crate::util;
 
 pub fn credential_management(
@@ -34,7 +36,6 @@ pub fn credential_management(
         println!("response(cbor) = {}",util::to_hex_str(&response_cbor));
 
         Ok(credential_management_response::parse_cbor(&response_cbor)?)
-        //data.print("Debug");
     }else{
         Err("PIN Token Error".to_string())
     }

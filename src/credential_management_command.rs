@@ -31,12 +31,19 @@ pub fn create_payload(
     }
 
     // subCommandParams (0x02): Map containing following parameters
-    //let mut tmp = Vec::new();
     let mut sub_command_params_cbor = Vec::new();
     if sub_command == SubCommand::EnumerateCredentialsBegin || sub_command == SubCommand::EnumerateCredentialsGetNextCredential{
         // rpIDHash (0x01): RPID SHA-256 hash.
         let mut param = BTreeMap::new();
         param.insert(Value::Integer(0x01), Value::Bytes(sub_command_params.to_vec()));
+        let val = Value::Map(param);
+        map.insert(Value::Integer(0x02), val.clone());
+
+        sub_command_params_cbor = to_vec(&val).unwrap();
+    } else if sub_command == SubCommand::DeleteCredential {
+        // credentialId (0x02): PublicKeyCredentialDescriptor of the credential to be deleted.
+        let mut param = BTreeMap::new();
+        param.insert(Value::Integer(0x02), Value::Bytes(sub_command_params.to_vec()));
         let val = Value::Map(param);
         map.insert(Value::Integer(0x02), val.clone());
 
