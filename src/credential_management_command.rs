@@ -41,19 +41,13 @@ pub fn create_payload(
 
         sub_command_params_cbor = to_vec(&val).unwrap();
     } else if sub_command == SubCommand::DeleteCredential {
-        // credentialId (0x02): PublicKeyCredentialDescriptor of the credential to be deleted.
         let mut param = BTreeMap::new();
-
-        //let mut aaa = BTreeMap::new();
 
         let mut credential_id = BTreeMap::new();
         credential_id.insert(Value::Text("id".to_string()), Value::Bytes(sub_command_params.to_vec()));
         credential_id.insert(Value::Text("type".to_string()), Value::Text("public-key".to_string()));    
-
-        //aaa.insert(Value::Integer(0x07),Value::Bytes(to_vec(&credential_id).unwrap()));
         
         param.insert(Value::Integer(0x02), Value::Map(credential_id));
-        //param.insert(Value::Integer(0x02), Value::Bytes(to_vec(&aaa).unwrap()));
 
         let val = Value::Map(param);
         map.insert(Value::Integer(0x02), val.clone());

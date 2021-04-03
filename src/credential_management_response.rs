@@ -5,7 +5,7 @@ use crate::credential_management_params;
 pub fn parse_cbor(bytes: &[u8]) -> Result<credential_management_params::CredsMetadata, String> {
     let mut data = credential_management_params::CredsMetadata::default();
     if bytes.len() == 0 {
-        return Err(String::from("bytes.len() == len"));
+        return Ok(data);
     }
 
     let cbor = serde_cbor::from_slice(bytes).unwrap();
