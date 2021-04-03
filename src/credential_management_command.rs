@@ -1,3 +1,4 @@
+use crate::util;
 use serde_cbor::to_vec;
 use serde_cbor::Value;
 use std::collections::BTreeMap;
@@ -40,7 +41,8 @@ pub fn create_payload(
         map.insert(Value::Integer(0x02), val.clone());
 
         sub_command_params_cbor = to_vec(&val).unwrap();
-    } else if sub_command == SubCommand::DeleteCredential {
+    } else if sub_command == SubCommand::DeleteCredential || sub_command == SubCommand::DeleteCredential {
+        // credentialId (0x02): PublicKeyCredentialDescriptor of the credential to be deleted.
         let mut param = BTreeMap::new();
 
         let mut credential_id = BTreeMap::new();
@@ -52,8 +54,18 @@ pub fn create_payload(
         let val = Value::Map(param);
         map.insert(Value::Integer(0x02), val.clone());
 
+        if sub_command == SubCommand::DeleteCredential {
+            // PEND
+            let user_id = util::to_str_hex("010203".to_string());
+            // credentialId (0x02): PublicKeyCredentialDescriptor of the credential to be updated.
+            // user (0x03): a PublicKeyCredentialUserEntity with the updated information.
+            let mut user = BTreeMap::new();
+            user.insert(Value::Text("id".to_string()), Value::Bytes(user_id.to_vec()));
+            user.insert(Value::Text("name".to_string()), Value::Text("test-name".to_string()));    
+            user.insert(Value::Text("displayName".to_string()), Value::Text("test-disp-name".to_string()));    
+    
+        }
         sub_command_params_cbor = to_vec(&val).unwrap();
-
     }
 
     // pinProtocol(0x03)
