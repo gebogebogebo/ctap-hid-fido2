@@ -8,7 +8,8 @@ fn main() {
     // PEND
     println!("credential_management_enumerate_credentials()");
     let rpid_hash: Vec<u8> = util::to_str_hex(
-        "0BDF390F1237B556DB51AF378D5795D5531385CCECDB4499D6BAFBD8918460CA".to_string(),
+//        "0BDF390F1237B556DB51AF378D5795D5531385CCECDB4499D6BAFBD8918460CA".to_string(),
+        "8C5D729B193185CD17AC242C85E6BD23D3990ABB1C65336559524882A6EACA33".to_string(),
     );
     match ctap_hid_fido2::credential_management_enumerate_credentials(
         &ctap_hid_fido2::HidParam::get_default_params(),

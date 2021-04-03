@@ -91,6 +91,8 @@ pub struct CredsMetadata {
     pub public_key_credential_descriptor: PublicKeyCredentialDescriptor,
     pub public_key: PublicKey,
     pub total_credentials: u32,
+    pub cred_protect: u32,
+    pub large_blob_key: Vec<u8>,
 }
 impl CredsMetadata {
     #[allow(dead_code)]
@@ -98,9 +100,23 @@ impl CredsMetadata {
         println!("{}", title);
         println!("- existing_resident_credentials_count               = {:?}", self.existing_resident_credentials_count);
         println!("- max_possible_remaining_resident_credentials_count = {:?}", self.max_possible_remaining_resident_credentials_count);
-        println!("- rp.id                                             = {:?}", self.public_key_credential_rp_entity.id);
-        println!("- rp.name                                           = {:?}", self.public_key_credential_rp_entity.name);
+        println!("- public_key_credential_rp_entity");
+        println!("  - id                                              = {:?}", self.public_key_credential_rp_entity.id);
+        println!("  - name                                            = {:?}", self.public_key_credential_rp_entity.name);
         println!("- rpid_hash                                         = {:?}", util::to_hex_str(&self.rpid_hash));
-        println!("- rp.total_rps                                      = {:?}", self.total_rps);
+        println!("- total_rps                                         = {:?}", self.total_rps);
+        println!("- public_key_credential_user_entity");
+        println!("  - id                                              = {:?}", util::to_hex_str(&self.public_key_credential_user_entity.id));
+        println!("  - name                                            = {:?}", self.public_key_credential_user_entity.name);
+        println!("  - display_name                                    = {:?}", self.public_key_credential_user_entity.display_name);
+        println!("- public_key_credential_descriptor");
+        println!("  - credential_id                                   = {:?}", util::to_hex_str(&self.public_key_credential_descriptor.credential_id));
+        println!("  - credential_type                                 = {:?}", self.public_key_credential_descriptor.credential_type);
+        println!("- public_key");
+        println!("  - credential_publickey_der                        = {:?}", util::to_hex_str(&self.public_key.credential_publickey_der));
+        println!("  - credential_publickey_pem                        = {:?}", self.public_key.credential_publickey_pem);
+        println!("- total_credentials                                 = {:?}", self.total_credentials);
+        println!("- cred_protect                                      = {:?}", self.cred_protect);
+        println!("- large_blob_key                                    = {:?}", util::to_hex_str(&self.large_blob_key));
     }
 }
