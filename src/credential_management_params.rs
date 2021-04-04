@@ -167,3 +167,17 @@ impl CredsMetadata {
         );
     }
 }
+
+#[derive(Debug, Default, Clone)]
+pub struct CredentialsCount {
+    pub existing_resident_credentials_count: u32,
+    pub max_possible_remaining_resident_credentials_count: u32,
+}
+impl CredentialsCount {
+    pub fn new(meta: CredsMetadata) -> CredentialsCount {
+        let mut ret = CredentialsCount::default();
+        ret.existing_resident_credentials_count = meta.existing_resident_credentials_count;
+        ret.max_possible_remaining_resident_credentials_count = meta.max_possible_remaining_resident_credentials_count;
+        ret
+    }
+}

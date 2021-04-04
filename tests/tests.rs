@@ -25,6 +25,13 @@ fn test_get_info() {
 }
 
 #[test]
+fn test_get_info_u2f() {
+    let hid_params = HidParam::get_default_params();
+    get_info_u2f(&hid_params).unwrap();
+    assert!(true);
+}
+
+#[test]
 fn test_client_pin_get_retries() {
     let hid_params = HidParam::get_default_params();
     let retry = get_pin_retries(&hid_params);
