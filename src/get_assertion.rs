@@ -3,12 +3,13 @@ use crate::util;
 use crate::get_assertion_command;
 use crate::get_assertion_params;
 use crate::get_assertion_response;
+use crate::get_next_assertion_command;
 use crate::ctaphid;
-use crate::get_pin_token;
 use crate::FidoKeyHid;
 use crate::HidParam;
+use crate::client_pin;
 
-pub fn get_assertion_inter(
+pub fn get_assertion(
     hid_params: &[HidParam],
     rpid: &str,
     challenge: &[u8],
@@ -31,7 +32,7 @@ pub fn get_assertion_inter(
     // pin token
     let pin_token = {
         if let Some(pin) = pin {
-            Some(get_pin_token(&device, &cid, pin.to_string())?)
+            Some(client_pin::get_pin_token(&device, &cid, pin.to_string())?)
         } else {
             None
         }
@@ -73,9 +74,18 @@ pub fn get_assertion_inter(
     let mut asss = vec![ass];
 
     for _ in 0..(asss[0].number_of_credentials - 1) {
-        let ass = crate::get_next_assertion(&device, &cid)?;
+        let ass = get_next_assertion(&device, &cid)?;
         asss.push(ass);
     }
 
     Ok(asss)
+}
+
+fn get_next_assertion(
+    device: &FidoKeyHid,
+    cid: &[u8],
+) -> Result<get_assertion_params::Assertion, String> {
+    let send_payload = get_next_assertion_command::create_payload();
+    let response_cbor = ctaphid::ctaphid_cbor(&device, &cid, &send_payload)?;
+    get_assertion_response::parse_cbor(&response_cbor)
 }

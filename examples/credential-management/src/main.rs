@@ -9,7 +9,15 @@ fn metadata(pin: Option<&str>) {
         pin,
     ) {
         Ok(result) => {
-            result.print("- creds metadata");
+            println!("- creds metadata");
+            println!(
+                "-- existing_resident_credentials_count               = {:?}",
+                result.existing_resident_credentials_count
+            );
+            println!(
+                "-- max_possible_remaining_resident_credentials_count = {:?}",
+                result.max_possible_remaining_resident_credentials_count
+            );
         }
         Err(error) => {
             println!("- creds metadata error: {:?}", error);
