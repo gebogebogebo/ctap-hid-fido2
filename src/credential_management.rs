@@ -12,8 +12,9 @@ use crate::util;
 pub fn credential_management(
     hid_params: &[HidParam],
     pin: Option<&str>,
-    rpid_hash: Vec<u8>,
     sub_command: credential_management_command::SubCommand,
+    rpid_hash: Option<Vec<u8>>,
+    pkcd: Option<credential_management_params::PublicKeyCredentialDescriptor>
 ) -> Result<credential_management_params::CredsMetadata, String> {
     let device = FidoKeyHid::new(hid_params)?;
     let cid = ctaphid::ctaphid_init(&device)?;
@@ -29,7 +30,7 @@ pub fn credential_management(
 
     // create pin auth
     if let Some(pin_token) = pin_token {
-        let send_payload = credential_management_command::create_payload(pin_token,sub_command,rpid_hash);
+        let send_payload = credential_management_command::create_payload(pin_token,sub_command,rpid_hash,pkcd);
         //println!("send(cbor) = {}",util::to_hex_str(&send_payload));
 
         let response_cbor = ctaphid::ctaphid_cbor(&device, &cid, &send_payload)?;
