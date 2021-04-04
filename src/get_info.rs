@@ -1,10 +1,9 @@
-
-use crate::FidoKeyHid;
-use crate::HidParam;
 use crate::ctaphid;
-use crate::util;
 use crate::get_info_command;
 use crate::get_info_response;
+use crate::util;
+use crate::FidoKeyHid;
+use crate::HidParam;
 
 pub fn get_info(hid_params: &[HidParam]) -> Result<Vec<(String, String)>, String> {
     let device = FidoKeyHid::new(hid_params)?;
@@ -51,4 +50,20 @@ pub fn get_info(hid_params: &[HidParam]) -> Result<Vec<(String, String)>, String
     }
 
     Ok(result)
+}
+
+pub fn get_info_u2f(hid_params: &[HidParam]) -> Result<String, String> {
+    let device = FidoKeyHid::new(hid_params)?;
+    let cid = ctaphid::ctaphid_init(&device)?;
+
+    let _data: Vec<u8> = Vec::new();
+
+    // CTAP1_INS.Version = 3
+    match ctaphid::send_apdu(&device, &cid, 0, 3, 0, 0, &_data) {
+        Ok(result) => {
+            let version: String = String::from_utf8(result).unwrap();
+            Ok(version)
+        }
+        Err(error) => Err(error),
+    }
 }

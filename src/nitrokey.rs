@@ -162,7 +162,6 @@ pub fn enter_boot(hid_params: &[crate::HidParam]) -> Result<(), String> {
 }
 
 pub fn solo_bootloader(hid_params: &[crate::HidParam]) -> Result<(), String> {
-    
     let device = FidoKeyHid::new(hid_params)?;
     let cid = ctaphid::ctaphid_init(&device)?;
 
@@ -198,12 +197,12 @@ pub fn solo_bootloader(hid_params: &[crate::HidParam]) -> Result<(), String> {
         let _data: Vec<u8> = Vec::new();
 
         match ctaphid::send_apdu(&device, &cid, 0, 3, 0, 0, &_data) {
-            Ok(result) =>{
+            Ok(result) => {
                 let version: String = String::from_utf8(result).unwrap();
                 println!("U2F version = {}", version);
             }
-            Err(error) =>{
-                println!("{}",error);
+            Err(error) => {
+                println!("{}", error);
             }
         }
     }
@@ -270,14 +269,13 @@ pub fn solo_bootloader(hid_params: &[crate::HidParam]) -> Result<(), String> {
         }
 
         match ctaphid::send_apdu(&device, &cid, 0, 0, 0, 0, &data) {
-            Ok(_result) =>{
+            Ok(_result) => {
                 // PEND
             }
-            Err(error) =>{
-                println!("{}",error);
+            Err(error) => {
+                println!("{}", error);
             }
         }
-
     }
 
     Ok(())

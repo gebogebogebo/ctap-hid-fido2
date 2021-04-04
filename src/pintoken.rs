@@ -4,12 +4,12 @@
 use ring;
 
 // v2
-use sha2::Sha256;
 use hmac::{Hmac, Mac, NewMac};
+use sha2::Sha256;
 
 pub struct PinToken {
-    pub signing_key : ring::hmac::SigningKey,
-    pub key :Vec<u8>,
+    pub signing_key: ring::hmac::SigningKey,
+    pub key: Vec<u8>,
 }
 
 impl PinToken {
@@ -20,13 +20,12 @@ impl PinToken {
         out
     }
 
-    pub fn authenticate_v2(&self, message: &[u8],firstbyte: usize) -> Vec<u8> {
+    pub fn authenticate_v2(&self, message: &[u8], firstbyte: usize) -> Vec<u8> {
         // Create alias for HMAC-SHA256
         type HmacSha256 = Hmac<Sha256>;
 
         // Create HMAC-SHA256 instance which implements `Mac` trait
-        let mut mac = HmacSha256::new_varkey(&self.key)
-            .expect("HMAC can take key of any size");
+        let mut mac = HmacSha256::new_varkey(&self.key).expect("HMAC can take key of any size");
         mac.update(&message);
 
         // `result` has type `Output` which is a thin wrapper around array of

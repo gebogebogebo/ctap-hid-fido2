@@ -1,4 +1,3 @@
-
 use crate::ctapdef;
 
 pub fn create_payload() -> Vec<u8> {
