@@ -170,7 +170,7 @@ pub fn credential_management_get_creds_metadata(
         hid_params: &[HidParam],
         pin: Option<&str>
 ) -> Result<credential_management_params::CredsMetadata, String> {
-    credential_management::credential_management(hid_params,pin,Vec::new(),credential_management_command::SubCommand::GetCredsMetadata)
+    credential_management::credential_management(hid_params,pin,credential_management_command::SubCommand::GetCredsMetadata,None,None)
 }
 
 /// CredentialManagement - enumerateRPsBegin & enumerateRPsNext
@@ -179,12 +179,12 @@ pub fn credential_management_enumerate_rps(
     pin: Option<&str>
 ) -> Result<Vec<credential_management_params::CredsMetadata>, String> {
     let mut datas:Vec<credential_management_params::CredsMetadata> = Vec::new();
-    let data = credential_management::credential_management(hid_params,pin,Vec::new(),credential_management_command::SubCommand::EnumerateRPsBegin)?;
+    let data = credential_management::credential_management(hid_params,pin,credential_management_command::SubCommand::EnumerateRPsBegin,None,None)?;
     datas.push(data.clone());
     if data.total_rps > 0 {
         let roop_n = data.total_rps-1;
         for _ in 0..roop_n {
-            let data = credential_management::credential_management(hid_params,pin,Vec::new(),credential_management_command::SubCommand::EnumerateRPsGetNextRP)?;
+            let data = credential_management::credential_management(hid_params,pin,credential_management_command::SubCommand::EnumerateRPsGetNextRP,None,None)?;
             datas.push(data);
         }
         }
@@ -199,12 +199,12 @@ pub fn credential_management_enumerate_credentials(
     rpid_hash: Vec<u8>
 ) -> Result<Vec<credential_management_params::CredsMetadata>, String> {
     let mut datas:Vec<credential_management_params::CredsMetadata> = Vec::new();
-    let data = credential_management::credential_management(hid_params,pin,rpid_hash.to_vec(),credential_management_command::SubCommand::EnumerateCredentialsBegin)?;
+    let data = credential_management::credential_management(hid_params,pin,credential_management_command::SubCommand::EnumerateCredentialsBegin,Some(rpid_hash.to_vec()),None)?;
     datas.push(data.clone());
     if data.total_credentials > 0 {
         let roop_n = data.total_credentials-1;
         for _ in 0..roop_n {
-            let data = credential_management::credential_management(hid_params,pin,rpid_hash.to_vec(),credential_management_command::SubCommand::EnumerateCredentialsGetNextCredential)?;
+            let data = credential_management::credential_management(hid_params,pin,credential_management_command::SubCommand::EnumerateCredentialsGetNextCredential,Some(rpid_hash.to_vec()),None)?;
             datas.push(data);
         }
     }
@@ -215,20 +215,19 @@ pub fn credential_management_enumerate_credentials(
 pub fn credential_management_delete_credential(
     hid_params: &[HidParam],
     pin: Option<&str>,
-    credential_id: Vec<u8>
+    pkcd: Option<credential_management_params::PublicKeyCredentialDescriptor>
 ) -> Result<credential_management_params::CredsMetadata, String> {
-    credential_management::credential_management(hid_params,pin,credential_id.to_vec(),credential_management_command::SubCommand::DeleteCredential)
+    credential_management::credential_management(hid_params,pin,credential_management_command::SubCommand::DeleteCredential,None,pkcd)
 }
 
 /// CredentialManagement - updateUserInformation
 pub fn credential_management_update_user_information(
     hid_params: &[HidParam],
     pin: Option<&str>,
-    credential_id: Vec<u8>
+    pkcd: Option<credential_management_params::PublicKeyCredentialDescriptor>
 ) -> Result<credential_management_params::CredsMetadata, String> {
-    credential_management::credential_management(hid_params,pin,credential_id.to_vec(),credential_management_command::SubCommand::UpdateUserInformation)
+    credential_management::credential_management(hid_params,pin,credential_management_command::SubCommand::UpdateUserInformation,None,pkcd)
 }
-
 
 /// Selection
 pub fn selection(hid_params: &[HidParam]) -> Result<String, String> {
