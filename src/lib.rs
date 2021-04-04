@@ -7,7 +7,12 @@
 
 mod client_pin_command;
 mod client_pin_response;
+mod config_command;
 mod cose;
+mod credential_management;
+mod credential_management_command;
+pub mod credential_management_params;
+mod credential_management_response;
 mod ctapdef;
 mod ctaphid;
 mod ctapihd_nitro;
@@ -24,15 +29,10 @@ mod make_credential_response;
 pub mod nitrokey;
 mod p256;
 mod pintoken;
+mod selection_command;
 mod ss;
 pub mod util;
 pub mod verifier;
-mod credential_management;
-pub mod credential_management_params;
-mod credential_management_command;
-mod credential_management_response;
-mod selection_command;
-mod config_command;
 
 #[cfg(not(target_os = "linux"))]
 mod fidokey;
@@ -146,115 +146,9 @@ pub fn get_info(hid_params: &[HidParam]) -> Result<Vec<(String, String)>, String
     get_info::get_info(hid_params)
 }
 
-/// Get Info U2F
+/// Get FIDO key information (U2F Protocol)
 pub fn get_info_u2f(hid_params: &[HidParam]) -> Result<String, String> {
-    let device = FidoKeyHid::new(hid_params)?;
-    let cid = ctaphid::ctaphid_init(&device)?;
-
-    let _data: Vec<u8> = Vec::new();
-
-    // CTAP1_INS.Version = 3
-    match ctaphid::send_apdu(&device, &cid, 0, 3, 0, 0, &_data) {
-        Ok(result) =>{
-            let version: String = String::from_utf8(result).unwrap();
-            Ok(version)
-        }
-        Err(error) =>{
-            Err(error)
-        }
-    }
-}
-
-/// CredentialManagement - getCredsMetadata
-pub fn credential_management_get_creds_metadata(
-        hid_params: &[HidParam],
-        pin: Option<&str>
-) -> Result<credential_management_params::CredsMetadata, String> {
-    credential_management::credential_management(hid_params,pin,credential_management_command::SubCommand::GetCredsMetadata,None,None,None)
-}
-
-/// CredentialManagement - enumerateRPsBegin & enumerateRPsNext
-pub fn credential_management_enumerate_rps(
-    hid_params: &[HidParam],
-    pin: Option<&str>
-) -> Result<Vec<credential_management_params::CredsMetadata>, String> {
-    let mut datas:Vec<credential_management_params::CredsMetadata> = Vec::new();
-    let data = credential_management::credential_management(hid_params,pin,credential_management_command::SubCommand::EnumerateRPsBegin,None,None,None)?;
-    datas.push(data.clone());
-    if data.total_rps > 0 {
-        let roop_n = data.total_rps-1;
-        for _ in 0..roop_n {
-            let data = credential_management::credential_management(hid_params,pin,credential_management_command::SubCommand::EnumerateRPsGetNextRP,None,None,None)?;
-            datas.push(data);
-        }
-        }
-
-    Ok(datas)
-}
-
-/// CredentialManagement - enumerateCredentialsBegin & enumerateCredentialsNext
-pub fn credential_management_enumerate_credentials(
-    hid_params: &[HidParam],
-    pin: Option<&str>,
-    rpid_hash: Vec<u8>
-) -> Result<Vec<credential_management_params::CredsMetadata>, String> {
-    let mut datas:Vec<credential_management_params::CredsMetadata> = Vec::new();
-    let data = credential_management::credential_management(hid_params,pin,credential_management_command::SubCommand::EnumerateCredentialsBegin,Some(rpid_hash.to_vec()),None,None)?;
-    datas.push(data.clone());
-    if data.total_credentials > 0 {
-        let roop_n = data.total_credentials-1;
-        for _ in 0..roop_n {
-            let data = credential_management::credential_management(hid_params,pin,credential_management_command::SubCommand::EnumerateCredentialsGetNextCredential,Some(rpid_hash.to_vec()),None,None)?;
-            datas.push(data);
-        }
-    }
-    Ok(datas)
-}
-
-/// CredentialManagement - deleteCredential
-pub fn credential_management_delete_credential(
-    hid_params: &[HidParam],
-    pin: Option<&str>,
-    pkcd: Option<credential_management_params::PublicKeyCredentialDescriptor>
-) -> Result<credential_management_params::CredsMetadata, String> {
-    credential_management::credential_management(hid_params,pin,credential_management_command::SubCommand::DeleteCredential,None,pkcd,None)
-}
-
-/// CredentialManagement - updateUserInformation
-pub fn credential_management_update_user_information(
-    hid_params: &[HidParam],
-    pin: Option<&str>,
-    pkcd: Option<credential_management_params::PublicKeyCredentialDescriptor>,
-    pkcue: Option<credential_management_params::PublicKeyCredentialUserEntity>,
-) -> Result<credential_management_params::CredsMetadata, String> {
-    credential_management::credential_management(hid_params,pin,credential_management_command::SubCommand::UpdateUserInformation,None,pkcd,pkcue)
-}
-
-/// Selection
-pub fn selection(hid_params: &[HidParam]) -> Result<String, String> {
-    let device = FidoKeyHid::new(hid_params)?;
-    let cid = ctaphid::ctaphid_init(&device)?;
-
-    let send_payload = selection_command::create_payload();
-    println!("{}",util::to_hex_str(&send_payload));
-
-    let _response_cbor = ctaphid::ctaphid_cbor(&device, &cid, &send_payload)?;
-        
-    Ok("".to_string())
-}
-
-/// Get Config
-pub fn config(hid_params: &[HidParam]) -> Result<String, String> {
-    let device = FidoKeyHid::new(hid_params)?;
-    let cid = ctaphid::ctaphid_init(&device)?;
-
-    let send_payload = 
-        config_command::create_payload_enable_enterprise_attestation();
-    println!("{}",util::to_hex_str(&send_payload));
-
-    let _response_cbor = ctaphid::ctaphid_cbor(&device, &cid, &send_payload)?;
-        
-    Ok("".to_string())
+    get_info::get_info_u2f(hid_params)
 }
 
 /// Get PIN retry count
@@ -351,8 +245,8 @@ fn make_credential_inter(
         // get pintoken & create pin auth
         if let Some(pin) = pin {
             if pin.len() > 0 {
-                let pin_auth =
-                    get_pin_token(&device, &cid, pin.to_string())?.authenticate_v1(&params.client_data_hash);
+                let pin_auth = get_pin_token(&device, &cid, pin.to_string())?
+                    .authenticate_v1(&params.client_data_hash);
 
                 //println!("- pin_auth({:02})    = {:?}", pin_auth.len(),util::to_hex_str(&pin_auth));
                 params.pin_auth = pin_auth.to_vec();
@@ -529,6 +423,145 @@ fn get_pin_token(
     }
 }
 
+/// CredentialManagement - getCredsMetadata
+pub fn credential_management_get_creds_metadata(
+    hid_params: &[HidParam],
+    pin: Option<&str>,
+) -> Result<credential_management_params::CredsMetadata, String> {
+    credential_management::credential_management(
+        hid_params,
+        pin,
+        credential_management_command::SubCommand::GetCredsMetadata,
+        None,
+        None,
+        None,
+    )
+}
+
+/// CredentialManagement - enumerateRPsBegin & enumerateRPsNext
+pub fn credential_management_enumerate_rps(
+    hid_params: &[HidParam],
+    pin: Option<&str>,
+) -> Result<Vec<credential_management_params::CredsMetadata>, String> {
+    let mut datas: Vec<credential_management_params::CredsMetadata> = Vec::new();
+    let data = credential_management::credential_management(
+        hid_params,
+        pin,
+        credential_management_command::SubCommand::EnumerateRPsBegin,
+        None,
+        None,
+        None,
+    )?;
+    datas.push(data.clone());
+    if data.total_rps > 0 {
+        let roop_n = data.total_rps - 1;
+        for _ in 0..roop_n {
+            let data = credential_management::credential_management(
+                hid_params,
+                pin,
+                credential_management_command::SubCommand::EnumerateRPsGetNextRP,
+                None,
+                None,
+                None,
+            )?;
+            datas.push(data);
+        }
+    }
+    Ok(datas)
+}
+
+/// CredentialManagement - enumerateCredentialsBegin & enumerateCredentialsNext
+pub fn credential_management_enumerate_credentials(
+    hid_params: &[HidParam],
+    pin: Option<&str>,
+    rpid_hash: Vec<u8>,
+) -> Result<Vec<credential_management_params::CredsMetadata>, String> {
+    let mut datas: Vec<credential_management_params::CredsMetadata> = Vec::new();
+    let data = credential_management::credential_management(
+        hid_params,
+        pin,
+        credential_management_command::SubCommand::EnumerateCredentialsBegin,
+        Some(rpid_hash.to_vec()),
+        None,
+        None,
+    )?;
+    datas.push(data.clone());
+    if data.total_credentials > 0 {
+        let roop_n = data.total_credentials - 1;
+        for _ in 0..roop_n {
+            let data = credential_management::credential_management(
+                hid_params,
+                pin,
+                credential_management_command::SubCommand::EnumerateCredentialsGetNextCredential,
+                Some(rpid_hash.to_vec()),
+                None,
+                None,
+            )?;
+            datas.push(data);
+        }
+    }
+    Ok(datas)
+}
+
+/// CredentialManagement - deleteCredential
+pub fn credential_management_delete_credential(
+    hid_params: &[HidParam],
+    pin: Option<&str>,
+    pkcd: Option<credential_management_params::PublicKeyCredentialDescriptor>,
+) -> Result<credential_management_params::CredsMetadata, String> {
+    credential_management::credential_management(
+        hid_params,
+        pin,
+        credential_management_command::SubCommand::DeleteCredential,
+        None,
+        pkcd,
+        None,
+    )
+}
+
+/// CredentialManagement - updateUserInformation
+pub fn credential_management_update_user_information(
+    hid_params: &[HidParam],
+    pin: Option<&str>,
+    pkcd: Option<credential_management_params::PublicKeyCredentialDescriptor>,
+    pkcue: Option<credential_management_params::PublicKeyCredentialUserEntity>,
+) -> Result<credential_management_params::CredsMetadata, String> {
+    credential_management::credential_management(
+        hid_params,
+        pin,
+        credential_management_command::SubCommand::UpdateUserInformation,
+        None,
+        pkcd,
+        pkcue,
+    )
+}
+
+/// Selection
+pub fn selection(hid_params: &[HidParam]) -> Result<String, String> {
+    let device = FidoKeyHid::new(hid_params)?;
+    let cid = ctaphid::ctaphid_init(&device)?;
+
+    let send_payload = selection_command::create_payload();
+    println!("{}", util::to_hex_str(&send_payload));
+
+    let _response_cbor = ctaphid::ctaphid_cbor(&device, &cid, &send_payload)?;
+
+    Ok("".to_string())
+}
+
+/// Get Config
+pub fn config(hid_params: &[HidParam]) -> Result<String, String> {
+    let device = FidoKeyHid::new(hid_params)?;
+    let cid = ctaphid::ctaphid_init(&device)?;
+
+    let send_payload = config_command::create_payload_enable_enterprise_attestation();
+    println!("{}", util::to_hex_str(&send_payload));
+
+    let _response_cbor = ctaphid::ctaphid_cbor(&device, &cid, &send_payload)?;
+
+    Ok("".to_string())
+}
+
 //
 // test
 //
@@ -597,9 +630,9 @@ mod tests {
         //println!("- out_bytes({:?})       = {:?}", out_bytes.len(), util::to_hex_str(&out_bytes));
         let check = "F0AC99D6AAD2E199AF9CF25F6568A6F5".to_string();
 
-        let pin_token_dec = pintoken::PinToken{
-            signing_key : hmac::SigningKey::new(&digest::SHA256, &out_bytes),
-            key : out_bytes.to_vec(),
+        let pin_token_dec = pintoken::PinToken {
+            signing_key: hmac::SigningKey::new(&digest::SHA256, &out_bytes),
+            key: out_bytes.to_vec(),
         };
         let pin_auth = pin_token_dec.authenticate_v1(&client_data_hash);
 

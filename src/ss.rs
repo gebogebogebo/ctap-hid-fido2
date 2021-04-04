@@ -79,8 +79,8 @@ impl SharedSecret {
         decryptor.decrypt(&mut input, &mut output, true).unwrap();
         //println!("- out_bytes({:?})       = {:?}", out_bytes.len(), util::to_hex_str(&out_bytes));
 
-        let pin_token = pintoken::PinToken{
-            signing_key: hmac::SigningKey::new(&digest::SHA256,&out_bytes),
+        let pin_token = pintoken::PinToken {
+            signing_key: hmac::SigningKey::new(&digest::SHA256, &out_bytes),
             key: out_bytes.to_vec(),
         };
         Ok(pin_token)

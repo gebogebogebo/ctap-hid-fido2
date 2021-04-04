@@ -32,7 +32,7 @@ pub(crate) fn is_debug() -> bool {
 }
 
 // for cbor
-pub(crate) fn cbor_get_string_from_map(cbor_map: &Value,get_key: &str)-> Option<String>{
+pub(crate) fn cbor_get_string_from_map(cbor_map: &Value, get_key: &str) -> Option<String> {
     if let Value::Map(xs) = cbor_map {
         for (key, val) in xs {
             if let Value::Text(s) = key {
@@ -47,7 +47,7 @@ pub(crate) fn cbor_get_string_from_map(cbor_map: &Value,get_key: &str)-> Option<
     None
 }
 
-pub(crate) fn cbor_get_bytes_from_map(cbor_map: &Value,get_key: &str)-> Option<Vec<u8>>{
+pub(crate) fn cbor_get_bytes_from_map(cbor_map: &Value, get_key: &str) -> Option<Vec<u8>> {
     if let Value::Map(xs) = cbor_map {
         for (key, val) in xs {
             if let Value::Text(s) = key {

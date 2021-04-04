@@ -1,7 +1,7 @@
 use ctap_hid_fido2;
 use ctap_hid_fido2::util;
 
-fn metadata(pin:Option<&str>) {
+fn metadata(pin: Option<&str>) {
     println!("# credential_management_get_creds_metadata()");
     println!("");
     match ctap_hid_fido2::credential_management_get_creds_metadata(
@@ -19,7 +19,7 @@ fn metadata(pin:Option<&str>) {
     println!("");
 }
 
-fn rps(pin:Option<&str>) {
+fn rps(pin: Option<&str>) {
     println!("# credential_management_enumerate_rps()");
     println!("");
     match ctap_hid_fido2::credential_management_enumerate_rps(
@@ -40,7 +40,7 @@ fn rps(pin:Option<&str>) {
     println!("");
 }
 
-fn credentials(pin:Option<&str>) {
+fn credentials(pin: Option<&str>) {
     println!("# credential_management_enumerate_credentials()");
     println!("");
 
@@ -67,7 +67,7 @@ fn credentials(pin:Option<&str>) {
     println!("");
 }
 
-fn delete(pin:Option<&str>) {
+fn delete(pin: Option<&str>) {
     println!("# credential_management_delete_credential()");
     println!("");
 
@@ -93,7 +93,7 @@ fn delete(pin:Option<&str>) {
     println!("");
 }
 
-fn update(pin:Option<&str>) {
+fn update(pin: Option<&str>) {
     println!("credential_management_update_user_information()");
 
     let mut pkcd =
