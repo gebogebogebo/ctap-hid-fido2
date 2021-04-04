@@ -24,7 +24,8 @@ pub fn create_payload(
     pin_token: pintoken::PinToken,
     sub_command: SubCommand,
     rpid_hash: Option<Vec<u8>>,
-    pkcd: Option<credential_management_params::PublicKeyCredentialDescriptor>
+    pkcd: Option<credential_management_params::PublicKeyCredentialDescriptor>,
+    pkcue: Option<credential_management_params::PublicKeyCredentialUserEntity>,
 ) -> Vec<u8> {
 
     let mut map = BTreeMap::new();
@@ -50,15 +51,13 @@ pub fn create_payload(
                 let param = create_public_key_credential_descriptor(pkcd.unwrap());
         
                 if sub_command == SubCommand::UpdateUserInformation {
-                    /*
-                    let user_id = util::to_str_hex("6765626F3034".to_string());
                     // user (0x03)        : a PublicKeyCredentialUserEntity with the updated information.
+                    let pkcuee = pkcue.unwrap();
                     let mut user = BTreeMap::new();
-                    user.insert(Value::Text("id".to_string()), Value::Bytes(user_id.to_vec()));
-                    user.insert(Value::Text("name".to_string()), Value::Text("test-name".to_string()));    
-                    user.insert(Value::Text("displayName".to_string()), Value::Text("test-disp-name".to_string()));    
-                    param.insert(Value::Integer(0x03), Value::Map(user));
-                    */
+                    user.insert(Value::Text("id".to_string()), Value::Bytes(pkcuee.id.to_vec()));
+                    user.insert(Value::Text("name".to_string()), Value::Text(pkcuee.name.to_string()));    
+                    user.insert(Value::Text("displayName".to_string()), Value::Text(pkcuee.display_name.to_string()));
+                    //param.insert(Value::Integer(0x03), Value::Map(user));
                 }
         
                 map.insert(Value::Integer(0x02), param.clone());                
