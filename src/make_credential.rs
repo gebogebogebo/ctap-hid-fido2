@@ -9,7 +9,7 @@ use crate::HidParam;
 #[allow(unused_imports)]
 use crate::util;
 
-pub fn make_credential_inter(
+pub fn make_credential(
     hid_params: &[HidParam],
     rpid: &str,
     challenge: &[u8],

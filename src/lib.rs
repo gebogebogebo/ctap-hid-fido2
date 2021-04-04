@@ -16,6 +16,7 @@ mod credential_management_response;
 mod ctapdef;
 mod ctaphid;
 mod ctapihd_nitro;
+mod get_assertion;
 mod get_assertion_command;
 pub mod get_assertion_params;
 mod get_assertion_response;
@@ -138,8 +139,7 @@ pub fn get_fidokey_devices() -> Vec<(String, HidParam)> {
 pub fn wink(hid_params: &[HidParam]) -> Result<(), String> {
     let device = FidoKeyHid::new(hid_params)?;
     let cid = ctaphid::ctaphid_init(&device)?;
-    ctaphid::ctaphid_wink(&device, &cid)?;
-    Ok(())
+    ctaphid::ctaphid_wink(&device, &cid)
 }
 
 /// Get FIDO key information
@@ -177,8 +177,7 @@ pub fn make_credential(
     challenge: &[u8],
     pin: Option<&str>,
 ) -> Result<make_credential_params::Attestation, String> {
-    let result = make_credential::make_credential_inter(hid_params, rpid, challenge, pin, false, None)?;
-    Ok(result)
+    make_credential::make_credential(hid_params, rpid, challenge, pin, false, None)
 }
 
 /// Registration command.Generate credentials(with PIN ,Resident Key)
@@ -189,8 +188,7 @@ pub fn make_credential_rk(
     pin: Option<&str>,
     rkparam: &make_credential_params::RkParam,
 ) -> Result<make_credential_params::Attestation, String> {
-    let result = make_credential::make_credential_inter(hid_params, rpid, challenge, pin, true, Some(rkparam))?;
-    Ok(result)
+    make_credential::make_credential(hid_params, rpid, challenge, pin, true, Some(rkparam))
 }
 
 /// Registration command.Generate credentials(without PIN ,non Resident Key)
@@ -199,8 +197,7 @@ pub fn make_credential_without_pin(
     rpid: &str,
     challenge: &[u8],
 ) -> Result<make_credential_params::Attestation, String> {
-    let result = make_credential::make_credential_inter(hid_params, rpid, challenge, None, false, None)?;
-    Ok(result)
+    make_credential::make_credential(hid_params, rpid, challenge, None, false, None)
 }
 
 /// Authentication command(with PIN , non Resident Key)
@@ -211,7 +208,7 @@ pub fn get_assertion(
     credential_id: &[u8],
     pin: Option<&str>,
 ) -> Result<get_assertion_params::Assertion, String> {
-    let asss = get_assertion_inter(hid_params, rpid, challenge, credential_id, pin, true)?;
+    let asss = get_assertion::get_assertion_inter(hid_params, rpid, challenge, credential_id, pin, true)?;
     Ok(asss[0].clone())
 }
 
@@ -223,80 +220,7 @@ pub fn get_assertions_rk(
     pin: Option<&str>,
 ) -> Result<Vec<get_assertion_params::Assertion>, String> {
     let dmy: [u8; 0] = [];
-    let asss = get_assertion_inter(hid_params, rpid, challenge, &dmy, pin, true)?;
-    Ok(asss)
-}
-
-fn get_assertion_inter(
-    hid_params: &[HidParam],
-    rpid: &str,
-    challenge: &[u8],
-    credential_id: &[u8],
-    pin: Option<&str>,
-    up: bool,
-) -> Result<Vec<get_assertion_params::Assertion>, String> {
-    // init
-    let device = FidoKeyHid::new(hid_params)?;
-    let cid = ctaphid::ctaphid_init(&device)?;
-
-    // uv
-    let uv = {
-        match pin {
-            Some(_) => false,
-            None => true,
-        }
-    };
-
-    // pin token
-    let pin_token = {
-        if let Some(pin) = pin {
-            Some(get_pin_token(&device, &cid, pin.to_string())?)
-        } else {
-            None
-        }
-    };
-
-    //let pin_token = get_pin_token(&device, &cid, pin.to_string())?;
-
-    // create cmmand
-    let send_payload = {
-        let mut params =
-            get_assertion_command::Params::new(rpid, challenge.to_vec(), credential_id.to_vec());
-        params.option_up = up;
-        params.option_uv = uv;
-
-        // create pin auth
-        if let Some(pin_token) = pin_token {
-            let pin_auth = pin_token.authenticate_v1(&params.client_data_hash);
-            //println!("- pin_auth({:02})    = {:?}", pin_auth.len(),util::to_hex_str(&pin_auth));
-            params.pin_auth = pin_auth.to_vec();
-        }
-
-        get_assertion_command::create_payload(params)
-    };
-    //println!("- get_assertion({:02})    = {:?}", send_payload.len(),util::to_hex_str(&send_payload));
-
-    // send & response
-    let response_cbor = ctaphid::ctaphid_cbor(&device, &cid, &send_payload)?;
-
-    if util::is_debug() == true {
-        println!(
-            "- response_cbor({:02})    = {:?}",
-            response_cbor.len(),
-            util::to_hex_str(&response_cbor)
-        );
-    }
-
-    let ass = get_assertion_response::parse_cbor(&response_cbor)?;
-
-    let mut asss = vec![ass];
-
-    for _ in 0..(asss[0].number_of_credentials - 1) {
-        let ass = get_next_assertion(&device, &cid)?;
-        asss.push(ass);
-    }
-
-    Ok(asss)
+    get_assertion::get_assertion_inter(hid_params, rpid, challenge, &dmy, pin, true)
 }
 
 fn get_next_assertion(
@@ -304,14 +228,8 @@ fn get_next_assertion(
     cid: &[u8],
 ) -> Result<get_assertion_params::Assertion, String> {
     let send_payload = get_next_assertion_command::create_payload();
-
-    // send & response
     let response_cbor = ctaphid::ctaphid_cbor(&device, &cid, &send_payload)?;
-
-    //println!("- response_cbor({:02})    = {:?}", response_cbor.len(),util::to_hex_str(&response_cbor));
-
-    let ass = get_assertion_response::parse_cbor(&response_cbor)?;
-    Ok(ass)
+    get_assertion_response::parse_cbor(&response_cbor)
 }
 
 fn get_pin_token(
@@ -408,7 +326,6 @@ pub fn credential_management_enumerate_credentials(
     pin: Option<&str>,
     rpid_hash: Vec<u8>,
 ) -> Result<Vec<credential_management_params::CredsMetadata>, String> {
-    let mut datas: Vec<credential_management_params::CredsMetadata> = Vec::new();
     let data = credential_management::credential_management(
         hid_params,
         pin,
@@ -417,6 +334,7 @@ pub fn credential_management_enumerate_credentials(
         None,
         None,
     )?;
+    let mut datas: Vec<credential_management_params::CredsMetadata> = Vec::new();
     datas.push(data.clone());
     if data.total_credentials > 0 {
         let roop_n = data.total_credentials - 1;
