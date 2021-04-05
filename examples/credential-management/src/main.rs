@@ -3,21 +3,12 @@ use ctap_hid_fido2::util;
 
 fn metadata(pin: Option<&str>) {
     println!("# credential_management_get_creds_metadata()");
-    println!("");
     match ctap_hid_fido2::credential_management_get_creds_metadata(
         &ctap_hid_fido2::HidParam::get_default_params(),
         pin,
     ) {
         Ok(result) => {
-            println!("- creds metadata");
-            println!(
-                "-- existing_resident_credentials_count               = {:?}",
-                result.existing_resident_credentials_count
-            );
-            println!(
-                "-- max_possible_remaining_resident_credentials_count = {:?}",
-                result.max_possible_remaining_resident_credentials_count
-            );
+            println!("{}", result);
         }
         Err(error) => {
             println!("- creds metadata error: {:?}", error);
@@ -29,15 +20,14 @@ fn metadata(pin: Option<&str>) {
 
 fn rps(pin: Option<&str>) {
     println!("# credential_management_enumerate_rps()");
-    println!("");
     match ctap_hid_fido2::credential_management_enumerate_rps(
         &ctap_hid_fido2::HidParam::get_default_params(),
         pin,
     ) {
         Ok(results) => {
             for data in results {
-                data.print("## rps");
-                println!("");
+                println!("## rps");
+                println!("{}",data);
             }
         }
         Err(error) => {
@@ -53,7 +43,6 @@ fn credentials(pin: Option<&str>) {
     println!("");
 
     let rpid_hash: Vec<u8> = util::to_str_hex(
-        //        "0BDF390F1237B556DB51AF378D5795D5531385CCECDB4499D6BAFBD8918460CA".to_string(),
         "8C5D729B193185CD17AC242C85E6BD23D3990ABB1C65336559524882A6EACA33".to_string(),
     );
     match ctap_hid_fido2::credential_management_enumerate_credentials(
