@@ -40,7 +40,7 @@ pub fn parse_cbor(bytes: &[u8]) -> Result<credential_management_params::CredsMet
                         data.public_key_credential_descriptor =
                             credential_management_params::PublicKeyCredentialDescriptor::default()
                                 .get_id(val)
-                                .get_name(val)
+                                .get_type(val)
                     }
                     0x08 => {
                         data.public_key =

@@ -131,11 +131,11 @@ fn create_public_key_credential_descriptor(
     let mut map = BTreeMap::new();
     map.insert(
         Value::Text("id".to_string()),
-        Value::Bytes(in_param.credential_id),
+        Value::Bytes(in_param.id),
     );
     map.insert(
         Value::Text("type".to_string()),
-        Value::Text(in_param.credential_type),
+        Value::Text(in_param.ctype),
     );
 
     let mut param = BTreeMap::new();
