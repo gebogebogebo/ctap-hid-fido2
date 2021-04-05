@@ -225,6 +225,15 @@ pub fn get_assertions_rk(
     get_assertion::get_assertion(hid_params, rpid, challenge, &dmy, pin, true)
 }
 
+pub fn enable_ctap_2_1(hid_params: &[HidParam]) -> bool{
+    let info = get_info::get_info(hid_params).unwrap();
+    for (key, value) in info {
+        println!("- {} / {}", key, value);
+    }
+    let a = 0;
+    true
+}
+
 /// CredentialManagement - getCredsMetadata (CTAP 2.1-PRE)
 pub fn credential_management_get_creds_metadata(
     hid_params: &[HidParam],

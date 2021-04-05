@@ -125,6 +125,8 @@ fn update(pin: Option<&str>) {
 fn main() {
     ctap_hid_fido2::hello();
 
+    println!("Enable CTAP 2.1 = {}",ctap_hid_fido2::enable_ctap_2_1(&ctap_hid_fido2::HidParam::get_default_params()));
+
     println!("----- credential-management start -----");
     metadata(Some("1234"));
     rps(Some("1234"));
