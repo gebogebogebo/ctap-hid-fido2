@@ -52,8 +52,8 @@ fn credentials(pin: Option<&str>) {
     ) {
         Ok(results) => {
             for data in results {
-                data.print("## credentials");
-                println!("");
+                println!("## credentials");
+                println!("{}",data);
             }
         }
         Err(error) => {
@@ -70,10 +70,10 @@ fn delete(pin: Option<&str>) {
 
     let mut pkcd =
         ctap_hid_fido2::credential_management_params::PublicKeyCredentialDescriptor::default();
-    pkcd.credential_id = util::to_str_hex(
+    pkcd.id = util::to_str_hex(
         "271EDC98A27DF03BB9DAE9F7A85A3249DF4412D0BA2F301ED62E2A03AA44326067B88C5D729B193185CD17AC242C85E6BD23D3990ABB1C65336559524882A6EACA33C4010000".to_string(),
     );
-    pkcd.credential_type = "public_key".to_string();
+    pkcd.ctype = "public_key".to_string();
 
     match ctap_hid_fido2::credential_management_delete_credential(
         &ctap_hid_fido2::HidParam::get_default_params(),
@@ -95,10 +95,10 @@ fn update(pin: Option<&str>) {
 
     let mut pkcd =
         ctap_hid_fido2::credential_management_params::PublicKeyCredentialDescriptor::default();
-    pkcd.credential_id = util::to_str_hex(
+    pkcd.id = util::to_str_hex(
         "2476469AB7113555910F56B21F06D3A3D16D7E5775C67DB0B5CF51D0FB071935AEDC8C5D729B193185CD17AC242C85E6BD23D3990ABB1C65336559524882A6EACA33D1010000".to_string(),
     );
-    pkcd.credential_type = "public_key".to_string();
+    pkcd.ctype = "public_key".to_string();
 
     let mut pkcue =
         ctap_hid_fido2::credential_management_params::PublicKeyCredentialUserEntity::default();

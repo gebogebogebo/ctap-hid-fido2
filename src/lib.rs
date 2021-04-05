@@ -225,7 +225,7 @@ pub fn get_assertions_rk(
     get_assertion::get_assertion(hid_params, rpid, challenge, &dmy, pin, true)
 }
 
-/// CredentialManagement - getCredsMetadata
+/// CredentialManagement - getCredsMetadata (CTAP 2.1-PRE)
 pub fn credential_management_get_creds_metadata(
     hid_params: &[HidParam],
     pin: Option<&str>,
@@ -241,7 +241,7 @@ pub fn credential_management_get_creds_metadata(
     Ok(credential_management_params::CredentialsCount::new(&meta))
 }
 
-/// CredentialManagement - enumerateRPsBegin & enumerateRPsNext
+/// CredentialManagement - enumerateRPsBegin & enumerateRPsNext (CTAP 2.1-PRE)
 pub fn credential_management_enumerate_rps(
     hid_params: &[HidParam],
     pin: Option<&str>,
@@ -273,12 +273,14 @@ pub fn credential_management_enumerate_rps(
     Ok(datas)
 }
 
-/// CredentialManagement - enumerateCredentialsBegin & enumerateCredentialsNext
+/// CredentialManagement - enumerateCredentialsBegin & enumerateCredentialsNext (CTAP 2.1-PRE)
 pub fn credential_management_enumerate_credentials(
     hid_params: &[HidParam],
     pin: Option<&str>,
     rpid_hash: Vec<u8>,
-) -> Result<Vec<credential_management_params::CredsMetadata>, String> {
+) -> Result<Vec<credential_management_params::Credential>, String> {
+    let mut datas: Vec<credential_management_params::Credential> = Vec::new();
+
     let data = credential_management::credential_management(
         hid_params,
         pin,
@@ -287,8 +289,7 @@ pub fn credential_management_enumerate_credentials(
         None,
         None,
     )?;
-    let mut datas: Vec<credential_management_params::CredsMetadata> = Vec::new();
-    datas.push(data.clone());
+    datas.push(credential_management_params::Credential::new(&data));
     if data.total_credentials > 0 {
         let roop_n = data.total_credentials - 1;
         for _ in 0..roop_n {
@@ -300,13 +301,13 @@ pub fn credential_management_enumerate_credentials(
                 None,
                 None,
             )?;
-            datas.push(data);
+            datas.push(credential_management_params::Credential::new(&data));
         }
     }
     Ok(datas)
 }
 
-/// CredentialManagement - deleteCredential
+/// CredentialManagement - deleteCredential (CTAP 2.1-PRE)
 pub fn credential_management_delete_credential(
     hid_params: &[HidParam],
     pin: Option<&str>,
@@ -322,7 +323,7 @@ pub fn credential_management_delete_credential(
     )
 }
 
-/// CredentialManagement - updateUserInformation
+/// CredentialManagement - updateUserInformation (CTAP 2.1-PRE)
 pub fn credential_management_update_user_information(
     hid_params: &[HidParam],
     pin: Option<&str>,
@@ -339,7 +340,7 @@ pub fn credential_management_update_user_information(
     )
 }
 
-/// Selection
+/// Selection (CTAP 2.1-PRE)
 pub fn selection(hid_params: &[HidParam]) -> Result<String, String> {
     let device = FidoKeyHid::new(hid_params)?;
     let cid = ctaphid::ctaphid_init(&device)?;
@@ -352,7 +353,7 @@ pub fn selection(hid_params: &[HidParam]) -> Result<String, String> {
     Ok("".to_string())
 }
 
-/// Get Config
+/// Get Config (CTAP 2.1-PRE)
 pub fn config(hid_params: &[HidParam]) -> Result<String, String> {
     let device = FidoKeyHid::new(hid_params)?;
     let cid = ctaphid::ctaphid_init(&device)?;
