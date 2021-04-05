@@ -1,11 +1,11 @@
-#[allow(unused_imports)]
-use crate::util;
 use crate::client_pin_command;
 use crate::client_pin_response;
 use crate::ctaphid;
-use crate::FidoKeyHid;
-use crate::ss;
 use crate::pintoken;
+use crate::ss;
+#[allow(unused_imports)]
+use crate::util;
+use crate::FidoKeyHid;
 
 pub fn get_pin_token(
     device: &FidoKeyHid,

@@ -1,8 +1,8 @@
+use crate::client_pin;
 use crate::credential_management_command;
 use crate::credential_management_params;
 use crate::credential_management_response;
 use crate::ctaphid;
-use crate::client_pin;
 use crate::FidoKeyHid;
 use crate::HidParam;
 

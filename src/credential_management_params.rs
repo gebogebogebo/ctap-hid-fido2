@@ -1,6 +1,7 @@
 use crate::cose;
 use crate::util;
 use serde_cbor::Value;
+use std::fmt;
 
 #[derive(Debug, Default, Clone)]
 pub struct PublicKeyCredentialRpEntity {
@@ -17,6 +18,11 @@ impl PublicKeyCredentialRpEntity {
         let mut ret = self.clone();
         ret.name = util::cbor_get_string_from_map(cbor, "name").unwrap_or_default();
         ret
+    }
+}
+impl fmt::Display for PublicKeyCredentialRpEntity {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "(id : {} , name : {})", self.id, self.name)
     }
 }
 
@@ -174,10 +180,40 @@ pub struct CredentialsCount {
     pub max_possible_remaining_resident_credentials_count: u32,
 }
 impl CredentialsCount {
-    pub fn new(meta: CredsMetadata) -> CredentialsCount {
+    pub fn new(meta: &CredsMetadata) -> CredentialsCount {
         let mut ret = CredentialsCount::default();
         ret.existing_resident_credentials_count = meta.existing_resident_credentials_count;
-        ret.max_possible_remaining_resident_credentials_count = meta.max_possible_remaining_resident_credentials_count;
+        ret.max_possible_remaining_resident_credentials_count =
+            meta.max_possible_remaining_resident_credentials_count;
         ret
+    }
+}
+impl fmt::Display for CredentialsCount {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "- existing_resident_credentials_count = {}\n- max_possible_remaining_resident_credentials_count = {}", self.existing_resident_credentials_count, self.max_possible_remaining_resident_credentials_count)
+    }
+}
+
+#[derive(Debug, Default, Clone)]
+pub struct Rp {
+    pub public_key_credential_rp_entity: PublicKeyCredentialRpEntity,
+    pub rpid_hash: Vec<u8>,
+}
+impl Rp {
+    pub fn new(meta: &CredsMetadata) -> Rp {
+        let mut ret = Rp::default();
+        ret.public_key_credential_rp_entity = meta.public_key_credential_rp_entity.clone();
+        ret.rpid_hash = meta.rpid_hash.to_vec();
+        ret
+    }
+}
+impl fmt::Display for Rp {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "- public_key_credential_rp_entity = {}\n- rpid_hash                       = {}",
+            self.public_key_credential_rp_entity,
+            util::to_hex_str(&self.rpid_hash)
+        )
     }
 }

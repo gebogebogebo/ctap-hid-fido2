@@ -1,13 +1,13 @@
-#[allow(unused_imports)]
-use crate::util;
+use crate::client_pin;
+use crate::ctaphid;
 use crate::get_assertion_command;
 use crate::get_assertion_params;
 use crate::get_assertion_response;
 use crate::get_next_assertion_command;
-use crate::ctaphid;
+#[allow(unused_imports)]
+use crate::util;
 use crate::FidoKeyHid;
 use crate::HidParam;
-use crate::client_pin;
 
 pub fn get_assertion(
     hid_params: &[HidParam],
