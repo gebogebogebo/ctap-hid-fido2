@@ -225,13 +225,14 @@ pub fn get_assertions_rk(
     get_assertion::get_assertion(hid_params, rpid, challenge, &dmy, pin, true)
 }
 
-pub fn enable_ctap_2_1(hid_params: &[HidParam]) -> bool{
-    let info = get_info::get_info(hid_params).unwrap();
-    for (key, value) in info {
-        println!("- {} / {}", key, value);
+pub fn enable_ctap_2_1(hid_params: &[HidParam]) -> Result<bool,String>{
+    let infos = get_info::get_info(hid_params)?;
+    let find = infos.iter().find(|v| v.0 == "versions" && v.1.contains("FIDO_2_1"));
+    //println!("find: {:?}", positive);
+    match find {
+        Some(_) => Ok(true),
+        None => Ok(false),
     }
-    let a = 0;
-    true
 }
 
 /// CredentialManagement - getCredsMetadata (CTAP 2.1-PRE)
