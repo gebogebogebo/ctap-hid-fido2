@@ -452,4 +452,5 @@ mod tests {
 
         assert_eq!(check, hex::encode(pin_auth).to_uppercase());
     }
+    
 }

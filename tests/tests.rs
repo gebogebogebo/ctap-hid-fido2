@@ -56,3 +56,47 @@ fn test_make_credential_with_pin_non_rk() {
 
     assert!(true);
 }
+
+#[test]
+fn test_credential_management_get_creds_metadata() {
+    match ctap_hid_fido2::enable_ctap_2_1(&ctap_hid_fido2::HidParam::get_default_params()) {
+        Ok(result) => {
+            if !result {
+                // Skip
+                return;
+            }
+        },
+        Err(_) => assert!(false),
+    };
+
+    let pin = "1234";
+    match ctap_hid_fido2::credential_management_get_creds_metadata(
+        &ctap_hid_fido2::HidParam::get_default_params(),
+        Some(pin),
+    ) {
+        Ok(_) => assert!(true),
+        Err(_) => assert!(false),
+    };
+}
+
+#[test]
+fn test_credential_management_enumerate_rps() {
+    match ctap_hid_fido2::enable_ctap_2_1(&ctap_hid_fido2::HidParam::get_default_params()) {
+        Ok(result) => {
+            if !result {
+                // Skip
+                return;
+            }
+        },
+        Err(_) => assert!(false),
+    };
+
+    let pin = "1234";
+    match ctap_hid_fido2::credential_management_enumerate_rps(
+        &ctap_hid_fido2::HidParam::get_default_params(),
+        Some(pin),
+    ) {
+        Ok(_) => assert!(true),
+        Err(_) => assert!(false),
+    };
+}
