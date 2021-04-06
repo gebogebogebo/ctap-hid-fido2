@@ -122,7 +122,6 @@ fn update(pin: Option<&str>) {
     println!("");
 }
 
-// PEND TODO エラーログの仕組みを作る
 fn main() {
     ctap_hid_fido2::hello();
 

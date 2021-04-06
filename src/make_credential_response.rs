@@ -6,7 +6,6 @@ use byteorder::{BigEndian, ReadBytesExt};
 use serde_cbor::Value;
 use std::io::Cursor;
 
-// PEND これは戻り値で構造体を返すようにしたほうがいい
 fn parse_cbor_att_stmt(obj: &Value, att: &mut make_credential_params::Attestation) {
     if let Value::Map(xs) = obj {
         for (key, val) in xs {
