@@ -1,5 +1,7 @@
 use ctap_hid_fido2;
 use ctap_hid_fido2::util;
+extern crate clap;
+use clap::{App, Arg, SubCommand};
 
 fn metadata(pin: Option<&str>) {
     println!("# credential_management_get_creds_metadata()");
@@ -123,6 +125,79 @@ fn update(pin: Option<&str>) {
 }
 
 fn main() {
+    //println!("# credential_management_get_creds_metadata()");
+
+    // PEND clap
+    let app = App::new("credential-management")
+        .version("0.1.0")
+        .author("gebo")
+        .about("CTAP 2.1 credential-management command test app")
+        //.arg(Arg::with_name("metadata")
+        //.help("credential_management_get_creds_metadata")
+        //.required(true)
+        //)
+        .arg(Arg::with_name("metadata")
+            .help("credential_management_get_creds_metadata")
+            .short("m")
+            .long("metadata")
+        )
+        .arg(Arg::with_name("rps")
+            .help("credential_management_enumerate_rps")
+            .short("r")
+            .long("rps")
+        )
+        .arg(Arg::with_name("credentials")
+            .help("credential_management_enumerate_credentials")
+            .short("c")
+            .long("credentials")
+        //)     println!("# credential_management_enumerate_credentials()");
+
+        //.arg(Arg::with_name("opt")              // オプションを定義
+        //    .help("credential_management_get_creds_metadata")              // ヘルプメッセージ
+        //    .short("mx")                         // ショートコマンド
+        //    .long("metadatax")                        // ロングコマンド
+        //    .takes_value(true)                  // 値を持つことを定義
+        //.subcommand(SubCommand::with_name("sub")// サブコマンドを定義
+        //    .about("sample subcommand")         // このサブコマンドについて
+        //    .arg(Arg::with_name("subflg")       // フラグを定義
+        //        .help("sample flag by sub")     // ヘルプメッセージ
+        //        .short("f")                     // ショートコマンド
+        //        .long("flag")                   // ロングコマンド
+        //    )
+        );
+
+    // 引数を解析
+    let matches = app.get_matches();
+
+    /*
+    // paが指定されていれば値を表示
+    if let Some(o) = matches.value_of("pa") {
+        println!("Value for pa: {}", o);
+    }
+
+    // optが指定されていれば値を表示
+    if let Some(o) = matches.value_of("opt") {
+        println!("Value for opt: {}", o);
+    }
+
+    // flgのON/OFFで表示するメッセージを切り替え
+    println!("flg is {}", if matches.is_present("flg") {"ON"} else {"OFF"});
+
+    // subサブコマンドの解析結果を取得
+    if let Some(ref matches) = matches.subcommand_matches("sub") {
+        println!("used sub"); // subが指定されていればメッセージを表示
+        // subflgのON/OFFで表示するメッセージを切り替え
+        println!("subflg is {}", if matches.is_present("subflg") {"ON"} else {"OFF"});
+    }        
+    */
+    // PEND clap
+
+    // flgのON/OFFで表示するメッセージを切り替え
+    println!("metadata is {}", if matches.is_present("metadata") {"ON"} else {"OFF"});
+    println!("rps is {}", if matches.is_present("rps") {"ON"} else {"OFF"});
+    println!("credentials is {}", if matches.is_present("credentials") {"ON"} else {"OFF"});
+
+    /*
     ctap_hid_fido2::hello();
 
     match ctap_hid_fido2::enable_ctap_2_1(&ctap_hid_fido2::HidParam::get_default_params()) {
@@ -141,6 +216,7 @@ fn main() {
     delete(Some("1234"));
     update(Some("1234"));
     println!("----- credential-management end -----");
+    */
 
     /* Test for CTAP 2.1
     match ctap_hid_fido2::config(&ctap_hid_fido2::HidParam::get_default_params()) {
