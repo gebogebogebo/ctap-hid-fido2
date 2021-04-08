@@ -136,6 +136,13 @@ fn main() {
         //.help("credential_management_get_creds_metadata")
         //.required(true)
         //)
+        .arg(Arg::with_name("pin")
+            .help("pin")
+            .short("p")
+            .long("pin")
+            .takes_value(true)
+            .default_value("1234")
+        )
         .arg(Arg::with_name("metadata")
             .help("credential_management_get_creds_metadata")
             .short("m")
@@ -150,6 +157,8 @@ fn main() {
             .help("credential_management_enumerate_credentials")
             .short("c")
             .long("credentials")
+            //.value_name("rpidhash")
+            .takes_value(true)
         //)     println!("# credential_management_enumerate_credentials()");
 
         //.arg(Arg::with_name("opt")              // オプションを定義
@@ -169,35 +178,6 @@ fn main() {
     // 引数を解析
     let matches = app.get_matches();
 
-    /*
-    // paが指定されていれば値を表示
-    if let Some(o) = matches.value_of("pa") {
-        println!("Value for pa: {}", o);
-    }
-
-    // optが指定されていれば値を表示
-    if let Some(o) = matches.value_of("opt") {
-        println!("Value for opt: {}", o);
-    }
-
-    // flgのON/OFFで表示するメッセージを切り替え
-    println!("flg is {}", if matches.is_present("flg") {"ON"} else {"OFF"});
-
-    // subサブコマンドの解析結果を取得
-    if let Some(ref matches) = matches.subcommand_matches("sub") {
-        println!("used sub"); // subが指定されていればメッセージを表示
-        // subflgのON/OFFで表示するメッセージを切り替え
-        println!("subflg is {}", if matches.is_present("subflg") {"ON"} else {"OFF"});
-    }        
-    */
-    // PEND clap
-
-    // flgのON/OFFで表示するメッセージを切り替え
-    println!("metadata is {}", if matches.is_present("metadata") {"ON"} else {"OFF"});
-    println!("rps is {}", if matches.is_present("rps") {"ON"} else {"OFF"});
-    println!("credentials is {}", if matches.is_present("credentials") {"ON"} else {"OFF"});
-
-    /*
     ctap_hid_fido2::hello();
 
     match ctap_hid_fido2::enable_ctap_2_1(&ctap_hid_fido2::HidParam::get_default_params()) {
@@ -209,10 +189,27 @@ fn main() {
         }
     };
 
+    let pin = matches.value_of("pin").unwrap(); //.unwrap_or("1234");
+    println!("Value for pin: {}", pin);
+
+    if matches.is_present("metadata"){
+        metadata(Some(pin));
+    }
+
+    if matches.is_present("rps"){
+        rps(Some(pin));
+    }
+
+    if matches.is_present("credentials"){
+        let rpidhash = matches.value_of("credentials");
+        println!("Value for rpidhash: {:?}", rpidhash);
+    
+        credentials(Some(pin));
+    }
+
+    /*
+
     println!("----- credential-management start -----");
-    metadata(Some("1234"));
-    rps(Some("1234"));
-    credentials(Some("1234"));
     delete(Some("1234"));
     update(Some("1234"));
     println!("----- credential-management end -----");
