@@ -1,7 +1,7 @@
 use ctap_hid_fido2;
 use ctap_hid_fido2::util;
 extern crate clap;
-use clap::{App, Arg, SubCommand};
+use clap::{App, Arg};
 
 fn metadata(pin: Option<&str>) {
     println!("# credential_management_get_creds_metadata()");
@@ -40,17 +40,17 @@ fn rps(pin: Option<&str>) {
     println!("");
 }
 
-fn credentials(pin: Option<&str>) {
+fn credentials(pin: Option<&str>,rpid_hash: Option<&str>) {
     println!("# credential_management_enumerate_credentials()");
+    println!("- value for rpid_hash: {:?}", rpid_hash);
     println!("");
 
-    let rpid_hash: Vec<u8> = util::to_str_hex(
-        "8C5D729B193185CD17AC242C85E6BD23D3990ABB1C65336559524882A6EACA33".to_string(),
-    );
+    let rpid_hash_bytes: Vec<u8> = util::to_str_hex(rpid_hash.unwrap().to_string());
+
     match ctap_hid_fido2::credential_management_enumerate_credentials(
         &ctap_hid_fido2::HidParam::get_default_params(),
         pin,
-        rpid_hash,
+        rpid_hash_bytes,
     ) {
         Ok(results) => {
             for data in results {
@@ -66,14 +66,15 @@ fn credentials(pin: Option<&str>) {
     println!("");
 }
 
-fn delete(pin: Option<&str>) {
+fn delete(pin: Option<&str>,credential_id: Option<&str>) {
     println!("# credential_management_delete_credential()");
+    println!("- value for credential_id: {:?}", credential_id);
     println!("");
 
     let mut pkcd =
         ctap_hid_fido2::credential_management_params::PublicKeyCredentialDescriptor::default();
     pkcd.id = util::to_str_hex(
-        "271EDC98A27DF03BB9DAE9F7A85A3249DF4412D0BA2F301ED62E2A03AA44326067B88C5D729B193185CD17AC242C85E6BD23D3990ABB1C65336559524882A6EACA33C4010000".to_string(),
+        credential_id.unwrap().to_string()
     );
     pkcd.ctype = "public_key".to_string();
 
@@ -92,13 +93,15 @@ fn delete(pin: Option<&str>) {
     println!("");
 }
 
-fn update(pin: Option<&str>) {
-    println!("credential_management_update_user_information()");
+fn update(pin: Option<&str>,credential_id: Option<&str>) {
+    println!("# credential_management_update_user_information()");
+    println!("- value for credential_id: {:?}", credential_id);
+    println!("");
 
     let mut pkcd =
         ctap_hid_fido2::credential_management_params::PublicKeyCredentialDescriptor::default();
     pkcd.id = util::to_str_hex(
-        "2476469AB7113555910F56B21F06D3A3D16D7E5775C67DB0B5CF51D0FB071935AEDC8C5D729B193185CD17AC242C85E6BD23D3990ABB1C65336559524882A6EACA33D1010000".to_string(),
+        credential_id.unwrap().to_string()
     );
     pkcd.ctype = "public_key".to_string();
 
@@ -125,17 +128,10 @@ fn update(pin: Option<&str>) {
 }
 
 fn main() {
-    //println!("# credential_management_get_creds_metadata()");
-
-    // PEND clap
     let app = App::new("credential-management")
         .version("0.1.0")
         .author("gebo")
         .about("CTAP 2.1 credential-management command test app")
-        //.arg(Arg::with_name("metadata")
-        //.help("credential_management_get_creds_metadata")
-        //.required(true)
-        //)
         .arg(Arg::with_name("pin")
             .help("pin")
             .short("p")
@@ -157,27 +153,25 @@ fn main() {
             .help("credential_management_enumerate_credentials")
             .short("c")
             .long("credentials")
-            //.value_name("rpidhash")
             .takes_value(true)
-        //)     println!("# credential_management_enumerate_credentials()");
-
-        //.arg(Arg::with_name("opt")              // オプションを定義
-        //    .help("credential_management_get_creds_metadata")              // ヘルプメッセージ
-        //    .short("mx")                         // ショートコマンド
-        //    .long("metadatax")                        // ロングコマンド
-        //    .takes_value(true)                  // 値を持つことを定義
-        //.subcommand(SubCommand::with_name("sub")// サブコマンドを定義
-        //    .about("sample subcommand")         // このサブコマンドについて
-        //    .arg(Arg::with_name("subflg")       // フラグを定義
-        //        .help("sample flag by sub")     // ヘルプメッセージ
-        //        .short("f")                     // ショートコマンド
-        //        .long("flag")                   // ロングコマンド
-        //    )
+        )
+        .arg(Arg::with_name("delete")
+            .help("credential_management_delete_credential")
+            .short("d")
+            .long("delete")
+            .takes_value(true)
+        )
+        .arg(Arg::with_name("update")
+            .help("credential_management_update_user_information")
+            .short("u")
+            .long("update")
+            .takes_value(true)
         );
 
-    // 引数を解析
+    // Parse arguments
     let matches = app.get_matches();
 
+    // Start
     ctap_hid_fido2::hello();
 
     match ctap_hid_fido2::enable_ctap_2_1(&ctap_hid_fido2::HidParam::get_default_params()) {
@@ -189,8 +183,10 @@ fn main() {
         }
     };
 
-    let pin = matches.value_of("pin").unwrap(); //.unwrap_or("1234");
+    let pin = matches.value_of("pin").unwrap();
     println!("Value for pin: {}", pin);
+
+    println!("----- credential-management start -----");
 
     if matches.is_present("metadata"){
         metadata(Some(pin));
@@ -201,19 +197,21 @@ fn main() {
     }
 
     if matches.is_present("credentials"){
-        let rpidhash = matches.value_of("credentials");
-        println!("Value for rpidhash: {:?}", rpidhash);
-    
-        credentials(Some(pin));
+        let rpid_hash = matches.value_of("credentials");    
+        credentials(Some(pin),rpid_hash);
     }
 
-    /*
+    if matches.is_present("delete"){
+        let credential_id = matches.value_of("delete");    
+        delete(Some(pin),credential_id);
+    }
 
-    println!("----- credential-management start -----");
-    delete(Some("1234"));
-    update(Some("1234"));
+    if matches.is_present("update"){
+        let credential_id = matches.value_of("update");    
+        update(Some(pin),credential_id);
+    }
+
     println!("----- credential-management end -----");
-    */
 
     /* Test for CTAP 2.1
     match ctap_hid_fido2::config(&ctap_hid_fido2::HidParam::get_default_params()) {
