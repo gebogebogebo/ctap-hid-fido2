@@ -224,10 +224,14 @@ impl Rp {
 }
 impl fmt::Display for Rp {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let tmp1 = format!("- public_key_credential_rp_entity = ");
+        let tmp2 = format!("- rpid_hash({:02})                   = ",self.rpid_hash.len());
         write!(
             f,
-            "- public_key_credential_rp_entity = {}\n- rpid_hash                       = {}",
+            "{}{}\n{}{}",
+            tmp1,
             self.public_key_credential_rp_entity,
+            tmp2,
             util::to_hex_str(&self.rpid_hash)
         )
     }
