@@ -38,7 +38,7 @@
 
 ## CTAP 2.1 PRE について
 
-今世の中に出回っているセキュリティキーは既にCTAP2.1を実装しているものがありまして、 [authenticatorGetInfo](https://fidoalliance.org/specs/fido-v2.1-rd-20210309/fido-client-to-authenticator-protocol-v2.1-rd-20210309.html#authenticatorGetInfo) で **FIDO_2_1_PRE** という version が採れるものがあります。<br>そのセキュリティキーを使って **authenticatorCredentialManagement** を検証しました。
+今世の中に出回っているセキュリティキーは既にCTAP2.1を実装しているものがありまして、 [authenticatorGetInfo](https://fidoalliance.org/specs/fido-v2.1-rd-20210309/fido-client-to-authenticator-protocol-v2.1-rd-20210309.html#authenticatorGetInfo) で **FIDO_2_1_PRE** という version が採れるものがあります。<br>このセキュリティキーを使って **authenticatorCredentialManagement** を検証しました。
 
 
 
@@ -82,7 +82,7 @@ subCommand (0x01) にgetCredsMetadata(0x01) を指定して、pinUvAuthProtocol(
 
 
 
-#### pinUvAuthProtocol,pinUvAuthParam
+#### pinUvAuthProtocol/pinUvAuthParam
 
 authenticatorCredentialManagement の各サブコマンドにはpinUvAuthProtocol、pinUvAuthParamを指定する必要があります。これはPINの情報で、取得する情報がクレデンシャルなので当然といえば当然ですね。ただ生成シーケンスがかなりめんどくさいです。
 
@@ -100,7 +100,7 @@ PIN/UV Auth プロトコルを指定します。かんたんにいうとPINを�
 
 
 
-### enumerateRPsBegin,enumerateRPsGetNextRP
+### enumerateRPsBegin/enumerateRPsGetNextRP
 
 RP情報を取得します。enumerateRPsBeginで最初のRP情報と総RP数を取得し、enumerateRPsGetNextRPで次のRP情報を取得します。
 
@@ -116,7 +116,7 @@ RP情報を取得します。enumerateRPsBeginで最初のRP情報と総RP数を
   - rp (0x03) : RP名
   - rpIDHash (0x04) : RPIDハッシュ
 
-#### pinUvAuthProtocol,pinUvAuthParam
+#### pinUvAuthProtocol/pinUvAuthParam
 
 getCredsMetadataとほぼ同じです、pinUvAuthParamの求め方が少し違います。
 
@@ -125,7 +125,54 @@ getCredsMetadataとほぼ同じです、pinUvAuthParamの求め方が少し違�
 
 
 
-### enumerateCredentialsBegin,enumerateCredentialsGetNextCredential
+### enumerateCredentialsBegin/enumerateCredentialsGetNextCredential
+
+パラメータで指定されたRPのクレデンシャルを取得します。enumerateCredentialsBeginで最初のクレデンシャルと総クレデンシャル数を取得し、enumerateCredentialsGetNextCredentialで次のクレデンシャルを取得します。
+
+#### Parameters
+##### subCommandParams
+
+サブパラメータでRPID hashを指定します。
+
+##### pinUvAuthProtocol/pinUvAuthParam
+
+pinUvAuthProtocolは他のコマンドと一緒です。<br>pinUvAuthParamがちょっとめんどくさいです。<br>
+
+```
+pinUvAuthParam = authenticate(pinUvAuthToken, enumerateCredentialsBegin(0x04) || subCommandParams)
+```
+
+この **0x04 || subCommandParams** が何なのかというと0x04(1byte)とsubCommandParamsを連結したたデータです。subCommandParamsがRPIDだらRPIDってことではなくCBOR Map型で指定する必要があります。この辺どうなっているかは[コード]()を見たほうが良いかもしれません。<br>
+
+
+#### Response
+
+- enumerateCredentialsBeginでとれる情報
+
+  - user (0x06) : ユーザーデータ、PublicKeyCredentialUserEntity型
+  - credentialID (0x07) : クレデンシャルID、PublicKeyCredentialDescriptor型
+  - publicKey (0x08) : 公開鍵、COSE_Key型
+  - totalCredentials (0x09) : 総クレデンシャル数
+
+- enumerateCredentialsGetNextCredentialでとれる情報
+
+  - user (0x06) : ユーザーデータ、PublicKeyCredentialUserEntity型
+  - credentialID (0x07) : クレデンシャルID、PublicKeyCredentialDescriptor型
+  - publicKey (0x08) : 公開鍵、COSE_Key型
 
 
 
+### deleteCredential
+
+#### Parameters
+##### subCommandParams
+##### pinUvAuthProtocol/pinUvAuthParam
+#### Response
+
+
+
+### updateUserInformation
+#### Parameters
+##### subCommandParams
+##### pinUvAuthProtocol/pinUvAuthParam
+#### Response
