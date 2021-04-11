@@ -87,20 +87,19 @@ pub fn create_payload(
 
     // pinUvAuthParam(0x04)
     {
-        // pinUvAuthParam (0x04): authenticate(pinUvAuthToken, getCredsMetadata (0x01)).
-        //                          First 16 bytes of HMAC-SHA-256 of contents using pinUvAuthToken.
-        // pinUvAuthParam (0x04): authenticate(pinUvAuthToken,
-        //                          enumerateCredentialsBegin (0x04) || subCommandParams).
+        // pinUvAuthParam (0x04): 
+        // - authenticate(pinUvAuthToken, getCredsMetadata (0x01)).
+        // - authenticate(pinUvAuthToken, enumerateCredentialsBegin (0x04) || subCommandParams).
+        // -- First 16 bytes of HMAC-SHA-256 of contents using pinUvAuthToken.
         let mut message = vec![sub_command as u8];
         message.append(&mut sub_command_params_cbor.to_vec());
-        let param_pin_auth = pin_token.authenticate_v2(&message, 16);
+        let pin_uv_auth_param = pin_token.authenticate_v2(&message, 16);
         //println!("- pin_auth({:02})    = {:?}", pin_auth.len(),util::to_hex_str(&pin_auth));
 
         //let pin_auth = pin_token.sign(&util::create_clientdata_hash(challenge));
         //println!("- pin_auth({:02})    = {:?}", pin_auth.len(),util::to_hex_str(&pin_auth));
 
-        let pin_auth = Value::Bytes(param_pin_auth);
-        map.insert(Value::Integer(0x04), pin_auth);
+        map.insert(Value::Integer(0x04), Value::Bytes(pin_uv_auth_param));
     }
 
     // create cbor
