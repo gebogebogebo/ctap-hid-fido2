@@ -13,36 +13,26 @@
 
 
 
-### 教科書
+- 教科書
+  - [CTAP仕様 Client to Authenticator Protocol (CTAP) Proposed Standard, Review Draft, March 09, 2021](https://fidoalliance.org/specs/fido-v2.1-rd-20210309/fido-client-to-authenticator-protocol-v2.1-rd-20210309.html)
 
-- [CTAP仕様 Client to Authenticator Protocol (CTAP) Proposed Standard, Review Draft, March 09, 2021](https://fidoalliance.org/specs/fido-v2.1-rd-20210309/fido-client-to-authenticator-protocol-v2.1-rd-20210309.html)
+- 教材
+	- [SoloKey](https://solokeys.com/)
 
+- 復習
+	- [CTAP2 お勉強メモ#1](https://qiita.com/gebo/items/d2ffbd4fcf7d75e21b63)
+	- [CTAP2 お勉強メモ#2](https://qiita.com/gebo/items/e0bd197d607312dcf4fb)
+	- [CTAP2 お勉強メモ#3](https://qiita.com/gebo/items/2cfc3202cd88a59b24ba)
+	- [CTAP2 お勉強メモ#4](https://qiita.com/gebo/items/634aa39b0e08d8258682)
+	- [CTAP2 お勉強メモ#5](https://qiita.com/gebo/items/84454583daeaf6711fd0)
+	- [CTAP2 お勉強メモ#6](https://qiita.com/gebo/items/cfc6ceb1c7f9aa5fdad6)
+	- [CTAP2 お勉強メモ#7](https://qiita.com/gebo/items/2c9d020c0768b95a01b0)
+	- [CTAP2 お勉強メモ#8](https://qiita.com/gebo/items/f4dfedce907babb46241)
 
-
-### 教材
-
-- [SoloKey](https://solokeys.com/)
-
-
-
-### 復習
-
-- [CTAP2 お勉強メモ#1](https://qiita.com/gebo/items/d2ffbd4fcf7d75e21b63)
-- [CTAP2 お勉強メモ#2](https://qiita.com/gebo/items/e0bd197d607312dcf4fb)
-- [CTAP2 お勉強メモ#3](https://qiita.com/gebo/items/2cfc3202cd88a59b24ba)
-- [CTAP2 お勉強メモ#4](https://qiita.com/gebo/items/634aa39b0e08d8258682)
-- [CTAP2 お勉強メモ#5](https://qiita.com/gebo/items/84454583daeaf6711fd0)
-- [CTAP2 お勉強メモ#6](https://qiita.com/gebo/items/cfc6ceb1c7f9aa5fdad6)
-- [CTAP2 お勉強メモ#7](https://qiita.com/gebo/items/2c9d020c0768b95a01b0)
-- [CTAP2 お勉強メモ#8](https://qiita.com/gebo/items/f4dfedce907babb46241)
-
-
-
-### 環境
-
-- Mac Os Big Sur
-- Visual Studio Code
-	- Rust
+- 環境
+	- Mac Os Big Sur
+	- Visual Studio Code
+		- Rust
 
 
 
@@ -92,15 +82,15 @@ subCommand (0x01) にgetCredsMetadata(0x01) を指定して、pinUvAuthProtocol(
 
 
 
-#### pinUvAuthProtocol(0x03),pinUvAuthParam(0x04)
+#### pinUvAuthProtocol,pinUvAuthParam
 
 authenticatorCredentialManagement の各サブコマンドにはpinUvAuthProtocol、pinUvAuthParamを指定する必要があります。これはPINの情報で、取得する情報がクレデンシャルなので当然といえば当然ですね。ただ生成シーケンスがかなりめんどくさいです。
 
-##### pinUvAuthProtocol(0x03)
+##### pinUvAuthProtocol
 
 PIN/UV Auth プロトコルを指定します。かんたんにいうとPINをどんなふうに暗号化しているかです。<br>仕様では  1 ([6.5.6. PIN/UV Auth Protocol One](https://fidoalliance.org/specs/fido-v2.1-rd-20210309/fido-client-to-authenticator-protocol-v2.1-rd-20210309.html#pinProto1)) と 2 ([6.5.7. PIN/UV Auth Protocol Two](https://fidoalliance.org/specs/fido-v2.1-rd-20210309/fido-client-to-authenticator-protocol-v2.1-rd-20210309.html#pinProto2)) がありまして。<br>どっちでもいいというわけではなくて、セキュリティキーに対して authenticatorGetInfo 投げて pin_uv_auth_protocols で採れる値です。<br>私の持っているセキュリティキーの場合は 1 でした。
 
-##### pinUvAuthParam(0x04)
+##### pinUvAuthParam
 
 [仕様](https://fidoalliance.org/specs/fido-v2.1-rd-20210309/fido-client-to-authenticator-protocol-v2.1-rd-20210309.html#getCredsMetadata)では **authenticate(pinUvAuthToken, getCredsMetadata (0x01))** だっつうことなのですが意味不明ですね。<br>以下の方法で求めます。
 
@@ -110,7 +100,7 @@ PIN/UV Auth プロトコルを指定します。かんたんにいうとPINを�
 
 
 
-#### enumerateRPsBegin,enumerateRPsGetNextRP
+### enumerateRPsBegin,enumerateRPsGetNextRP
 
 RP情報を取得します。enumerateRPsBeginで最初のRP情報と総RP数を取得し、enumerateRPsGetNextRPで次のRP情報を取得します。
 
@@ -126,7 +116,7 @@ RP情報を取得します。enumerateRPsBeginで最初のRP情報と総RP数を
   - rp (0x03) : RP名
   - rpIDHash (0x04) : RPIDハッシュ
 
-#### pinUvAuthProtocol(0x03),pinUvAuthParam(0x04)
+#### pinUvAuthProtocol,pinUvAuthParam
 
 getCredsMetadataとほぼ同じです、pinUvAuthParamの求め方が少し違います。
 
@@ -135,7 +125,7 @@ getCredsMetadataとほぼ同じです、pinUvAuthParamの求め方が少し違�
 
 
 
-#### enumerateCredentialsBegin,enumerateCredentialsGetNextCredential
+### enumerateCredentialsBegin,enumerateCredentialsGetNextCredential
 
 
 
