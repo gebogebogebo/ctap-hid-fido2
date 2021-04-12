@@ -7,8 +7,6 @@
 これはCTAPのお勉強をしたメモです。
 **WebAuthn(ウェブオースン)ではなく、CTAP(シータップ)であります。**
 
-[WebAuthn Level2](https://www.w3.org/TR/webauthn-2/) が W3C Recommendation になりました！。 
-
 今回はCTAP2.1の **authenticatorCredentialManagement** です。
 
 
@@ -42,6 +40,16 @@
 
 
 
+## サンプルコード
+
+Rustで実装したサンプルコードがあります。コード見たほうが早いという人はこちら。
+
+**ctap-hid-fido2**
+
+https://github.com/gebogebogebo/ctap-hid-fido2
+
+
+
 ## authenticatorCredentialManagement
 
 [教科書 - 6.8 authenticatorCredentialManagement (0x0A)](https://fidoalliance.org/specs/fido-v2.1-rd-20210309/fido-client-to-authenticator-protocol-v2.1-rd-20210309.html#authenticatorCredentialManagement)
@@ -66,7 +74,29 @@ authenticatorCredentialManagement は Residentkey で記録されたセキュリ
 
 subCommand (0x01) にgetCredsMetadata(0x01) を指定して、pinUvAuthProtocol(0x03)、pinUvAuthParam(0x04)を設定してCBORを投げると応答が返ってきます。
 
+#### Parameters
 
+authenticatorCredentialManagement の各サブコマンドにはpinUvAuthProtocol、pinUvAuthParamを指定する必要があります。これはPINの情報で、取得する情報がクレデンシャルなので当然といえば当然ですね。ただ生成シーケンスがかなりめんどくさいです。
+
+##### pinUvAuthProtocol
+
+PIN/UV Auth プロトコルを指定します。簡単にいうとPINをどんなふうに暗号化しているかです。<br>仕様では  1 ([6.5.6. PIN/UV Auth Protocol One](https://fidoalliance.org/specs/fido-v2.1-rd-20210309/fido-client-to-authenticator-protocol-v2.1-rd-20210309.html#pinProto1)) と 2 ([6.5.7. PIN/UV Auth Protocol Two](https://fidoalliance.org/specs/fido-v2.1-rd-20210309/fido-client-to-authenticator-protocol-v2.1-rd-20210309.html#pinProto2)) がありまして。<br>どっちでもいいというわけではなくて、セキュリティキーに対して authenticatorGetInfo 投げて pin_uv_auth_protocols で採れる値です。<br>私の持っているセキュリティキーの場合は 1(Protocol One) でした。
+
+##### pinUvAuthParam
+
+[仕様](https://fidoalliance.org/specs/fido-v2.1-rd-20210309/fido-client-to-authenticator-protocol-v2.1-rd-20210309.html#getCredsMetadata)では 
+
+```
+authenticate(pinUvAuthToken, getCredsMetadata (0x01))
+```
+
+だっつうことなのですが意味不明です。<br>以下の方法で求めます。
+
+- Protocol One なんで [いつもの方法](https://qiita.com/gebo/items/2c6e854fadebaaa45cc7)で pinUvAuthToken を求めます。32byteのバイナリデータです。
+- 32byteの pinUvAuthToken を Key , 1byteの 0x01 を Message として HMAC-SHA256 を求めます、32byteのバイナリデータが求まります。私のコード(Rust)では[hmacクレート](https://crates.io/crates/hmac)を使っています、簡単です。
+- 先程求めた32byteのHMAC-SHA256の先頭16Byte(0〜16番目)がpinUvAuthParamです。つまり、16byteのバイナリデータですね。
+
+#### Response
 
 - getCredsMetadataでとれる情報
   - existingResidentCredentialsCount (0x01) : セキュリキーに記録可能なクレデンシャルの最大数
@@ -82,27 +112,20 @@ subCommand (0x01) にgetCredsMetadata(0x01) を指定して、pinUvAuthProtocol(
 
 
 
-#### pinUvAuthProtocol/pinUvAuthParam
-
-authenticatorCredentialManagement の各サブコマンドにはpinUvAuthProtocol、pinUvAuthParamを指定する必要があります。これはPINの情報で、取得する情報がクレデンシャルなので当然といえば当然ですね。ただ生成シーケンスがかなりめんどくさいです。
-
-##### pinUvAuthProtocol
-
-PIN/UV Auth プロトコルを指定します。かんたんにいうとPINをどんなふうに暗号化しているかです。<br>仕様では  1 ([6.5.6. PIN/UV Auth Protocol One](https://fidoalliance.org/specs/fido-v2.1-rd-20210309/fido-client-to-authenticator-protocol-v2.1-rd-20210309.html#pinProto1)) と 2 ([6.5.7. PIN/UV Auth Protocol Two](https://fidoalliance.org/specs/fido-v2.1-rd-20210309/fido-client-to-authenticator-protocol-v2.1-rd-20210309.html#pinProto2)) がありまして。<br>どっちでもいいというわけではなくて、セキュリティキーに対して authenticatorGetInfo 投げて pin_uv_auth_protocols で採れる値です。<br>私の持っているセキュリティキーの場合は 1 でした。
-
-##### pinUvAuthParam
-
-[仕様](https://fidoalliance.org/specs/fido-v2.1-rd-20210309/fido-client-to-authenticator-protocol-v2.1-rd-20210309.html#getCredsMetadata)では **authenticate(pinUvAuthToken, getCredsMetadata (0x01))** だっつうことなのですが意味不明ですね。<br>以下の方法で求めます。
-
-- Protocol One なんで [いつもの方法](https://qiita.com/gebo/items/2c6e854fadebaaa45cc7)で pinUvAuthToken を求めます。32byteのバイナリデータです。
-- 32byteの pinUvAuthToken を Key , 1byteの 0x01 を Message として HMAC-SHA256 を求めます、これは32byteのバイナリデータです。私のコード(Rust)ではhmacクレートを使っています、簡単です。
-- 先程求めた32byteのHMAC-SHA256の先頭16Byte(0〜16番目)がpinUvAuthParamです。つまり、16byteのバイナリデータですね。
-
-
-
 ### enumerateRPsBegin/enumerateRPsGetNextRP
 
 RP情報を取得します。enumerateRPsBeginで最初のRP情報と総RP数を取得し、enumerateRPsGetNextRPで次のRP情報を取得します。
+
+#### Parameters
+
+##### pinUvAuthProtocol/pinUvAuthParam
+
+getCredsMetadataとほぼ同じです、pinUvAuthParamの求め方が少し違います。
+
+- enumerateRPsBeginのとき → authenticate(pinUvAuthToken, **0x02**)
+- enumerateRPsGetNextRPのとき → authenticate(pinUvAuthToken, **0x03**)
+
+#### Response
 
 - enumerateRPsBeginでとれる情報
 
@@ -110,18 +133,10 @@ RP情報を取得します。enumerateRPsBeginで最初のRP情報と総RP数を
   - rpIDHash (0x04) : RPIDハッシュ、32byteのバイナリデータ
 
   - totalRPs (0x05) : 登録されている総RP数、数値
-
 - enumerateRPsGetNextRPでとれる情報
 
   - rp (0x03) : RP名
   - rpIDHash (0x04) : RPIDハッシュ
-
-#### pinUvAuthProtocol/pinUvAuthParam
-
-getCredsMetadataとほぼ同じです、pinUvAuthParamの求め方が少し違います。
-
-- enumerateRPsBeginのとき → authenticate(pinUvAuthToken, **0x02**)
-- enumerateRPsGetNextRPのとき → authenticate(pinUvAuthToken, **0x03**)
 
 
 
@@ -176,3 +191,10 @@ pinUvAuthParam = authenticate(pinUvAuthToken, enumerateCredentialsBegin(0x04) ||
 ##### subCommandParams
 ##### pinUvAuthProtocol/pinUvAuthParam
 #### Response
+
+
+
+# おつかれさまでした
+
+[WebAuthn Level2](https://www.w3.org/TR/webauthn-2/) が W3C Recommendation になりました！。 
+
