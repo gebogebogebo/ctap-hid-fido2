@@ -179,18 +179,47 @@ pinUvAuthParam = authenticate(pinUvAuthToken, enumerateCredentialsBegin(0x04) ||
 
 ### deleteCredential
 
+クレデンシャルを削除します。これが欲しかった！ってやつです。
+
 #### Parameters
+
 ##### subCommandParams
+
+[仕様書](https://fidoalliance.org/specs/fido-v2.1-rd-20210309/fido-client-to-authenticator-protocol-v2.1-rd-20210309.html#deleteCredential)には
+
+```
+credentialId (0x02): PublicKeyCredentialDescriptor of the credential to be deleted.
+```
+
+って書いてあります、せっかちな私はここでしばらくハマりました。<br>credentialId**バイト配列ではなくPublicKeyCredentialDescriptor型で指定します。**CBOR Mapです。サンプルコードでは[create_public_key_credential_descriptor()]()のあたりです。<br>(バイト配列のcredentialIdだけ渡せば特定できると思うけど)
+
 ##### pinUvAuthProtocol/pinUvAuthParam
+
+```
+pinUvAuthProtocol = 1
+pinUvAuthParam = authenticate(pinUvAuthToken, deleteCredential (0x06) || subCommandParams)
+```
+
+ってことで。
+
 #### Response
+
+削除完了したらCTAP2_OK(0x00)が返ってくるだけです。
 
 
 
 ### updateUserInformation
 #### Parameters
 ##### subCommandParams
+
 ##### pinUvAuthProtocol/pinUvAuthParam
+``` 
+pinUvAuthProtocol = 1
+pinUvAuthParam = authenticate(pinUvAuthToken, updateUserInformation (0x07) || subCommandParams)
+```
 #### Response
+
+更新したらCTAP2_OK(0x00)が返ってくるだけです。
 
 
 
