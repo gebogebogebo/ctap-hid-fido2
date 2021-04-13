@@ -10,7 +10,7 @@ use crate::FidoKeyHid;
 pub fn get_pin_token(
     device: &FidoKeyHid,
     cid: &[u8],
-    pin: String,
+    pin: &str,
 ) -> Result<pintoken::PinToken, String> {
     if pin.len() > 0 {
         let send_payload =
@@ -23,7 +23,7 @@ pub fn get_pin_token(
         let shared_secret = ss::SharedSecret::new(&key_agreement)?;
         //shared_secret.public_key.print("SharedSecret  - Public Key");
 
-        let pin_hash_enc = shared_secret.encrypt_pin(&pin)?;
+        let pin_hash_enc = shared_secret.encrypt_pin(pin)?;
         //println!("- PIN hash enc({:?})       = {:?}", pin_hash_enc.len(), util::to_hex_str(&pin_hash_enc));
 
         let send_payload = client_pin_command::create_payload_get_pin_token(

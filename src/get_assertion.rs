@@ -32,13 +32,11 @@ pub fn get_assertion(
     // pin token
     let pin_token = {
         if let Some(pin) = pin {
-            Some(client_pin::get_pin_token(&device, &cid, pin.to_string())?)
+            Some(client_pin::get_pin_token(&device, &cid, pin)?)
         } else {
             None
         }
     };
-
-    //let pin_token = get_pin_token(&device, &cid, pin.to_string())?;
 
     // create cmmand
     let send_payload = {

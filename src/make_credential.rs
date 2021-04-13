@@ -52,7 +52,7 @@ pub fn make_credential(
         // get pintoken & create pin auth
         if let Some(pin) = pin {
             if pin.len() > 0 {
-                let pin_auth = client_pin::get_pin_token(&device, &cid, pin.to_string())?
+                let pin_auth = client_pin::get_pin_token(&device, &cid, pin)?
                     .authenticate_v1(&params.client_data_hash);
 
                 //println!("- pin_auth({:02})    = {:?}", pin_auth.len(),util::to_hex_str(&pin_auth));

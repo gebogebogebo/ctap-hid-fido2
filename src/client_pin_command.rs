@@ -83,14 +83,14 @@ pub fn create_payload_get_pin_token(
     let ka = Value::Map(ka_val);
 
     // 0x06:pinHashEnc
-    let pin_hash_enc = Value::Bytes(pin_hash_enc);
+    let pin_hash_enc_val = Value::Bytes(pin_hash_enc);
 
     // create cbor
     let mut map = BTreeMap::new();
     map.insert(Value::Integer(0x01), pin_prot);
     map.insert(Value::Integer(0x02), sub_cmd);
     map.insert(Value::Integer(0x03), ka);
-    map.insert(Value::Integer(0x06), pin_hash_enc);
+    map.insert(Value::Integer(0x06), pin_hash_enc_val);
     let cbor = Value::Map(map);
 
     // Command - authenticatorClientPIN (0x06)
