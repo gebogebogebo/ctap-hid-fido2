@@ -23,7 +23,7 @@ pub fn credential_management(
     // pin token
     let pin_token = {
         if let Some(pin) = pin {
-            Some(client_pin::get_pin_token(&device, &cid, pin.to_string())?)
+            Some(client_pin::get_pin_token(&device, &cid, pin)?)
         } else {
             None
         }
