@@ -235,6 +235,15 @@ pub fn enable_ctap_2_1(hid_params: &[HidParam]) -> Result<bool,String>{
     }
 }
 
+pub fn enable_ctap_2_1_pre(hid_params: &[HidParam]) -> Result<bool,String>{
+    let infos = get_info::get_info(hid_params)?;
+    let find = infos.iter().find(|v| v.0 == "versions" && v.1.contains("FIDO_2_1_PRE"));
+    match find {
+        Some(_) => Ok(true),
+        None => Ok(false),
+    }
+}
+
 /// CredentialManagement - getCredsMetadata (CTAP 2.1-PRE)
 pub fn credential_management_get_creds_metadata(
     hid_params: &[HidParam],
