@@ -47,26 +47,12 @@ pub fn create_payload(
                 Some(param)
             }
             SubCommand::DeleteCredential | SubCommand::UpdateUserInformation => {
-                // credentialId (0x02): PublicKeyCredentialDescriptor of the credential to be deleted or updated.
-                let param = create_public_key_credential_descriptor(pkcd.unwrap());
-
+                let param;
                 if sub_command == SubCommand::UpdateUserInformation {
-                    // user (0x03)        : a PublicKeyCredentialUserEntity with the updated information.
-                    let pkcuee = pkcue.unwrap();
-                    let mut user = BTreeMap::new();
-                    user.insert(
-                        Value::Text("id".to_string()),
-                        Value::Bytes(pkcuee.id.to_vec()),
-                    );
-                    user.insert(
-                        Value::Text("name".to_string()),
-                        Value::Text(pkcuee.name.to_string()),
-                    );
-                    user.insert(
-                        Value::Text("displayName".to_string()),
-                        Value::Text(pkcuee.display_name.to_string()),
-                    );
-                    //param.insert(Value::Integer(0x03), Value::Map(user));
+                    param = create_public_key_credential_descriptor_pend(pkcd.unwrap(),pkcue.unwrap());
+                } else {
+                    // credentialId (0x02): PublicKeyCredentialDescriptor of the credential to be deleted or updated.
+                    param = create_public_key_credential_descriptor(pkcd.unwrap());
                 }
 
                 map.insert(Value::Integer(0x02), param.clone());
@@ -139,5 +125,44 @@ fn create_public_key_credential_descriptor(
 
     let mut param = BTreeMap::new();
     param.insert(Value::Integer(0x02), Value::Map(map));
+    Value::Map(param)
+}
+
+fn create_public_key_credential_descriptor_pend(
+    in_param: credential_management_params::PublicKeyCredentialDescriptor,
+    pkcuee: credential_management_params::PublicKeyCredentialUserEntity,
+) -> Value {
+    let mut param = BTreeMap::new();
+    {
+        let mut map = BTreeMap::new();
+        map.insert(
+            Value::Text("id".to_string()),
+            Value::Bytes(in_param.id),
+        );
+        map.insert(
+            Value::Text("type".to_string()),
+            Value::Text(in_param.ctype),
+        );
+    
+        param.insert(Value::Integer(0x02), Value::Map(map));
+    }
+
+    {
+        let mut user = BTreeMap::new();
+        user.insert(
+            Value::Text("id".to_string()),
+            Value::Bytes(pkcuee.id),
+        );
+        user.insert(
+            Value::Text("name".to_string()),
+            Value::Text(pkcuee.name.to_string()),
+        );
+        user.insert(
+            Value::Text("displayName".to_string()),
+            Value::Text(pkcuee.display_name.to_string()),
+        );
+        param.insert(Value::Integer(0x03), Value::Map(user));
+    }
+
     Value::Map(param)
 }

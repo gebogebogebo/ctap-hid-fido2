@@ -107,7 +107,7 @@ fn update(pin: Option<&str>,credential_id: Option<&str>) {
 
     let mut pkcue =
         ctap_hid_fido2::credential_management_params::PublicKeyCredentialUserEntity::default();
-    pkcue.id = util::to_str_hex("010203".to_string());
+    pkcue.id = util::to_str_hex("7974657374".to_string());
     pkcue.name = "test-name".to_string();
     pkcue.display_name = "test-display-name".to_string();
 
@@ -169,6 +169,11 @@ fn main() {
             .long("update")
             .takes_value(true)
             .value_name("public_key_credential_descriptor.id(credential-id)")
+        )
+        .arg(Arg::with_name("info")
+            .help("authenticatorGetInfo")
+            .short("i")
+            .long("info")
         );
 
     // Parse arguments
@@ -178,13 +183,27 @@ fn main() {
     ctap_hid_fido2::hello();
 
     match ctap_hid_fido2::enable_ctap_2_1(&ctap_hid_fido2::HidParam::get_default_params()) {
-        Ok(result) => {
-            println!("Enable CTAP 2.1 = {:?}",result);
-        }
-        Err(error) => {
-            println!("- error: {:?}", error);
-        }
+        Ok(result) => println!("Enable CTAP 2.1 = {:?}",result),
+        Err(error) => println!("- error: {:?}", error),
     };
+    match ctap_hid_fido2::enable_ctap_2_1_pre(&ctap_hid_fido2::HidParam::get_default_params()) {
+        Ok(result) => println!("Enable CTAP 2.1 PRE = {:?}",result),
+        Err(error) => println!("- error: {:?}", error),
+    };
+
+    if matches.is_present("info"){
+        println!("get_info()");
+        let infos = match ctap_hid_fido2::get_info(&ctap_hid_fido2::HidParam::get_default_params()) {
+            Ok(result) => result,
+            Err(error) => {
+                println!("error: {:?}", error);
+                return;
+            }
+        };
+        for (key, value) in infos {
+            println!("- {} / {}", key, value);
+        }
+    }
 
     let pin = matches.value_of("pin").unwrap();
     println!("Value for pin: {}", pin);

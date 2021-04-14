@@ -38,10 +38,10 @@ pub fn credential_management(
             pkcd,
             pkcue,
         );
-        //println!("send(cbor) = {}",util::to_hex_str(&send_payload));
+        println!("send(cbor) = {}",util::to_hex_str(&send_payload));
 
         let response_cbor = ctaphid::ctaphid_cbor(&device, &cid, &send_payload)?;
-        //println!("response(cbor) = {}",util::to_hex_str(&response_cbor));
+        println!("response(cbor) = {}",util::to_hex_str(&response_cbor));
 
         Ok(credential_management_response::parse_cbor(&response_cbor)?)
     } else {
