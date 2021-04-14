@@ -154,18 +154,21 @@ fn main() {
             .short("c")
             .long("credentials")
             .takes_value(true)
+            .value_name("rpid_hash")
         )
         .arg(Arg::with_name("delete")
             .help("credential_management_delete_credential")
             .short("d")
             .long("delete")
             .takes_value(true)
+            .value_name("public_key_credential_descriptor.id(credential-id)")
         )
         .arg(Arg::with_name("update")
             .help("credential_management_update_user_information")
             .short("u")
             .long("update")
             .takes_value(true)
+            .value_name("public_key_credential_descriptor.id(credential-id)")
         );
 
     // Parse arguments
