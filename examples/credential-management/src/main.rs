@@ -109,7 +109,7 @@ fn update(pin: Option<&str>,credential_id: Option<&str>) {
         ctap_hid_fido2::credential_management_params::PublicKeyCredentialUserEntity::default();
     pkcue.id = util::to_str_hex("7974657374".to_string());
     pkcue.name = "test-name".to_string();
-    pkcue.display_name = "test-display-name".to_string();
+    pkcue.display_name = "test-display".to_string();
 
     match ctap_hid_fido2::credential_management_update_user_information(
         &ctap_hid_fido2::HidParam::get_default_params(),

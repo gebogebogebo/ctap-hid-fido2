@@ -10,7 +10,7 @@ pub struct Params {
     pub client_data_hash: Vec<u8>,
     pub allowlist_credential_id: Vec<u8>,
     pub option_up: bool,
-    pub option_uv: bool,
+    pub option_uv: Option<bool>,
     pub pin_auth: Vec<u8>,
 }
 
@@ -54,7 +54,10 @@ pub fn create_payload(params: Params) -> Vec<u8> {
     // 0x05 : options
     let mut options_val = BTreeMap::new();
     options_val.insert(Value::Text("up".to_string()), Value::Bool(params.option_up));
-    options_val.insert(Value::Text("uv".to_string()), Value::Bool(params.option_uv));
+    if let Some(v) = params.option_uv {
+        options_val.insert(Value::Text("uv".to_string()), Value::Bool(v));
+    }        
+
     let options = Value::Map(options_val);
 
     // pinAuth(0x06)

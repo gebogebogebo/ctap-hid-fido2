@@ -179,7 +179,7 @@ pub fn make_credential(
     challenge: &[u8],
     pin: Option<&str>,
 ) -> Result<make_credential_params::Attestation, String> {
-    make_credential::make_credential(hid_params, rpid, challenge, pin, false, None)
+    make_credential::make_credential(hid_params, rpid, challenge, pin, false, None, None)
 }
 
 /// Registration command.Generate credentials(with PIN ,Resident Key)
@@ -190,7 +190,7 @@ pub fn make_credential_rk(
     pin: Option<&str>,
     rkparam: &make_credential_params::RkParam,
 ) -> Result<make_credential_params::Attestation, String> {
-    make_credential::make_credential(hid_params, rpid, challenge, pin, true, Some(rkparam))
+    make_credential::make_credential(hid_params, rpid, challenge, pin, true, Some(rkparam),None)
 }
 
 /// Registration command.Generate credentials(without PIN ,non Resident Key)
@@ -199,7 +199,7 @@ pub fn make_credential_without_pin(
     rpid: &str,
     challenge: &[u8],
 ) -> Result<make_credential_params::Attestation, String> {
-    make_credential::make_credential(hid_params, rpid, challenge, None, false, None)
+    make_credential::make_credential(hid_params, rpid, challenge, None, false, None,None)
 }
 
 /// Authentication command(with PIN , non Resident Key)
@@ -210,7 +210,7 @@ pub fn get_assertion(
     credential_id: &[u8],
     pin: Option<&str>,
 ) -> Result<get_assertion_params::Assertion, String> {
-    let asss = get_assertion::get_assertion(hid_params, rpid, challenge, credential_id, pin, true)?;
+    let asss = get_assertion::get_assertion(hid_params, rpid, challenge, credential_id, pin, true, None)?;
     Ok(asss[0].clone())
 }
 
@@ -222,7 +222,7 @@ pub fn get_assertions_rk(
     pin: Option<&str>,
 ) -> Result<Vec<get_assertion_params::Assertion>, String> {
     let dmy: [u8; 0] = [];
-    get_assertion::get_assertion(hid_params, rpid, challenge, &dmy, pin, true)
+    get_assertion::get_assertion(hid_params, rpid, challenge, &dmy, pin, true, None)
 }
 
 pub fn enable_ctap_2_1(hid_params: &[HidParam]) -> Result<bool,String>{
@@ -420,14 +420,14 @@ mod tests {
         let challenge = b"this is challenge".to_vec();
         // create windows
         let pin_auth = hex::decode("6F79FB322D74972ACAA844C10C183BF7").unwrap();
-        let check = "01A7015820E61E2BD6C4612662960B159CD54CF8EFF1A998C89B3742519D11F85E0F5E787602A262696468746573742E636F6D646E616D656003A36269644100646E616D6561206B646973706C61794E616D6561200481A263616C672664747970656A7075626C69632D6B657907A262726BF4627576F508506F79FB322D74972ACAA844C10C183BF70901".to_string();
+        let check = "01A7015820E61E2BD6C4612662960B159CD54CF8EFF1A998C89B3742519D11F85E0F5E787602A262696468746573742E636F6D646E616D656003A36269644100646E616D6561206B646973706C61794E616D6561200481A263616C672664747970656A7075626C69632D6B657907A162726BF408506F79FB322D74972ACAA844C10C183BF70901".to_string();
 
         // create cmmand
         let send_payload = {
             let mut params =
                 make_credential_command::Params::new(rpid, challenge.to_vec(), [].to_vec());
             params.option_rk = false; // non rk
-            params.option_uv = true;
+            //params.option_uv = true;
 
             println!(
                 "- client_data_hash({:02})    = {:?}",
@@ -440,6 +440,14 @@ mod tests {
             make_credential_command::create_payload(params)
         };
 
+        if util::is_debug() == true {
+            println!(
+                "- make_credential({:02})    = {:?}",
+                send_payload.len(),
+                util::to_hex_str(&send_payload)
+            );
+        }
+    
         let command = hex::encode(send_payload).to_uppercase();
         assert_eq!(command, check);
     }
