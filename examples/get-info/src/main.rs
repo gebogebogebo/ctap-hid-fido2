@@ -24,16 +24,13 @@ fn main() {
     }
 
     println!("get_info()");
-    let infos = match ctap_hid_fido2::get_info(&ctap_hid_fido2::HidParam::get_default_params()) {
-        Ok(result) => result,
+    match ctap_hid_fido2::get_info2(&ctap_hid_fido2::HidParam::get_default_params()) {
+        Ok(info) => println!("{}",info),
         Err(error) => {
             println!("error: {:?}", error);
             return;
         }
     };
-    for (key, value) in infos {
-        println!("- {} / {}", key, value);
-    }
 
     println!("get_pin_retries()");
     let retry =

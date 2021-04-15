@@ -23,6 +23,7 @@ pub mod get_assertion_params;
 mod get_assertion_response;
 mod get_info;
 mod get_info_command;
+pub mod get_info_params;
 mod get_info_response;
 mod get_next_assertion_command;
 mod make_credential;
@@ -145,8 +146,13 @@ pub fn wink(hid_params: &[HidParam]) -> Result<(), String> {
 }
 
 /// Get FIDO key information
+/*
 pub fn get_info(hid_params: &[HidParam]) -> Result<Vec<(String, String)>, String> {
     get_info::get_info(hid_params)
+}
+*/
+pub fn get_info2(hid_params: &[HidParam]) -> Result<get_info_params::Info, String> {
+    get_info::get_info2(hid_params)
 }
 
 /// Get FIDO key information (CTAP 1.0)
@@ -226,9 +232,8 @@ pub fn get_assertions_rk(
 }
 
 pub fn enable_ctap_2_1(hid_params: &[HidParam]) -> Result<bool,String>{
-    let infos = get_info::get_info(hid_params)?;
-    let find = infos.iter().find(|v| v.0 == "versions" && v.1.contains("FIDO_2_1"));
-    //println!("find: {:?}", positive);
+    let info = get_info::get_info2(hid_params)?;
+    let find = info.versions.iter().find(|v| v.contains("FIDO_2_1"));
     match find {
         Some(_) => Ok(true),
         None => Ok(false),
@@ -236,8 +241,8 @@ pub fn enable_ctap_2_1(hid_params: &[HidParam]) -> Result<bool,String>{
 }
 
 pub fn enable_ctap_2_1_pre(hid_params: &[HidParam]) -> Result<bool,String>{
-    let infos = get_info::get_info(hid_params)?;
-    let find = infos.iter().find(|v| v.0 == "versions" && v.1.contains("FIDO_2_1_PRE"));
+    let info = get_info::get_info2(hid_params)?;
+    let find = info.versions.iter().find(|v| v.contains("FIDO_2_1_PRE"));
     match find {
         Some(_) => Ok(true),
         None => Ok(false),

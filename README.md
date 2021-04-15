@@ -461,12 +461,8 @@ make_credential(),get_assertion()
 
 ```rust
 match ctap_hid_fido2::enable_ctap_2_1(&ctap_hid_fido2::HidParam::get_default_params()) {
-    Ok(result) => {
-        println!("Enable CTAP 2.1 = {:?}",result);
-    }
-    Err(error) => {
-        println!("- error: {:?}", error);
-    }
+    Ok(result) => println!("Enable CTAP 2.1 = {:?}",result),
+    Err(error) => println!("- error: {:?}", error),
 };
 ```
 
@@ -481,12 +477,8 @@ match ctap_hid_fido2::credential_management_get_creds_metadata(
     &ctap_hid_fido2::HidParam::get_default_params(),
     pin,
 ) {
-    Ok(result) => {
-        println!("{}", result);
-    }
-    Err(error) => {
-        println!("- creds metadata error: {:?}", error);
-    }
+    Ok(result) => println!("{}", result),
+    Err(error) => println!("- creds metadata error: {:?}", error),
 };
 ```
 
@@ -505,9 +497,7 @@ match ctap_hid_fido2::credential_management_enumerate_rps(
             println!("{}",data);
         }
     }
-    Err(error) => {
-        println!("- enumerate rps error: {:?}", error);
-    }
+    Err(error) => println!("- enumerate rps error: {:?}", error),
 };
 ```
 
@@ -527,9 +517,7 @@ match ctap_hid_fido2::credential_management_enumerate_credentials(
             println!("{}",data);
         }
     }
-    Err(error) => {
-        println!("- enumerate credentials error: {:?}", error);
-    }
+    Err(error) => println!("- enumerate credentials error: {:?}", error),
 };
 ```
 
