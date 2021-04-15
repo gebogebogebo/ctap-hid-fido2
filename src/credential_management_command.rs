@@ -20,6 +20,40 @@ pub enum SubCommand {
     UpdateUserInformation = 0x07,
 }
 
+/*
+fn parse_test(cbor:Value){
+    if let Value::Map(n) = cbor {
+        for (key, val) in n {
+            if let Value::Integer(member) = key {
+                match member {
+                    0x02 => {
+                        if let Value::Map(nn) = val {
+                            for (key2, val2) in nn {
+                                if let Value::Integer(member2) = key2 {
+                                    match member2 {
+                                        0x02 => {
+                                            let a = 0;
+                                        },
+                                        0x03 => {
+                                            let id = util::cbor_get_bytes_from_map(&val2, "id");
+                                            let name = util::cbor_get_string_from_map(&val2,"name");
+                                            let dname = util::cbor_get_string_from_map(&val2,"displayName");
+                                            let a = 0;
+                                        },
+                                        _ => (),
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    _ => (),
+                }
+            }
+        }
+    }
+}
+*/
+
 pub fn create_payload(
     pin_token: pintoken::PinToken,
     sub_command: SubCommand,
@@ -80,16 +114,14 @@ pub fn create_payload(
         let mut message = vec![sub_command as u8];
         message.append(&mut sub_command_params_cbor.to_vec());
         let pin_uv_auth_param = pin_token.authenticate_v2(&message, 16);
-        //println!("- pin_auth({:02})    = {:?}", pin_auth.len(),util::to_hex_str(&pin_auth));
-
-        //let pin_auth = pin_token.sign(&util::create_clientdata_hash(challenge));
-        //println!("- pin_auth({:02})    = {:?}", pin_auth.len(),util::to_hex_str(&pin_auth));
 
         map.insert(Value::Integer(0x04), Value::Bytes(pin_uv_auth_param));
     }
 
     // create cbor
     let cbor = Value::Map(map);
+
+    //parse_test(cbor.clone());
 
     // create payload
     let mut payload = [ctapdef::AUTHENTICATOR_CREDENTIAL_MANAGEMENT].to_vec();
