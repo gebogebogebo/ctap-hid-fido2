@@ -12,7 +12,8 @@ pub struct Params {
     pub user_name: String,
     pub user_display_name: String,
     pub option_rk: bool,
-    pub option_uv: bool,
+    pub option_up: Option<bool>,
+    pub option_uv: Option<bool>,
     pub client_data_hash: Vec<u8>,
     pub pin_auth: Vec<u8>,
 }
@@ -97,7 +98,12 @@ pub fn create_payload(params: Params) -> Vec<u8> {
     let options = {
         let mut options_val = BTreeMap::new();
         options_val.insert(Value::Text("rk".to_string()), Value::Bool(params.option_rk));
-        options_val.insert(Value::Text("uv".to_string()), Value::Bool(params.option_uv));
+        if let Some(v) = params.option_up {
+            options_val.insert(Value::Text("up".to_string()), Value::Bool(v));
+        }        
+        if let Some(v) = params.option_uv {
+            options_val.insert(Value::Text("uv".to_string()), Value::Bool(v));
+        }        
         Value::Map(options_val)
     };
 

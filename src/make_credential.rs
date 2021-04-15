@@ -16,11 +16,13 @@ pub fn make_credential(
     pin: Option<&str>,
     rk: bool,
     rkparam: Option<&make_credential_params::RkParam>,
+    uv: Option<bool>
 ) -> Result<make_credential_params::Attestation, String> {
     // init
     let device = FidoKeyHid::new(hid_params)?;
     let cid = ctaphid::ctaphid_init(&device)?;
 
+    /*
     // uv
     let uv = {
         match pin {
@@ -28,6 +30,7 @@ pub fn make_credential(
             None => true,
         }
     };
+    */
 
     let user_id = {
         if let Some(rkp) = rkparam {
@@ -73,6 +76,15 @@ pub fn make_credential(
 
     // send & response
     let response_cbor = ctaphid::ctaphid_cbor(&device, &cid, &send_payload)?;
+
+    if util::is_debug() == true {
+        println!(
+            "- response_cbor({:02})    = {:?}",
+            response_cbor.len(),
+            util::to_hex_str(&response_cbor)
+        );
+    }
+
 
     let att = make_credential_response::parse_cbor(&response_cbor)?;
     Ok(att)

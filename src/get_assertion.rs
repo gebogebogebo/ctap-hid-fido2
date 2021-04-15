@@ -16,11 +16,13 @@ pub fn get_assertion(
     credential_id: &[u8],
     pin: Option<&str>,
     up: bool,
+    uv: Option<bool>
 ) -> Result<Vec<get_assertion_params::Assertion>, String> {
     // init
     let device = FidoKeyHid::new(hid_params)?;
     let cid = ctaphid::ctaphid_init(&device)?;
 
+    /*
     // uv
     let uv = {
         match pin {
@@ -28,6 +30,7 @@ pub fn get_assertion(
             None => true,
         }
     };
+    */
 
     // pin token
     let pin_token = {
@@ -54,7 +57,14 @@ pub fn get_assertion(
 
         get_assertion_command::create_payload(params)
     };
-    //println!("- get_assertion({:02})    = {:?}", send_payload.len(),util::to_hex_str(&send_payload));
+
+    if util::is_debug() == true {
+        println!(
+            "- get_assertion({:02})    = {:?}",
+            send_payload.len(),
+            util::to_hex_str(&send_payload)
+        );
+    }
 
     // send & response
     let response_cbor = ctaphid::ctaphid_cbor(&device, &cid, &send_payload)?;
