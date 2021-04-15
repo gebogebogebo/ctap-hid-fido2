@@ -1,53 +1,9 @@
 use crate::util;
+use crate::get_info_params;
 use num::NumCast;
 use serde_cbor::Value;
 
-#[derive(Debug, Default)]
-pub struct Info {
-    // CTAP 2.0
-    pub versions: Vec<String>,
-    pub extensions: Vec<String>,
-    pub aaguid: Vec<u8>,
-    pub options: Vec<(String, bool)>,
-    pub max_msg_size: i32,
-    //pub pin_protocols: Vec<i32>,
-    // CTAP 2.1
-    pub pin_uv_auth_protocols: Vec<u32>,
-    pub max_credential_count_in_list: u32,
-    pub max_credential_id_length: u32,
-    pub transports: Vec<String>,
-    pub algorithms: Vec<(String, String)>,
-}
-
-impl Info {
-    #[allow(dead_code)]
-    pub fn print(self: &Info, title: &str) {
-        println!("{}", title);
-        println!("- versions      = {:?}", self.versions);
-        println!("- extensions    = {:?}", self.extensions);
-        println!(
-            "- aaguid({:?})    = {:?}",
-            self.aaguid.len(),
-            util::to_hex_str(&self.aaguid)
-        );
-        println!("- options       = {:?}", self.options);
-        println!("- max_msg_size  = {:?}", self.max_msg_size);
-        println!("- pin_uv_auth_protocols = {:?}", self.pin_uv_auth_protocols);
-        println!(
-            "- max_credential_count_in_list = {:?}",
-            self.max_credential_count_in_list
-        );
-        println!(
-            "- max_credential_id_length = {:?}",
-            self.max_credential_id_length
-        );
-        println!("- algorithms    = {:?}", self.algorithms);
-
-        println!("");
-    }
-}
-
-fn parse_cbor_member(member: i128, val: &Value, info: &mut Info) {
+fn parse_cbor_member(member: i128, val: &Value, info: &mut get_info_params::Info) {
     match member {
         0x01 => info.versions = util::cbor_value_to_vec_string(val).unwrap(),
         0x02 => info.extensions = util::cbor_value_to_vec_string(val).unwrap(),
@@ -109,8 +65,8 @@ fn parse_cbor_member(member: i128, val: &Value, info: &mut Info) {
     }
 }
 
-pub fn parse_cbor(bytes: &[u8]) -> Result<Info, String> {
-    let mut info = Info::default();
+pub fn parse_cbor(bytes: &[u8]) -> Result<get_info_params::Info, String> {
+    let mut info = get_info_params::Info::default();
 
     let cbor = serde_cbor::from_slice(bytes).unwrap();
     if let Value::Map(n) = cbor {

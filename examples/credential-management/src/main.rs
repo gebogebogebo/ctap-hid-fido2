@@ -193,16 +193,10 @@ fn main() {
 
     if matches.is_present("info"){
         println!("get_info()");
-        let infos = match ctap_hid_fido2::get_info(&ctap_hid_fido2::HidParam::get_default_params()) {
-            Ok(result) => result,
-            Err(error) => {
-                println!("error: {:?}", error);
-                return;
-            }
+        match ctap_hid_fido2::get_info2(&ctap_hid_fido2::HidParam::get_default_params()) {
+            Ok(info) => println!("{}", info),
+            Err(error) => println!("error: {:?}", error),
         };
-        for (key, value) in infos {
-            println!("- {} / {}", key, value);
-        }
     }
 
     let pin = matches.value_of("pin").unwrap();
@@ -234,24 +228,4 @@ fn main() {
     }
 
     println!("----- credential-management end -----");
-
-    /* Test for CTAP 2.1
-    match ctap_hid_fido2::config(&ctap_hid_fido2::HidParam::get_default_params()) {
-        Ok(result) => {
-            println!("- config : {:?}", result);
-        }
-        Err(error) => {
-            println!("- config error: {:?}", error);
-        }
-    };
-
-    match ctap_hid_fido2::selection(&ctap_hid_fido2::HidParam::get_default_params()) {
-        Ok(result) => {
-            println!("- selection : {:?}", result);
-        }
-        Err(error) => {
-            println!("- selection error: {:?}", error);
-        }
-    };
-    */
 }
