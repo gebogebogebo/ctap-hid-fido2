@@ -174,8 +174,7 @@ fn create_public_key_credential_descriptor_pend(
         map.insert(
             Value::Text("type".to_string()),
             Value::Text(in_param.ctype),
-        );
-    
+        );    
         param.insert(Value::Integer(0x02), Value::Map(map));
     }
 

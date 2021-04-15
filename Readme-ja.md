@@ -13,10 +13,9 @@
 
 - 教科書
   - [CTAP仕様 Client to Authenticator Protocol (CTAP) Proposed Standard, Review Draft, March 09, 2021](https://fidoalliance.org/specs/fido-v2.1-rd-20210309/fido-client-to-authenticator-protocol-v2.1-rd-20210309.html)
-
 - 教材
-	- [SoloKey](https://solokeys.com/)
-
+	- [YubiKey 5 Nano](https://www.yubico.com/jp/product/yubikey-5-nano/) - Firmware: 5.2.7
+- [SoloKey](https://solokeys.com/) Firmware: 4.1.2
 - 復習
 	- [CTAP2 お勉強メモ#1](https://qiita.com/gebo/items/d2ffbd4fcf7d75e21b63)
 	- [CTAP2 お勉強メモ#2](https://qiita.com/gebo/items/e0bd197d607312dcf4fb)
@@ -26,7 +25,6 @@
 	- [CTAP2 お勉強メモ#6](https://qiita.com/gebo/items/cfc6ceb1c7f9aa5fdad6)
 	- [CTAP2 お勉強メモ#7](https://qiita.com/gebo/items/2c9d020c0768b95a01b0)
 	- [CTAP2 お勉強メモ#8](https://qiita.com/gebo/items/f4dfedce907babb46241)
-
 - 環境
 	- Mac Os Big Sur
 	- Visual Studio Code
@@ -34,7 +32,7 @@
 
 
 
-## CTAP 2.1 PRE について
+## CTAP 2.1 のセキュリティキー
 
 今世の中に出回っているセキュリティキーは既にCTAP2.1を実装しているものがありまして、 [authenticatorGetInfo](https://fidoalliance.org/specs/fido-v2.1-rd-20210309/fido-client-to-authenticator-protocol-v2.1-rd-20210309.html#authenticatorGetInfo) で **FIDO_2_1_PRE** という version が採れるものがあります。<br>このセキュリティキーを使って **authenticatorCredentialManagement** を検証しました。
 
@@ -209,8 +207,25 @@ pinUvAuthParam = authenticate(pinUvAuthToken, deleteCredential (0x06) || subComm
 
 
 ### updateUserInformation
+登録されているユーザー情報を変更します。
+
+**このコマンドは動作確認できていません。確認できたら更新します。**
+
+
+
 #### Parameters
+
 ##### subCommandParams
+
+```
+- subCommandParams (0x02): Map containing the parameters that need to be updated.
+	- credentialId (0x02): PublicKeyCredentialDescriptor of the credential to be updated.
+	- user (0x03): a PublicKeyCredentialUserEntity with the updated information.
+```
+
+複雑な構造です。色々試しましたが `0x11 CTAP2_ERR_CBOR_UNEXPECTED_TYPE` エラーになってしまいます。
+
+
 
 ##### pinUvAuthProtocol/pinUvAuthParam
 ``` 
@@ -219,7 +234,7 @@ pinUvAuthParam = authenticate(pinUvAuthToken, updateUserInformation (0x07) || su
 ```
 #### Response
 
-更新したらCTAP2_OK(0x00)が返ってくるだけです。
+更新したらCTAP2_OK(0x00)が返ってくるはずです。
 
 
 
