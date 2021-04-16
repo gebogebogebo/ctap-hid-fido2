@@ -11,15 +11,16 @@ The raspberry Pi is now supported. However, it needs to be build.
 
 ## Description
 - Implements FIDO2 CTAP 2.0 & 2.1PRE (HID)
-- [Client to Authenticator Protocol (CTAP)](https://fidoalliance.org/specs/fido-v2.0-ps-20190130/fido-client-to-authenticator-protocol-v2.0-ps-20190130.html)
+- [Client to Authenticator Protocol (CTAP)](https://fidoalliance.org/specs/fido-v2.1-rd-20210309/fido-client-to-authenticator-protocol-v2.1-rd-20210309.html)
 - Confirmed operation FIDO key
   - Yubikey Blue (Security Key Series)
   - Yubikey Black (YubiKey 5)
   - FEITIAN ePass FIDO(A4B)
   - FEITIAN BioPass K27 USB Security Key
   - FEITIAN AllinPass FIDO2 K33
-  - SoloKey
+  - [SoloKey](https://github.com/solokeys/solo)
   - Nitrokey FIDO2
+  - [OpenSK](https://github.com/google/OpenSK)
 - Rust Version
   - cargo 1.51.0 , rustc 1.51.0 , rustup 1.23.1
 - for Mac
