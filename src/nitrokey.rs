@@ -165,37 +165,12 @@ pub fn solo_bootloader(hid_params: &[crate::HidParam]) -> Result<(), String> {
     let device = FidoKeyHid::new(hid_params)?;
     let cid = ctaphid::ctaphid_init(&device)?;
 
-    // format_request
-    // \x44 \x00 \x00 \x00 \x8c \x27 \x90 \xf6 \x00 \x10 AAAAAAAAAAAAAAAA
-    let solo_bootloader_version = 0x44;
-    let mut format_request: Vec<u8> = vec![0; 26];
-    format_request[0] = solo_bootloader_version;
-    format_request[1] = 0;
-    format_request[2] = 0;
-    format_request[3] = 0;
-
-    // TAG
-    format_request[4] = 0x8c;
-    format_request[5] = 0x27;
-    format_request[6] = 0x90;
-    format_request[7] = 0xf6;
-
-    // length
-    format_request[8] = 0;
-    format_request[9] = 16;
-
-    // data(A x 16)
-    for counter in 0..16 {
-        format_request[10 + counter] = 0x41;
-    }
-    // format_request
-
     // authenticate
     /*
     client_param = b"B" * 32
     app_param = b"A" * 32
     key_handle = format_request
-    
+
     def authenticate(self, client_param, app_param, key_handle, check_only=False):
         """Authenticate a previously registered credential.
         :param client_param: SHA256 hash of the ClientData used for the request.
@@ -213,7 +188,95 @@ pub fn solo_bootloader(hid_params: &[crate::HidParam]) -> Result<(), String> {
         return SignatureData(response)
     */
 
-    let mut data: Vec<u8> = vec![0; 16];
-    let resut = ctaphid::send_apdu(&device,&cid,0,0,0,0,&data)?;
+    {
+        // CTAP1_INS.Version = 3
+        //　　　 　　　　U  2  F  _  V  2
+        // result = 0x55 32 46 5F 56 32 90 -> U2F_V2
+        //            85 50 70 95 86 50
+        // http://web-apps.nbookmark.com/ascii-converter/
+        let _data: Vec<u8> = Vec::new();
+
+        match ctaphid::send_apdu(&device, &cid, 0, 3, 0, 0, &_data) {
+            Ok(result) => {
+                let version: String = String::from_utf8(result).unwrap();
+                println!("U2F version = {}", version);
+            }
+            Err(error) => {
+                println!("{}", error);
+            }
+        }
+    }
+
+    {
+        // client param
+        // (B * 32)
+        let mut client_param: Vec<u8> = vec![0; 32];
+        for counter in 0..32 {
+            client_param[counter] = 0x42;
+        }
+
+        // app param
+        // (A * 32)
+        let mut app_param: Vec<u8> = vec![0; 32];
+        for counter in 0..32 {
+            app_param[counter] = 0x41;
+        }
+
+        // create format_request
+        // \x44 \x00 \x00 \x00 \x8c \x27 \x90 \xf6 \x00 \x10 AAAAAAAAAAAAAAAA
+        let solo_bootloader_version = 0x44;
+        let mut format_request: Vec<u8> = vec![0; 26];
+        format_request[0] = solo_bootloader_version;
+        format_request[1] = 0x00;
+        format_request[2] = 0x00;
+        format_request[3] = 0x00;
+
+        // TAG
+        format_request[4] = 0x8c;
+        format_request[5] = 0x27;
+        format_request[6] = 0x90;
+        format_request[7] = 0xf6;
+
+        // length
+        format_request[8] = 0x0;
+        format_request[9] = 0x10;
+
+        // data(A x 16)
+        for counter in 0..16 {
+            format_request[10 + counter] = 0x41;
+        }
+        // format_request
+
+        // data
+        let mut data: Vec<u8> =
+            vec![0; client_param.len() + app_param.len() + 1 + format_request.len()];
+        let mut index = 0;
+        for counter in 0..client_param.len() {
+            data[index] = client_param[counter];
+            index = index + 1
+        }
+        for counter in 0..app_param.len() {
+            data[index] = app_param[counter];
+            index = index + 1;
+        }
+
+        data[index] = 26;
+        index = index + 1;
+
+        for counter in 0..format_request.len() {
+            data[index] = format_request[counter];
+            index = index + 1;
+        }
+
+        match ctaphid::send_apdu(&device, &cid, 0, 0, 0, 0, &data) {
+            Ok(_result) => {
+                // PEND
+            }
+            Err(error) => {
+                println!("{}", error);
+            }
+        }
+    }
+
     Ok(())
 }

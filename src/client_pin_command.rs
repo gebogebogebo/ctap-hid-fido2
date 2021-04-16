@@ -1,4 +1,5 @@
 use crate::cose;
+use crate::ctapdef;
 use serde_cbor::to_vec;
 use serde_cbor::Value;
 use std::collections::BTreeMap;
@@ -17,7 +18,7 @@ fn create_payload_get_keyagreement() -> Vec<u8> {
     let pin_prot = Value::Integer(1);
 
     // 0x02 : subCommand
-    let sub_cmd = Value::Integer(2);
+    let sub_cmd = Value::Integer(SubCommand::GetKeyAgreement as i128);
 
     // create cbor
     let mut map = BTreeMap::new();
@@ -26,7 +27,7 @@ fn create_payload_get_keyagreement() -> Vec<u8> {
     let cbor = Value::Map(map);
 
     // Command - authenticatorClientPIN (0x06)
-    let mut payload = [0x06].to_vec();
+    let mut payload = [ctapdef::AUTHENTICATOR_CLIENT_PIN].to_vec();
     payload.append(&mut to_vec(&cbor).unwrap());
     payload
 }
@@ -36,7 +37,7 @@ fn create_payload_get_retries() -> Vec<u8> {
     let pin_prot = Value::Integer(1);
 
     // 0x02 : subCommand
-    let sub_cmd = Value::Integer(1);
+    let sub_cmd = Value::Integer(SubCommand::GetRetries as i128);
 
     // create cbor
     let mut map = BTreeMap::new();
@@ -45,7 +46,7 @@ fn create_payload_get_retries() -> Vec<u8> {
     let cbor = Value::Map(map);
 
     // Command - authenticatorClientPIN (0x06)
-    let mut payload = [0x06].to_vec();
+    let mut payload = [ctapdef::AUTHENTICATOR_CLIENT_PIN].to_vec();
     payload.append(&mut to_vec(&cbor).unwrap());
     payload
 }
@@ -58,7 +59,7 @@ pub fn create_payload_get_pin_token(
     let pin_prot = Value::Integer(1);
 
     // 0x02 : subCommand
-    let sub_cmd = Value::Integer(5);
+    let sub_cmd = Value::Integer(SubCommand::GetPINToken as i128);
 
     // 0x03:keyAgreement : COSE_Key
     let mut ka_val = BTreeMap::new();
@@ -82,14 +83,14 @@ pub fn create_payload_get_pin_token(
     let ka = Value::Map(ka_val);
 
     // 0x06:pinHashEnc
-    let pin_hash_enc = Value::Bytes(pin_hash_enc);
+    let pin_hash_enc_val = Value::Bytes(pin_hash_enc);
 
     // create cbor
     let mut map = BTreeMap::new();
     map.insert(Value::Integer(0x01), pin_prot);
     map.insert(Value::Integer(0x02), sub_cmd);
     map.insert(Value::Integer(0x03), ka);
-    map.insert(Value::Integer(0x06), pin_hash_enc);
+    map.insert(Value::Integer(0x06), pin_hash_enc_val);
     let cbor = Value::Map(map);
 
     // Command - authenticatorClientPIN (0x06)
