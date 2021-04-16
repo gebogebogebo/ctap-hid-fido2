@@ -3,12 +3,14 @@
 # ctap-hid-fido2
 Rust FIDO2 CTAP library
 
+**Some features of CTAP2.1PRE have been implemented.**
+
 for Mac & Win & raspberry Pi
 
 The raspberry Pi is now supported. However, it needs to be build.
 
 ## Description
-- Implements FIDO2 CTAP (HID)
+- Implements FIDO2 CTAP 2.0 & 2.1PRE (HID)
 - [Client to Authenticator Protocol (CTAP)](https://fidoalliance.org/specs/fido-v2.0-ps-20190130/fido-client-to-authenticator-protocol-v2.0-ps-20190130.html)
 - Confirmed operation FIDO key
   - Yubikey Blue (Security Key Series)
@@ -19,11 +21,9 @@ The raspberry Pi is now supported. However, it needs to be build.
   - SoloKey
   - Nitrokey FIDO2
 - Rust Version
-  - cargo 1.45.1 (f242df6ed 2020-07-22)
-  - rustc 1.45.2 (d3fb005a3 2020-07-31)
-  - rustup 1.22.1 (b01adbbc3 2020-07-08)
+  - cargo 1.51.0 , rustc 1.51.0 , rustup 1.23.1
 - for Mac
-  - macOS Catalina 10.15.6
+  - macOS Catalina / Big Sur
   - Visual Studio Code
 - for Windows
   - Windows10 1909
@@ -64,16 +64,10 @@ use ctap_hid_fido2;
 
 fn main() {
     println!("get_info()");
-    let infos = match ctap_hid_fido2::get_info(&ctap_hid_fido2::HidParam::get_default_params()) {
-        Ok(result) => result,
-        Err(error) => {
-            println!("error: {:?}", error);
-            return;
-        }
+    match ctap_hid_fido2::get_info(&ctap_hid_fido2::HidParam::get_default_params()) {
+        Ok(info) => println!("{}",info),
+        Err(error) => println!("error: {:?}", error),
     };
-    for (key, value) in infos {
-        println!("- {} / {}", key, value);
-    }
 }
 ```
 
@@ -81,16 +75,17 @@ fn main() {
 
 ```sh
 get_info()
-- versions / U2F_V2
-- versions / FIDO_2_0
-- extensions / hmac-secret
-- aaguid / FA2B99DC9E3942578F924A30D23C4118
-- options-rk / true
-- options-up / true
-- options-plat / false
-- options-clientPin / true
-- max_msg_size / 1200
-- pin_protocols / 1
+- versions                      = ["U2F_V2", "FIDO_2_0", "FIDO_2_1_PRE"]
+- extensions                    = ["credProtect", "hmac-secret"]
+- aaguid(16)                    = EE882879721C491397753DFCCE97072A
+- options                       = [("rk", true), ("up", true), ("plat", false), ("clientPin", true), ("credentialMgmtPreview", true)]
+- max_msg_size                  = 1200
+- pin_uv_auth_protocols         = [1]
+- max_credential_count_in_list  = 8
+- max_credential_id_length      = 128
+- transports                    = ["usb"]
+- algorithms                    = [("alg", "-7"), ("type", "public-key"), ("alg", "-8"), ("type", "public-key")]
+g
 ```
 
 
@@ -102,15 +97,10 @@ use ctap_hid_fido2;
 
 fn main() {
     println!("get_pin_retries()");
-    let retry =
-        match ctap_hid_fido2::get_pin_retries(&ctap_hid_fido2::HidParam::get_default_params()) {
-            Ok(result) => result,
-            Err(error) => {
-                println!("error: {:?}", error);
-                return;
-            }
-        };
-    println!("- pin retry = {}", retry);
+    match ctap_hid_fido2::get_pin_retries(&ctap_hid_fido2::HidParam::get_default_params()) {
+        Ok(retry) => println!("- pin retry = {}", retry),
+        Err(error) => println!("error: {:?}", error),
+    };
 }
 ```
 
@@ -451,6 +441,112 @@ make_credential(),get_assertion()
         }
     };
 ```
+
+
+
+### CTAP 2.1 PRE
+
+
+#### enable_ctap_2_1()
+
+```rust
+match ctap_hid_fido2::enable_ctap_2_1(&ctap_hid_fido2::HidParam::get_default_params()) {
+    Ok(result) => println!("Enable CTAP 2.1 = {:?}",result),
+    Err(error) => println!("- error: {:?}", error),
+};
+```
+
+
+
+#### enable_ctap_2_1_pre()
+
+```rust
+match ctap_hid_fido2::enable_ctap_2_1_pre(&ctap_hid_fido2::HidParam::get_default_params()) {
+    Ok(result) => println!("Enable CTAP 2.1 PRE = {:?}",result),
+    Err(error) => println!("- error: {:?}", error),
+};
+```
+
+
+
+#### authenticatorCredentialManagement
+[authenticatorCredentialManagement (0x0A)](https://fidoalliance.org/specs/fido-v2.1-rd-20210309/fido-client-to-authenticator-protocol-v2.1-rd-20210309.html#authenticatorCredentialManagement)
+
+##### credential_management_get_creds_metadata()
+
+``` rust
+match ctap_hid_fido2::credential_management_get_creds_metadata(
+    &ctap_hid_fido2::HidParam::get_default_params(),
+    pin,
+) {
+    Ok(result) => println!("{}", result),
+    Err(error) => println!("- creds metadata error: {:?}", error),
+};
+```
+
+
+
+##### credential_management_enumerate_rps()
+
+```rust
+match ctap_hid_fido2::credential_management_enumerate_rps(
+    &ctap_hid_fido2::HidParam::get_default_params(),
+    pin,
+) {
+    Ok(results) => {
+        for data in results {
+            println!("## rps");
+            println!("{}",data);
+        }
+    }
+    Err(error) => println!("- enumerate rps error: {:?}", error),
+};
+```
+
+
+
+##### credential_management_enumerate_credentials()
+
+```rust
+match ctap_hid_fido2::credential_management_enumerate_credentials(
+    &ctap_hid_fido2::HidParam::get_default_params(),
+    pin,
+    rpid_hash_bytes,
+) {
+    Ok(results) => {
+        for data in results {
+            println!("## credentials");
+            println!("{}",data);
+        }
+    }
+    Err(error) => println!("- enumerate credentials error: {:?}", error),
+};
+```
+
+
+
+##### credential_management_delete_credential()
+
+```rust
+let mut pkcd = ctap_hid_fido2::credential_management_params::PublicKeyCredentialDescriptor::default();
+pkcd.id = util::to_str_hex(
+    credential_id.unwrap().to_string()
+);
+pkcd.ctype = "public_key".to_string();
+
+match ctap_hid_fido2::credential_management_delete_credential(
+    &ctap_hid_fido2::HidParam::get_default_params(),
+    pin,
+    Some(pkcd),
+) {
+    Ok(_) => println!("- credential_management_delete_credential Success"),
+    Err(error) => println!(
+        "- credential_management_delete_credential error: {:?}",
+        error
+    ),
+};
+```
+
 
 
 

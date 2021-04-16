@@ -13,6 +13,10 @@ pub fn to_hex_str(bytes: &[u8]) -> String {
         .collect::<String>()
 }
 
+pub fn to_str_hex(hexstr: String) -> Vec<u8> {
+    hex::decode(hexstr).unwrap()
+}
+
 pub fn print_typename<T>(_: T) {
     println!("{}", std::any::type_name::<T>());
 }
@@ -25,6 +29,35 @@ pub fn print_typename<T>(_: T) {
 #[allow(dead_code)]
 pub(crate) fn is_debug() -> bool {
     false
+}
+
+// for cbor
+pub(crate) fn cbor_get_string_from_map(cbor_map: &Value, get_key: &str) -> Option<String> {
+    if let Value::Map(xs) = cbor_map {
+        for (key, val) in xs {
+            if let Value::Text(s) = key {
+                if s.as_str() == get_key {
+                    if let Value::Text(s) = val {
+                        return Some(s.to_string());
+                    }
+                }
+            }
+        }
+    }
+    None
+}
+
+pub(crate) fn cbor_get_bytes_from_map(cbor_map: &Value, get_key: &str) -> Option<Vec<u8>> {
+    if let Value::Map(xs) = cbor_map {
+        for (key, val) in xs {
+            if let Value::Text(s) = key {
+                if s.as_str() == get_key {
+                    return cbor_value_to_vec_u8(val);
+                }
+            }
+        }
+    }
+    None
 }
 
 #[allow(dead_code)]
@@ -113,6 +146,8 @@ pub(crate) fn get_ctap_status_message(status: u8) -> String {
         0x14 => "0x14 CTAP2_ERR_MISSING_PARAMETER Missing non - optional parameter.".to_string(),
         0x15 => "0x15 CTAP2_ERR_LIMIT_EXCEEDED Limit for number of items exceeded.".to_string(),
         0x16 => "0x16 CTAP2_ERR_UNSUPPORTED_EXTENSION Unsupported extension.".to_string(),
+        0x17 => "0x17 CTAP2_ERR_FP_DATABASE_FULL Fingerprint data base is full, e.g., during enrollment.".to_string(),
+        0x18 => "0x18 CTAP2_ERR_LARGE_BLOB_STORAGE_FULL Large blob storage is full.".to_string(),
         0x19 => "0x19 CTAP2_ERR_CREDENTIAL_EXCLUDED   Valid credential found in the exclude list.".to_string(),
         0x21 => "0x21 CTAP2_ERR_PROCESSING    Processing(Lengthy operation is in progress).".to_string(),
         0x22 => "0x22 CTAP2_ERR_INVALID_CREDENTIAL    Credential not valid for the authenticator.".to_string(),
@@ -141,6 +176,11 @@ pub(crate) fn get_ctap_status_message(status: u8) -> String {
         0x39 => "0x39 CTAP2_ERR_REQUEST_TOO_LARGE Authenticator cannot handle this request due to memory constraints.".to_string(),
         0x3A => "0x3A CTAP2_ERR_ACTION_TIMEOUT The current operation has timed out.".to_string(),
         0x3B => "0x3B CTAP2_ERR_UP_REQUIRED User presence is required for the requested operation.".to_string(),
+        0x3C => "0x3C CTAP2_ERR_UV_BLOCKED built-in user verification is disabled.".to_string(),
+        0x3D => "0x3D CTAP2_ERR_INTEGRITY_FAILURE A checksum did not match.".to_string(),
+        0x3E => "0x3E CTAP2_ERR_INVALID_SUBCOMMAND The requested subcommand is either invalid or not implemented.".to_string(),
+        0x3F => "0x3F CTAP2_ERR_UV_INVALID built-in user verification unsuccessful. The platform should retry.".to_string(),
+        0x40 => "0x40 CTAP2_ERR_UNAUTHORIZED_PERMISSION The permissions parameter contains an unauthorized permission.".to_string(),
         0x7F => "0x7F CTAP1_ERR_OTHER Other unspecified error.".to_string(),
         0xDF => "0xDF CTAP2_ERR_SPEC_LAST CTAP 2 spec last error.".to_string(),
         0xE0 => "0xE0 CTAP2_ERR_EXTENSION_FIRST Extension specific error.".to_string(),
@@ -153,11 +193,23 @@ pub(crate) fn get_ctap_status_message(status: u8) -> String {
     }
 }
 
+pub(crate) fn get_u2f_status_message(status: u8) -> String {
+    match status {
+        0x90 => "SW_NO_ERROR (0x9000): The command completed successfully without error.".to_string(),
+        0x69 => "SW_CONDITIONS_NOT_SATISFIED (0x6985): The request was rejected due to test-of-user-presence being required.".to_string(),
+        0x6A => "SW_WRONG_DATA (0x6A80): The request was rejected due to an invalid key handle.".to_string(),
+        0x67 => "SW_WRONG_LENGTH (0x6700): The length of the request was invalid.".to_string(),
+        0x6E => "SW_CLA_NOT_SUPPORTED (0x6E00): The Class byte of the request is not supported.".to_string(),
+        0x6D => "SW_INS_NOT_SUPPORTED (0x6D00): The Instruction of the request is not supported.".to_string(),
+        _ => format!("0x{:X}", status),
+    }
+}
+
 #[allow(dead_code)]
 pub(crate) fn convert_to_publickey_pem(public_key_der: &[u8]) -> String {
     let mut tmp = vec![];
 
-    // 1.metadata(26byte)
+    // 0.metadata(26byte)
     let meta_header = hex::decode("3059301306072a8648ce3d020106082a8648ce3d030107034200").unwrap();
     tmp.append(&mut meta_header.to_vec());
 

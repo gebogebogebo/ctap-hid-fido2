@@ -117,7 +117,7 @@ pub fn ctaphid_nitro_send_and_response(
     println!("{}", util::to_hex_str(&buf[..64]));
     println!("##");
     */
-    
+
     let st = ctaphid_cbor_responce_nitro(&buf);
     if st.0 != command {
         return Err("ctaphid_cbor_responce_nitro".into());

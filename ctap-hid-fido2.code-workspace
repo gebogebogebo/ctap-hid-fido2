@@ -20,6 +20,12 @@
 		},
 		{
 			"path": "examples/nitro-update"
+		},
+		{
+			"path": "examples/credential-management"
+		},
+		{
+			"path": "examples/test-ctap21"
 		}
 	],
 	"settings": {}
