@@ -193,7 +193,7 @@ fn main() {
 
     if matches.is_present("info"){
         println!("get_info()");
-        match ctap_hid_fido2::get_info2(&ctap_hid_fido2::HidParam::get_default_params()) {
+        match ctap_hid_fido2::get_info(&ctap_hid_fido2::HidParam::get_default_params()) {
             Ok(info) => println!("{}", info),
             Err(error) => println!("error: {:?}", error),
         };

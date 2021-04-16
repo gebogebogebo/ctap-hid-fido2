@@ -24,24 +24,16 @@ fn main() {
     }
 
     println!("get_info()");
-    match ctap_hid_fido2::get_info2(&ctap_hid_fido2::HidParam::get_default_params()) {
+    match ctap_hid_fido2::get_info(&ctap_hid_fido2::HidParam::get_default_params()) {
         Ok(info) => println!("{}",info),
-        Err(error) => {
-            println!("error: {:?}", error);
-            return;
-        }
+        Err(error) => println!("error: {:?}", error),
     };
 
     println!("get_pin_retries()");
-    let retry =
-        match ctap_hid_fido2::get_pin_retries(&ctap_hid_fido2::HidParam::get_default_params()) {
-            Ok(result) => result,
-            Err(error) => {
-                println!("error: {:?}", error);
-                return;
-            }
-        };
-    println!("- pin retry = {}", retry);
+    match ctap_hid_fido2::get_pin_retries(&ctap_hid_fido2::HidParam::get_default_params()) {
+        Ok(retry) => println!("- pin retry = {}", retry),
+        Err(error) => println!("error: {:?}", error),
+    };
 
     println!("get_info_u2f()");
     match ctap_hid_fido2::get_info_u2f(&ctap_hid_fido2::HidParam::get_default_params()) {
