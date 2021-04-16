@@ -7,7 +7,15 @@
 これはCTAPのお勉強をしたメモです。
 **WebAuthn(ウェブオースン)ではなく、CTAP(シータップ)であります。**
 
-今回はCTAP2.1の **authenticatorCredentialManagement** です。
+今回はCTAP2.1(Review Draft)の **authenticatorCredentialManagement** です。
+
+
+
+## CTAP 2.1 PRE ?
+
+今の CTAP 2.0 に機能拡張を加えた仕様で Review Draft です。なので正式版は仕様が変わる可能性があります。
+
+とはいえ、今世の中に出回っているセキュリティキーで既に実装しているものがありまして、 [authenticatorGetInfo](https://fidoalliance.org/specs/fido-v2.1-rd-20210309/fido-client-to-authenticator-protocol-v2.1-rd-20210309.html#authenticatorGetInfo) で **FIDO_2_1_PRE** という version が採れるものがそれになります。<br>このセキュリティキーを使って **authenticatorCredentialManagement** を検証しました。
 
 
 
@@ -15,7 +23,7 @@
   - [CTAP仕様 Client to Authenticator Protocol (CTAP) Proposed Standard, Review Draft, March 09, 2021](https://fidoalliance.org/specs/fido-v2.1-rd-20210309/fido-client-to-authenticator-protocol-v2.1-rd-20210309.html)
 - 教材
 	- [YubiKey 5 Nano](https://www.yubico.com/jp/product/yubikey-5-nano/) - Firmware: 5.2.7
-- [SoloKey](https://solokeys.com/) Firmware: 4.1.2
+- [SoloKey](https://solokeys.com/) - Firmware: 4.1.2
 - 復習
 	- [CTAP2 お勉強メモ#1](https://qiita.com/gebo/items/d2ffbd4fcf7d75e21b63)
 	- [CTAP2 お勉強メモ#2](https://qiita.com/gebo/items/e0bd197d607312dcf4fb)
@@ -32,19 +40,13 @@
 
 
 
-## CTAP 2.1 のセキュリティキー
-
-今世の中に出回っているセキュリティキーは既にCTAP2.1を実装しているものがありまして、 [authenticatorGetInfo](https://fidoalliance.org/specs/fido-v2.1-rd-20210309/fido-client-to-authenticator-protocol-v2.1-rd-20210309.html#authenticatorGetInfo) で **FIDO_2_1_PRE** という version が採れるものがあります。<br>このセキュリティキーを使って **authenticatorCredentialManagement** を検証しました。
-
-
-
 ## サンプルコード
 
-Rustで実装したサンプルコードがあります。コード見たほうが早いという人はこちら。
+Rustで実装したクレートとサンプルコードがあります。コード見たほうが早いという人はこちら。
 
-**ctap-hid-fido2**
+**crate** : [ctap-hid-fido2(2.0.0)](https://crates.io/crates/ctap-hid-fido2)
 
-https://github.com/gebogebogebo/ctap-hid-fido2
+**sample** : [credential-management](https://github.com/gebogebogebo/ctap-hid-fido2)
 
 
 

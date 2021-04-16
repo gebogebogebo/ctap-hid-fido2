@@ -146,13 +146,8 @@ pub fn wink(hid_params: &[HidParam]) -> Result<(), String> {
 }
 
 /// Get FIDO key information
-/*
-pub fn get_info(hid_params: &[HidParam]) -> Result<Vec<(String, String)>, String> {
+pub fn get_info(hid_params: &[HidParam]) -> Result<get_info_params::Info, String> {
     get_info::get_info(hid_params)
-}
-*/
-pub fn get_info2(hid_params: &[HidParam]) -> Result<get_info_params::Info, String> {
-    get_info::get_info2(hid_params)
 }
 
 /// Get FIDO key information (CTAP 1.0)
@@ -232,7 +227,7 @@ pub fn get_assertions_rk(
 }
 
 pub fn enable_ctap_2_1(hid_params: &[HidParam]) -> Result<bool,String>{
-    let info = get_info::get_info2(hid_params)?;
+    let info = get_info::get_info(hid_params)?;
     let find = info.versions.iter().find(|v| v.contains("FIDO_2_1"));
     match find {
         Some(_) => Ok(true),
@@ -241,7 +236,7 @@ pub fn enable_ctap_2_1(hid_params: &[HidParam]) -> Result<bool,String>{
 }
 
 pub fn enable_ctap_2_1_pre(hid_params: &[HidParam]) -> Result<bool,String>{
-    let info = get_info::get_info2(hid_params)?;
+    let info = get_info::get_info(hid_params)?;
     let find = info.versions.iter().find(|v| v.contains("FIDO_2_1_PRE"));
     match find {
         Some(_) => Ok(true),
