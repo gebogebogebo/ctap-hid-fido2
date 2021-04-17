@@ -38,6 +38,7 @@ mod ss;
 pub mod util;
 pub mod verifier;
 mod bio_enrollment;
+mod bio_enrollment_command;
 
 #[cfg(not(target_os = "linux"))]
 mod fidokey;
@@ -243,6 +244,16 @@ pub fn enable_ctap_2_1_pre(hid_params: &[HidParam]) -> Result<bool,String>{
         Some(_) => Ok(true),
         None => Ok(false),
     }
+}
+
+/// BioEnrollment - getFingerprintSensorInfo (CTAP 2.1-PRE)
+pub fn bio_enrollment_get_fingerprint_sensor_info(
+    hid_params: &[HidParam],
+    pin: Option<&str>,
+) -> Result<(), String> {
+    // 6.7.2. Get bio modality
+    bio_enrollment::bio_enrollment(hid_params,pin,None)?;
+    Ok(())
 }
 
 /// CredentialManagement - getCredsMetadata (CTAP 2.1-PRE)

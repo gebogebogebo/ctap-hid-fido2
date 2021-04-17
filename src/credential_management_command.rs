@@ -55,7 +55,7 @@ fn parse_test(cbor:Value){
 */
 
 pub fn create_payload(
-    pin_token: pintoken::PinToken,
+    pin_token: Option<pintoken::PinToken>,
     sub_command: SubCommand,
     rpid_hash: Option<Vec<u8>>,
     pkcd: Option<credential_management_params::PublicKeyCredentialDescriptor>,
@@ -99,14 +99,11 @@ pub fn create_payload(
         }
     }
 
-    // pinProtocol(0x03)
-    {
+    if let Some(pin_token) = pin_token {
+        // pinProtocol(0x03)
         let pin_protocol = Value::Integer(1);
         map.insert(Value::Integer(0x03), pin_protocol);
-    }
 
-    // pinUvAuthParam(0x04)
-    {
         // pinUvAuthParam (0x04): 
         // - authenticate(pinUvAuthToken, getCredsMetadata (0x01)).
         // - authenticate(pinUvAuthToken, enumerateCredentialsBegin (0x04) || subCommandParams).

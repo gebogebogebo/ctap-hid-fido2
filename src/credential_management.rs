@@ -29,8 +29,7 @@ pub(crate) fn credential_management(
         }
     };
 
-    // create pin auth
-    if let Some(pin_token) = pin_token {
+    //if let Some(pin_token) = pin_token {
         let send_payload = credential_management_command::create_payload(
             pin_token,
             sub_command,
@@ -49,7 +48,7 @@ pub(crate) fn credential_management(
         }
 
         Ok(credential_management_response::parse_cbor(&response_cbor)?)
-    } else {
-        Err("PIN Token Error".to_string())
-    }
+    //} else {
+    //    Err("PIN Token Error".to_string())
+    //}
 }
