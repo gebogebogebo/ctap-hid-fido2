@@ -37,6 +37,7 @@ mod selection_command;
 mod ss;
 pub mod util;
 pub mod verifier;
+mod bio_enrollment;
 
 #[cfg(not(target_os = "linux"))]
 mod fidokey;
@@ -331,7 +332,7 @@ pub fn credential_management_delete_credential(
     hid_params: &[HidParam],
     pin: Option<&str>,
     pkcd: Option<credential_management_params::PublicKeyCredentialDescriptor>,
-) -> Result<credential_management_params::CredsMetadata, String> {
+) -> Result<(), String> {
     credential_management::credential_management(
         hid_params,
         pin,
@@ -339,7 +340,8 @@ pub fn credential_management_delete_credential(
         None,
         pkcd,
         None,
-    )
+    )?;
+    Ok(())
 }
 
 /// CredentialManagement - updateUserInformation (CTAP 2.1-PRE)
@@ -348,7 +350,7 @@ pub fn credential_management_update_user_information(
     pin: Option<&str>,
     pkcd: Option<credential_management_params::PublicKeyCredentialDescriptor>,
     pkcue: Option<credential_management_params::PublicKeyCredentialUserEntity>,
-) -> Result<credential_management_params::CredsMetadata, String> {
+) -> Result<(), String> {
     credential_management::credential_management(
         hid_params,
         pin,
@@ -356,7 +358,8 @@ pub fn credential_management_update_user_information(
         None,
         pkcd,
         pkcue,
-    )
+    )?;
+    Ok(())
 }
 
 /// Selection (CTAP 2.1-PRE)
