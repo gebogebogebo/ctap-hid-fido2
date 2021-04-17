@@ -4,7 +4,7 @@ use serde_cbor::Value;
 use std::fmt;
 
 #[derive(Debug, Default, Clone)]
-pub struct CredsMetadata {
+pub(crate) struct CredentialManagementData {
     pub existing_resident_credentials_count: u32,
     pub max_possible_remaining_resident_credentials_count: u32,
     pub public_key_credential_rp_entity: PublicKeyCredentialRpEntity,
@@ -121,7 +121,7 @@ pub struct CredentialsCount {
     pub max_possible_remaining_resident_credentials_count: u32,
 }
 impl CredentialsCount {
-    pub fn new(meta: &CredsMetadata) -> CredentialsCount {
+    pub(crate) fn new(meta: &CredentialManagementData) -> CredentialsCount {
         let mut ret = CredentialsCount::default();
         ret.existing_resident_credentials_count = meta.existing_resident_credentials_count;
         ret.max_possible_remaining_resident_credentials_count =
@@ -141,7 +141,7 @@ pub struct Rp {
     pub rpid_hash: Vec<u8>,
 }
 impl Rp {
-    pub fn new(meta: &CredsMetadata) -> Rp {
+    pub(crate) fn new(meta: &CredentialManagementData) -> Rp {
         let mut ret = Rp::default();
         ret.public_key_credential_rp_entity = meta.public_key_credential_rp_entity.clone();
         ret.rpid_hash = meta.rpid_hash.to_vec();
@@ -170,7 +170,7 @@ pub struct Credential {
     pub public_key: PublicKey,
 }
 impl Credential {
-    pub fn new(meta: &CredsMetadata) -> Credential {
+    pub(crate) fn new(meta: &CredentialManagementData) -> Credential {
         let mut ret = Credential::default();
         ret.public_key_credential_user_entity = meta.public_key_credential_user_entity.clone();
         ret.public_key_credential_descriptor = meta.public_key_credential_descriptor.clone();

@@ -9,14 +9,14 @@ use crate::HidParam;
 #[allow(unused_imports)]
 use crate::util;
 
-pub fn credential_management(
+pub(crate) fn credential_management(
     hid_params: &[HidParam],
     pin: Option<&str>,
     sub_command: credential_management_command::SubCommand,
     rpid_hash: Option<Vec<u8>>,
     pkcd: Option<credential_management_params::PublicKeyCredentialDescriptor>,
     pkcue: Option<credential_management_params::PublicKeyCredentialUserEntity>,
-) -> Result<credential_management_params::CredsMetadata, String> {
+) -> Result<credential_management_params::CredentialManagementData, String> {
     let device = FidoKeyHid::new(hid_params)?;
     let cid = ctaphid::ctaphid_init(&device)?;
 

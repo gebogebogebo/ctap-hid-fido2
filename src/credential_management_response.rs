@@ -2,8 +2,8 @@ use crate::credential_management_params;
 use crate::util;
 use serde_cbor::Value;
 
-pub fn parse_cbor(bytes: &[u8]) -> Result<credential_management_params::CredsMetadata, String> {
-    let mut data = credential_management_params::CredsMetadata::default();
+pub(crate) fn parse_cbor(bytes: &[u8]) -> Result<credential_management_params::CredentialManagementData, String> {
+    let mut data = credential_management_params::CredentialManagementData::default();
     if bytes.len() == 0 {
         return Ok(data);
     }
