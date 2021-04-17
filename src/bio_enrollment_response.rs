@@ -9,9 +9,9 @@ pub(crate) fn parse_cbor(bytes: &[u8]) -> Result<(), String> {
         return Ok(());
     }
 
-    let cbor = serde_cbor::from_slice(bytes).unwrap();
+    let cbor = serde_cbor::from_slice(bytes).unwrap_or_else(|_|Err("parse error!".to_string()))?;
     if let Value::Map(n) = cbor {
-        for (key, val) in &n {
+        for (key, val) in n {
             if let Value::Integer(member) = key {
                 match member {
                     0x01 => {
@@ -24,6 +24,6 @@ pub(crate) fn parse_cbor(bytes: &[u8]) -> Result<(), String> {
         }
         Ok(())
     } else {
-        Err(String::from("parse error!"))
+        Err("parse error!".to_string())
     }
 }
