@@ -44,10 +44,11 @@ pub fn create_payload(
         }
     }
 
+    // getModality (0x06)
+    map.insert(Value::Integer(0x06), Value::Bool(true));
+
     // create cbor
     let cbor = Value::Map(map);
-
-    //parse_test(cbor.clone());
 
     // create payload
     let mut payload = [ctapdef::AUTHENTICATOR_BIO_ENROLLMENT].to_vec();

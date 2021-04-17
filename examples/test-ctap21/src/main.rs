@@ -22,6 +22,24 @@ fn main() {
         Err(error) => println!("error: {:?}", error),
     };
 
+    //let pin = matches.value_of("pin").unwrap();
+    let pin = "1234";
+    println!("Value for pin: {}", pin);
+
+    println!("bio_enroll()");
+    match ctap_hid_fido2::bio_enrollment_get_fingerprint_sensor_info(
+        &ctap_hid_fido2::HidParam::get_default_params(),
+        Some(pin),
+    ) {
+        Ok(_result) => {
+            //println!("{}", result);
+        }
+        Err(error) => {
+            println!("- creds metadata error: {:?}", error);
+        }
+    };
+
+    /*
     println!("config()");
     match ctap_hid_fido2::config(&ctap_hid_fido2::HidParam::get_default_params()) {
         Ok(result) => println!("- config : {:?}", result),
@@ -33,5 +51,6 @@ fn main() {
         Ok(result) => println!("- selection : {:?}", result),
         Err(error) => println!("- selection error: {:?}", error),
     };
+    */
     
 }
