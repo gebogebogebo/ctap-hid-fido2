@@ -5,6 +5,7 @@ Utility API
 use num::NumCast;
 use serde_cbor::Value;
 use sha2::{Digest, Sha256};
+use std::collections::BTreeMap;
 
 pub fn to_hex_str(bytes: &[u8]) -> String {
     bytes
@@ -105,6 +106,19 @@ pub(crate) fn cbor_value_to_vec_bytes(value: &Value) -> Option<Vec<Vec<u8>>> {
         Some(bytes)
     } else {
         None
+    }
+}
+
+pub(crate) fn cbor_bytes_to_map(bytes: &[u8]) -> Result<BTreeMap<Value,Value>,String>{
+    match serde_cbor::from_slice(bytes){
+        Ok(cbor) =>{
+            if let Value::Map(n) = cbor {
+                Ok(n)
+            }else{
+                Err("parse error 2".to_string())
+            }
+        }
+        Err(_) => Err("parse error 1".to_string()),
     }
 }
 
