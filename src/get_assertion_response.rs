@@ -35,42 +35,26 @@ fn parse_cbor_authdata(authdata: Vec<u8>, ass: &mut get_assertion_params::Assert
     //index = ret.1;
 }
 
-fn parse_cbor_public_key_credential_user_entity(
-    obj: &Value,
-    ass: &mut get_assertion_params::Assertion,
-) {
-    ass.user = get_assertion_params::PublicKeyCredentialUserEntity::default()
-    .get_id(obj)
-    .get_name(obj)
-    .get_display_name(obj);
-}
-
-fn parse_cbor_member(
-    member: i128,
-    val: &Value,
-    ass: &mut get_assertion_params::Assertion,
-) -> Result<(), String> {
-    match member {
-        0x01 => ass.credential_id = util::cbor_get_bytes_from_map(val,"id")?,
-        0x02 => {
-            if let Value::Bytes(xs) = val {
-                parse_cbor_authdata(xs.to_vec(), ass);
-            }
-        }
-        0x03 => ass.signature = util::cbor_value_to_vec_u8(val)?,
-        0x04 => parse_cbor_public_key_credential_user_entity(val, ass),
-        0x05 => ass.number_of_credentials = util::cbor_value_to_num(val)?,
-        _ => println!("- anything error"),
-    }
-    Ok(())
-}
-
 pub fn parse_cbor(bytes: &[u8]) -> Result<get_assertion_params::Assertion, String> {
     let mut ass = get_assertion_params::Assertion::default();
     let maps = util::cbor_bytes_to_map(bytes)?;
     for (key, val) in &maps {
         if let Value::Integer(member) = key {
-            parse_cbor_member(*member, val, &mut ass)?;
+            match member {
+                0x01 => ass.credential_id = util::cbor_get_bytes_from_map(val,"id")?,
+                0x02 => {
+                    if let Value::Bytes(xs) = val {
+                        parse_cbor_authdata(xs.to_vec(), &mut ass);
+                    }
+                }
+                0x03 => ass.signature = util::cbor_value_to_vec_u8(val)?,
+                0x04 => ass.user = get_assertion_params::PublicKeyCredentialUserEntity::default()
+                            .get_id(val)
+                            .get_name(val)
+                            .get_display_name(val),
+                0x05 => ass.number_of_credentials = util::cbor_value_to_num(val)?,
+                _ => println!("- anything error"),
+            }
         }
     }
     Ok(ass)
