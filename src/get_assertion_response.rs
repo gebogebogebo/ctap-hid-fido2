@@ -1,9 +1,9 @@
 use crate::get_assertion_params;
+use crate::public_key_credential_user_entity::PublicKeyCredentialUserEntity;
 use crate::util;
 use byteorder::{BigEndian, ReadBytesExt};
 use serde_cbor::Value;
 use std::io::Cursor;
-use crate::public_key_credential_user_entity::PublicKeyCredentialUserEntity;
 
 fn parse_cbor_authdata(authdata: Vec<u8>, ass: &mut get_assertion_params::Assertion) {
     // copy
@@ -42,17 +42,19 @@ pub fn parse_cbor(bytes: &[u8]) -> Result<get_assertion_params::Assertion, Strin
     for (key, val) in &maps {
         if let Value::Integer(member) = key {
             match member {
-                0x01 => ass.credential_id = util::cbor_get_bytes_from_map(val,"id")?,
+                0x01 => ass.credential_id = util::cbor_get_bytes_from_map(val, "id")?,
                 0x02 => {
                     if let Value::Bytes(xs) = val {
                         parse_cbor_authdata(xs.to_vec(), &mut ass);
                     }
                 }
                 0x03 => ass.signature = util::cbor_value_to_vec_u8(val)?,
-                0x04 => ass.user = PublicKeyCredentialUserEntity::default()
-                            .get_id(val)
-                            .get_name(val)
-                            .get_display_name(val),
+                0x04 => {
+                    ass.user = PublicKeyCredentialUserEntity::default()
+                        .get_id(val)
+                        .get_name(val)
+                        .get_display_name(val)
+                }
                 0x05 => ass.number_of_credentials = util::cbor_value_to_num(val)?,
                 _ => println!("- anything error"),
             }

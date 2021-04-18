@@ -1,13 +1,13 @@
 #[allow(unused_imports)]
 use crate::util;
 
-use crate::credential_management_params;
 use crate::ctapdef;
 use crate::pintoken;
+use crate::public_key_credential_descriptor::PublicKeyCredentialDescriptor;
+use crate::public_key_credential_user_entity::PublicKeyCredentialUserEntity;
 use serde_cbor::to_vec;
 use serde_cbor::Value;
 use std::collections::BTreeMap;
-use crate::public_key_credential_user_entity::PublicKeyCredentialUserEntity;
 
 #[allow(dead_code)]
 #[derive(Debug, Copy, Clone, PartialEq)]
@@ -59,7 +59,7 @@ pub fn create_payload(
     pin_token: Option<pintoken::PinToken>,
     sub_command: SubCommand,
     rpid_hash: Option<Vec<u8>>,
-    pkcd: Option<credential_management_params::PublicKeyCredentialDescriptor>,
+    pkcd: Option<PublicKeyCredentialDescriptor>,
     pkcue: Option<PublicKeyCredentialUserEntity>,
 ) -> Vec<u8> {
     let mut map = BTreeMap::new();
@@ -141,9 +141,7 @@ fn create_rpid_hash(rpid_hash: Vec<u8>) -> Value {
     Value::Map(param)
 }
 
-fn create_public_key_credential_descriptor(
-    in_param: credential_management_params::PublicKeyCredentialDescriptor,
-) -> Value {
+fn create_public_key_credential_descriptor(in_param: PublicKeyCredentialDescriptor) -> Value {
     let mut map = BTreeMap::new();
     map.insert(Value::Text("id".to_string()), Value::Bytes(in_param.id));
     map.insert(Value::Text("type".to_string()), Value::Text(in_param.ctype));
@@ -154,7 +152,7 @@ fn create_public_key_credential_descriptor(
 }
 
 fn create_public_key_credential_descriptor_pend(
-    in_param: credential_management_params::PublicKeyCredentialDescriptor,
+    in_param: PublicKeyCredentialDescriptor,
     pkcuee: PublicKeyCredentialUserEntity,
 ) -> Value {
     let mut param = BTreeMap::new();

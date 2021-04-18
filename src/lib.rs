@@ -37,11 +37,17 @@ mod make_credential_response;
 pub mod nitrokey;
 mod p256;
 mod pintoken;
+pub mod public_key;
+pub mod public_key_credential_descriptor;
+pub mod public_key_credential_rp_entity;
+pub mod public_key_credential_user_entity;
 mod selection_command;
 mod ss;
 pub mod util;
 pub mod verifier;
-pub mod public_key_credential_user_entity;
+
+//
+use crate::public_key_credential_descriptor::PublicKeyCredentialDescriptor;
 
 #[cfg(not(target_os = "linux"))]
 mod fidokey;
@@ -346,7 +352,7 @@ pub fn credential_management_enumerate_credentials(
 pub fn credential_management_delete_credential(
     hid_params: &[HidParam],
     pin: Option<&str>,
-    pkcd: Option<credential_management_params::PublicKeyCredentialDescriptor>,
+    pkcd: Option<PublicKeyCredentialDescriptor>,
 ) -> Result<(), String> {
     credential_management::credential_management(
         hid_params,
@@ -363,7 +369,7 @@ pub fn credential_management_delete_credential(
 pub fn credential_management_update_user_information(
     hid_params: &[HidParam],
     pin: Option<&str>,
-    pkcd: Option<credential_management_params::PublicKeyCredentialDescriptor>,
+    pkcd: Option<PublicKeyCredentialDescriptor>,
     pkcue: Option<public_key_credential_user_entity::PublicKeyCredentialUserEntity>,
 ) -> Result<(), String> {
     credential_management::credential_management(
