@@ -5,6 +5,10 @@
 
 */
 
+mod bio_enrollment;
+mod bio_enrollment_command;
+pub mod bio_enrollment_params;
+mod bio_enrollment_response;
 mod client_pin;
 mod client_pin_command;
 mod client_pin_response;
@@ -37,10 +41,6 @@ mod selection_command;
 mod ss;
 pub mod util;
 pub mod verifier;
-mod bio_enrollment;
-mod bio_enrollment_command;
-mod bio_enrollment_response;
-pub mod bio_enrollment_params;
 
 #[cfg(not(target_os = "linux"))]
 mod fidokey;
@@ -195,7 +195,7 @@ pub fn make_credential_rk(
     pin: Option<&str>,
     rkparam: &make_credential_params::RkParam,
 ) -> Result<make_credential_params::Attestation, String> {
-    make_credential::make_credential(hid_params, rpid, challenge, pin, true, Some(rkparam),None)
+    make_credential::make_credential(hid_params, rpid, challenge, pin, true, Some(rkparam), None)
 }
 
 /// Registration command.Generate credentials(without PIN ,non Resident Key)
@@ -204,7 +204,7 @@ pub fn make_credential_without_pin(
     rpid: &str,
     challenge: &[u8],
 ) -> Result<make_credential_params::Attestation, String> {
-    make_credential::make_credential(hid_params, rpid, challenge, None, false, None,None)
+    make_credential::make_credential(hid_params, rpid, challenge, None, false, None, None)
 }
 
 /// Authentication command(with PIN , non Resident Key)
@@ -215,7 +215,8 @@ pub fn get_assertion(
     credential_id: &[u8],
     pin: Option<&str>,
 ) -> Result<get_assertion_params::Assertion, String> {
-    let asss = get_assertion::get_assertion(hid_params, rpid, challenge, credential_id, pin, true, None)?;
+    let asss =
+        get_assertion::get_assertion(hid_params, rpid, challenge, credential_id, pin, true, None)?;
     Ok(asss[0].clone())
 }
 
@@ -230,7 +231,7 @@ pub fn get_assertions_rk(
     get_assertion::get_assertion(hid_params, rpid, challenge, &dmy, pin, true, None)
 }
 
-pub fn enable_ctap_2_1(hid_params: &[HidParam]) -> Result<bool,String>{
+pub fn enable_ctap_2_1(hid_params: &[HidParam]) -> Result<bool, String> {
     let info = get_info::get_info(hid_params)?;
     let find = info.versions.iter().find(|v| v.contains("FIDO_2_1"));
     match find {
@@ -239,7 +240,7 @@ pub fn enable_ctap_2_1(hid_params: &[HidParam]) -> Result<bool,String>{
     }
 }
 
-pub fn enable_ctap_2_1_pre(hid_params: &[HidParam]) -> Result<bool,String>{
+pub fn enable_ctap_2_1_pre(hid_params: &[HidParam]) -> Result<bool, String> {
     let info = get_info::get_info(hid_params)?;
     let find = info.versions.iter().find(|v| v.contains("FIDO_2_1_PRE"));
     match find {
@@ -254,7 +255,7 @@ pub fn bio_enrollment_get_fingerprint_sensor_info(
     pin: Option<&str>,
 ) -> Result<(), String> {
     // 6.7.2. Get bio modality
-    bio_enrollment::bio_enrollment(hid_params,pin,None)?;
+    bio_enrollment::bio_enrollment(hid_params, pin, None)?;
     Ok(())
 }
 
@@ -443,7 +444,7 @@ mod tests {
             let mut params =
                 make_credential_command::Params::new(rpid, challenge.to_vec(), [].to_vec());
             params.option_rk = false; // non rk
-            //params.option_uv = true;
+                                      //params.option_uv = true;
 
             println!(
                 "- client_data_hash({:02})    = {:?}",
@@ -463,7 +464,7 @@ mod tests {
                 util::to_hex_str(&send_payload)
             );
         }
-    
+
         let command = hex::encode(send_payload).to_uppercase();
         assert_eq!(command, check);
     }
@@ -485,5 +486,4 @@ mod tests {
 
         assert_eq!(check, hex::encode(pin_auth).to_uppercase());
     }
-    
 }

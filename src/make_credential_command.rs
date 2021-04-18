@@ -100,10 +100,10 @@ pub fn create_payload(params: Params) -> Vec<u8> {
         options_val.insert(Value::Text("rk".to_string()), Value::Bool(params.option_rk));
         if let Some(v) = params.option_up {
             options_val.insert(Value::Text("up".to_string()), Value::Bool(v));
-        }        
+        }
         if let Some(v) = params.option_uv {
             options_val.insert(Value::Text("uv".to_string()), Value::Bool(v));
-        }        
+        }
         Value::Map(options_val)
     };
 

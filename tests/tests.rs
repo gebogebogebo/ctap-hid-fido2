@@ -65,7 +65,7 @@ fn test_credential_management_get_creds_metadata() {
                 // Skip
                 return;
             }
-        },
+        }
         Err(_) => assert!(false),
     };
 
@@ -87,7 +87,7 @@ fn test_credential_management_enumerate_rps() {
                 // Skip
                 return;
             }
-        },
+        }
         Err(_) => assert!(false),
     };
 

@@ -62,12 +62,13 @@ fn parse_cbor_public_key_credential_user_entity(
     }
 }
 
-fn parse_cbor_member(member: i128, val: &Value, ass: &mut get_assertion_params::Assertion) {
-    //util::cbor_value_print(val);
-
+fn parse_cbor_member(
+    member: i128,
+    val: &Value,
+    ass: &mut get_assertion_params::Assertion,
+) -> Result<(), String> {
     match member {
-        1 => {
-            // 0x01:credential
+        0x01 => {
             if let Value::Map(xs) = val {
                 for (key, val2) in xs {
                     if let Value::Text(s) = key {
@@ -81,40 +82,26 @@ fn parse_cbor_member(member: i128, val: &Value, ass: &mut get_assertion_params::
                 }
             }
         }
-        2 => {
-            // 0x02:AuthData
+        0x02 => {
             if let Value::Bytes(xs) = val {
                 parse_cbor_authdata(xs.to_vec(), ass);
             }
         }
-        3 => {
-            // 0x03:signature
-            ass.signature = util::cbor_value_to_vec_u8(val).unwrap();
-        }
-        4 => {
-            // 0x04:user
-            parse_cbor_public_key_credential_user_entity(val, ass);
-        }
-        5 => {
-            // 0x05:numberOfCredentials
-            ass.number_of_credentials = util::cbor_value_to_num(val).unwrap();
-        }
+        0x03 => ass.signature = util::cbor_value_to_vec_u8(val)?,
+        0x04 => parse_cbor_public_key_credential_user_entity(val, ass),
+        0x05 => ass.number_of_credentials = util::cbor_value_to_num(val)?,
         _ => println!("- anything error"),
     }
+    Ok(())
 }
 
 pub fn parse_cbor(bytes: &[u8]) -> Result<get_assertion_params::Assertion, String> {
     let mut ass = get_assertion_params::Assertion::default();
-
-    let cbor: Value = serde_cbor::from_slice(bytes).unwrap();
-    if let Value::Map(map) = cbor {
-        for (key, val) in &map {
-            if let Value::Integer(member) = key {
-                parse_cbor_member(*member, val, &mut ass);
-            }
+    let maps = util::cbor_bytes_to_map(bytes)?;
+    for (key, val) in &maps {
+        if let Value::Integer(member) = key {
+            parse_cbor_member(*member, val, &mut ass)?;
         }
-        Ok(ass)
-    } else {
-        Err(String::from("parse error!"))
     }
+    Ok(ass)
 }
