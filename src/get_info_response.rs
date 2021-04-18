@@ -1,6 +1,5 @@
-use crate::util;
 use crate::get_info_params;
-use num::NumCast;
+use crate::util;
 use serde_cbor::Value;
 
 pub fn parse_cbor(bytes: &[u8]) -> Result<get_info_params::Info, String> {
@@ -46,7 +45,7 @@ pub fn parse_cbor(bytes: &[u8]) -> Result<get_info_params::Info, String> {
                                             "".to_string()
                                         }
                                     };
-        
+
                                     let setval = {
                                         if let Value::Text(valstr) = val {
                                             valstr.to_string()
@@ -56,7 +55,7 @@ pub fn parse_cbor(bytes: &[u8]) -> Result<get_info_params::Info, String> {
                                             "".to_string()
                                         }
                                     };
-        
+
                                     info.algorithms.push((setkey, setval));
                                 }
                             }

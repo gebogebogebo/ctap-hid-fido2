@@ -16,7 +16,7 @@ pub fn make_credential(
     pin: Option<&str>,
     rk: bool,
     rkparam: Option<&make_credential_params::RkParam>,
-    uv: Option<bool>
+    uv: Option<bool>,
 ) -> Result<make_credential_params::Attestation, String> {
     // init
     let device = FidoKeyHid::new(hid_params)?;
@@ -84,7 +84,6 @@ pub fn make_credential(
             util::to_hex_str(&response_cbor)
         );
     }
-
 
     let att = make_credential_response::parse_cbor(&response_cbor)?;
     Ok(att)

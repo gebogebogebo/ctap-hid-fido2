@@ -2,14 +2,19 @@ use crate::credential_management_params;
 use crate::util;
 use serde_cbor::Value;
 
-pub(crate) fn parse_cbor(bytes: &[u8]) -> Result<credential_management_params::CredentialManagementData, String> {
+pub(crate) fn parse_cbor(
+    bytes: &[u8],
+) -> Result<credential_management_params::CredentialManagementData, String> {
     let mut data = credential_management_params::CredentialManagementData::default();
     let maps = util::cbor_bytes_to_map(bytes)?;
     for (key, val) in &maps {
         if let Value::Integer(member) = key {
             match member {
                 0x01 => data.existing_resident_credentials_count = util::cbor_value_to_num(val)?,
-                0x02 => data.max_possible_remaining_resident_credentials_count = util::cbor_value_to_num(val)?,
+                0x02 => {
+                    data.max_possible_remaining_resident_credentials_count =
+                        util::cbor_value_to_num(val)?
+                }
                 0x03 => {
                     data.public_key_credential_rp_entity =
                         credential_management_params::PublicKeyCredentialRpEntity::default()
@@ -32,8 +37,7 @@ pub(crate) fn parse_cbor(bytes: &[u8]) -> Result<credential_management_params::C
                             .get_type(val)
                 }
                 0x08 => {
-                    data.public_key =
-                        credential_management_params::PublicKey::default().get(val)
+                    data.public_key = credential_management_params::PublicKey::default().get(val)
                 }
                 0x09 => data.total_credentials = util::cbor_value_to_num(val)?,
                 0x0A => data.cred_protect = util::cbor_value_to_num(val)?,

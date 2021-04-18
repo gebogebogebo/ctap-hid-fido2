@@ -66,7 +66,13 @@ impl PublicKeyCredentialUserEntity {
 }
 impl fmt::Display for PublicKeyCredentialUserEntity {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "(id : {} , name : {} , display_name : {})", util::to_hex_str(&self.id), self.name, self.display_name)
+        write!(
+            f,
+            "(id : {} , name : {} , display_name : {})",
+            util::to_hex_str(&self.id),
+            self.name,
+            self.display_name
+        )
     }
 }
 
@@ -89,7 +95,12 @@ impl PublicKeyCredentialDescriptor {
 }
 impl fmt::Display for PublicKeyCredentialDescriptor {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "(id : {} , type : {})", util::to_hex_str(&self.id), self.ctype)
+        write!(
+            f,
+            "(id : {} , type : {})",
+            util::to_hex_str(&self.id),
+            self.ctype
+        )
     }
 }
 
@@ -103,15 +114,19 @@ impl PublicKey {
         let mut ret = self.clone();
         let cose_key = cose::CoseKey::decode(cbor).unwrap();
         ret.der = cose_key.convert_to_publickey_der();
-        ret.pem =
-            util::convert_to_publickey_pem(&ret.der);
+        ret.pem = util::convert_to_publickey_pem(&ret.der);
 
         ret
     }
 }
 impl fmt::Display for PublicKey {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "(der : {} , pem : {})", util::to_hex_str(&self.der), self.pem)
+        write!(
+            f,
+            "(der : {} , pem : {})",
+            util::to_hex_str(&self.der),
+            self.pem
+        )
     }
 }
 
@@ -151,7 +166,10 @@ impl Rp {
 impl fmt::Display for Rp {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let tmp1 = format!("- public_key_credential_rp_entity = ");
-        let tmp2 = format!("- rpid_hash({:02})                   = ",self.rpid_hash.len());
+        let tmp2 = format!(
+            "- rpid_hash({:02})                   = ",
+            self.rpid_hash.len()
+        );
         write!(
             f,
             "{}{}\n{}{}",

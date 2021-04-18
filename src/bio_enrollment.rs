@@ -1,5 +1,5 @@
-use crate::client_pin;
 use crate::bio_enrollment_command;
+use crate::client_pin;
 //use crate::credential_management_params;
 use crate::bio_enrollment_response;
 use crate::ctaphid;
@@ -14,7 +14,6 @@ pub fn bio_enrollment(
     pin: Option<&str>,
     sub_command: Option<bio_enrollment_command::SubCommand>,
 ) -> Result<String, String> {
-
     // init
     let device = FidoKeyHid::new(hid_params)?;
     let cid = ctaphid::ctaphid_init(&device)?;
@@ -27,19 +26,16 @@ pub fn bio_enrollment(
             None
         }
     };
- 
-    let send_payload = bio_enrollment_command::create_payload(
-        pin_token,
-        sub_command,
-    );
+
+    let send_payload = bio_enrollment_command::create_payload(pin_token, sub_command);
 
     if util::is_debug() == true {
-        println!("send(cbor) = {}",util::to_hex_str(&send_payload));
+        println!("send(cbor) = {}", util::to_hex_str(&send_payload));
     }
 
     let response_cbor = ctaphid::ctaphid_cbor(&device, &cid, &send_payload)?;
     if util::is_debug() == true {
-        println!("response(cbor) = {}",util::to_hex_str(&response_cbor));
+        println!("response(cbor) = {}", util::to_hex_str(&response_cbor));
     }
 
     bio_enrollment_response::parse_cbor(&response_cbor)?;
