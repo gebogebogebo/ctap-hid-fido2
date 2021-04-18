@@ -1,24 +1,10 @@
 use crate::credential_management_params;
 use crate::util;
 use serde_cbor::Value;
-use std::collections::BTreeMap;
-
-fn parse_cobr_bytes_to_map(bytes: &[u8]) -> Result<BTreeMap<Value,Value>,String>{
-    match serde_cbor::from_slice(bytes){
-        Ok(cbor) =>{
-            if let Value::Map(n) = cbor {
-                Ok(n)
-            }else{
-                Err("parse error 2".to_string())
-            }
-        }
-        Err(_) => Err("parse error 1".to_string()),
-    }
-}
 
 pub(crate) fn parse_cbor(bytes: &[u8]) -> Result<credential_management_params::CredentialManagementData, String> {
     let mut data = credential_management_params::CredentialManagementData::default();
-    let maps = parse_cobr_bytes_to_map(bytes)?;
+    let maps = util::cbor_bytes_to_map(bytes)?;
     for (key, val) in &maps {
         if let Value::Integer(member) = key {
             match member {

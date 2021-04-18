@@ -5,25 +5,17 @@ use crate::util;
 
 pub(crate) fn parse_cbor(bytes: &[u8]) -> Result<(), String> {
     //let mut data = credential_management_params::CredentialManagementData::default();
-    if bytes.len() == 0 {
-        return Ok(());
-    }
-
-    let cbor = serde_cbor::from_slice(bytes).unwrap_or_else(|_|Err("parse error!".to_string()))?;
-    if let Value::Map(n) = cbor {
-        for (key, val) in n {
-            if let Value::Integer(member) = key {
-                match member {
-                    0x01 => {
-                    }
-                    0x02 => {
-                    }
-                    _ => println!("parse_cbor_member - unknown info {:?}", member),
+    let maps = util::cbor_bytes_to_map(bytes)?;
+    for (key, val) in &maps {
+        if let Value::Integer(member) = key {
+            match member {
+                0x01 => {
                 }
+                0x02 => {
+                }
+                _ => println!("parse_cbor_member - unknown info {:?}", member),
             }
         }
-        Ok(())
-    } else {
-        Err("parse error!".to_string())
     }
+    Ok(())
 }
