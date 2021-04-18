@@ -13,7 +13,7 @@ fn main() {
     let challenge = verifier::create_challenge();
 
     let mut rkparam = make_credential_params::RkParam::default();
-    rkparam.user_id = b"22222".to_vec();
+    rkparam.user_id = b"11111".to_vec();
     rkparam.user_name = "gebo".to_string();
     rkparam.user_display_name = "GEBO GEBO".to_string();
 
@@ -80,11 +80,7 @@ fn main() {
     println!("- Assertion Num = {:?}",asss.len());
     for ass in asss {
         ass.print("Assertion");
-        println!(
-            "- user_id({:02})       = {:?}",
-            ass.user_id.len(),
-            util::to_hex_str(&ass.user_id)
-        );
+        println!("- user = {}",ass.user);
     }
 
     println!("----- test-with-pin-rk end -----");

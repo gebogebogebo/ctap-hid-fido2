@@ -29,7 +29,7 @@ pub fn print_typename<T>(_: T) {
 // for debug
 #[allow(dead_code)]
 pub(crate) fn is_debug() -> bool {
-    true
+    false
 }
 
 // for cbor
@@ -44,8 +44,10 @@ pub(crate) fn cbor_get_string_from_map(cbor_map: &Value, get_key: &str) -> Resul
                 }
             }
         }
+        Ok("".to_string())
+    }else{
+        Err("Cast Error : Value is not a Map.".to_string())
     }
-    Err("Cast Error : Value is not a Map.".to_string())
 }
 
 pub(crate) fn cbor_get_bytes_from_map(cbor_map: &Value, get_key: &str) -> Result<Vec<u8>, String> {

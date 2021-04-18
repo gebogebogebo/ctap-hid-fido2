@@ -3,6 +3,7 @@ get_assertion API parameters
 */
 
 use crate::util;
+use crate::credential_management_params;
 
 /// Assertion Object
 #[derive(Debug, Default, Clone)]
@@ -20,9 +21,7 @@ pub struct Assertion {
 
     pub signature: Vec<u8>,
 
-    pub user_id: Vec<u8>,
-    pub user_name: String,
-    pub user_display_name: String,
+    pub user: credential_management_params::PublicKeyCredentialUserEntity,
 
     pub credential_id: Vec<u8>,
 
@@ -71,19 +70,7 @@ impl Assertion {
             self.signature.len(),
             util::to_hex_str(&self.signature)
         );
-        println!(
-            "- user_id({:02})                             = {:?}",
-            self.user_id.len(),
-            util::to_hex_str(&self.user_id)
-        );
-        println!(
-            "- user_name                               = {:?}",
-            self.user_name
-        );
-        println!(
-            "- user_display_name                       = {:?}",
-            self.user_display_name
-        );
+        println!("- user = {}",self.user);
         println!(
             "- credential_id({:02})                       = {:?}",
             self.credential_id.len(),
