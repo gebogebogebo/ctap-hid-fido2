@@ -73,7 +73,8 @@ fn main() {
         }
     };
     println!("- Authenticate Success!!");
-    ass.print("Assertion");
+    println!("Assertion");
+    println!("{}", ass);
 
     println!("Verify");
     let is_success = verifier::verify_assertion(
