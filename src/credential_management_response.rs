@@ -1,7 +1,7 @@
 use crate::credential_management_params;
 use crate::util;
 use serde_cbor::Value;
-use crate::get_assertion_params;
+use crate::public_key_credential_user_entity::PublicKeyCredentialUserEntity;
 
 pub(crate) fn parse_cbor(
     bytes: &[u8],
@@ -26,7 +26,7 @@ pub(crate) fn parse_cbor(
                 0x05 => data.total_rps = util::cbor_value_to_num(val)?,
                 0x06 => {
                     data.public_key_credential_user_entity =
-                    get_assertion_params::PublicKeyCredentialUserEntity::default()
+                    PublicKeyCredentialUserEntity::default()
                             .get_id(val)
                             .get_name(val)
                             .get_display_name(val)

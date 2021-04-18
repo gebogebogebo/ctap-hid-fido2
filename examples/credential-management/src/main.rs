@@ -1,12 +1,15 @@
 use ctap_hid_fido2;
+use ctap_hid_fido2::credential_management_params::PublicKeyCredentialDescriptor;
+use ctap_hid_fido2::public_key_credential_user_entity::PublicKeyCredentialUserEntity;
 use ctap_hid_fido2::util;
+use ctap_hid_fido2::HidParam;
 extern crate clap;
 use clap::{App, Arg};
 
 fn metadata(pin: Option<&str>) {
     println!("# credential_management_get_creds_metadata()");
     match ctap_hid_fido2::credential_management_get_creds_metadata(
-        &ctap_hid_fido2::HidParam::get_default_params(),
+        &HidParam::get_default_params(),
         pin,
     ) {
         Ok(result) => {
@@ -22,14 +25,12 @@ fn metadata(pin: Option<&str>) {
 
 fn rps(pin: Option<&str>) {
     println!("# credential_management_enumerate_rps()");
-    match ctap_hid_fido2::credential_management_enumerate_rps(
-        &ctap_hid_fido2::HidParam::get_default_params(),
-        pin,
-    ) {
+    match ctap_hid_fido2::credential_management_enumerate_rps(&HidParam::get_default_params(), pin)
+    {
         Ok(results) => {
             for data in results {
                 println!("## rps");
-                println!("{}",data);
+                println!("{}", data);
             }
         }
         Err(error) => {
@@ -40,7 +41,7 @@ fn rps(pin: Option<&str>) {
     println!("");
 }
 
-fn credentials(pin: Option<&str>,rpid_hash: Option<&str>) {
+fn credentials(pin: Option<&str>, rpid_hash: Option<&str>) {
     println!("# credential_management_enumerate_credentials()");
     println!("- value for rpid_hash: {:?}", rpid_hash);
     println!("");
@@ -48,14 +49,14 @@ fn credentials(pin: Option<&str>,rpid_hash: Option<&str>) {
     let rpid_hash_bytes: Vec<u8> = util::to_str_hex(rpid_hash.unwrap().to_string());
 
     match ctap_hid_fido2::credential_management_enumerate_credentials(
-        &ctap_hid_fido2::HidParam::get_default_params(),
+        &HidParam::get_default_params(),
         pin,
         rpid_hash_bytes,
     ) {
         Ok(results) => {
             for data in results {
                 println!("## credentials");
-                println!("{}",data);
+                println!("{}", data);
             }
         }
         Err(error) => {
@@ -66,20 +67,17 @@ fn credentials(pin: Option<&str>,rpid_hash: Option<&str>) {
     println!("");
 }
 
-fn delete(pin: Option<&str>,credential_id: Option<&str>) {
+fn delete(pin: Option<&str>, credential_id: Option<&str>) {
     println!("# credential_management_delete_credential()");
     println!("- value for credential_id: {:?}", credential_id);
     println!("");
 
-    let mut pkcd =
-        ctap_hid_fido2::credential_management_params::PublicKeyCredentialDescriptor::default();
-    pkcd.id = util::to_str_hex(
-        credential_id.unwrap().to_string()
-    );
+    let mut pkcd = PublicKeyCredentialDescriptor::default();
+    pkcd.id = util::to_str_hex(credential_id.unwrap().to_string());
     pkcd.ctype = "public_key".to_string();
 
     match ctap_hid_fido2::credential_management_delete_credential(
-        &ctap_hid_fido2::HidParam::get_default_params(),
+        &HidParam::get_default_params(),
         pin,
         Some(pkcd),
     ) {
@@ -93,26 +91,22 @@ fn delete(pin: Option<&str>,credential_id: Option<&str>) {
     println!("");
 }
 
-fn update(pin: Option<&str>,credential_id: Option<&str>) {
+fn update(pin: Option<&str>, credential_id: Option<&str>) {
     println!("# credential_management_update_user_information()");
     println!("- value for credential_id: {:?}", credential_id);
     println!("");
 
-    let mut pkcd =
-        ctap_hid_fido2::credential_management_params::PublicKeyCredentialDescriptor::default();
-    pkcd.id = util::to_str_hex(
-        credential_id.unwrap().to_string()
-    );
+    let mut pkcd = PublicKeyCredentialDescriptor::default();
+    pkcd.id = util::to_str_hex(credential_id.unwrap().to_string());
     pkcd.ctype = "public_key".to_string();
 
-    let mut pkcue =
-        ctap_hid_fido2::get_assertion_params::PublicKeyCredentialUserEntity::default();
+    let mut pkcue = PublicKeyCredentialUserEntity::default();
     pkcue.id = util::to_str_hex("7974657374".to_string());
     pkcue.name = "test-name".to_string();
     pkcue.display_name = "test-display".to_string();
 
     match ctap_hid_fido2::credential_management_update_user_information(
-        &ctap_hid_fido2::HidParam::get_default_params(),
+        &HidParam::get_default_params(),
         pin,
         Some(pkcd),
         Some(pkcue),
@@ -132,48 +126,55 @@ fn main() {
         .version("0.1.0")
         .author("gebo")
         .about("CTAP 2.1 credential-management command test app")
-        .arg(Arg::with_name("pin")
-            .help("pin")
-            .short("p")
-            .long("pin")
-            .takes_value(true)
-            .default_value("1234")
+        .arg(
+            Arg::with_name("pin")
+                .help("pin")
+                .short("p")
+                .long("pin")
+                .takes_value(true)
+                .default_value("1234"),
         )
-        .arg(Arg::with_name("metadata")
-            .help("credential_management_get_creds_metadata")
-            .short("m")
-            .long("metadata")
+        .arg(
+            Arg::with_name("metadata")
+                .help("credential_management_get_creds_metadata")
+                .short("m")
+                .long("metadata"),
         )
-        .arg(Arg::with_name("rps")
-            .help("credential_management_enumerate_rps")
-            .short("r")
-            .long("rps")
+        .arg(
+            Arg::with_name("rps")
+                .help("credential_management_enumerate_rps")
+                .short("r")
+                .long("rps"),
         )
-        .arg(Arg::with_name("credentials")
-            .help("credential_management_enumerate_credentials")
-            .short("c")
-            .long("credentials")
-            .takes_value(true)
-            .value_name("rpid_hash")
+        .arg(
+            Arg::with_name("credentials")
+                .help("credential_management_enumerate_credentials")
+                .short("c")
+                .long("credentials")
+                .takes_value(true)
+                .value_name("rpid_hash"),
         )
-        .arg(Arg::with_name("delete")
-            .help("credential_management_delete_credential")
-            .short("d")
-            .long("delete")
-            .takes_value(true)
-            .value_name("public_key_credential_descriptor.id(credential-id)")
+        .arg(
+            Arg::with_name("delete")
+                .help("credential_management_delete_credential")
+                .short("d")
+                .long("delete")
+                .takes_value(true)
+                .value_name("public_key_credential_descriptor.id(credential-id)"),
         )
-        .arg(Arg::with_name("update")
-            .help("credential_management_update_user_information")
-            .short("u")
-            .long("update")
-            .takes_value(true)
-            .value_name("public_key_credential_descriptor.id(credential-id)")
+        .arg(
+            Arg::with_name("update")
+                .help("credential_management_update_user_information")
+                .short("u")
+                .long("update")
+                .takes_value(true)
+                .value_name("public_key_credential_descriptor.id(credential-id)"),
         )
-        .arg(Arg::with_name("info")
-            .help("authenticatorGetInfo")
-            .short("i")
-            .long("info")
+        .arg(
+            Arg::with_name("info")
+                .help("authenticatorGetInfo")
+                .short("i")
+                .long("info"),
         );
 
     // Parse arguments
@@ -182,18 +183,18 @@ fn main() {
     // Start
     ctap_hid_fido2::hello();
 
-    match ctap_hid_fido2::enable_ctap_2_1(&ctap_hid_fido2::HidParam::get_default_params()) {
-        Ok(result) => println!("Enable CTAP 2.1 = {:?}",result),
+    match ctap_hid_fido2::enable_ctap_2_1(&HidParam::get_default_params()) {
+        Ok(result) => println!("Enable CTAP 2.1 = {:?}", result),
         Err(error) => println!("- error: {:?}", error),
     };
-    match ctap_hid_fido2::enable_ctap_2_1_pre(&ctap_hid_fido2::HidParam::get_default_params()) {
-        Ok(result) => println!("Enable CTAP 2.1 PRE = {:?}",result),
+    match ctap_hid_fido2::enable_ctap_2_1_pre(&HidParam::get_default_params()) {
+        Ok(result) => println!("Enable CTAP 2.1 PRE = {:?}", result),
         Err(error) => println!("- error: {:?}", error),
     };
 
-    if matches.is_present("info"){
+    if matches.is_present("info") {
         println!("get_info()");
-        match ctap_hid_fido2::get_info(&ctap_hid_fido2::HidParam::get_default_params()) {
+        match ctap_hid_fido2::get_info(&HidParam::get_default_params()) {
             Ok(info) => println!("{}", info),
             Err(error) => println!("error: {:?}", error),
         };
@@ -204,27 +205,27 @@ fn main() {
 
     println!("----- credential-management start -----");
 
-    if matches.is_present("metadata"){
+    if matches.is_present("metadata") {
         metadata(Some(pin));
     }
 
-    if matches.is_present("rps"){
+    if matches.is_present("rps") {
         rps(Some(pin));
     }
 
-    if matches.is_present("credentials"){
-        let rpid_hash = matches.value_of("credentials");    
-        credentials(Some(pin),rpid_hash);
+    if matches.is_present("credentials") {
+        let rpid_hash = matches.value_of("credentials");
+        credentials(Some(pin), rpid_hash);
     }
 
-    if matches.is_present("delete"){
-        let credential_id = matches.value_of("delete");    
-        delete(Some(pin),credential_id);
+    if matches.is_present("delete") {
+        let credential_id = matches.value_of("delete");
+        delete(Some(pin), credential_id);
     }
 
-    if matches.is_present("update"){
-        let credential_id = matches.value_of("update");    
-        update(Some(pin),credential_id);
+    if matches.is_present("update") {
+        let credential_id = matches.value_of("update");
+        update(Some(pin), credential_id);
     }
 
     println!("----- credential-management end -----");

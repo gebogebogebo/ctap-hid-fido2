@@ -41,6 +41,7 @@ mod selection_command;
 mod ss;
 pub mod util;
 pub mod verifier;
+pub mod public_key_credential_user_entity;
 
 #[cfg(not(target_os = "linux"))]
 mod fidokey;
@@ -363,7 +364,7 @@ pub fn credential_management_update_user_information(
     hid_params: &[HidParam],
     pin: Option<&str>,
     pkcd: Option<credential_management_params::PublicKeyCredentialDescriptor>,
-    pkcue: Option<get_assertion_params::PublicKeyCredentialUserEntity>,
+    pkcue: Option<public_key_credential_user_entity::PublicKeyCredentialUserEntity>,
 ) -> Result<(), String> {
     credential_management::credential_management(
         hid_params,
