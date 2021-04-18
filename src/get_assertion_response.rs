@@ -3,6 +3,7 @@ use crate::util;
 use byteorder::{BigEndian, ReadBytesExt};
 use serde_cbor::Value;
 use std::io::Cursor;
+use crate::credential_management_params;
 
 fn parse_cbor_authdata(authdata: Vec<u8>, ass: &mut get_assertion_params::Assertion) {
     // copy
@@ -39,27 +40,15 @@ fn parse_cbor_public_key_credential_user_entity(
     obj: &Value,
     ass: &mut get_assertion_params::Assertion,
 ) {
-    if let Value::Map(xs) = obj {
-        for (key, val) in xs {
-            if let Value::Text(s) = key {
-                let ss = s.as_str();
-                match ss {
-                    "id" => ass.user_id = util::cbor_value_to_vec_u8(val).unwrap(),
-                    "name" => {
-                        if let Value::Text(s) = val {
-                            ass.user_name = s.to_string();
-                        }
-                    }
-                    "displayName" => {
-                        if let Value::Text(s) = val {
-                            ass.user_display_name = s.to_string();
-                        }
-                    }
-                    _ => {}
-                }
-            }
-        }
-    }
+    ass.user = 
+    credential_management_params::PublicKeyCredentialUserEntity::default()
+    .get_id(obj)
+    .get_name(obj)
+    .get_display_name(obj);
+
+    //ass.user_id = util::cbor_get_bytes_from_map(obj,"id").unwrap();
+    //ass.user_name = util::cbor_get_string_from_map(obj,"name").unwrap();
+    //ass.user_display_name = util::cbor_get_string_from_map(obj,"displayName").unwrap();
 }
 
 fn parse_cbor_member(
@@ -68,20 +57,7 @@ fn parse_cbor_member(
     ass: &mut get_assertion_params::Assertion,
 ) -> Result<(), String> {
     match member {
-        0x01 => {
-            if let Value::Map(xs) = val {
-                for (key, val2) in xs {
-                    if let Value::Text(s) = key {
-                        let ss = s.as_str();
-                        match ss {
-                            "id" => ass.credential_id = util::cbor_value_to_vec_u8(val2).unwrap(),
-                            "type" => {}
-                            _ => {}
-                        }
-                    }
-                }
-            }
-        }
+        0x01 => ass.credential_id = util::cbor_get_bytes_from_map(val,"id")?,
         0x02 => {
             if let Value::Bytes(xs) = val {
                 parse_cbor_authdata(xs.to_vec(), ass);
