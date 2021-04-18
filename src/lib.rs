@@ -363,7 +363,7 @@ pub fn credential_management_update_user_information(
     hid_params: &[HidParam],
     pin: Option<&str>,
     pkcd: Option<credential_management_params::PublicKeyCredentialDescriptor>,
-    pkcue: Option<credential_management_params::PublicKeyCredentialUserEntity>,
+    pkcue: Option<get_assertion_params::PublicKeyCredentialUserEntity>,
 ) -> Result<(), String> {
     credential_management::credential_management(
         hid_params,
