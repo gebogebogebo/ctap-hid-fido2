@@ -106,7 +106,7 @@ fn update(pin: Option<&str>,credential_id: Option<&str>) {
     pkcd.ctype = "public_key".to_string();
 
     let mut pkcue =
-        ctap_hid_fido2::credential_management_params::PublicKeyCredentialUserEntity::default();
+        ctap_hid_fido2::get_assertion_params::PublicKeyCredentialUserEntity::default();
     pkcue.id = util::to_str_hex("7974657374".to_string());
     pkcue.name = "test-name".to_string();
     pkcue.display_name = "test-display".to_string();
