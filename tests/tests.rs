@@ -52,7 +52,8 @@ fn test_make_credential_with_pin_non_rk() {
     att.print("Attestation");
 
     let ass = get_assertion(&params, rpid, &challenge, &att.credential_id, Some(pin)).unwrap();
-    ass.print("Assertion");
+    println!("Assertion");
+    println!("{}",ass);
 
     assert!(true);
 }
