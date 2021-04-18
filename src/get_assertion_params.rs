@@ -2,8 +2,8 @@
 get_assertion API parameters
 */
 
-use crate::util;
 use crate::public_key_credential_user_entity::PublicKeyCredentialUserEntity;
+use crate::util;
 
 /// Assertion Object
 #[derive(Debug, Default, Clone)]
@@ -70,7 +70,7 @@ impl Assertion {
             self.signature.len(),
             util::to_hex_str(&self.signature)
         );
-        println!("- user = {}",self.user);
+        println!("- user = {}", self.user);
         println!(
             "- credential_id({:02})                       = {:?}",
             self.credential_id.len(),

@@ -45,7 +45,7 @@ pub(crate) fn cbor_get_string_from_map(cbor_map: &Value, get_key: &str) -> Resul
             }
         }
         Ok("".to_string())
-    }else{
+    } else {
         Err("Cast Error : Value is not a Map.".to_string())
     }
 }

@@ -1,5 +1,5 @@
 use ctap_hid_fido2;
-use ctap_hid_fido2::credential_management_params::PublicKeyCredentialDescriptor;
+use ctap_hid_fido2::public_key_credential_descriptor::PublicKeyCredentialDescriptor;
 use ctap_hid_fido2::public_key_credential_user_entity::PublicKeyCredentialUserEntity;
 use ctap_hid_fido2::util;
 use ctap_hid_fido2::HidParam;

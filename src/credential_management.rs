@@ -3,9 +3,10 @@ use crate::credential_management_command;
 use crate::credential_management_params;
 use crate::credential_management_response;
 use crate::ctaphid;
+use crate::public_key_credential_descriptor::PublicKeyCredentialDescriptor;
+use crate::public_key_credential_user_entity::PublicKeyCredentialUserEntity;
 use crate::FidoKeyHid;
 use crate::HidParam;
-use crate::public_key_credential_user_entity::PublicKeyCredentialUserEntity;
 
 #[allow(unused_imports)]
 use crate::util;
@@ -15,7 +16,7 @@ pub(crate) fn credential_management(
     pin: Option<&str>,
     sub_command: credential_management_command::SubCommand,
     rpid_hash: Option<Vec<u8>>,
-    pkcd: Option<credential_management_params::PublicKeyCredentialDescriptor>,
+    pkcd: Option<PublicKeyCredentialDescriptor>,
     pkcue: Option<PublicKeyCredentialUserEntity>,
 ) -> Result<credential_management_params::CredentialManagementData, String> {
     let device = FidoKeyHid::new(hid_params)?;
