@@ -40,6 +40,7 @@ pub mod verifier;
 mod bio_enrollment;
 mod bio_enrollment_command;
 mod bio_enrollment_response;
+pub mod bio_enrollment_params;
 
 #[cfg(not(target_os = "linux"))]
 mod fidokey;

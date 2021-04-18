@@ -12,7 +12,7 @@ fn parse_cbor_att_stmt(obj: &Value, att: &mut make_credential_params::Attestatio
             if let Value::Text(s) = key {
                 let ss = s.as_str();
                 match ss {
-                    "alg" => att.attstmt_alg = util::cbor_cast_value(val).unwrap(),
+                    "alg" => att.attstmt_alg = util::cbor_value_to_num(val).unwrap(),
                     "sig" => att.attstmt_sig = util::cbor_value_to_vec_u8(val).unwrap(),
                     "x5c" => att.attstmt_x5c = util::cbor_value_to_vec_bytes(val).unwrap(),
                     _ => {}

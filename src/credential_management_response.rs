@@ -8,22 +8,16 @@ pub(crate) fn parse_cbor(bytes: &[u8]) -> Result<credential_management_params::C
     for (key, val) in &maps {
         if let Value::Integer(member) = key {
             match member {
-                0x01 => {
-                    data.existing_resident_credentials_count =
-                        util::cbor_cast_value(val).unwrap()
-                }
-                0x02 => {
-                    data.max_possible_remaining_resident_credentials_count =
-                        util::cbor_cast_value(val).unwrap()
-                }
+                0x01 => data.existing_resident_credentials_count = util::cbor_value_to_num(val)?,
+                0x02 => data.max_possible_remaining_resident_credentials_count = util::cbor_value_to_num(val)?,
                 0x03 => {
                     data.public_key_credential_rp_entity =
                         credential_management_params::PublicKeyCredentialRpEntity::default()
                             .get_id(val)
                             .get_name(val)
                 }
-                0x04 => data.rpid_hash = util::cbor_value_to_vec_u8(val).unwrap(),
-                0x05 => data.total_rps = util::cbor_cast_value(val).unwrap(),
+                0x04 => data.rpid_hash = util::cbor_value_to_vec_u8(val)?,
+                0x05 => data.total_rps = util::cbor_value_to_num(val)?,
                 0x06 => {
                     data.public_key_credential_user_entity =
                         credential_management_params::PublicKeyCredentialUserEntity::default()
@@ -41,10 +35,10 @@ pub(crate) fn parse_cbor(bytes: &[u8]) -> Result<credential_management_params::C
                     data.public_key =
                         credential_management_params::PublicKey::default().get(val)
                 }
-                0x09 => data.total_credentials = util::cbor_cast_value(val).unwrap(),
-                0x0A => data.cred_protect = util::cbor_cast_value(val).unwrap(),
-                0x0B => data.large_blob_key = util::cbor_value_to_vec_u8(val).unwrap(),
-                _ => println!("parse_cbor_member - unknown info {:?}", member),
+                0x09 => data.total_credentials = util::cbor_value_to_num(val)?,
+                0x0A => data.cred_protect = util::cbor_value_to_num(val)?,
+                0x0B => data.large_blob_key = util::cbor_value_to_vec_u8(val)?,
+                _ => println!("parse_cbor_member - unknown member {:?}", member),
             }
         }
     }

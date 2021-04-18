@@ -97,7 +97,7 @@ fn parse_cbor_member(member: i128, val: &Value, ass: &mut get_assertion_params::
         }
         5 => {
             // 0x05:numberOfCredentials
-            ass.number_of_credentials = util::cbor_cast_value(val).unwrap();
+            ass.number_of_credentials = util::cbor_value_to_num(val).unwrap();
         }
         _ => println!("- anything error"),
     }
