@@ -3,6 +3,7 @@ use crate::util;
 use byteorder::{BigEndian, ReadBytesExt};
 use serde_cbor::Value;
 use std::io::Cursor;
+use crate::public_key_credential_user_entity::PublicKeyCredentialUserEntity;
 
 fn parse_cbor_authdata(authdata: Vec<u8>, ass: &mut get_assertion_params::Assertion) {
     // copy
@@ -48,7 +49,7 @@ pub fn parse_cbor(bytes: &[u8]) -> Result<get_assertion_params::Assertion, Strin
                     }
                 }
                 0x03 => ass.signature = util::cbor_value_to_vec_u8(val)?,
-                0x04 => ass.user = get_assertion_params::PublicKeyCredentialUserEntity::default()
+                0x04 => ass.user = PublicKeyCredentialUserEntity::default()
                             .get_id(val)
                             .get_name(val)
                             .get_display_name(val),

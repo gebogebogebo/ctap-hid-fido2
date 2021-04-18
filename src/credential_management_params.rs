@@ -2,7 +2,7 @@ use crate::cose;
 use crate::util;
 use serde_cbor::Value;
 use std::fmt;
-use crate::get_assertion_params;
+use crate::public_key_credential_user_entity::PublicKeyCredentialUserEntity;
 
 #[derive(Debug, Default, Clone)]
 pub(crate) struct CredentialManagementData {
@@ -11,7 +11,7 @@ pub(crate) struct CredentialManagementData {
     pub public_key_credential_rp_entity: PublicKeyCredentialRpEntity,
     pub rpid_hash: Vec<u8>,
     pub total_rps: u32,
-    pub public_key_credential_user_entity: get_assertion_params::PublicKeyCredentialUserEntity,
+    pub public_key_credential_user_entity: PublicKeyCredentialUserEntity,
     pub public_key_credential_descriptor: PublicKeyCredentialDescriptor,
     pub public_key: PublicKey,
     pub total_credentials: u32,
@@ -149,7 +149,7 @@ impl fmt::Display for Rp {
 
 #[derive(Debug, Default, Clone)]
 pub struct Credential {
-    pub public_key_credential_user_entity: get_assertion_params::PublicKeyCredentialUserEntity,
+    pub public_key_credential_user_entity: PublicKeyCredentialUserEntity,
     pub public_key_credential_descriptor: PublicKeyCredentialDescriptor,
     pub public_key: PublicKey,
 }
