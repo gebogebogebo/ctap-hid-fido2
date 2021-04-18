@@ -2,6 +2,7 @@ use crate::cose;
 use crate::util;
 use serde_cbor::Value;
 use std::fmt;
+use crate::get_assertion_params;
 
 #[derive(Debug, Default, Clone)]
 pub(crate) struct CredentialManagementData {
@@ -10,7 +11,7 @@ pub(crate) struct CredentialManagementData {
     pub public_key_credential_rp_entity: PublicKeyCredentialRpEntity,
     pub rpid_hash: Vec<u8>,
     pub total_rps: u32,
-    pub public_key_credential_user_entity: PublicKeyCredentialUserEntity,
+    pub public_key_credential_user_entity: get_assertion_params::PublicKeyCredentialUserEntity,
     pub public_key_credential_descriptor: PublicKeyCredentialDescriptor,
     pub public_key: PublicKey,
     pub total_credentials: u32,
@@ -38,41 +39,6 @@ impl PublicKeyCredentialRpEntity {
 impl fmt::Display for PublicKeyCredentialRpEntity {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "(id : {} , name : {})", self.id, self.name)
-    }
-}
-
-#[derive(Debug, Default, Clone)]
-pub struct PublicKeyCredentialUserEntity {
-    pub id: Vec<u8>,
-    pub name: String,
-    pub display_name: String,
-}
-impl PublicKeyCredentialUserEntity {
-    pub fn get_id(self: &mut PublicKeyCredentialUserEntity, cbor: &Value) -> Self {
-        let mut ret = self.clone();
-        ret.id = util::cbor_get_bytes_from_map(cbor, "id").unwrap_or_default();
-        ret
-    }
-    pub fn get_name(self: &mut PublicKeyCredentialUserEntity, cbor: &Value) -> Self {
-        let mut ret = self.clone();
-        ret.name = util::cbor_get_string_from_map(cbor, "name").unwrap_or_default();
-        ret
-    }
-    pub fn get_display_name(self: &mut PublicKeyCredentialUserEntity, cbor: &Value) -> Self {
-        let mut ret = self.clone();
-        ret.display_name = util::cbor_get_string_from_map(cbor, "displayName").unwrap_or_default();
-        ret
-    }
-}
-impl fmt::Display for PublicKeyCredentialUserEntity {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(
-            f,
-            "(id : {} , name : {} , display_name : {})",
-            util::to_hex_str(&self.id),
-            self.name,
-            self.display_name
-        )
     }
 }
 
@@ -183,7 +149,7 @@ impl fmt::Display for Rp {
 
 #[derive(Debug, Default, Clone)]
 pub struct Credential {
-    pub public_key_credential_user_entity: PublicKeyCredentialUserEntity,
+    pub public_key_credential_user_entity: get_assertion_params::PublicKeyCredentialUserEntity,
     pub public_key_credential_descriptor: PublicKeyCredentialDescriptor,
     pub public_key: PublicKey,
 }

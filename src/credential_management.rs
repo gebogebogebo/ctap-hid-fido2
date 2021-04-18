@@ -5,6 +5,7 @@ use crate::credential_management_response;
 use crate::ctaphid;
 use crate::FidoKeyHid;
 use crate::HidParam;
+use crate::get_assertion_params;
 
 #[allow(unused_imports)]
 use crate::util;
@@ -15,7 +16,7 @@ pub(crate) fn credential_management(
     sub_command: credential_management_command::SubCommand,
     rpid_hash: Option<Vec<u8>>,
     pkcd: Option<credential_management_params::PublicKeyCredentialDescriptor>,
-    pkcue: Option<credential_management_params::PublicKeyCredentialUserEntity>,
+    pkcue: Option<get_assertion_params::PublicKeyCredentialUserEntity>,
 ) -> Result<credential_management_params::CredentialManagementData, String> {
     let device = FidoKeyHid::new(hid_params)?;
     let cid = ctaphid::ctaphid_init(&device)?;

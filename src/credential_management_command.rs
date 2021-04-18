@@ -7,6 +7,7 @@ use crate::pintoken;
 use serde_cbor::to_vec;
 use serde_cbor::Value;
 use std::collections::BTreeMap;
+use crate::get_assertion_params;
 
 #[allow(dead_code)]
 #[derive(Debug, Copy, Clone, PartialEq)]
@@ -59,7 +60,7 @@ pub fn create_payload(
     sub_command: SubCommand,
     rpid_hash: Option<Vec<u8>>,
     pkcd: Option<credential_management_params::PublicKeyCredentialDescriptor>,
-    pkcue: Option<credential_management_params::PublicKeyCredentialUserEntity>,
+    pkcue: Option<get_assertion_params::PublicKeyCredentialUserEntity>,
 ) -> Vec<u8> {
     let mut map = BTreeMap::new();
 
@@ -154,7 +155,7 @@ fn create_public_key_credential_descriptor(
 
 fn create_public_key_credential_descriptor_pend(
     in_param: credential_management_params::PublicKeyCredentialDescriptor,
-    pkcuee: credential_management_params::PublicKeyCredentialUserEntity,
+    pkcuee: get_assertion_params::PublicKeyCredentialUserEntity,
 ) -> Value {
     let mut param = BTreeMap::new();
     {
