@@ -3,7 +3,7 @@ make_credential API parameters
 */
 
 use crate::util;
-
+use crate::public_key::PublicKey;
 
 /// Attestation Object
 /// [https://www.w3.org/TR/webauthn/#sctn-attestation](https://www.w3.org/TR/webauthn/#sctn-attestation)
@@ -18,8 +18,7 @@ pub struct Attestation {
     pub sign_count: u32,
     pub aaguid: Vec<u8>,
     pub credential_id: Vec<u8>,
-    pub credential_publickey_pem: String,
-    pub credential_publickey_der: Vec<u8>,
+    pub credential_publickey: PublicKey,
     pub auth_data: Vec<u8>,
 
     pub attstmt_alg: i32,
@@ -71,12 +70,7 @@ impl Attestation {
             self.credential_id.len(),
             util::to_hex_str(&self.credential_id)
         );
-        println!(
-            "- credential_publickey({:02})                = {:?}",
-            self.credential_publickey_pem.len(),
-            self.credential_publickey_pem
-        );
-
+        println!("- credential_publickey = {}",self.credential_publickey);
         println!(
             "- attstmt_alg                             = {:?}",
             self.attstmt_alg
