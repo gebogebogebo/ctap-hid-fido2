@@ -63,7 +63,7 @@ pub fn verify_attestation(
 
     let mut att_result = AttestationVerifyResult::default();
     att_result.is_success = result;
-    att_result.credential_id = attestation.credential_id.to_vec();
+    att_result.credential_id = attestation.credential_descriptor.id.to_vec();
     att_result.credential_publickey_pem = attestation.credential_publickey.pem.to_string();
     att_result.credential_publickey_der = attestation.credential_publickey.der.to_vec();
     att_result

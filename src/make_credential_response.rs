@@ -95,7 +95,7 @@ fn parse_cbor_authdata(authdata: &[u8], attestation: &mut make_credential_params
 
     // credentialId(credentialIdLength)
     let ret = clo_vec(index, len as usize);
-    attestation.credential_id = ret.0;
+    attestation.credential_descriptor.id = ret.0;
     index = ret.1;
 
     if attestation.flags_attested_credential_data_included {

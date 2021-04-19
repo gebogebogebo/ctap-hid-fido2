@@ -49,9 +49,10 @@ fn test_make_credential_with_pin_non_rk() {
     let params = HidParam::get_default_params();
 
     let att = make_credential(&params, rpid, &challenge, Some(pin)).unwrap();
-    att.print("Attestation");
+    println!("Attestation");
+    println!("{}",att);
 
-    let ass = get_assertion(&params, rpid, &challenge, &att.credential_id, Some(pin)).unwrap();
+    let ass = get_assertion(&params, rpid, &challenge, &att.credential_descriptor.id, Some(pin)).unwrap();
     println!("Assertion");
     println!("{}",ass);
 

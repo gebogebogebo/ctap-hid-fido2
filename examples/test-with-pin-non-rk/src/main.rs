@@ -32,7 +32,8 @@ fn main() {
     };
 
     println!("- Register Success!!");
-    att.print("Attestation");
+    println!("Attestation");
+    println!("{}",att);
 
     println!("Verify");
     let verify_result = verifier::verify_attestation(rpid, &challenge, &att);
