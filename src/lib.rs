@@ -48,6 +48,7 @@ pub mod verifier;
 
 //
 use crate::public_key_credential_descriptor::PublicKeyCredentialDescriptor;
+use crate::public_key_credential_user_entity::PublicKeyCredentialUserEntity;
 
 #[cfg(not(target_os = "linux"))]
 mod fidokey;
@@ -200,7 +201,7 @@ pub fn make_credential_rk(
     rpid: &str,
     challenge: &[u8],
     pin: Option<&str>,
-    rkparam: &make_credential_params::RkParam,
+    rkparam: &PublicKeyCredentialUserEntity,
 ) -> Result<make_credential_params::Attestation, String> {
     make_credential::make_credential(hid_params, rpid, challenge, pin, true, Some(rkparam), None)
 }
