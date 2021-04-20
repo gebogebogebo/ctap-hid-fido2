@@ -16,18 +16,32 @@ fn main() {
     };
 
     //if matches.is_present("info"){
+    /*
     println!("get_info()");
     match ctap_hid_fido2::get_info(&ctap_hid_fido2::HidParam::get_default_params()) {
         Ok(info) => println!("{}", info),
         Err(error) => println!("error: {:?}", error),
     };
+    */
 
     //let pin = matches.value_of("pin").unwrap();
     let pin = "1234";
     println!("Value for pin: {}", pin);
 
-    println!("bio_enroll()");
+    println!("bio_enrollment_get_fingerprint_sensor_info()");
     match ctap_hid_fido2::bio_enrollment_get_fingerprint_sensor_info(
+        &ctap_hid_fido2::HidParam::get_default_params(),
+    ) {
+        Ok(_result) => {
+            //println!("{}", result);
+        }
+        Err(error) => {
+            println!("- bio_enrollment_get_fingerprint_sensor_info error: {:?}", error);
+        }
+    };
+
+    println!("bio_enrollment_enumerate_enrollments()");
+    match ctap_hid_fido2::bio_enrollment_enumerate_enrollments(
         &ctap_hid_fido2::HidParam::get_default_params(),
         Some(pin),
     ) {
@@ -35,7 +49,7 @@ fn main() {
             //println!("{}", result);
         }
         Err(error) => {
-            println!("- creds metadata error: {:?}", error);
+            println!("- bio_enrollment_enumerate_enrollments error: {:?}", error);
         }
     };
 

@@ -26,6 +26,9 @@ pub fn create_payload(
     let mut map = BTreeMap::new();
 
     if let Some(sub_command) = sub_command {
+        // modality (0x01) = fingerprint (0x01)
+        map.insert(Value::Integer(0x01), Value::Integer(0x01 as i128));
+
         // subCommand(0x02)
         let sub_cmd = Value::Integer(sub_command as i128);
         map.insert(Value::Integer(0x02), sub_cmd);
@@ -42,10 +45,11 @@ pub fn create_payload(
 
             map.insert(Value::Integer(0x05), Value::Bytes(pin_uv_auth_param));
         }
+    }else{
+        // getModality (0x06)
+        map.insert(Value::Integer(0x06), Value::Bool(true));
     }
 
-    // getModality (0x06)
-    map.insert(Value::Integer(0x06), Value::Bool(true));
 
     // create cbor
     let cbor = Value::Map(map);
