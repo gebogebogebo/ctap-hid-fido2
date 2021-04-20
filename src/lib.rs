@@ -260,10 +260,27 @@ pub fn enable_ctap_2_1_pre(hid_params: &[HidParam]) -> Result<bool, String> {
 /// BioEnrollment - getFingerprintSensorInfo (CTAP 2.1-PRE)
 pub fn bio_enrollment_get_fingerprint_sensor_info(
     hid_params: &[HidParam],
-    pin: Option<&str>,
 ) -> Result<(), String> {
     // 6.7.2. Get bio modality
-    bio_enrollment::bio_enrollment(hid_params, pin, None)?;
+    let data = bio_enrollment::bio_enrollment(hid_params, None, None)?;
+    println!("{}",data);
+
+    // 6.7.3. Get fingerprint sensor info
+    let data = bio_enrollment::bio_enrollment(hid_params, None, Some(bio_enrollment_command::SubCommand::GetFingerprintSensorInfo))?;
+    println!("{}",data);
+
+    Ok(())
+}
+
+/// BioEnrollment - enumerateEnrollments (CTAP 2.1-PRE)
+pub fn bio_enrollment_enumerate_enrollments(
+    hid_params: &[HidParam],
+    pin: Option<&str>,
+) -> Result<(), String> {
+    // 6.7.6. Enumerate enrollments
+    let data = bio_enrollment::bio_enrollment(hid_params, pin, Some(bio_enrollment_command::SubCommand::EnumerateEnrollments))?;
+    println!("{}",data);
+
     Ok(())
 }
 
