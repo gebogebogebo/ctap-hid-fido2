@@ -33,14 +33,28 @@ pub fn create_payload(
         let sub_cmd = Value::Integer(sub_command as i128);
         map.insert(Value::Integer(0x02), sub_cmd);
 
+        /*
+        // subCommandParams (0x03): Map containing following parameters
+        let mut sub_command_params_cbor = Vec::new();
+        if need_sub_command_param(sub_command) {
+            let value = match sub_command {
+                _ => (None),
+            };
+            if let Some(v) = value {
+                sub_command_params_cbor = to_vec(&v).unwrap();
+            }
+        }
+        */
+
         if let Some(pin_token) = pin_token {
             // pinUvAuthProtocol(0x04)
             let pin_protocol = Value::Integer(1);
             map.insert(Value::Integer(0x04), pin_protocol);
 
-            // pinUvAuthParam(0x05)
-            let message = vec![sub_command as u8];
-            //message.append(&mut sub_command_params_cbor.to_vec());
+            // pinUvAuthParam (0x05)
+            // - authenticate(pinUvAuthToken, fingerprint (0x01) || enumerateEnrollments (0x04)).
+            let mut message = vec![0x01 as u8];
+            message.append(&mut vec![sub_command as u8]);
             let pin_uv_auth_param = pin_token.authenticate_v2(&message, 16);
 
             map.insert(Value::Integer(0x05), Value::Bytes(pin_uv_auth_param));
@@ -58,4 +72,8 @@ pub fn create_payload(
     let mut payload = [ctapdef::AUTHENTICATOR_BIO_ENROLLMENT].to_vec();
     payload.append(&mut to_vec(&cbor).unwrap());
     payload
+}
+
+fn need_sub_command_param(sub_command: SubCommand) -> bool {
+    sub_command == SubCommand::EnrollBegin
 }
