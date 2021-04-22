@@ -37,12 +37,18 @@ pub(crate) fn cbor_get_string_from_map(cbor_map: &Value, get_key: &str) -> Resul
     if let Value::Map(xs) = cbor_map {
         for (key, val) in xs {
             if let Value::Text(s) = key {
-                if s.as_str() == get_key {
-                    if let Value::Text(s) = val {
-                        return Ok(s.to_string());
+                if s == get_key {
+                    if let Value::Text(v) = val {
+                        return Ok(v.to_string());
                     }
                 }
-            }
+            } else if let Value::Integer(s) = key{
+                if s.to_string() == get_key {
+                    if let Value::Text(v) = val {
+                        return Ok(v.to_string());
+                    }
+                }
+            } 
         }
         Ok("".to_string())
     } else {
@@ -54,13 +60,19 @@ pub(crate) fn cbor_get_bytes_from_map(cbor_map: &Value, get_key: &str) -> Result
     if let Value::Map(xs) = cbor_map {
         for (key, val) in xs {
             if let Value::Text(s) = key {
-                if s.as_str() == get_key {
+                if s == get_key {
+                    return cbor_value_to_vec_u8(val);
+                }
+            } else if let Value::Integer(s) = key{
+                if s.to_string() == get_key {
                     return cbor_value_to_vec_u8(val);
                 }
             }
         }
+        Ok(vec![])
+    }else{
+        Err("Cast Error : Value is not a Map.".to_string())
     }
-    Err("Cast Error : Value is not a Map.".to_string())
 }
 
 #[allow(dead_code)]
@@ -78,6 +90,15 @@ pub(crate) fn cbor_value_to_vec_u8(value: &Value) -> Result<Vec<u8>, String> {
         Ok(xs.to_vec())
     } else {
         Err("Cast Error : Value is not a Bytes.".to_string())
+    }
+}
+
+#[allow(dead_code)]
+pub(crate) fn cbor_value_to_str(value: &Value) -> Result<String, String> {
+    if let Value::Text(s) = value {
+        Ok(s.to_string())
+    } else {
+        Err("Cast Error : Value is not a Text.".to_string())
     }
 }
 

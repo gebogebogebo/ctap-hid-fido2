@@ -46,7 +46,7 @@ fn main() {
         Some(pin),
     ) {
         Ok(_result) => {
-            //println!("{}", result);
+            //println!("{:?}", result);
         }
         Err(error) => {
             println!("- bio_enrollment_enumerate_enrollments error: {:?}", error);
