@@ -47,6 +47,7 @@ pub mod util;
 pub mod verifier;
 
 //
+use crate::bio_enrollment_params::{FingerprintKind, Modality};
 use crate::public_key_credential_descriptor::PublicKeyCredentialDescriptor;
 use crate::public_key_credential_user_entity::PublicKeyCredentialUserEntity;
 
@@ -260,16 +261,33 @@ pub fn enable_ctap_2_1_pre(hid_params: &[HidParam]) -> Result<bool, String> {
 /// BioEnrollment - getFingerprintSensorInfo (CTAP 2.1-PRE)
 pub fn bio_enrollment_get_fingerprint_sensor_info(
     hid_params: &[HidParam],
-) -> Result<(), String> {
+) -> Result<(Modality, FingerprintKind), String> {
     // 6.7.2. Get bio modality
     let data = bio_enrollment::bio_enrollment(hid_params, None, None)?;
-    println!("{}",data);
+    if util::is_debug() {
+        println!("{}", data);
+    }
+    let modality = match data.modality{
+        0x01 => Modality::Fingerprint,
+        _ => Modality::Unknown,
+    };
 
     // 6.7.3. Get fingerprint sensor info
-    let data = bio_enrollment::bio_enrollment(hid_params, None, Some(bio_enrollment_command::SubCommand::GetFingerprintSensorInfo))?;
-    println!("{}",data);
+    let data = bio_enrollment::bio_enrollment(
+        hid_params,
+        None,
+        Some(bio_enrollment_command::SubCommand::GetFingerprintSensorInfo),
+    )?;
+    if util::is_debug() {
+        println!("{}", data);
+    }
+    let fptype = match data.fingerprint_kind{
+        0x01 => FingerprintKind::TouchType,
+        0x02 => FingerprintKind::SwipeType,
+        _ => FingerprintKind::Unknown,
+    };
 
-    Ok(())
+    Ok((modality, fptype))
 }
 
 /// BioEnrollment - enumerateEnrollments (CTAP 2.1-PRE)
@@ -278,8 +296,12 @@ pub fn bio_enrollment_enumerate_enrollments(
     pin: Option<&str>,
 ) -> Result<(), String> {
     // 6.7.6. Enumerate enrollments
-    let data = bio_enrollment::bio_enrollment(hid_params, pin, Some(bio_enrollment_command::SubCommand::EnumerateEnrollments))?;
-    println!("{}",data);
+    let data = bio_enrollment::bio_enrollment(
+        hid_params,
+        pin,
+        Some(bio_enrollment_command::SubCommand::EnumerateEnrollments),
+    )?;
+    println!("{}", data);
 
     Ok(())
 }

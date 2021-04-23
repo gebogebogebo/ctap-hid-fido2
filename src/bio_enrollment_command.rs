@@ -59,11 +59,10 @@ pub fn create_payload(
 
             map.insert(Value::Integer(0x05), Value::Bytes(pin_uv_auth_param));
         }
-    }else{
+    } else {
         // getModality (0x06)
         map.insert(Value::Integer(0x06), Value::Bool(true));
     }
-
 
     // create cbor
     let cbor = Value::Map(map);

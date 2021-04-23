@@ -5,7 +5,7 @@ use byteorder::{BigEndian, ReadBytesExt};
 use serde_cbor::Value;
 use std::io::Cursor;
 
-fn parse_cbor_att_stmt(obj: &Value, att: &mut Attestation)->Result<(),String> {
+fn parse_cbor_att_stmt(obj: &Value, att: &mut Attestation) -> Result<(), String> {
     if let Value::Map(xs) = obj {
         for (key, val) in xs {
             if let Value::Text(s) = key {
@@ -22,7 +22,7 @@ fn parse_cbor_att_stmt(obj: &Value, att: &mut Attestation)->Result<(),String> {
     Ok(())
 }
 
-fn parse_cbor_authdata(authdata: &[u8], attestation: &mut Attestation)->Result<(),String> {
+fn parse_cbor_authdata(authdata: &[u8], attestation: &mut Attestation) -> Result<(), String> {
     // copy
     attestation.auth_data = authdata.to_vec();
 

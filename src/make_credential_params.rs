@@ -2,9 +2,9 @@
 make_credential API parameters
 */
 
-use crate::util;
 use crate::public_key::PublicKey;
 use crate::public_key_credential_descriptor::PublicKeyCredentialDescriptor;
+use crate::util;
 use std::fmt;
 
 /// Attestation Object

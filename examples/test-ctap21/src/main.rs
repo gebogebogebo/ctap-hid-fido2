@@ -32,8 +32,8 @@ fn main() {
     match ctap_hid_fido2::bio_enrollment_get_fingerprint_sensor_info(
         &ctap_hid_fido2::HidParam::get_default_params(),
     ) {
-        Ok(_result) => {
-            //println!("{}", result);
+        Ok(result) => {
+            println!("{:?}", result);
         }
         Err(error) => {
             println!("- bio_enrollment_get_fingerprint_sensor_info error: {:?}", error);

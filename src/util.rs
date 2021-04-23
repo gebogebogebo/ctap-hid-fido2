@@ -42,13 +42,13 @@ pub(crate) fn cbor_get_string_from_map(cbor_map: &Value, get_key: &str) -> Resul
                         return Ok(v.to_string());
                     }
                 }
-            } else if let Value::Integer(s) = key{
+            } else if let Value::Integer(s) = key {
                 if s.to_string() == get_key {
                     if let Value::Text(v) = val {
                         return Ok(v.to_string());
                     }
                 }
-            } 
+            }
         }
         Ok("".to_string())
     } else {
@@ -63,14 +63,14 @@ pub(crate) fn cbor_get_bytes_from_map(cbor_map: &Value, get_key: &str) -> Result
                 if s == get_key {
                     return cbor_value_to_vec_u8(val);
                 }
-            } else if let Value::Integer(s) = key{
+            } else if let Value::Integer(s) = key {
                 if s.to_string() == get_key {
                     return cbor_value_to_vec_u8(val);
                 }
             }
         }
         Ok(vec![])
-    }else{
+    } else {
         Err("Cast Error : Value is not a Map.".to_string())
     }
 }
