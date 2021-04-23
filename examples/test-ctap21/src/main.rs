@@ -45,8 +45,10 @@ fn main() {
         &ctap_hid_fido2::HidParam::get_default_params(),
         Some(pin),
     ) {
-        Ok(_result) => {
-            //println!("{:?}", result);
+        Ok(template_infos) => {
+            for i in template_infos.iter(){
+                println!("{}", i);
+            }
         }
         Err(error) => {
             println!("- bio_enrollment_enumerate_enrollments error: {:?}", error);
