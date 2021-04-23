@@ -1,6 +1,21 @@
 use crate::util;
 use std::fmt;
 
+#[allow(dead_code)]
+#[derive(Debug, Copy, Clone, PartialEq)]
+pub enum Modality {
+    Unknown = 0x00,
+    Fingerprint = 0x01,
+}
+
+#[allow(dead_code)]
+#[derive(Debug, Copy, Clone, PartialEq)]
+pub enum FingerprintKind {
+    Unknown = 0,
+    TouchType = 1,
+    SwipeType = 2,
+}
+
 #[derive(Debug, Default, Clone)]
 pub(crate) struct BioEnrollmentData {
     pub modality: u32,
@@ -17,7 +32,8 @@ impl fmt::Display for BioEnrollmentData {
         let tmp1 = format!("- modality = ");
         let tmp2 = format!("- fingerprint_kind = ");
         let tmp3 = format!("- max_capture_samples_required_for_enroll = ");
-        let tmp4 = format!("- template_id({:02})                   = ",
+        let tmp4 = format!(
+            "- template_id({:02})                   = ",
             self.template_id.len()
         );
         let tmp5 = format!("- last_enroll_sample_status = ");
@@ -48,7 +64,8 @@ pub(crate) struct TemplateInfo {
 }
 impl fmt::Display for TemplateInfo {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let tmp1 = format!("- template_id({:02})                   = ",
+        let tmp1 = format!(
+            "- template_id({:02})                   = ",
             self.template_id.len()
         );
         let tmp2 = format!("- template_friendly_name = ");

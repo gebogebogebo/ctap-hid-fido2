@@ -1,7 +1,7 @@
 use crate::bio_enrollment_command;
-use crate::client_pin;
 use crate::bio_enrollment_params::BioEnrollmentData;
 use crate::bio_enrollment_response;
+use crate::client_pin;
 use crate::ctaphid;
 use crate::FidoKeyHid;
 use crate::HidParam;
@@ -29,12 +29,12 @@ pub(crate) fn bio_enrollment(
 
     let send_payload = bio_enrollment_command::create_payload(pin_token, sub_command);
 
-    if util::is_debug() == true {
+    if util::is_debug() {
         println!("send(cbor) = {}", util::to_hex_str(&send_payload));
     }
 
     let response_cbor = ctaphid::ctaphid_cbor(&device, &cid, &send_payload)?;
-    if util::is_debug() == true {
+    if util::is_debug() {
         println!("response(cbor) = {}", util::to_hex_str(&response_cbor));
     }
 
