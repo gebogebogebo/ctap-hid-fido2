@@ -47,7 +47,7 @@ pub mod util;
 pub mod verifier;
 
 //
-use crate::bio_enrollment_params::{FingerprintKind, Modality};
+use crate::bio_enrollment_params::{FingerprintKind, Modality,TemplateInfo};
 use crate::public_key_credential_descriptor::PublicKeyCredentialDescriptor;
 use crate::public_key_credential_user_entity::PublicKeyCredentialUserEntity;
 
@@ -267,7 +267,7 @@ pub fn bio_enrollment_get_fingerprint_sensor_info(
     if util::is_debug() {
         println!("{}", data);
     }
-    let modality = match data.modality{
+    let modality: Modality = match data.modality{
         0x01 => Modality::Fingerprint,
         _ => Modality::Unknown,
     };
@@ -294,16 +294,18 @@ pub fn bio_enrollment_get_fingerprint_sensor_info(
 pub fn bio_enrollment_enumerate_enrollments(
     hid_params: &[HidParam],
     pin: Option<&str>,
-) -> Result<(), String> {
+) -> Result<Vec<TemplateInfo>, String> {
     // 6.7.6. Enumerate enrollments
     let data = bio_enrollment::bio_enrollment(
         hid_params,
         pin,
         Some(bio_enrollment_command::SubCommand::EnumerateEnrollments),
     )?;
-    println!("{}", data);
+    if util::is_debug() {
+        println!("{}", data);
+    }
 
-    Ok(())
+    Ok(data.template_infos)
 }
 
 /// CredentialManagement - getCredsMetadata (CTAP 2.1-PRE)

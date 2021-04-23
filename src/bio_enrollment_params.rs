@@ -4,8 +4,8 @@ use std::fmt;
 #[allow(dead_code)]
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub enum Modality {
-    Unknown = 0x00,
-    Fingerprint = 0x01,
+    Unknown,
+    Fingerprint,
 }
 
 #[allow(dead_code)]
@@ -29,18 +29,24 @@ pub(crate) struct BioEnrollmentData {
 }
 impl fmt::Display for BioEnrollmentData {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let tmp1 = format!("- modality = ");
-        let tmp2 = format!("- fingerprint_kind = ");
+        let tmp1 = format!("- modality                                = ");
+        let tmp2 = format!("- fingerprint_kind                        = ");
         let tmp3 = format!("- max_capture_samples_required_for_enroll = ");
         let tmp4 = format!(
-            "- template_id({:02})                   = ",
+            "- template_id({:02})                         = ",
             self.template_id.len()
         );
-        let tmp5 = format!("- last_enroll_sample_status = ");
-        let tmp6 = format!("- max_template_friendly_name = ");
+        let tmp5 = format!("- last_enroll_sample_status               = ");
+        let tmp6 = format!("- max_template_friendly_name              = ");
+        let tmp7 = format!("- template_infos                          = ");
+        let mut tmp7_val = "".to_string();
+        for i in self.template_infos.iter(){
+            let tmp = format!("{}",i);
+            tmp7_val.push_str(&tmp);
+        }
         write!(
             f,
-            "{}{}\n{}{}\n{}{}\n{}{}\n{}{}\n{}{}",
+            "{}{}\n{}{}\n{}{}\n{}{}\n{}{}\n{}{}\n{}{}",
             tmp1,
             self.modality,
             tmp2,
@@ -53,25 +59,27 @@ impl fmt::Display for BioEnrollmentData {
             self.last_enroll_sample_status,
             tmp6,
             self.max_template_friendly_name,
+            tmp7,
+            tmp7_val,
         )
     }
 }
 
 #[derive(Debug, Default, Clone)]
-pub(crate) struct TemplateInfo {
+pub struct TemplateInfo {
     pub template_id: Vec<u8>,
     pub template_friendly_name: String,
 }
 impl fmt::Display for TemplateInfo {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let tmp1 = format!(
-            "- template_id({:02})                   = ",
+            "({:02}byte)0x",
             self.template_id.len()
         );
-        let tmp2 = format!("- template_friendly_name = ");
+        let tmp2 = format!("");
         write!(
             f,
-            "{}{}\n{}{}",
+            "({}{},{}{})",
             tmp1,
             util::to_hex_str(&self.template_id),
             tmp2,
