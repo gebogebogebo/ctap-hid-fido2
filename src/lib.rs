@@ -263,7 +263,7 @@ pub fn bio_enrollment_get_fingerprint_sensor_info(
     hid_params: &[HidParam],
 ) -> Result<(Modality, FingerprintKind), String> {
     // 6.7.2. Get bio modality
-    let data = bio_enrollment::bio_enrollment(hid_params, None, None)?;
+    let data = bio_enrollment::bio_enrollment(hid_params, None, None, None)?;
     if util::is_debug() {
         println!("{}", data);
     }
@@ -277,6 +277,7 @@ pub fn bio_enrollment_get_fingerprint_sensor_info(
         hid_params,
         None,
         Some(bio_enrollment_command::SubCommand::GetFingerprintSensorInfo),
+        None,
     )?;
     if util::is_debug() {
         println!("{}", data);
@@ -291,15 +292,16 @@ pub fn bio_enrollment_get_fingerprint_sensor_info(
 }
 
 /// BioEnrollment - enumerateEnrollments (CTAP 2.1-PRE)
+/// 6.7.6. Enumerate enrollments
 pub fn bio_enrollment_enumerate_enrollments(
     hid_params: &[HidParam],
     pin: Option<&str>,
 ) -> Result<Vec<TemplateInfo>, String> {
-    // 6.7.6. Enumerate enrollments
     let data = bio_enrollment::bio_enrollment(
         hid_params,
         pin,
         Some(bio_enrollment_command::SubCommand::EnumerateEnrollments),
+        None,
     )?;
     if util::is_debug() {
         println!("{}", data);
@@ -307,6 +309,27 @@ pub fn bio_enrollment_enumerate_enrollments(
 
     Ok(data.template_infos)
 }
+
+/// BioEnrollment - Rename/Set FriendlyName
+/// 6.7.7. Rename/Set FriendlyName
+pub fn bio_enrollment_set_friendly_name(
+    hid_params: &[HidParam],
+    pin: Option<&str>,
+    template_info: TemplateInfo,
+) -> Result<(), String> {
+    let data = bio_enrollment::bio_enrollment(
+        hid_params,
+        pin,
+        Some(bio_enrollment_command::SubCommand::SetFriendlyName),
+        Some(template_info),
+    )?;
+    if util::is_debug() {
+        println!("{}", data);
+    }
+
+    Ok(())
+}
+
 
 /// CredentialManagement - getCredsMetadata (CTAP 2.1-PRE)
 pub fn credential_management_get_creds_metadata(
