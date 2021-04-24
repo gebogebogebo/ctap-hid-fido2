@@ -6,6 +6,7 @@ use crate::pintoken;
 use serde_cbor::to_vec;
 use serde_cbor::Value;
 use std::collections::BTreeMap;
+use crate::bio_enrollment_params::{TemplateInfo};
 
 #[allow(dead_code)]
 #[derive(Debug, Copy, Clone, PartialEq)]
@@ -22,6 +23,7 @@ pub enum SubCommand {
 pub fn create_payload(
     pin_token: Option<pintoken::PinToken>,
     sub_command: Option<SubCommand>,
+    template_info: Option<TemplateInfo>,
 ) -> Vec<u8> {
     let mut map = BTreeMap::new();
 
@@ -33,18 +35,21 @@ pub fn create_payload(
         let sub_cmd = Value::Integer(sub_command as i128);
         map.insert(Value::Integer(0x02), sub_cmd);
 
-        /*
         // subCommandParams (0x03): Map containing following parameters
         let mut sub_command_params_cbor = Vec::new();
         if need_sub_command_param(sub_command) {
+            let v = to_value_template_info(template_info.unwrap());
+            sub_command_params_cbor = to_vec(&v).unwrap();
+
+            /*
             let value = match sub_command {
                 _ => (None),
             };
             if let Some(v) = value {
                 sub_command_params_cbor = to_vec(&v).unwrap();
             }
+            */
         }
-        */
 
         if let Some(pin_token) = pin_token {
             // pinUvAuthProtocol(0x04)
@@ -55,6 +60,7 @@ pub fn create_payload(
             // - authenticate(pinUvAuthToken, fingerprint (0x01) || enumerateEnrollments (0x04)).
             let mut message = vec![0x01 as u8];
             message.append(&mut vec![sub_command as u8]);
+            message.append(&mut sub_command_params_cbor.to_vec());
             let pin_uv_auth_param = pin_token.authenticate_v2(&message, 16);
 
             map.insert(Value::Integer(0x05), Value::Bytes(pin_uv_auth_param));
@@ -74,5 +80,13 @@ pub fn create_payload(
 }
 
 fn need_sub_command_param(sub_command: SubCommand) -> bool {
-    sub_command == SubCommand::EnrollBegin
+    sub_command == SubCommand::EnrollBegin ||
+    sub_command == SubCommand::SetFriendlyName
+}
+
+fn to_value_template_info(in_param: TemplateInfo) -> Value {
+    let mut param = BTreeMap::new();
+    param.insert(Value::Integer(0x01), Value::Bytes(in_param.template_id));
+    param.insert(Value::Integer(0x02), Value::Text(in_param.template_friendly_name.to_string()));
+    Value::Map(param)
 }
