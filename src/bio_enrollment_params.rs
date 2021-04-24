@@ -70,6 +70,15 @@ pub struct TemplateInfo {
     pub template_id: Vec<u8>,
     pub template_friendly_name: String,
 }
+impl TemplateInfo {
+    pub fn new(template_id: Vec<u8>,template_friendly_name: &str) -> TemplateInfo {
+        let mut ret = TemplateInfo::default();
+        ret.template_id = template_id.clone();
+        ret.template_friendly_name = template_friendly_name.to_string();
+        ret
+    }
+}
+
 impl fmt::Display for TemplateInfo {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let tmp1 = format!(

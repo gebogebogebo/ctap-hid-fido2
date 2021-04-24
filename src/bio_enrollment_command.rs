@@ -38,17 +38,18 @@ pub fn create_payload(
         // subCommandParams (0x03): Map containing following parameters
         let mut sub_command_params_cbor = Vec::new();
         if need_sub_command_param(sub_command) {
-            let v = to_value_template_info(template_info.unwrap());
-            sub_command_params_cbor = to_vec(&v).unwrap();
-
-            /*
             let value = match sub_command {
+                SubCommand::SetFriendlyName =>{
+                    let param = to_value_template_info(template_info.unwrap());
+                    map.insert(Value::Integer(0x03), param.clone());
+                    Some(param)
+                }
                 _ => (None),
             };
+
             if let Some(v) = value {
                 sub_command_params_cbor = to_vec(&v).unwrap();
             }
-            */
         }
 
         if let Some(pin_token) = pin_token {
