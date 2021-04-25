@@ -178,6 +178,7 @@ fn main() {
     println!("");
     println!("");
 
+    /*
     println!("bio_enrollment_next");
     match ctap_hid_fido2::bio_enrollment_next(
         &HidParam::get_default_params(),
@@ -195,6 +196,7 @@ fn main() {
     };
     println!("");
     println!("");
+    */
     
     /*
     println!("config()");
