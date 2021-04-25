@@ -263,7 +263,7 @@ pub fn bio_enrollment_get_fingerprint_sensor_info(
     hid_params: &[HidParam],
 ) -> Result<(Modality, FingerprintKind), String> {
     // 6.7.2. Get bio modality
-    let data = bio_enrollment::bio_enrollment(hid_params, None, None, None)?;
+    let data = bio_enrollment::bio_enrollment(hid_params, None, None, None, None)?;
     if util::is_debug() {
         println!("{}", data);
     }
@@ -278,6 +278,7 @@ pub fn bio_enrollment_get_fingerprint_sensor_info(
         None,
         Some(bio_enrollment_command::SubCommand::GetFingerprintSensorInfo),
         None,
+        None,
     )?;
     if util::is_debug() {
         println!("{}", data);
@@ -291,6 +292,48 @@ pub fn bio_enrollment_get_fingerprint_sensor_info(
     Ok((modality, fptype))
 }
 
+/// BioEnrollment - EnrollBegin
+pub fn bio_enrollment_begin(
+    hid_params: &[HidParam],
+    pin: Option<&str>,
+    timeout_milliseconds: Option<u16>,
+) -> Result<(u8,String), String> {
+    let data = bio_enrollment::bio_enrollment(
+        hid_params,
+        pin,
+        Some(bio_enrollment_command::SubCommand::EnrollBegin),
+        None,
+        timeout_milliseconds,
+    )?;
+    if util::is_debug() {
+        println!("{}", data);
+    }
+    let msg = ctapdef::get_ctap_last_enroll_sample_status_message(data.last_enroll_sample_status as u8);
+    Ok((data.last_enroll_sample_status as u8,msg))
+}
+
+/// BioEnrollment - CaptureNext
+pub fn bio_enrollment_next(
+    hid_params: &[HidParam],
+    pin: Option<&str>,
+    template_id: Vec<u8>,
+    timeout_milliseconds: Option<u16>,
+) -> Result<(u8,String), String> {
+    let template_info = TemplateInfo::new(template_id, None);
+    let data = bio_enrollment::bio_enrollment(
+        hid_params,
+        pin,
+        Some(bio_enrollment_command::SubCommand::EnrollCaptureNextSample),
+        Some(template_info),
+        timeout_milliseconds,
+    )?;
+    if util::is_debug() {
+        println!("{}", data);
+    }
+    let msg = ctapdef::get_ctap_last_enroll_sample_status_message(data.last_enroll_sample_status as u8);
+    Ok((data.last_enroll_sample_status as u8,msg))
+}
+
 /// BioEnrollment - enumerateEnrollments (CTAP 2.1-PRE)
 /// 6.7.6. Enumerate enrollments
 pub fn bio_enrollment_enumerate_enrollments(
@@ -301,6 +344,7 @@ pub fn bio_enrollment_enumerate_enrollments(
         hid_params,
         pin,
         Some(bio_enrollment_command::SubCommand::EnumerateEnrollments),
+        None,
         None,
     )?;
     if util::is_debug() {
@@ -322,6 +366,7 @@ pub fn bio_enrollment_set_friendly_name(
         pin,
         Some(bio_enrollment_command::SubCommand::SetFriendlyName),
         Some(template_info),
+        None,
     )?;
     if util::is_debug() {
         println!("{}", data);
@@ -341,6 +386,7 @@ pub fn bio_enrollment_remove(
         pin,
         Some(bio_enrollment_command::SubCommand::RemoveEnrollment),
         Some(template_info),
+        None,
     )?;
     if util::is_debug() {
         println!("{}", data);

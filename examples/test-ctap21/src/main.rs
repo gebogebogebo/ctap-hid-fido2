@@ -162,6 +162,40 @@ fn main() {
         
     }
 
+    println!("bio_enrollment_begin");
+    match ctap_hid_fido2::bio_enrollment_begin(
+        &HidParam::get_default_params(),
+        Some(pin),
+        Some(10000),
+    ) {
+        Ok(result) => {
+            println!("- result: {:?}",result);
+        }
+        Err(error) => {
+            println!("- bio_enrollment_begin error: {:?}", error);
+        }
+    };
+    println!("");
+    println!("");
+
+    println!("bio_enrollment_next");
+    match ctap_hid_fido2::bio_enrollment_next(
+        &HidParam::get_default_params(),
+        Some(pin),
+        vec![0x00,0x01],
+        //None
+        Some(10000),
+    ) {
+        Ok(result) => {
+            println!("- result: {:?}",result);
+        }
+        Err(error) => {
+            println!("- bio_enrollment_next error: {:?}", error);
+        }
+    };
+    println!("");
+    println!("");
+    
     /*
     println!("config()");
     match ctap_hid_fido2::config(&HidParam::get_default_params()) {
