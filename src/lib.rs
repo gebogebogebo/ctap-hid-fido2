@@ -302,12 +302,11 @@ pub fn bio_enrollment_begin(
     timeout_milliseconds: Option<u16>,
 ) -> Result<EnrollStatus, String> {
     let init = bio_enrollment::bio_enrollment_init(hid_params,pin)?;
-    let pin_token = init.2.unwrap();
 
     let data = bio_enrollment::bio_enrollment(
         &init.0,
         &init.1,
-        Some(&pin_token),
+        init.2.as_ref(),
         Some(bio_enrollment_command::SubCommand::EnrollBegin),
         None,
         timeout_milliseconds,
@@ -321,7 +320,7 @@ pub fn bio_enrollment_begin(
         template_id : data.template_id.to_vec(),
         device : init.0,
         cid : init.1,
-        pin_token : Some(pin_token),
+        pin_token : init.2,
     };
     Ok(result)
 }
