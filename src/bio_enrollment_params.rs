@@ -106,11 +106,36 @@ impl fmt::Display for TemplateInfo {
     }
 }
 
-pub struct EnrollStatus {
-    pub last_enroll_sample_status: u8,
-    pub message: String,
-    pub template_id: Vec<u8>,
+pub struct EnrollStatus1 {
     pub device: FidoKeyHid,
     pub cid: [u8;4],
     pub pin_token: Option<PinToken>,
+    pub template_id: Vec<u8>,
+}
+
+pub struct EnrollStatus2 {
+    pub status: u8,
+    pub message: String,
+    pub remaining_samples: u32,
+    pub is_finish: bool,
+}
+impl fmt::Display for EnrollStatus2 {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let tmp1 = format!("- status            = ");
+        let tmp2 = format!("- message           = ");
+        let tmp3 = format!("- remaining_samples = ");
+        let tmp4 = format!("- is_finish         = ");
+        write!(
+            f,
+            "{}{}\n{}{}\n{}{}\n{}{}",
+            tmp1,
+            self.status,
+            tmp2,
+            self.message,
+            tmp3,
+            self.remaining_samples,
+            tmp4,
+            self.is_finish,
+        )
+    }
 }

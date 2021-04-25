@@ -6,7 +6,7 @@ use ctap_hid_fido2::util;
 use ctap_hid_fido2::HidParam;
 extern crate clap;
 use clap::{App, Arg, SubCommand};
-use ctap_hid_fido2::bio_enrollment_params::EnrollStatus;
+use ctap_hid_fido2::bio_enrollment_params::EnrollStatus1;
 
 fn main() {
     let app = App::new("test-ctap21")
@@ -40,6 +40,12 @@ fn main() {
                     .help("Enumerate enrollments")
                     .short("e")
                     .long("enumerate"),
+            )
+            .arg(
+                Arg::with_name("enroll")
+                    .help("Enrolling fingerprint")
+                    .short("n")
+                    .long("enroll"),
             )
             .arg(
                 Arg::with_name("rename")
@@ -124,7 +130,8 @@ fn main() {
             println!("");
             println!("");
         }
- 
+
+        // PEND renameのオプション
         if matches.is_present("rename"){
             println!("Rename/Set FriendlyName");
             match ctap_hid_fido2::bio_enrollment_set_friendly_name(
@@ -143,6 +150,7 @@ fn main() {
             println!("");
         }
 
+        // PEND deleteのオプション
         if matches.is_present("delete"){
             println!("Delete enrollment");
             match ctap_hid_fido2::bio_enrollment_remove(
@@ -160,32 +168,11 @@ fn main() {
             println!("");
             println!("");
         }
-        
+
+        if matches.is_present("enroll"){
+            bio_enrollment(pin);
+        }
     }
-
-    /*
-    println!("bio_enrollment_begin");
-    let enroll_status = match ctap_hid_fido2::bio_enrollment_begin(
-        &HidParam::get_default_params(),
-        Some(pin),
-        Some(10000),
-    ) {
-        Ok(result) => {
-            println!("- Success");
-            result
-        }
-        Err(error) => {
-            println!("- bio_enrollment_begin error: {:?}", error);
-            return;
-        }
-    };
-    println!("");
-    println!("");
-
-    bio_enrollment_next(&enroll_status);
-    bio_enrollment_next(&enroll_status);
-    bio_enrollment_next(&enroll_status);
-    */
 
     /*
     println!("config()");
@@ -202,20 +189,53 @@ fn main() {
     */
 }
 
-fn bio_enrollment_next(enroll_status: &EnrollStatus){
+fn bio_enrollment(pin: &str){
+    println!("bio_enrollment_begin");
+    let enroll_status = match ctap_hid_fido2::bio_enrollment_begin(
+        &HidParam::get_default_params(),
+        Some(pin),
+        Some(10000),
+    ) {
+        Ok(result) => {
+            println!("{}",result.1);
+            result.0
+        }
+        Err(error) => {
+            println!("- bio_enrollment_begin error: {:?}", error);
+            return;
+        }
+    };
+    println!("");
+    println!("");
+
+    bio_enrollment_next(&enroll_status);
+    bio_enrollment_next(&enroll_status);
+    bio_enrollment_next(&enroll_status);
+
+    /*
+    for _counter in 0..10 {
+        bio_enrollment_next(&enroll_status);
+    }
+    */
+
+}
+
+fn bio_enrollment_next(enroll_status: &EnrollStatus1)->Result<bool,String>{
     println!("bio_enrollment_next");
     match ctap_hid_fido2::bio_enrollment_next(
         enroll_status,
         Some(10000),
     ) {
         Ok(result) => {
-            println!("- result: {:?}",result);
+            println!("{}",result);
+            println!("");
+            println!("");
+            return Ok(result.is_finish)
         }
         Err(error) => {
-            println!("- bio_enrollment_next error: {:?}", error);
+            let msg = format!("- bio_enrollment_next error: {:?}", error);
+            println!("{}",msg);
+            return Err(msg)
         }
     };
-    println!("");
-    println!("");
-
 }

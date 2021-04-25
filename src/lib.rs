@@ -47,7 +47,7 @@ pub mod util;
 pub mod verifier;
 
 //
-use crate::bio_enrollment_params::{FingerprintKind, Modality,TemplateInfo,EnrollStatus};
+use crate::bio_enrollment_params::{FingerprintKind, Modality,TemplateInfo,EnrollStatus1,EnrollStatus2};
 use crate::public_key_credential_descriptor::PublicKeyCredentialDescriptor;
 use crate::public_key_credential_user_entity::PublicKeyCredentialUserEntity;
 
@@ -300,7 +300,7 @@ pub fn bio_enrollment_begin(
     hid_params: &[HidParam],
     pin: Option<&str>,
     timeout_milliseconds: Option<u16>,
-) -> Result<EnrollStatus, String> {
+) -> Result<(EnrollStatus1,EnrollStatus2), String> {
     let init = bio_enrollment::bio_enrollment_init(hid_params,pin)?;
 
     let data = bio_enrollment::bio_enrollment(
@@ -314,22 +314,31 @@ pub fn bio_enrollment_begin(
     if util::is_debug() {
         println!("{}", data);
     }
-    let result = EnrollStatus {
-        last_enroll_sample_status : data.last_enroll_sample_status as u8,
-        message : ctapdef::get_ctap_last_enroll_sample_status_message(data.last_enroll_sample_status as u8),
-        template_id : data.template_id.to_vec(),
+    let result1 = EnrollStatus1 {
         device : init.0,
         cid : init.1,
         pin_token : init.2,
+        template_id : data.template_id.to_vec(),
     };
-    Ok(result)
+    let finish = if data.last_enroll_sample_status == 0x00 && data.remaining_samples == 0 {
+        true
+    }else{
+        false
+    };
+    let result2 = EnrollStatus2 {
+        status : data.last_enroll_sample_status as u8,
+        message : ctapdef::get_ctap_last_enroll_sample_status_message(data.last_enroll_sample_status as u8),
+        remaining_samples : data.remaining_samples,
+        is_finish : finish,
+    };
+    Ok((result1,result2))
 }
 
 /// BioEnrollment - CaptureNext
 pub fn bio_enrollment_next(
-    enroll_status: &EnrollStatus,
+    enroll_status: &EnrollStatus1,
     timeout_milliseconds: Option<u16>,
-) -> Result<(u8,String), String> {
+) -> Result<EnrollStatus2, String> {
     let template_info = TemplateInfo::new(enroll_status.template_id.to_vec(), None);
     let data = bio_enrollment::bio_enrollment(
         &enroll_status.device,
@@ -342,8 +351,18 @@ pub fn bio_enrollment_next(
     if util::is_debug() {
         println!("{}", data);
     }
-    let msg = ctapdef::get_ctap_last_enroll_sample_status_message(data.last_enroll_sample_status as u8);
-    Ok((data.last_enroll_sample_status as u8,msg))
+    let finish = if data.last_enroll_sample_status == 0x00 && data.remaining_samples == 0 {
+        true
+    }else{
+        false
+    };
+    let result = EnrollStatus2 {
+        status : data.last_enroll_sample_status as u8,
+        message : ctapdef::get_ctap_last_enroll_sample_status_message(data.last_enroll_sample_status as u8),
+        remaining_samples : data.remaining_samples,
+        is_finish : finish,
+    };
+    Ok(result)
 }
 
 /// BioEnrollment - enumerateEnrollments (CTAP 2.1-PRE)
