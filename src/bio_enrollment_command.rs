@@ -21,7 +21,7 @@ pub enum SubCommand {
 }
 
 pub fn create_payload(
-    pin_token: Option<pintoken::PinToken>,
+    pin_token: Option<&pintoken::PinToken>,
     sub_command: Option<SubCommand>,
     template_info: Option<TemplateInfo>,
     timeout_milliseconds: Option<u16>,

@@ -262,8 +262,10 @@ pub fn enable_ctap_2_1_pre(hid_params: &[HidParam]) -> Result<bool, String> {
 pub fn bio_enrollment_get_fingerprint_sensor_info(
     hid_params: &[HidParam],
 ) -> Result<(Modality, FingerprintKind), String> {
+    let init = bio_enrollment::bio_enrollment_init(hid_params,None)?;
+
     // 6.7.2. Get bio modality
-    let data = bio_enrollment::bio_enrollment(hid_params, None, None, None, None)?;
+    let data = bio_enrollment::bio_enrollment(&init.0,&init.1,None, None, None, None)?;
     if util::is_debug() {
         println!("{}", data);
     }
@@ -274,7 +276,8 @@ pub fn bio_enrollment_get_fingerprint_sensor_info(
 
     // 6.7.3. Get fingerprint sensor info
     let data = bio_enrollment::bio_enrollment(
-        hid_params,
+        &init.0,
+        &init.1,
         None,
         Some(bio_enrollment_command::SubCommand::GetFingerprintSensorInfo),
         None,
@@ -298,9 +301,13 @@ pub fn bio_enrollment_begin(
     pin: Option<&str>,
     timeout_milliseconds: Option<u16>,
 ) -> Result<(u8,String), String> {
+    let init = bio_enrollment::bio_enrollment_init(hid_params,pin)?;
+    let pin_token = init.2.unwrap();
+
     let data = bio_enrollment::bio_enrollment(
-        hid_params,
-        pin,
+        &init.0,
+        &init.1,
+        Some(&pin_token),
         Some(bio_enrollment_command::SubCommand::EnrollBegin),
         None,
         timeout_milliseconds,
@@ -314,15 +321,17 @@ pub fn bio_enrollment_begin(
 
 /// BioEnrollment - CaptureNext
 pub fn bio_enrollment_next(
-    hid_params: &[HidParam],
-    pin: Option<&str>,
+    device: &FidoKeyHid,
+    cid: &[u8;4],
+    pin_token: Option<&pintoken::PinToken>,
     template_id: Vec<u8>,
     timeout_milliseconds: Option<u16>,
 ) -> Result<(u8,String), String> {
     let template_info = TemplateInfo::new(template_id, None);
     let data = bio_enrollment::bio_enrollment(
-        hid_params,
-        pin,
+        device,
+        cid,
+        pin_token,
         Some(bio_enrollment_command::SubCommand::EnrollCaptureNextSample),
         Some(template_info),
         timeout_milliseconds,
@@ -340,9 +349,13 @@ pub fn bio_enrollment_enumerate_enrollments(
     hid_params: &[HidParam],
     pin: Option<&str>,
 ) -> Result<Vec<TemplateInfo>, String> {
+    let init = bio_enrollment::bio_enrollment_init(hid_params,pin)?;
+    let pin_token = init.2.unwrap();
+
     let data = bio_enrollment::bio_enrollment(
-        hid_params,
-        pin,
+        &init.0,
+        &init.1,
+        Some(&pin_token),
         Some(bio_enrollment_command::SubCommand::EnumerateEnrollments),
         None,
         None,
@@ -361,9 +374,13 @@ pub fn bio_enrollment_set_friendly_name(
     pin: Option<&str>,
     template_info: TemplateInfo,
 ) -> Result<(), String> {
+    let init = bio_enrollment::bio_enrollment_init(hid_params,pin)?;
+    let pin_token = init.2.unwrap();
+
     let data = bio_enrollment::bio_enrollment(
-        hid_params,
-        pin,
+        &init.0,
+        &init.1,
+        Some(&pin_token),
         Some(bio_enrollment_command::SubCommand::SetFriendlyName),
         Some(template_info),
         None,
@@ -380,10 +397,14 @@ pub fn bio_enrollment_remove(
     pin: Option<&str>,
     template_id: Vec<u8>,
 ) -> Result<(), String> {
+    let init = bio_enrollment::bio_enrollment_init(hid_params,pin)?;
+    let pin_token = init.2.unwrap();
+
     let template_info = TemplateInfo::new(template_id, None);
     let data = bio_enrollment::bio_enrollment(
-        hid_params,
-        pin,
+        &init.0,
+        &init.1,
+        Some(&pin_token),
         Some(bio_enrollment_command::SubCommand::RemoveEnrollment),
         Some(template_info),
         None,
