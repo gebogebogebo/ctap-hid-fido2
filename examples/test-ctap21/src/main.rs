@@ -6,6 +6,7 @@ use ctap_hid_fido2::util;
 use ctap_hid_fido2::HidParam;
 extern crate clap;
 use clap::{App, Arg, SubCommand};
+use ctap_hid_fido2::bio_enrollment_params::EnrollStatus;
 
 fn main() {
     let app = App::new("test-ctap21")
@@ -162,6 +163,7 @@ fn main() {
         
     }
 
+    /*
     println!("bio_enrollment_begin");
     let enroll_status = match ctap_hid_fido2::bio_enrollment_begin(
         &HidParam::get_default_params(),
@@ -180,20 +182,10 @@ fn main() {
     println!("");
     println!("");
 
-    println!("bio_enrollment_next");
-    match ctap_hid_fido2::bio_enrollment_next(
-        &enroll_status,
-        Some(10000),
-    ) {
-        Ok(result) => {
-            println!("- result: {:?}",result);
-        }
-        Err(error) => {
-            println!("- bio_enrollment_next error: {:?}", error);
-        }
-    };
-    println!("");
-    println!("");
+    bio_enrollment_next(&enroll_status);
+    bio_enrollment_next(&enroll_status);
+    bio_enrollment_next(&enroll_status);
+    */
 
     /*
     println!("config()");
@@ -208,4 +200,22 @@ fn main() {
         Err(error) => println!("- selection error: {:?}", error),
     };
     */
+}
+
+fn bio_enrollment_next(enroll_status: &EnrollStatus){
+    println!("bio_enrollment_next");
+    match ctap_hid_fido2::bio_enrollment_next(
+        enroll_status,
+        Some(10000),
+    ) {
+        Ok(result) => {
+            println!("- result: {:?}",result);
+        }
+        Err(error) => {
+            println!("- bio_enrollment_next error: {:?}", error);
+        }
+    };
+    println!("");
+    println!("");
+
 }
