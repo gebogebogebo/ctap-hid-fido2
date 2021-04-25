@@ -163,28 +163,26 @@ fn main() {
     }
 
     println!("bio_enrollment_begin");
-    match ctap_hid_fido2::bio_enrollment_begin(
+    let enroll_status = match ctap_hid_fido2::bio_enrollment_begin(
         &HidParam::get_default_params(),
         Some(pin),
         Some(10000),
     ) {
         Ok(result) => {
-            println!("- result: {:?}",result);
+            println!("- Success");
+            result
         }
         Err(error) => {
             println!("- bio_enrollment_begin error: {:?}", error);
+            return;
         }
     };
     println!("");
     println!("");
 
-    /*
     println!("bio_enrollment_next");
     match ctap_hid_fido2::bio_enrollment_next(
-        &HidParam::get_default_params(),
-        Some(pin),
-        vec![0x00,0x01],
-        //None
+        &enroll_status,
         Some(10000),
     ) {
         Ok(result) => {
@@ -196,8 +194,7 @@ fn main() {
     };
     println!("");
     println!("");
-    */
-    
+
     /*
     println!("config()");
     match ctap_hid_fido2::config(&HidParam::get_default_params()) {

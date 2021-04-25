@@ -1,5 +1,7 @@
 use crate::util;
 use std::fmt;
+use crate::FidoKeyHid;
+use crate::pintoken::PinToken;
 
 #[allow(dead_code)]
 #[derive(Debug, Copy, Clone, PartialEq)]
@@ -102,4 +104,13 @@ impl fmt::Display for TemplateInfo {
             self.template_friendly_name,
         )
     }
+}
+
+pub struct EnrollStatus {
+    pub last_enroll_sample_status: u8,
+    pub message: String,
+    pub template_id: Vec<u8>,
+    pub device: FidoKeyHid,
+    pub cid: [u8;4],
+    pub pin_token: Option<PinToken>,
 }
