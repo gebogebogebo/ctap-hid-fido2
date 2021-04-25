@@ -39,11 +39,11 @@ pub fn create_payload(
         let mut sub_command_params_cbor = Vec::new();
         if need_sub_command_param(sub_command) {
             let value = match sub_command {
-                SubCommand::SetFriendlyName =>{
+                SubCommand::SetFriendlyName | SubCommand::RemoveEnrollment =>{
                     let param = to_value_template_info(template_info.unwrap());
                     map.insert(Value::Integer(0x03), param.clone());
                     Some(param)
-                }
+                },
                 _ => (None),
             };
 
@@ -82,12 +82,15 @@ pub fn create_payload(
 
 fn need_sub_command_param(sub_command: SubCommand) -> bool {
     sub_command == SubCommand::EnrollBegin ||
-    sub_command == SubCommand::SetFriendlyName
+    sub_command == SubCommand::SetFriendlyName ||
+    sub_command == SubCommand::RemoveEnrollment
 }
 
 fn to_value_template_info(in_param: TemplateInfo) -> Value {
     let mut param = BTreeMap::new();
     param.insert(Value::Integer(0x01), Value::Bytes(in_param.template_id));
-    param.insert(Value::Integer(0x02), Value::Text(in_param.template_friendly_name.to_string()));
+    if let Some(v) = in_param.template_friendly_name{
+        param.insert(Value::Integer(0x02), Value::Text(v.to_string()));
+    }
     Value::Map(param)
 }

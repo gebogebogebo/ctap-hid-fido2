@@ -68,13 +68,17 @@ impl fmt::Display for BioEnrollmentData {
 #[derive(Debug, Default, Clone)]
 pub struct TemplateInfo {
     pub template_id: Vec<u8>,
-    pub template_friendly_name: String,
+    pub template_friendly_name: Option<String>,
 }
 impl TemplateInfo {
-    pub fn new(template_id: Vec<u8>,template_friendly_name: &str) -> TemplateInfo {
+    pub fn new(template_id: Vec<u8>,template_friendly_name: Option<&str>) -> TemplateInfo {
         let mut ret = TemplateInfo::default();
         ret.template_id = template_id.clone();
-        ret.template_friendly_name = template_friendly_name.to_string();
+        if let Some(v) = template_friendly_name {
+            ret.template_friendly_name = Some(v.to_string());
+        }else{
+            ret.template_friendly_name = None;
+        }
         ret
     }
 }
@@ -88,7 +92,7 @@ impl fmt::Display for TemplateInfo {
         let tmp2 = format!("");
         write!(
             f,
-            "({}{},{}{})",
+            "({}{},{}{:?})",
             tmp1,
             util::to_hex_str(&self.template_id),
             tmp2,
