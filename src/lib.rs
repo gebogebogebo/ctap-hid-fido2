@@ -47,7 +47,7 @@ pub mod util;
 pub mod verifier;
 
 //
-use crate::bio_enrollment_params::{FingerprintKind, Modality,TemplateInfo};
+use crate::bio_enrollment_params::{FingerprintKind, Modality,TemplateInfo,EnrollStatus};
 use crate::public_key_credential_descriptor::PublicKeyCredentialDescriptor;
 use crate::public_key_credential_user_entity::PublicKeyCredentialUserEntity;
 
@@ -300,7 +300,7 @@ pub fn bio_enrollment_begin(
     hid_params: &[HidParam],
     pin: Option<&str>,
     timeout_milliseconds: Option<u16>,
-) -> Result<(u8,String), String> {
+) -> Result<EnrollStatus, String> {
     let init = bio_enrollment::bio_enrollment_init(hid_params,pin)?;
     let pin_token = init.2.unwrap();
 
@@ -315,23 +315,27 @@ pub fn bio_enrollment_begin(
     if util::is_debug() {
         println!("{}", data);
     }
-    let msg = ctapdef::get_ctap_last_enroll_sample_status_message(data.last_enroll_sample_status as u8);
-    Ok((data.last_enroll_sample_status as u8,msg))
+    let result = EnrollStatus {
+        last_enroll_sample_status : data.last_enroll_sample_status as u8,
+        message : ctapdef::get_ctap_last_enroll_sample_status_message(data.last_enroll_sample_status as u8),
+        template_id : data.template_id.to_vec(),
+        device : init.0,
+        cid : init.1,
+        pin_token : Some(pin_token),
+    };
+    Ok(result)
 }
 
 /// BioEnrollment - CaptureNext
 pub fn bio_enrollment_next(
-    device: &FidoKeyHid,
-    cid: &[u8;4],
-    pin_token: Option<&pintoken::PinToken>,
-    template_id: Vec<u8>,
+    enroll_status: &EnrollStatus,
     timeout_milliseconds: Option<u16>,
 ) -> Result<(u8,String), String> {
-    let template_info = TemplateInfo::new(template_id, None);
+    let template_info = TemplateInfo::new(enroll_status.template_id.to_vec(), None);
     let data = bio_enrollment::bio_enrollment(
-        device,
-        cid,
-        pin_token,
+        &enroll_status.device,
+        &enroll_status.cid,
+        enroll_status.pin_token.as_ref(),
         Some(bio_enrollment_command::SubCommand::EnrollCaptureNextSample),
         Some(template_info),
         timeout_milliseconds,
