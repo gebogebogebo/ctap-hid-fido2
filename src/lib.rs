@@ -326,10 +326,27 @@ pub fn bio_enrollment_set_friendly_name(
     if util::is_debug() {
         println!("{}", data);
     }
-
     Ok(())
 }
 
+/// 6.7.8. Remove enrollment
+pub fn bio_enrollment_remove(
+    hid_params: &[HidParam],
+    pin: Option<&str>,
+    template_id: Vec<u8>,
+) -> Result<(), String> {
+    let template_info = TemplateInfo::new(template_id, None);
+    let data = bio_enrollment::bio_enrollment(
+        hid_params,
+        pin,
+        Some(bio_enrollment_command::SubCommand::RemoveEnrollment),
+        Some(template_info),
+    )?;
+    if util::is_debug() {
+        println!("{}", data);
+    }
+    Ok(())
+}
 
 /// CredentialManagement - getCredsMetadata (CTAP 2.1-PRE)
 pub fn credential_management_get_creds_metadata(

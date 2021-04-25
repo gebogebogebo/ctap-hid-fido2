@@ -8,3 +8,4 @@ edition = "2018"
 
 [dependencies]
 ctap-hid-fido2 = { path = "../.." }
+clap = "2.33.3"
