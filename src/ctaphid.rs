@@ -1,5 +1,6 @@
 #[allow(unused_imports)]
 use crate::util;
+use crate::ctapdef;
 
 #[cfg(not(target_os = "linux"))]
 use crate::fidokey::*;
@@ -101,9 +102,9 @@ fn is_responce_error(status: (u8, u16, u8)) -> bool {
 
 fn get_status_message(status: (u8, u16, u8)) -> String {
     if status.0 == CTAPHID_MSG {
-        util::get_u2f_status_message(status.2)
+        ctapdef::get_u2f_status_message(status.2)
     } else {
-        util::get_ctap_status_message(status.2)
+        ctapdef::get_ctap_status_message(status.2)
     }
 }
 
@@ -271,7 +272,7 @@ fn ctaphid_cbormsg(
             Err(_error) => {
                 return Err(format!(
                     "read err = {}",
-                    util::get_ctap_status_message(0xfe)
+                    ctapdef::get_ctap_status_message(0xfe)
                 ));
             }
         };
@@ -314,7 +315,7 @@ fn ctaphid_cbormsg(
                     Err(_error) => {
                         return Err(format!(
                             "read err = {}",
-                            util::get_ctap_status_message(0xfe)
+                            ctapdef::get_ctap_status_message(0xfe)
                         ));
                     }
                 };
