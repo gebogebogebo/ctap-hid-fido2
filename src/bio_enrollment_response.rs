@@ -14,6 +14,9 @@ pub(crate) fn parse_cbor(bytes: &[u8]) -> Result<BioEnrollmentData, String> {
                 0x03 => {
                     data.max_capture_samples_required_for_enroll = util::cbor_value_to_num(val)?
                 }
+                0x04 => data.template_id = util::cbor_value_to_vec_u8(val)?,
+                0x05 => data.last_enroll_sample_status = util::cbor_value_to_num(val)?,
+                0x06 => data.remaining_samples = util::cbor_value_to_num(val)?,
                 0x07 => {
                     if let Value::Array(xs) = val {
                         for x in xs {

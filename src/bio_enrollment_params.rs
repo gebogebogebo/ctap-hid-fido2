@@ -37,16 +37,17 @@ impl fmt::Display for BioEnrollmentData {
             self.template_id.len()
         );
         let tmp5 = format!("- last_enroll_sample_status               = ");
-        let tmp6 = format!("- max_template_friendly_name              = ");
-        let tmp7 = format!("- template_infos                          = ");
-        let mut tmp7_val = "".to_string();
+        let tmp6 = format!("- remaining_samples                       = ");
+        let tmp7 = format!("- max_template_friendly_name              = ");
+        let tmp8 = format!("- template_infos                          = ");
+        let mut tmp8_val = "".to_string();
         for i in self.template_infos.iter(){
             let tmp = format!("{}",i);
-            tmp7_val.push_str(&tmp);
+            tmp8_val.push_str(&tmp);
         }
         write!(
             f,
-            "{}{}\n{}{}\n{}{}\n{}{}\n{}{}\n{}{}\n{}{}",
+            "{}{}\n{}{}\n{}{}\n{}{}\n{}{}\n{}{}\n{}{}\n{}{}",
             tmp1,
             self.modality,
             tmp2,
@@ -58,9 +59,11 @@ impl fmt::Display for BioEnrollmentData {
             tmp5,
             self.last_enroll_sample_status,
             tmp6,
-            self.max_template_friendly_name,
+            self.remaining_samples,
             tmp7,
-            tmp7_val,
+            self.max_template_friendly_name,
+            tmp8,
+            tmp8_val,
         )
     }
 }

@@ -14,6 +14,7 @@ pub(crate) fn bio_enrollment(
     pin: Option<&str>,
     sub_command: Option<bio_enrollment_command::SubCommand>,
     template_info: Option<TemplateInfo>,
+    timeout_milliseconds: Option<u16>,
 ) -> Result<BioEnrollmentData, String> {
     // init
     let device = FidoKeyHid::new(hid_params)?;
@@ -28,7 +29,7 @@ pub(crate) fn bio_enrollment(
         }
     };
 
-    let send_payload = bio_enrollment_command::create_payload(pin_token, sub_command, template_info);
+    let send_payload = bio_enrollment_command::create_payload(pin_token, sub_command, template_info, timeout_milliseconds);
 
     if util::is_debug() {
         println!("send(cbor) = {}", util::to_hex_str(&send_payload));
