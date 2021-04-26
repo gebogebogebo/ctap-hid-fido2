@@ -183,8 +183,11 @@ fn main() {
             println!("");
         }
 
-        if matches.is_present("enroll"){
-            bio_enrollment(pin);
+        if matches.is_present("enroll"){            
+            match bio_enrollment(pin){
+                Ok(()) => {},
+                Err(_) => {},
+            }
         }
     }
 
