@@ -203,7 +203,7 @@ fn main() {
     */
 }
 
-fn bio_enrollment(pin: &str){
+fn bio_enrollment(pin: &str)->Result<(),String>{
     println!("bio_enrollment_begin");
     let enroll_status = match ctap_hid_fido2::bio_enrollment_begin(
         &HidParam::get_default_params(),
@@ -215,23 +215,20 @@ fn bio_enrollment(pin: &str){
             result.0
         }
         Err(error) => {
-            println!("- bio_enrollment_begin error: {:?}", error);
-            return;
+            let msg = format!("- bio_enrollment_begin error: {:?}", error);
+            println!("{}",msg);
+            return Err(msg)
         }
     };
     println!("");
     println!("");
 
-    bio_enrollment_next(&enroll_status);
-    bio_enrollment_next(&enroll_status);
-    bio_enrollment_next(&enroll_status);
-
-    /*
     for _counter in 0..10 {
-        bio_enrollment_next(&enroll_status);
+        if bio_enrollment_next(&enroll_status)? {
+            break;
+        }
     }
-    */
-
+    Ok(())
 }
 
 fn bio_enrollment_next(enroll_status: &EnrollStatus1)->Result<bool,String>{

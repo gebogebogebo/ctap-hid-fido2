@@ -365,6 +365,24 @@ pub fn bio_enrollment_next(
     Ok(result)
 }
 
+/// BioEnrollment - Cancel current enrollment
+pub fn bio_enrollment_cancel(
+    enroll_status: &EnrollStatus1,
+) -> Result<(), String> {
+    let data = bio_enrollment::bio_enrollment(
+        &enroll_status.device,
+        &enroll_status.cid,
+        enroll_status.pin_token.as_ref(),
+        Some(bio_enrollment_command::SubCommand::CancelCurrentEnrollment),
+        None,
+        None,
+    )?;
+    if util::is_debug() {
+        println!("{}", data);
+    }
+    Ok(())
+}
+
 /// BioEnrollment - enumerateEnrollments (CTAP 2.1-PRE)
 /// 6.7.6. Enumerate enrollments
 pub fn bio_enrollment_enumerate_enrollments(
