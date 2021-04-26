@@ -4,6 +4,8 @@ use ctap_hid_fido2::bio_enrollment_params::TemplateInfo;
 #[allow(unused_imports)]
 use ctap_hid_fido2::util;
 use ctap_hid_fido2::HidParam;
+use ctap_hid_fido2::InfoParam;
+
 extern crate clap;
 use clap::{App, Arg, SubCommand};
 use ctap_hid_fido2::bio_enrollment_params::EnrollStatus1;
@@ -72,11 +74,7 @@ fn main() {
     // Start
     ctap_hid_fido2::hello();
 
-    match ctap_hid_fido2::enable_ctap_2_1(&HidParam::get_default_params()) {
-        Ok(result) => println!("Enable CTAP 2.1 = {:?}", result),
-        Err(error) => println!("- error: {:?}", error),
-    };
-    match ctap_hid_fido2::enable_ctap_2_1_pre(&HidParam::get_default_params()) {
+    match ctap_hid_fido2::enable_info_param(&HidParam::get_default_params(),InfoParam::VersionsFIDO21PRE) {
         Ok(result) => println!("Enable CTAP 2.1 PRE = {:?}", result),
         Err(error) => println!("- error: {:?}", error),
     };
