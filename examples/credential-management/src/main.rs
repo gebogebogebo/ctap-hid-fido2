@@ -3,6 +3,7 @@ use ctap_hid_fido2::public_key_credential_descriptor::PublicKeyCredentialDescrip
 use ctap_hid_fido2::public_key_credential_user_entity::PublicKeyCredentialUserEntity;
 use ctap_hid_fido2::util;
 use ctap_hid_fido2::HidParam;
+use ctap_hid_fido2::InfoParam;
 extern crate clap;
 use clap::{App, Arg};
 
@@ -46,7 +47,7 @@ fn credentials(pin: Option<&str>, rpid_hash: Option<&str>) {
     println!("- value for rpid_hash: {:?}", rpid_hash);
     println!("");
 
-    let rpid_hash_bytes: Vec<u8> = util::to_str_hex(rpid_hash.unwrap().to_string());
+    let rpid_hash_bytes: Vec<u8> = util::to_str_hex(rpid_hash.unwrap());
 
     match ctap_hid_fido2::credential_management_enumerate_credentials(
         &HidParam::get_default_params(),
@@ -73,7 +74,7 @@ fn delete(pin: Option<&str>, credential_id: Option<&str>) {
     println!("");
 
     let mut pkcd = PublicKeyCredentialDescriptor::default();
-    pkcd.id = util::to_str_hex(credential_id.unwrap().to_string());
+    pkcd.id = util::to_str_hex(credential_id.unwrap());
     pkcd.ctype = "public_key".to_string();
 
     match ctap_hid_fido2::credential_management_delete_credential(
@@ -97,11 +98,11 @@ fn update(pin: Option<&str>, credential_id: Option<&str>) {
     println!("");
 
     let mut pkcd = PublicKeyCredentialDescriptor::default();
-    pkcd.id = util::to_str_hex(credential_id.unwrap().to_string());
+    pkcd.id = util::to_str_hex(credential_id.unwrap());
     pkcd.ctype = "public_key".to_string();
 
     let mut pkcue = PublicKeyCredentialUserEntity::default();
-    pkcue.id = util::to_str_hex("7974657374".to_string());
+    pkcue.id = util::to_str_hex("7974657374");
     pkcue.name = "test-name".to_string();
     pkcue.display_name = "test-display".to_string();
 
@@ -183,11 +184,7 @@ fn main() {
     // Start
     ctap_hid_fido2::hello();
 
-    match ctap_hid_fido2::enable_ctap_2_1(&HidParam::get_default_params()) {
-        Ok(result) => println!("Enable CTAP 2.1 = {:?}", result),
-        Err(error) => println!("- error: {:?}", error),
-    };
-    match ctap_hid_fido2::enable_ctap_2_1_pre(&HidParam::get_default_params()) {
+    match ctap_hid_fido2::enable_info_param(&HidParam::get_default_params(),InfoParam::VersionsFIDO21PRE) {
         Ok(result) => println!("Enable CTAP 2.1 PRE = {:?}", result),
         Err(error) => println!("- error: {:?}", error),
     };

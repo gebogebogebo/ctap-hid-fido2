@@ -240,22 +240,52 @@ pub fn get_assertions_rk(
     get_assertion::get_assertion(hid_params, rpid, challenge, &dmy, pin, true, None)
 }
 
-pub fn enable_ctap_2_1(hid_params: &[HidParam]) -> Result<bool, String> {
-    let info = get_info::get_info(hid_params)?;
-    let find = info.versions.iter().find(|v| v.contains("FIDO_2_1"));
-    match find {
-        Some(_) => Ok(true),
-        None => Ok(false),
-    }
+#[derive(Debug, Clone, PartialEq)]
+pub enum InfoParam {
+    VersionsU2FV2,
+    VersionsFIDO20,
+    VersionsFIDO21PRE,
+    VersionsFIDO21,
+    ExtensionsCredProtect,
+    ExtensionsCredBlob,
+    ExtensionsLargeBlobKey,
+    ExtensionsMinPinLength,
+    ExtensionsHmacSecret,
 }
 
-pub fn enable_ctap_2_1_pre(hid_params: &[HidParam]) -> Result<bool, String> {
+pub fn enable_info_param(hid_params: &[HidParam],info_param: InfoParam) -> Result<bool, String> {
     let info = get_info::get_info(hid_params)?;
-    let find = info.versions.iter().find(|v| v.contains("FIDO_2_1_PRE"));
-    match find {
-        Some(_) => Ok(true),
-        None => Ok(false),
+    let find = match info_param {
+        InfoParam::VersionsU2FV2 => "U2F_V2",
+        InfoParam::VersionsFIDO20 => "FIDO_2_0",
+        InfoParam::VersionsFIDO21PRE => "FIDO_2_1_PRE",
+        InfoParam::VersionsFIDO21 => "FIDO_2_1",
+        InfoParam::ExtensionsCredProtect => "credProtect",
+        InfoParam::ExtensionsCredBlob => "credBlob",
+        InfoParam::ExtensionsLargeBlobKey => "credBlobKey",
+        InfoParam::ExtensionsMinPinLength => "minPinLength",
+        InfoParam::ExtensionsHmacSecret => "hmac-secret",
+    };
+    let ret = info.versions.iter().find(|v| *v==find);
+    if let Some(_) = ret {
+        return Ok(true);
     }
+    let ret = info.extensions.iter().find(|v| *v==find);
+    if let Some(_) = ret {
+        return Ok(true);
+    }
+    Ok(false)
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum InfoOptions {
+    Rk,
+    Up,
+    Uv,
+    Plat,
+    ClinetPin,
+    CredentialMgmtPreview,
+    UserVerificationMgmtPreview,
 }
 
 /// BioEnrollment - getFingerprintSensorInfo (CTAP 2.1-PRE)
