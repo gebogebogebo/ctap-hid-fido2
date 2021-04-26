@@ -14,7 +14,7 @@ pub fn to_hex_str(bytes: &[u8]) -> String {
         .collect::<String>()
 }
 
-pub fn to_str_hex(hexstr: String) -> Vec<u8> {
+pub fn to_str_hex(hexstr: &str) -> Vec<u8> {
     hex::decode(hexstr).unwrap()
 }
 
