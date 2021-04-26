@@ -51,13 +51,18 @@ fn main() {
                 Arg::with_name("rename")
                     .help("Rename/Set FriendlyName")
                     .short("r")
-                    .long("rename"),
+                    .long("rename")
+                    .takes_value(true)
+                    .value_name("templateId")
+                    .value_name("templateFriendlyName"),
             )
             .arg(
                 Arg::with_name("delete")
                     .help("Delete enrollment")
                     .short("d")
-                    .long("delete"),
+                    .long("delete")
+                    .takes_value(true)
+                    .value_name("templateId"),
             )
         );
 
@@ -131,13 +136,19 @@ fn main() {
             println!("");
         }
 
-        // PEND renameのオプション
         if matches.is_present("rename"){
+            let mut values = matches.values_of("rename").unwrap();
+            let template_id = values.next().unwrap();
+            let name = values.next();
             println!("Rename/Set FriendlyName");
+            println!("- value for templateId: {:?}", template_id);
+            println!("- value for templateFriendlyName: {:?}", name);
+            println!("");
+
             match ctap_hid_fido2::bio_enrollment_set_friendly_name(
                 &HidParam::get_default_params(),
                 Some(pin),
-                TemplateInfo::new(vec![0x00, 0x00], Some("test2")),
+                TemplateInfo::new(util::to_str_hex(template_id), name),
             ) {
                 Ok(()) => {
                     println!("- Success");
@@ -150,13 +161,16 @@ fn main() {
             println!("");
         }
 
-        // PEND deleteのオプション
         if matches.is_present("delete"){
+            let template_id = matches.value_of("delete").unwrap();
             println!("Delete enrollment");
+            println!("- value for templateId: {:?}", template_id);
+            println!("");
+        
             match ctap_hid_fido2::bio_enrollment_remove(
                 &HidParam::get_default_params(),
                 Some(pin),
-                vec![0x00, 0x01],
+                util::to_str_hex(template_id),
             ) {
                 Ok(()) => {
                     println!("- Success");
