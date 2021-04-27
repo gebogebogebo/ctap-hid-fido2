@@ -122,3 +122,55 @@ fn test_credential_management_enumerate_rps() {
         Err(_) => assert!(false),
     };
 }
+
+#[test]
+fn test_bio_enrollment_get_fingerprint_sensor_info() {
+    let mut skip = true;
+    match ctap_hid_fido2::enable_info_option(&HidParam::get_default_params(),InfoOption::UserVerificationMgmtPreview) {
+        Ok(result) => {
+            //println!("result = {:?}", result);
+            if let Some(v) = result {
+                //println!("some value = {}", v);
+                if v {skip=false};
+            }
+        }
+        Err(_) => assert!(false),
+    };
+
+    // skip
+    if skip {return};
+
+    match ctap_hid_fido2::bio_enrollment_get_fingerprint_sensor_info(
+        &HidParam::get_default_params())
+    {
+        Ok(_) => assert!(true),
+        Err(_) => assert!(false),
+    };
+}
+
+#[test]
+fn test_bio_enrollment_enumerate_enrollments() {
+    let mut skip = true;
+    match ctap_hid_fido2::enable_info_option(&HidParam::get_default_params(),InfoOption::UserVerificationMgmtPreview) {
+        Ok(result) => {
+            //println!("result = {:?}", result);
+            if let Some(v) = result {
+                //println!("some value = {}", v);
+                if v {skip=false};
+            }
+        }
+        Err(_) => assert!(false),
+    };
+
+    // skip
+    if skip {return};
+
+    let pin = "1234";
+    match ctap_hid_fido2::bio_enrollment_enumerate_enrollments(
+        &ctap_hid_fido2::HidParam::get_default_params(),
+        Some(pin),
+    ) {
+        Ok(_) => assert!(true),
+        Err(_) => assert!(false),
+    };
+}
