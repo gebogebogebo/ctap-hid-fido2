@@ -278,14 +278,39 @@ pub fn enable_info_param(hid_params: &[HidParam],info_param: InfoParam) -> Resul
 }
 
 #[derive(Debug, Clone, PartialEq)]
-pub enum InfoOptions {
+pub enum InfoOption {
     Rk,
     Up,
     Uv,
     Plat,
     ClinetPin,
     CredentialMgmtPreview,
+    CredMgmt,
     UserVerificationMgmtPreview,
+    BioEnroll,
+}
+pub fn enable_info_option(hid_params: &[HidParam],info_option: InfoOption) -> Result<Option<bool>, String> {
+    let info = get_info::get_info(hid_params)?;
+    let find = match info_option {
+        InfoOption::Rk => "rk",
+        InfoOption::Up => "up",
+        InfoOption::Uv => "uv",
+        InfoOption::Plat => "plat",
+        InfoOption::ClinetPin => "plat",
+        InfoOption::CredentialMgmtPreview => "credentialMgmtPreview",
+        InfoOption::CredMgmt => "credMgmt",
+        InfoOption::UserVerificationMgmtPreview => "userVerificationMgmtPreview",
+        InfoOption::BioEnroll => "bioEnroll",
+    };
+    let ret = info.options.iter().find(|v| (*v).0==find);
+    if let Some(v) = ret {
+        // v.1 == true or false
+        // - present and set to true.
+        // - present and set to false.
+        return Ok(Some(v.1));
+    }
+    // absent.
+    Ok(None)
 }
 
 /// BioEnrollment - getFingerprintSensorInfo (CTAP 2.1-PRE)

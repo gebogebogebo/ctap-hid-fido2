@@ -1,10 +1,9 @@
 use ctap_hid_fido2;
 
-use ctap_hid_fido2::bio_enrollment_params::TemplateInfo;
 #[allow(unused_imports)]
 use ctap_hid_fido2::util;
-use ctap_hid_fido2::HidParam;
-use ctap_hid_fido2::InfoParam;
+use ctap_hid_fido2::bio_enrollment_params::TemplateInfo;
+use ctap_hid_fido2::{HidParam,InfoParam,InfoOption};
 
 extern crate clap;
 use clap::{App, Arg, SubCommand};
@@ -75,7 +74,27 @@ fn main() {
     ctap_hid_fido2::hello();
 
     match ctap_hid_fido2::enable_info_param(&HidParam::get_default_params(),InfoParam::VersionsFIDO21PRE) {
-        Ok(result) => println!("Enable CTAP 2.1 PRE = {:?}", result),
+        Ok(result) => println!("FIDO 2.1 PRE = {:?}", result),
+        Err(error) => println!("- error: {:?}", error),
+    };
+
+    match ctap_hid_fido2::enable_info_option(&HidParam::get_default_params(),InfoOption::CredMgmt) {
+        Ok(result) => println!("CredMgmt = {:?}", result),
+        Err(error) => println!("- error: {:?}", error),
+    };
+
+    match ctap_hid_fido2::enable_info_option(&HidParam::get_default_params(),InfoOption::CredentialMgmtPreview) {
+        Ok(result) => println!("CredentialMgmtPreview = {:?}", result),
+        Err(error) => println!("- error: {:?}", error),
+    };
+
+    match ctap_hid_fido2::enable_info_option(&HidParam::get_default_params(),InfoOption::UserVerificationMgmtPreview) {
+        Ok(result) => println!("CredentialMgmtPreview = {:?}", result),
+        Err(error) => println!("- error: {:?}", error),
+    };
+
+    match ctap_hid_fido2::enable_info_option(&HidParam::get_default_params(),InfoOption::BioEnroll) {
+        Ok(result) => println!("BioEnroll = {:?}", result),
         Err(error) => println!("- error: {:?}", error),
     };
 
