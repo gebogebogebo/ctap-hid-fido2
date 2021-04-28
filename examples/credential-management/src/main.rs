@@ -13,15 +13,9 @@ fn metadata(pin: Option<&str>) {
         &HidParam::get_default_params(),
         pin,
     ) {
-        Ok(result) => {
-            println!("{}", result);
-        }
-        Err(error) => {
-            println!("- creds metadata error: {:?}", error);
-        }
-    };
-    println!("");
-    println!("");
+        Ok(result) => println!("{}", result),
+        Err(e) => println!("- error: {:?}", e),
+    }
 }
 
 fn rps(pin: Option<&str>) {
@@ -29,17 +23,12 @@ fn rps(pin: Option<&str>) {
     match ctap_hid_fido2::credential_management_enumerate_rps(&HidParam::get_default_params(), pin)
     {
         Ok(results) => {
-            for data in results {
-                println!("## rps");
-                println!("{}", data);
+            for r in results {
+                println!("## rps\n{}", r);
             }
         }
-        Err(error) => {
-            println!("- enumerate rps error: {:?}", error);
-        }
-    };
-    println!("");
-    println!("");
+        Err(e) => println!("- error: {:?}", e),
+    }
 }
 
 fn credentials(pin: Option<&str>, rpid_hash: Option<&str>) {
@@ -55,17 +44,12 @@ fn credentials(pin: Option<&str>, rpid_hash: Option<&str>) {
         rpid_hash_bytes,
     ) {
         Ok(results) => {
-            for data in results {
-                println!("## credentials");
-                println!("{}", data);
+            for c in results {
+                println!("## credentials\n{}", c);
             }
         }
-        Err(error) => {
-            println!("- enumerate credentials error: {:?}", error);
-        }
-    };
-    println!("");
-    println!("");
+        Err(e) => println!("- error: {:?}", e),
+    }
 }
 
 fn delete(pin: Option<&str>, credential_id: Option<&str>) {
@@ -82,14 +66,9 @@ fn delete(pin: Option<&str>, credential_id: Option<&str>) {
         pin,
         Some(pkcd),
     ) {
-        Ok(_) => println!("- credential_management_delete_credential Success"),
-        Err(error) => println!(
-            "- credential_management_delete_credential error: {:?}",
-            error
-        ),
-    };
-    println!("");
-    println!("");
+        Ok(_) => println!("- success"),
+        Err(e) => println!("- error: {:?}",e),
+    }
 }
 
 fn update(pin: Option<&str>, credential_id: Option<&str>) {
@@ -184,7 +163,10 @@ fn main() {
     // Start
     ctap_hid_fido2::hello();
 
-    match ctap_hid_fido2::enable_info_param(&HidParam::get_default_params(),InfoParam::VersionsFIDO21PRE) {
+    match ctap_hid_fido2::enable_info_param(
+        &HidParam::get_default_params(),
+        InfoParam::VersionsFIDO21PRE,
+    ) {
         Ok(result) => println!("Enable CTAP 2.1 PRE = {:?}", result),
         Err(error) => println!("- error: {:?}", error),
     };
@@ -197,32 +179,32 @@ fn main() {
         };
     }
 
-    let pin = matches.value_of("pin").unwrap();
-    println!("Value for pin: {}", pin);
+    let pin = matches.value_of("pin");
+    println!("Value for pin: {:?}", pin);
 
     println!("----- credential-management start -----");
 
     if matches.is_present("metadata") {
-        metadata(Some(pin));
+        metadata(pin);
     }
 
     if matches.is_present("rps") {
-        rps(Some(pin));
+        rps(pin);
     }
 
     if matches.is_present("credentials") {
         let rpid_hash = matches.value_of("credentials");
-        credentials(Some(pin), rpid_hash);
+        credentials(pin, rpid_hash);
     }
 
     if matches.is_present("delete") {
         let credential_id = matches.value_of("delete");
-        delete(Some(pin), credential_id);
+        delete(pin, credential_id);
     }
 
     if matches.is_present("update") {
         let credential_id = matches.value_of("update");
-        update(Some(pin), credential_id);
+        update(pin, credential_id);
     }
 
     println!("----- credential-management end -----");

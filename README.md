@@ -450,7 +450,7 @@ make_credential(),get_assertion()
 ```rust
 match ctap_hid_fido2::enable_info_param(&HidParam::get_default_params(),InfoParam::VersionsFIDO21PRE) {
     Ok(result) => println!("FIDO 2.1 PRE = {:?}", result),
-    Err(error) => println!("- error: {:?}", error),
+    Err(e) => println!("- error: {:?}", e),
 };
 ```
 
@@ -461,7 +461,7 @@ match ctap_hid_fido2::enable_info_param(&HidParam::get_default_params(),InfoPara
 ```rust
 match ctap_hid_fido2::enable_info_option(&HidParam::get_default_params(),InfoOption::BioEnroll) {
     Ok(result) => println!("BioEnroll = {:?}", result),
-    Err(error) => println!("- error: {:?}", error),
+    Err(e) => println!("- error: {:?}", e),
 };
 ```
 
@@ -470,9 +470,14 @@ match ctap_hid_fido2::enable_info_option(&HidParam::get_default_params(),InfoOpt
 ### CTAP 2.1 PRE
 
 #### authenticatorCredentialManagement
-[authenticatorCredentialManagement (0x0A)](https://fidoalliance.org/specs/fido-v2.1-rd-20210309/fido-client-to-authenticator-protocol-v2.1-rd-20210309.html#authenticatorCredentialManagement)
+
+This command manages discoverable credentials(resident key) in the authenticator.<br>[6.8. authenticatorCredentialManagement (0x0A)](https://fidoalliance.org/specs/fido-v2.1-rd-20210309/fido-client-to-authenticator-protocol-v2.1-rd-20210309.html#authenticatorCredentialManagement)
+
+
 
 ##### credential_management_get_creds_metadata()
+
+Get discoverable credentials metadata.
 
 ``` rust
 match ctap_hid_fido2::credential_management_get_creds_metadata(
@@ -480,7 +485,7 @@ match ctap_hid_fido2::credential_management_get_creds_metadata(
     pin,
 ) {
     Ok(result) => println!("{}", result),
-    Err(error) => println!("- creds metadata error: {:?}", error),
+    Err(e) => println!("- error: {:?}", e),
 };
 ```
 
@@ -488,76 +493,73 @@ match ctap_hid_fido2::credential_management_get_creds_metadata(
 
 ##### credential_management_enumerate_rps()
 
+Enumerate RPs present on the authenticator.
+
 ```rust
-match ctap_hid_fido2::credential_management_enumerate_rps(
-    &ctap_hid_fido2::HidParam::get_default_params(),
-    pin,
-) {
+match ctap_hid_fido2::credential_management_enumerate_rps(&HidParam::get_default_params(), pin)
+{
     Ok(results) => {
-        for data in results {
-            println!("## rps");
-            println!("{}",data);
+        for r in results {
+            println!("## rps\n{}", r);
         }
     }
-    Err(error) => println!("- enumerate rps error: {:?}", error),
-};
+    Err(e) => println!("- error: {:?}", e),
+}
 ```
 
 
 
 ##### credential_management_enumerate_credentials()
 
+Enumerate the credentials for a RP.
+
 ```rust
 match ctap_hid_fido2::credential_management_enumerate_credentials(
-    &ctap_hid_fido2::HidParam::get_default_params(),
+    &HidParam::get_default_params(),
     pin,
     rpid_hash_bytes,
 ) {
     Ok(results) => {
-        for data in results {
-            println!("## credentials");
-            println!("{}",data);
+        for c in results {
+            println!("## credentials\n{}", c);
         }
     }
-    Err(error) => println!("- enumerate credentials error: {:?}", error),
-};
+    Err(e) => println!("- error: {:?}", e),
+}
 ```
 
 
 
 ##### credential_management_delete_credential()
 
+Delete a credential.
+
 ```rust
-let mut pkcd = ctap_hid_fido2::credential_management_params::PublicKeyCredentialDescriptor::default();
-pkcd.id = util::to_str_hex(
-    credential_id.unwrap().to_string()
-);
+let mut pkcd = PublicKeyCredentialDescriptor::default();
+pkcd.id = util::to_str_hex(credential_id.unwrap());
 pkcd.ctype = "public_key".to_string();
 
 match ctap_hid_fido2::credential_management_delete_credential(
-    &ctap_hid_fido2::HidParam::get_default_params(),
+    &HidParam::get_default_params(),
     pin,
     Some(pkcd),
 ) {
-    Ok(_) => println!("- credential_management_delete_credential Success"),
-    Err(error) => println!(
-        "- credential_management_delete_credential error: {:?}",
-        error
-    ),
-};
+    Ok(_) => println!("- success"),
+    Err(e) => println!("- error: {:?}",e),
+}
 ```
 
 
 
 #### authenticatorBioEnrollment
 
-This command manages the fingerprints in the authenticator.
+This command manages the fingerprints in the authenticator.<br>[6.7. authenticatorBioEnrollment (0x09)](https://fidoalliance.org/specs/fido-v2.1-rd-20210309/fido-client-to-authenticator-protocol-v2.1-rd-20210309.html#authenticatorBioEnrollment)
 
 
 
 ##### bio_enrollment_get_fingerprint_sensor_info()
 
-get fingerprint sensor information.
+Get fingerprint sensor information.
 
 ```Rust
 match ctap_hid_fido2::bio_enrollment_get_fingerprint_sensor_info(
@@ -572,12 +574,12 @@ match ctap_hid_fido2::bio_enrollment_get_fingerprint_sensor_info(
 
 ##### bio_enrollment_enumerate_enrollments()
 
-enumurate a list of registered fingerprints.
+Enumurate a list of registered fingerprints.
 
 ```Rust
 match ctap_hid_fido2::bio_enrollment_enumerate_enrollments(
     &HidParam::get_default_params(),
-    Some(pin),
+    pin,
 ) {
     Ok(infos) => for i in infos {println!("- {}", i)},
     Err(e) => println!("- error: {:?}", e)
@@ -588,14 +590,14 @@ match ctap_hid_fido2::bio_enrollment_enumerate_enrollments(
 
 ##### bio_enrollment_begin(),bio_enrollment_next()
 
-enroll one fingerprint.<br>run `bio_enrollment_begin` first and then `bio_enrollment_next` several times.<br>`is_finish` detects the completion of registration.
+Enroll one fingerprint.<br>run `bio_enrollment_begin` first and then `bio_enrollment_next` several times.<br>`is_finish` detects the completion of registration.
 
 ```rust
 fn bio_enrollment(pin: &str) -> Result<(), String> {
     println!("bio_enrollment_begin");
     let result = ctap_hid_fido2::bio_enrollment_begin(
         &HidParam::get_default_params(),
-        Some(pin),
+        pin,
         Some(10000),
     )?;
     println!("{}", result.1);
@@ -627,7 +629,7 @@ Update the registered name of the fingerprint.
 ```rust
 match ctap_hid_fido2::bio_enrollment_set_friendly_name(
     &HidParam::get_default_params(),
-    Some(pin),
+    pin,
     TemplateInfo::new(util::to_str_hex(template_id), name),
 ) {
     Ok(()) => println!("- Success"),
@@ -639,12 +641,12 @@ match ctap_hid_fido2::bio_enrollment_set_friendly_name(
 
 ##### bio_enrollment_remove()
 
-Delete one fingerprint.
+Delete a fingerprint.
 
 ```rust
 match ctap_hid_fido2::bio_enrollment_remove(
      &HidParam::get_default_params(),
-     Some(pin),
+     pin,
      util::to_str_hex(template_id),
  ) {
      Ok(_) => println!("- Success"),
