@@ -118,8 +118,8 @@ fn main() {
         };
     }
 
-    let pin = matches.value_of("pin").unwrap();
-    println!("Value for pin: {}", pin);
+    let pin = matches.value_of("pin");
+    println!("Value for pin: {:?}", pin);
     println!("");
     println!("");
 
@@ -143,7 +143,7 @@ fn main() {
             println!("Enumerate enrollments");
             match ctap_hid_fido2::bio_enrollment_enumerate_enrollments(
                 &HidParam::get_default_params(),
-                Some(pin),
+                pin,
             ) {
                 Ok(infos) => {
                     for i in infos {
@@ -166,7 +166,7 @@ fn main() {
 
             match ctap_hid_fido2::bio_enrollment_set_friendly_name(
                 &HidParam::get_default_params(),
-                Some(pin),
+                pin,
                 TemplateInfo::new(util::to_str_hex(template_id), name),
             ) {
                 Ok(_) => println!("- Success"),
@@ -183,7 +183,7 @@ fn main() {
 
             match ctap_hid_fido2::bio_enrollment_remove(
                 &HidParam::get_default_params(),
-                Some(pin),
+                pin,
                 util::to_str_hex(template_id),
             ) {
                 Ok(_) => println!("- Success"),
@@ -193,7 +193,7 @@ fn main() {
         }
 
         if matches.is_present("enroll") {
-            match bio_enrollment(pin) {
+            match bio_enrollment(pin.unwrap()) {
                 Ok(_) => {}
                 Err(e) => println!("- error: {:?}", e),
             }

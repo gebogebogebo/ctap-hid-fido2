@@ -1,5 +1,5 @@
 use ctap_hid_fido2;
-use ctap_hid_fido2::make_credential_params;
+use ctap_hid_fido2::public_key_credential_user_entity::PublicKeyCredentialUserEntity;
 use ctap_hid_fido2::util;
 use ctap_hid_fido2::verifier;
 
@@ -12,10 +12,10 @@ fn main() {
 
     let challenge = verifier::create_challenge();
 
-    let mut rkparam = make_credential_params::RkParam::default();
-    rkparam.user_id = b"11111".to_vec();
-    rkparam.user_name = "gebo".to_string();
-    rkparam.user_display_name = "GEBO GEBO".to_string();
+    let mut rkparam = PublicKeyCredentialUserEntity::default();
+    rkparam.id = b"11111".to_vec();
+    rkparam.name = "gebo".to_string();
+    rkparam.display_name = "GEBO GEBO".to_string();
 
     println!("Register - make_credential()");
     println!("- rpid          = {:?}", rpid);
@@ -24,7 +24,7 @@ fn main() {
         challenge.len(),
         util::to_hex_str(&challenge)
     );
-    rkparam.print("RkParam");
+    println!("- rkparam       = {}", rkparam);
 
     let att = match ctap_hid_fido2::make_credential_rk(
         &ctap_hid_fido2::HidParam::get_default_params(),
@@ -34,14 +34,14 @@ fn main() {
         &rkparam
         ) {
         Ok(result) => result,
-        Err(err) => {
-            println!("- Register Error {:?}", err);
+        Err(e) => {
+            println!("- error {:?}", e);
             return;
         }
     };
 
     println!("- Register Success!!");
-    att.print("Attestation");
+    println!("{}",att);
 
     println!("Verify");
     let verify_result = verifier::verify_attestation(rpid, &challenge, &att);
@@ -79,7 +79,7 @@ fn main() {
 
     println!("- Assertion Num = {:?}",asss.len());
     for ass in asss {
-        ass.print("Assertion");
+        println!("- assertion = {}",ass);
         println!("- user = {}",ass.user);
     }
 
