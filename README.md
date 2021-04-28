@@ -445,30 +445,29 @@ make_credential(),get_assertion()
 
 
 
+#### enable_info_param()
+
+```rust
+match ctap_hid_fido2::enable_info_param(&HidParam::get_default_params(),InfoParam::VersionsFIDO21PRE) {
+    Ok(result) => println!("FIDO 2.1 PRE = {:?}", result),
+    Err(error) => println!("- error: {:?}", error),
+};
+```
+
+
+
+#### enable_info_option()
+
+```rust
+match ctap_hid_fido2::enable_info_option(&HidParam::get_default_params(),InfoOption::BioEnroll) {
+    Ok(result) => println!("BioEnroll = {:?}", result),
+    Err(error) => println!("- error: {:?}", error),
+};
+```
+
+
+
 ### CTAP 2.1 PRE
-
-
-#### enable_ctap_2_1()
-
-```rust
-match ctap_hid_fido2::enable_ctap_2_1(&ctap_hid_fido2::HidParam::get_default_params()) {
-    Ok(result) => println!("Enable CTAP 2.1 = {:?}",result),
-    Err(error) => println!("- error: {:?}", error),
-};
-```
-
-
-
-#### enable_ctap_2_1_pre()
-
-```rust
-match ctap_hid_fido2::enable_ctap_2_1_pre(&ctap_hid_fido2::HidParam::get_default_params()) {
-    Ok(result) => println!("Enable CTAP 2.1 PRE = {:?}",result),
-    Err(error) => println!("- error: {:?}", error),
-};
-```
-
-
 
 #### authenticatorCredentialManagement
 [authenticatorCredentialManagement (0x0A)](https://fidoalliance.org/specs/fido-v2.1-rd-20210309/fido-client-to-authenticator-protocol-v2.1-rd-20210309.html#authenticatorCredentialManagement)
@@ -547,6 +546,29 @@ match ctap_hid_fido2::credential_management_delete_credential(
     ),
 };
 ```
+
+
+
+#### authenticatorBioEnrollment
+
+##### bio_enrollment_get_fingerprint_sensor_info()
+
+```Rust
+match ctap_hid_fido2::bio_enrollment_get_fingerprint_sensor_info(&HidParam::get_default_params())
+{
+    Ok(result) => {
+        println!("- {:?}", result);
+    }
+    Err(error) => {
+        println!(
+            "- bio_enrollment_get_fingerprint_sensor_info error: {:?}",
+            error
+        );
+    }
+};
+```
+
+
 
 
 
