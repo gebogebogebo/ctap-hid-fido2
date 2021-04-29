@@ -13,6 +13,15 @@ pub struct PublicKeyCredentialUserEntity {
     pub display_name: String,
 }
 impl PublicKeyCredentialUserEntity {
+    pub fn new(id: Option<&[u8]>,name: Option<&str>,display_name: Option<&str>) -> PublicKeyCredentialUserEntity {
+        let mut ret = PublicKeyCredentialUserEntity::default();
+        if let Some(v) = id {
+            ret.id = v.to_vec();
+        }
+        if let Some(v) = name { ret.name = v.to_string(); }
+        if let Some(v) = display_name { ret.display_name = v.to_string(); }
+        ret
+    }
     pub fn get_id(self: &mut PublicKeyCredentialUserEntity, cbor: &Value) -> Self {
         let mut ret = self.clone();
         ret.id = util::cbor_get_bytes_from_map(cbor, "id").unwrap_or_default();
