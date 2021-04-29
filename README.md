@@ -7,8 +7,6 @@ Rust FIDO2 CTAP library
 
 for Mac & Win & raspberry Pi
 
-The raspberry Pi is now supported. However, it needs to be build.
-
 ## Description
 - Implements FIDO2 CTAP 2.0 & 2.1PRE (HID)
 - [Client to Authenticator Protocol (CTAP)](https://fidoalliance.org/specs/fido-v2.1-rd-20210309/fido-client-to-authenticator-protocol-v2.1-rd-20210309.html)
@@ -37,10 +35,10 @@ gebo
 ## Build and run
 
 #### Windows
-- Run as administrator
+- **Run as administrator**
 
 #### raspberry Pi
-- Cargo.toml modified and build
+- **Cargo.toml modified and build**
 
 ```
 [dependencies]
@@ -60,15 +58,22 @@ $ ./test_for_pi.sh
 
 #### get_info()
 
-```Rust
+[6.4. authenticatorGetInfo (0x04)](https://fidoalliance.org/specs/fido-v2.1-rd-20210309/fido-client-to-authenticator-protocol-v2.1-rd-20210309.html#authenticatorGetInfo)
+
+> Using this method, platforms can request that the authenticator report a list of its supported protocol versions and extensions, its AAGUID, and other aspects of its overall capabilities. Platforms should use this information to tailor their command parameters choices.
+
+
+
+```rust
 use ctap_hid_fido2;
+use ctap_hid_fido2::HidParam;
 
 fn main() {
     println!("get_info()");
     match ctap_hid_fido2::get_info(&ctap_hid_fido2::HidParam::get_default_params()) {
         Ok(info) => println!("{}",info),
-        Err(error) => println!("error: {:?}", error),
-    };
+        Err(e) => println!("error: {:?}", e),
+    }
 }
 ```
 
@@ -86,21 +91,51 @@ get_info()
 - max_credential_id_length      = 128
 - transports                    = ["usb"]
 - algorithms                    = [("alg", "-7"), ("type", "public-key"), ("alg", "-8"), ("type", "public-key")]
-g
+```
+
+
+
+#### get_info_u2f()
+
+Created to test [CTAPHID_MSG](https://fidoalliance.org/specs/fido-v2.1-rd-20210309/fido-client-to-authenticator-protocol-v2.1-rd-20210309.html#usb-hid-msg).
+
+```rust
+use ctap_hid_fido2;
+use ctap_hid_fido2::HidParam;
+
+fn main() {
+    println!("get_info_u2f()");
+    match ctap_hid_fido2::get_info_u2f(&HidParam::get_default_params()) {
+        Ok(result) => println!("{:?}", result),
+        Err(e) => println!("error: {:?}", e),
+    }
+}
+```
+
+**console**
+
+```sh
+get_info_u2f()
+"U2F_V2"
 ```
 
 
 
 #### get_pin_retries()
 
+[6.5.2.2. PIN-Entry and User Verification Retries Counters](https://fidoalliance.org/specs/fido-v2.1-rd-20210309/fido-client-to-authenticator-protocol-v2.1-rd-20210309.html#authnrClientPin-globalState-retries)
+
+pinRetries counter represents the number of attempts left before PIN is disabled.
+
 ```Rust
 use ctap_hid_fido2;
+use ctap_hid_fido2::HidParam;
 
 fn main() {
     println!("get_pin_retries()");
-    match ctap_hid_fido2::get_pin_retries(&ctap_hid_fido2::HidParam::get_default_params()) {
-        Ok(retry) => println!("- pin retry = {}", retry),
-        Err(error) => println!("error: {:?}", error),
+    match ctap_hid_fido2::get_pin_retries(&HidParam::get_default_params()) {
+        Ok(retry) => println!("{}", retry),
+        Err(e) => println!("error: {:?}", e),
     };
 }
 ```
@@ -109,7 +144,56 @@ fn main() {
 
 ```sh
 get_pin_retries()
-- pin retry = 8
+8
+```
+
+
+
+#### enable_info_param()
+
+Same as get_info(), but checks if it has a specific feature/version.<br>It is specified by the enum of InfoParam.
+
+```rust
+match ctap_hid_fido2::enable_info_param(&HidParam::get_default_params(),InfoParam::VersionsFIDO21PRE) {
+    Ok(result) => println!("FIDO 2.1 PRE = {:?}", result),
+    Err(e) => println!("- error: {:?}", e),
+};
+```
+
+
+
+#### enable_info_option()
+
+Same as get_info(), but checks if it has a specific option.<br>It is specified by the enum of InfoOption.
+
+- Result is `Option<bool>`
+  - `Some(true)` : option is present and set to true
+  - `Some(false)` : option is present and set to false
+  - `None` : option is absent
+
+```rust
+match ctap_hid_fido2::enable_info_option(&HidParam::get_default_params(),InfoOption::BioEnroll) {
+    Ok(result) => println!("BioEnroll = {:?}", result),
+    Err(e) => println!("- error: {:?}", e),
+};
+```
+
+
+
+#### wink
+
+Just blink the LED on the FIDO key.
+
+```Rust
+use ctap_hid_fido2;
+
+fn main() {
+    println!("----- wink start -----");
+    if let Err(msg) = ctap_hid_fido2::wink(&ctap_hid_fido2::HidParam::get_default_params()){
+        println!("error: {:?}", msg);
+    }
+    println!("----- wink end -----");
+}
 ```
 
 
@@ -236,24 +320,6 @@ Verify
 - is_success = true
 
 ----- test-with-pin-non-rk end -----
-```
-
-
-
-#### wink
-
-Just blink the LED on the FIDO key
-
-```Rust
-use ctap_hid_fido2;
-
-fn main() {
-    println!("----- wink start -----");
-    if let Err(msg) = ctap_hid_fido2::wink(&ctap_hid_fido2::HidParam::get_default_params()){
-        println!("error: {:?}", msg);
-    }
-    println!("----- wink end -----");
-}
 ```
 
 
@@ -441,28 +507,6 @@ make_credential(),get_assertion()
             return;
         }
     };
-```
-
-
-
-#### enable_info_param()
-
-```rust
-match ctap_hid_fido2::enable_info_param(&HidParam::get_default_params(),InfoParam::VersionsFIDO21PRE) {
-    Ok(result) => println!("FIDO 2.1 PRE = {:?}", result),
-    Err(e) => println!("- error: {:?}", e),
-};
-```
-
-
-
-#### enable_info_option()
-
-```rust
-match ctap_hid_fido2::enable_info_option(&HidParam::get_default_params(),InfoOption::BioEnroll) {
-    Ok(result) => println!("BioEnroll = {:?}", result),
-    Err(e) => println!("- error: {:?}", e),
-};
 ```
 
 
