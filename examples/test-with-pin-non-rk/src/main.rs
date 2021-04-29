@@ -1,5 +1,4 @@
 use anyhow::Result;
-
 use ctap_hid_fido2;
 use ctap_hid_fido2::util;
 use ctap_hid_fido2::verifier;
@@ -51,6 +50,7 @@ fn main() -> Result<()> {
     );
     println!("");
 
+    // Authenticate
     println!("Authenticate - get_assertion_with_pin()");
     let challenge = verifier::create_challenge();
     println!(

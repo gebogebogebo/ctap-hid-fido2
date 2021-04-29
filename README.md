@@ -180,7 +180,7 @@ match ctap_hid_fido2::enable_info_option(&HidParam::get_default_params(),InfoOpt
 
 
 
-#### wink
+#### wink()
 
 Just blink the LED on the FIDO key.
 
@@ -198,18 +198,22 @@ fn main() {
 
 
 
-#### make_credential()
-#### get_assertion()
-#### verifier::create_challenge()
-#### verifier::verify_attestation()
-#### verifier::verify_assertion()
+#### Register and Authenticate ( non-discoverable credentials/non-resident-key)
 
-```Rust
+- make_credential()
+- get_assertion()
+- verifier::create_challenge()
+- verifier::verify_attestation()
+- verifier::verify_assertion()
+
+```rust
+use anyhow::Result;
 use ctap_hid_fido2;
 use ctap_hid_fido2::util;
 use ctap_hid_fido2::verifier;
+use ctap_hid_fido2::HidParam;
 
-fn main() {
+fn main() -> Result<()> {
     println!("----- test-with-pin-non-rk start -----");
 
     // parameter
@@ -217,6 +221,7 @@ fn main() {
     let pin = "1234";
     let challenge = verifier::create_challenge();
 
+    // Register
     println!("Register - make_credential()");
     println!("- rpid          = {:?}", rpid);
     println!(
@@ -225,21 +230,16 @@ fn main() {
         util::to_hex_str(&challenge)
     );
 
-    let att = match ctap_hid_fido2::make_credential(
-        &ctap_hid_fido2::HidParam::get_default_params(),
+    let att = ctap_hid_fido2::make_credential(
+        &HidParam::get_default_params(),
         rpid,
         &challenge,
         Some(pin),
-    ) {
-        Ok(result) => result,
-        Err(err) => {
-            println!("- error {:?}", err);
-            return;
-        }
-    };
+    )?;
 
     println!("- Register Success!!");
-    att.print("Attestation");
+    println!("Attestation");
+    println!("{}", att);
 
     println!("Verify");
     let verify_result = verifier::verify_attestation(rpid, &challenge, &att);
@@ -257,7 +257,9 @@ fn main() {
         verify_result.credential_publickey_der.len(),
         util::to_hex_str(&verify_result.credential_publickey_der)
     );
+    println!("");
 
+    // Authenticate
     println!("Authenticate - get_assertion_with_pin()");
     let challenge = verifier::create_challenge();
     println!(
@@ -266,21 +268,16 @@ fn main() {
         util::to_hex_str(&challenge)
     );
 
-    let ass = match ctap_hid_fido2::get_assertion(
-        &ctap_hid_fido2::HidParam::get_default_params(),
+    let ass = ctap_hid_fido2::get_assertion(
+        &HidParam::get_default_params(),
         rpid,
         &challenge,
         &verify_result.credential_id,
         Some(pin),
-    ) {
-        Ok(result) => result,
-        Err(err) => {
-            println!("- Authenticate Error {:?}", err);
-            return;
-        }
-    };
+    )?;
     println!("- Authenticate Success!!");
-    ass.print("Assertion");
+    println!("Assertion");
+    println!("{}", ass);
 
     println!("Verify");
     let is_success = verifier::verify_assertion(
@@ -292,6 +289,7 @@ fn main() {
     println!("- is_success = {:?}", is_success);
 
     println!("----- test-with-pin-non-rk end -----");
+    Ok(())
 }
 ```
 
@@ -299,32 +297,53 @@ fn main() {
 
 ```sh
 ----- test-with-pin-non-rk start -----
-
 Register - make_credential()
 - rpid          = "test.com"
-- challenge(32) = "769448B3A7F951DEABC96358BFCB897F0336AA63FBE9227625529FDC96317950"
+- challenge(32) = "054E416942D60F9F584B58A1E53B3ED85E9ECBB486D72CE690569E884B038267"
 - touch fido key
 - Register Success!!
-
+Attestation
+- rpid_hash(32)                           = 99AB715D84A3BC5E0E92AA50E67A5813637FD1744BD301AB08F87191DDB816E0
+- flags_user_present_result               = true
+- flags_user_verified_result              = true
+- flags_attested_credential_data_included = true
+- flags_extension_data_included           = false
+- sign_count                              = 1
+- aaguid(16)                              = EE882879721C491397753DFCCE97072A
+- credential_descriptor                   = (id : 4AE2... , type : )
+- credential_publickey                    = (der : 04A0... , pem : -----BEGIN PUBLIC KEY-----...)
+- attstmt_alg                             = -7
+- attstmt_sig(71)                         = 3045...
+- attstmt_x5c_num                         = 1
 Verify
 - is_success                   = true
-- credential_id(64)            = "FA02C83CC646726A763035221E4C9CBE23A864D14CCD2CA6116FF8FE6FC5A98BEAB88E160F1FDE88A6955B9DE5BE0896EA1EDEF4F79950FD83427ADC48C84F0C"
-- credential_publickey_der(65) = "04BDE029737A3B8546FDE3EF565CBACA9946F29C6865033942918826ACCAC5465E7F8F130455C2C7DE86DBA25CBDBA5BDBE701E22051FE2070B9689FECBF7C6027"
+- credential_id(64)            = "4AEA..."
+- credential_publickey_der(65) = "04A0..."
 
 Authenticate - get_assertion_with_pin()
-- challenge(32) = "01E2EE84FCA308F66417BBDDD05D27399BF9306707C0B85813CB0679EBBB494F"
+- challenge(32) = "0B1A3BF49C6D335592EE789C9C662365E06F4D9A63E6C4EA5B62B221E072A33E"
 - touch fido key
 - Authenticate Success!!
-
+Assertion
+- rpid_hash(32)                           = 99AB715D84A3BC5E0E92AA50E67A5813637FD1744BD301AB08F87191DDB816E0
+- flags_user_present_result               = true
+- flags_user_verified_result              = true
+- flags_attested_credential_data_included = false
+- flags_extension_data_included           = false
+- sign_count                              = 4
+- number_of_credentials                   = 0
+- signature(71)                           = 3045...
+- user                                    = (id :  , name :  , display_name : )
+- credential_id(64)                       = 4AEA...
 Verify
 - is_success = true
-
 ----- test-with-pin-non-rk end -----
 ```
 
 
 
-#### make_credential_rk()
+#### Register and Authenticate ( discoverable credentials/resident-key)
+- make_credential_rk()
 
 ```Rust
 use ctap_hid_fido2;
@@ -413,7 +432,7 @@ Verify
 
 
 
-#### get_assertions_rk()
+- get_assertions_rk()
 
 ```Rust
 use ctap_hid_fido2;
