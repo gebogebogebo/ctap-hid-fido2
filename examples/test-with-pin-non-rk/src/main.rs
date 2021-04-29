@@ -25,8 +25,8 @@ fn main() {
         Some(pin),
     ) {
         Ok(result) => result,
-        Err(err) => {
-            println!("- error {:?}", err);
+        Err(e) => {
+            println!("- error {:?}", e);
             return;
         }
     };

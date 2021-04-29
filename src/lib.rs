@@ -47,6 +47,7 @@ pub mod util;
 pub mod verifier;
 
 //
+use anyhow::{anyhow,Result};
 use crate::bio_enrollment_params::{FingerprintKind, Modality,TemplateInfo,EnrollStatus1,EnrollStatus2};
 use crate::public_key_credential_descriptor::PublicKeyCredentialDescriptor;
 use crate::public_key_credential_user_entity::PublicKeyCredentialUserEntity;
@@ -152,10 +153,19 @@ pub fn get_fidokey_devices() -> Vec<(String, HidParam)> {
 }
 
 /// Lights the LED on the FIDO key
-pub fn wink(hid_params: &[HidParam]) -> Result<(), String> {
-    let device = FidoKeyHid::new(hid_params)?;
-    let cid = ctaphid::ctaphid_init(&device)?;
-    ctaphid::ctaphid_wink(&device, &cid)
+pub fn wink(hid_params: &[HidParam]) -> Result<()> {
+    let device = match FidoKeyHid::new(hid_params) {
+        Ok(v) => v,
+        Err(e) => return Err(anyhow!(e)),
+    };
+    let cid = match ctaphid::ctaphid_init(&device){
+        Ok(v) => v,
+        Err(e) => return Err(anyhow!(e)),
+    };
+    match ctaphid::ctaphid_wink(&device, &cid){
+        Ok(_) => Ok(()),
+        Err(e) => return Err(anyhow!(e)),
+    }
 }
 
 /// Get FIDO key information
