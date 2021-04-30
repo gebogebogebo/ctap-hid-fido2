@@ -25,7 +25,7 @@ for Mac & Win & raspberry Pi
   - macOS Catalina / Big Sur
   - Visual Studio Code
 - for Windows
-  - Windows10 1909
+  - Windows10
   - Visual Studio Code
 
 ## Author
@@ -344,51 +344,46 @@ Verify
 
 #### Register and Authenticate ( discoverable credentials/resident-key)
 - make_credential_rk()
+- get_assertions_rk()
 
-```Rust
+```rust
+use anyhow::Result;
 use ctap_hid_fido2;
-use ctap_hid_fido2::make_credential_params;
+use ctap_hid_fido2::public_key_credential_user_entity::PublicKeyCredentialUserEntity;
 use ctap_hid_fido2::util;
 use ctap_hid_fido2::verifier;
+use ctap_hid_fido2::HidParam;
 
-fn main() {
+fn main() -> Result<()> {
     println!("----- test-with-pin-rk start -----");
 
     // parameter
     let rpid = "ge.com";
     let pin = "1234";
-    let challenge = verifier::create_challenge();
 
-    let mut rkparam = make_credential_params::RkParam::default();
-    rkparam.user_id = b"11111".to_vec();
-    rkparam.user_name = "gebo".to_string();
-    rkparam.user_display_name = "GEBO GEBO".to_string();
-
+    // Register
     println!("Register - make_credential()");
+    let challenge = verifier::create_challenge();
+    let rkparam = PublicKeyCredentialUserEntity::new(Some(b"1111"),Some("gebo"),Some("GEBO GEBO"));
+
     println!("- rpid          = {:?}", rpid);
     println!(
         "- challenge({:02}) = {:?}",
         challenge.len(),
         util::to_hex_str(&challenge)
     );
-    rkparam.print("RkParam");
+    println!("- rkparam       = {}", rkparam);
 
-    let att = match ctap_hid_fido2::make_credential_rk(
-        &ctap_hid_fido2::HidParam::get_default_params(),
+    let att = ctap_hid_fido2::make_credential_rk(
+        &HidParam::get_default_params(),
         rpid,
         &challenge,
         Some(pin),
-        &rkparam
-        ) {
-        Ok(result) => result,
-        Err(err) => {
-            println!("- Register Error {:?}", err);
-            return;
-        }
-    };
+        &rkparam,
+    )?;
 
     println!("- Register Success!!");
-    att.print("Attestation");
+    println!("{}", att);
 
     println!("Verify");
     let verify_result = verifier::verify_attestation(rpid, &challenge, &att);
@@ -401,132 +396,38 @@ fn main() {
         verify_result.credential_publickey_der.len(),
         util::to_hex_str(&verify_result.credential_publickey_der)
     );
+    println!(
+        "- credential_id({:02}) = {:?}",
+        verify_result.credential_id.len(),
+        util::to_hex_str(&verify_result.credential_id)
+    );
 
-    println!("----- test-with-pin-rk end -----");
-}
-```
-
-**console**
-
-```sh
------ test-with-pin-rk start -----
-
-Register - make_credential()
-- rpid          = "ge.com"
-- challenge(32) = "FC0644242F0C3FADFD4E5EBEEF4B0CED629C7E76D50417148E5BF5D59EE67298"
-
-RkParam
-- user_id(05)       = "3131313131"
-- user_name         = "gebo"
-- user_display_name = "GEBO GEBO"
-
-- touch fido key
-- Register Success!!
-
-Verify
-- is_success                   = true
-- credential_publickey_der(65) = "045751B33677185635A8136668A64EABEED8DB7350C19E1804B67E66350B297BE0B64EE29ADBF64FE74DA684A2E8BB7F87314BD301C512E660E3C258FDA93C5C5D"
-
------ test-with-pin-rk end -----
-```
-
-
-
-- get_assertions_rk()
-
-```Rust
-use ctap_hid_fido2;
-use ctap_hid_fido2::util;
-use ctap_hid_fido2::verifier;
-
-fn main() {
-    println!("----- test-with-pin-rk start -----");
-
-    // parameter
-    let rpid = "ge.com";
-    let pin = "1234";
-
+    // Authenticate
     println!("Authenticate - get_assertions_rk()");
-
     let challenge = verifier::create_challenge();
-    let asss = match ctap_hid_fido2::get_assertions_rk(
-        &ctap_hid_fido2::HidParam::get_default_params(),
+    let asss = ctap_hid_fido2::get_assertions_rk(
+        &HidParam::get_default_params(),
         rpid,
         &challenge,
         Some(pin),
-    ) {
-        Ok(asss) => asss,
-        Err(err) => {
-            println!("- Authenticate Error {:?}", err);
-            return;
-        }
-    };
+    )?;
     println!("Authenticate Success!!");
 
-    println!("- Assertion Num = {:?}",asss.len());
+    println!("- Assertion Num = {:?}", asss.len());
     for ass in asss {
-        ass.print("Assertion");
-        println!(
-            "- user_id({:02})       = {:?}",
-            ass.user_id.len(),
-            util::to_hex_str(&ass.user_id)
-        );
+        println!("- assertion = {}", ass);
+        println!("- user = {}", ass.user);
     }
 
     println!("----- test-with-pin-rk end -----");
+    Ok(())
 }
 ```
 
-**console**
+- user_name and user_display_name are set only when multiple Assertions are acquired.
 
-user_name and user_display_name are set only when multiple Assertions are acquired.
-
-```sh
------ test-with-pin-rk start -----
-Authenticate - get_assertions_rk()
-- touch fido key
-
-Authenticate Success!!
-- Assertion Num = 1
-- user_id(05)       = "3131313131"
-- user_name         = ""
-- user_display_name = ""
------ test-with-pin-rk end -----
-```
-
-
-
-If you want to enable UV-user verification, please specify None instead of a PIN.
-make_credential(),get_assertion()
-
-```rust
-    let att = match ctap_hid_fido2::make_credential(
-        &ctap_hid_fido2::HidParam::get_default_params(),
-        rpid,
-        &challenge,
-        None,
-    ) {
-        Ok(result) => result,
-        Err(err) => {
-            println!("- error {:?}", err);
-            return;
-        }
-    };
-
-    let ass = match ctap_hid_fido2::get_assertion(
-        &ctap_hid_fido2::HidParam::get_default_params(),
-        rpid,
-        &challenge,
-        &verify_result.credential_id,
-        None,
-    ) {
-        Ok(result) => result,
-        Err(err) => {
-            println!("- Authenticate Error {:?}", err);
-            return;
-        }
-    };
-```
+- If you want to enable UV-user verification, please specify None instead of a PIN.
+  make_credential(),get_assertion()
 
 
 

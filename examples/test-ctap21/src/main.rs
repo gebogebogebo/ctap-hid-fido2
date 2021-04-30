@@ -1,4 +1,5 @@
 use ctap_hid_fido2;
+use anyhow::{Result};
 
 use ctap_hid_fido2::bio_enrollment_params::TemplateInfo;
 #[allow(unused_imports)]
@@ -9,7 +10,7 @@ extern crate clap;
 use clap::{App, Arg, SubCommand};
 use ctap_hid_fido2::bio_enrollment_params::EnrollStatus1;
 
-fn main() {
+fn main() -> Result<()> {
     let app = App::new("test-ctap21")
         .version("0.1.0")
         .author("gebo")
@@ -102,7 +103,7 @@ fn main() {
     ) {
         Ok(result) => println!("CredentialMgmtPreview = {:?}", result),
         Err(error) => println!("- error: {:?}", error),
-    };
+    }
 
     match ctap_hid_fido2::enable_info_option(&HidParam::get_default_params(), InfoOption::BioEnroll)
     {
@@ -194,7 +195,7 @@ fn main() {
 
         if matches.is_present("enroll") {
             match bio_enrollment(pin.unwrap()) {
-                Ok(_) => {}
+                Ok(_) => println!("- Success"),
                 Err(e) => println!("- error: {:?}", e),
             }
         }
@@ -213,9 +214,10 @@ fn main() {
         Err(error) => println!("- selection error: {:?}", error),
     };
     */
+    Ok(())
 }
 
-fn bio_enrollment(pin: &str) -> Result<(), String> {
+fn bio_enrollment(pin: &str) -> Result<()> {
     println!("bio_enrollment_begin");
     let result = ctap_hid_fido2::bio_enrollment_begin(
         &HidParam::get_default_params(),
@@ -233,7 +235,7 @@ fn bio_enrollment(pin: &str) -> Result<(), String> {
     Ok(())
 }
 
-fn bio_enrollment_next(enroll_status: &EnrollStatus1) -> Result<bool, String> {
+fn bio_enrollment_next(enroll_status: &EnrollStatus1) -> Result<bool> {
     println!("bio_enrollment_next");
     let result = ctap_hid_fido2::bio_enrollment_next(enroll_status, Some(10000))?;
     println!("{}", result);
