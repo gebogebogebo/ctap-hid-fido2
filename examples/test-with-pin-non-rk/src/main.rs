@@ -1,8 +1,10 @@
+use anyhow::Result;
 use ctap_hid_fido2;
 use ctap_hid_fido2::util;
 use ctap_hid_fido2::verifier;
+use ctap_hid_fido2::HidParam;
 
-fn main() {
+fn main() -> Result<()> {
     println!("----- test-with-pin-non-rk start -----");
 
     // parameter
@@ -10,6 +12,7 @@ fn main() {
     let pin = "1234";
     let challenge = verifier::create_challenge();
 
+    // Register
     println!("Register - make_credential()");
     println!("- rpid          = {:?}", rpid);
     println!(
@@ -18,21 +21,16 @@ fn main() {
         util::to_hex_str(&challenge)
     );
 
-    let att = match ctap_hid_fido2::make_credential(
-        &ctap_hid_fido2::HidParam::get_default_params(),
+    let att = ctap_hid_fido2::make_credential(
+        &HidParam::get_default_params(),
         rpid,
         &challenge,
         Some(pin),
-    ) {
-        Ok(result) => result,
-        Err(err) => {
-            println!("- error {:?}", err);
-            return;
-        }
-    };
+    )?;
 
     println!("- Register Success!!");
-    att.print("Attestation");
+    println!("Attestation");
+    println!("{}", att);
 
     println!("Verify");
     let verify_result = verifier::verify_attestation(rpid, &challenge, &att);
@@ -50,7 +48,9 @@ fn main() {
         verify_result.credential_publickey_der.len(),
         util::to_hex_str(&verify_result.credential_publickey_der)
     );
+    println!("");
 
+    // Authenticate
     println!("Authenticate - get_assertion_with_pin()");
     let challenge = verifier::create_challenge();
     println!(
@@ -59,21 +59,16 @@ fn main() {
         util::to_hex_str(&challenge)
     );
 
-    let ass = match ctap_hid_fido2::get_assertion(
-        &ctap_hid_fido2::HidParam::get_default_params(),
+    let ass = ctap_hid_fido2::get_assertion(
+        &HidParam::get_default_params(),
         rpid,
         &challenge,
         &verify_result.credential_id,
         Some(pin),
-    ) {
-        Ok(result) => result,
-        Err(err) => {
-            println!("- Authenticate Error {:?}", err);
-            return;
-        }
-    };
+    )?;
     println!("- Authenticate Success!!");
-    ass.print("Assertion");
+    println!("Assertion");
+    println!("{}", ass);
 
     println!("Verify");
     let is_success = verifier::verify_assertion(
@@ -85,4 +80,5 @@ fn main() {
     println!("- is_success = {:?}", is_success);
 
     println!("----- test-with-pin-non-rk end -----");
+    Ok(())
 }

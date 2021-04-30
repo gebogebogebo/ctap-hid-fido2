@@ -1,15 +1,11 @@
-use anyhow::Result;
 use ctap_hid_fido2;
+use ctap_hid_fido2::HidParam;
 
-fn main() -> Result<()> {
+fn main() {
     println!("----- wink start -----");
-
-    //ctap_hid_fido2::wink(&ctap_hid_fido2::HidParam::get_default_params())?;
-
-    if let Err(msg) = ctap_hid_fido2::wink(&ctap_hid_fido2::HidParam::get_default_params()){
-        println!("error: {:?}", msg);
-    }
-
+    match ctap_hid_fido2::wink(&HidParam::get_default_params()) {
+        Ok(_) => {},
+        Err(e) => println!("error: {:?}", e),
+    }    
     println!("----- wink end -----");
-    Ok(())
 }

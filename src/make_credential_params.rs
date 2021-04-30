@@ -2,30 +2,10 @@
 make_credential API parameters
 */
 
+use crate::public_key::PublicKey;
+use crate::public_key_credential_descriptor::PublicKeyCredentialDescriptor;
 use crate::util;
-
-#[derive(Debug, Default)]
-pub struct RkParam {
-    pub user_id: Vec<u8>,
-    pub user_name: String,
-    pub user_display_name: String,
-}
-
-impl RkParam {
-    #[allow(dead_code)]
-    pub fn print(self: &RkParam, title: &str) {
-        //if util::is_debug() == false {return;}
-
-        println!("{}", title);
-        println!(
-            "- user_id({:02})       = {:?}",
-            self.user_id.len(),
-            util::to_hex_str(&self.user_id)
-        );
-        println!("- user_name         = {:?}", self.user_name);
-        println!("- user_display_name = {:?}", self.user_display_name);
-    }
-}
+use std::fmt;
 
 /// Attestation Object
 /// [https://www.w3.org/TR/webauthn/#sctn-attestation](https://www.w3.org/TR/webauthn/#sctn-attestation)
@@ -39,9 +19,8 @@ pub struct Attestation {
     pub flags_extension_data_included: bool,
     pub sign_count: u32,
     pub aaguid: Vec<u8>,
-    pub credential_id: Vec<u8>,
-    pub credential_publickey_pem: String,
-    pub credential_publickey_der: Vec<u8>,
+    pub credential_descriptor: PublicKeyCredentialDescriptor,
+    pub credential_publickey: PublicKey,
     pub auth_data: Vec<u8>,
 
     pub attstmt_alg: i32,
@@ -49,77 +28,63 @@ pub struct Attestation {
     pub attstmt_x5c: Vec<Vec<u8>>,
 }
 
-impl Attestation {
-    #[allow(dead_code)]
-    pub fn print(self: &Attestation, title: &str) {
-        if util::is_debug() == false {
-            return;
-        }
-
-        println!("{}", title);
-        println!("- fmt                                     = {:?}", self.fmt);
-        println!(
-            "- rpid_hash({:02})                           = {:?}",
+impl fmt::Display for Attestation {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let tmp1 = format!(
+            "- rpid_hash({:02})                           = ",
             self.rpid_hash.len(),
-            util::to_hex_str(&self.rpid_hash)
         );
-        println!(
-            "- flags_user_present_result               = {:?}",
-            self.flags_user_present_result
-        );
-        println!(
-            "- flags_user_verified_result              = {:?}",
-            self.flags_user_verified_result
-        );
-        println!(
-            "- flags_attested_credential_data_included = {:?}",
-            self.flags_attested_credential_data_included
-        );
-        println!(
-            "- flags_extensiondata_included            = {:?}",
-            self.flags_extension_data_included
-        );
-        println!(
-            "- sign_count                              = {:?}",
-            self.sign_count
-        );
-        println!(
-            "- aaguid({:02})                              = {:?}",
+        let tmp2 = format!("- flags_user_present_result               = ");
+        let tmp3 = format!("- flags_user_verified_result              = ");
+        let tmp4 = format!("- flags_attested_credential_data_included = ");
+        let tmp5 = format!("- flags_extension_data_included           = ");
+        let tmp6 = format!("- sign_count                              = ");
+        let tmp7 = format!(
+            "- aaguid({:02})                              = ",
             self.aaguid.len(),
-            util::to_hex_str(&self.aaguid)
         );
-        println!(
-            "- credential_id({:02})                       = {:?}",
-            self.credential_id.len(),
-            util::to_hex_str(&self.credential_id)
-        );
-        println!(
-            "- credential_publickey({:02})                = {:?}",
-            self.credential_publickey_pem.len(),
-            self.credential_publickey_pem
-        );
-
-        println!(
-            "- attstmt_alg                             = {:?}",
-            self.attstmt_alg
-        );
-        println!(
-            "- attstmt_sig({:02})                         = {:?}",
+        let tmp8 = format!("- credential_descriptor                   = ");
+        let tmp9 = format!("- credential_publickey                    = ");
+        let tmpa = format!("- attstmt_alg                             = ");
+        let tmpb = format!(
+            "- attstmt_sig({:02})                         = ",
             self.attstmt_sig.len(),
-            util::to_hex_str(&self.attstmt_sig)
         );
+        let tmpc = format!("- attstmt_x5c_num                         = ");
+        //let tmpd = format!(
+        //    "- attstmt_x5c({:02})                         = ",
+        //    self.attstmt_x5c.len(),
+        //);
 
-        println!(
-            "- attstmt_x5c_num                         = {:02}",
-            self.attstmt_x5c.len()
-        );
-
-        for x in &self.attstmt_x5c {
-            println!(
-                "- attstmt_x5c({:04})                       = {:?}",
-                x.len(),
-                util::to_hex_str(x)
-            );
-        }
+        write!(
+            f,
+            "{}{}\n{}{}\n{}{}\n{}{}\n{}{}\n{}{}\n{}{}\n{}{}\n{}{}\n{}{}\n{}{}\n{}{}",
+            tmp1,
+            util::to_hex_str(&self.rpid_hash),
+            tmp2,
+            self.flags_user_present_result,
+            tmp3,
+            self.flags_user_verified_result,
+            tmp4,
+            self.flags_attested_credential_data_included,
+            tmp5,
+            self.flags_extension_data_included,
+            tmp6,
+            self.sign_count,
+            tmp7,
+            util::to_hex_str(&self.aaguid),
+            tmp8,
+            self.credential_descriptor,
+            tmp9,
+            self.credential_publickey,
+            tmpa,
+            self.attstmt_alg,
+            tmpb,
+            util::to_hex_str(&self.attstmt_sig),
+            tmpc,
+            self.attstmt_x5c.len(),
+            //tmpd,
+            //util::to_hex_str(&self.attstmt_x5c[0]),
+        )
     }
 }

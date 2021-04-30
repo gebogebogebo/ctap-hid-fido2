@@ -3,6 +3,7 @@ use crate::ctaphid;
 use crate::make_credential_command;
 use crate::make_credential_params;
 use crate::make_credential_response;
+use crate::public_key_credential_user_entity::PublicKeyCredentialUserEntity;
 use crate::FidoKeyHid;
 use crate::HidParam;
 
@@ -15,8 +16,8 @@ pub fn make_credential(
     challenge: &[u8],
     pin: Option<&str>,
     rk: bool,
-    rkparam: Option<&make_credential_params::RkParam>,
-    uv: Option<bool>
+    rkparam: Option<&PublicKeyCredentialUserEntity>,
+    uv: Option<bool>,
 ) -> Result<make_credential_params::Attestation, String> {
     // init
     let device = FidoKeyHid::new(hid_params)?;
@@ -34,7 +35,7 @@ pub fn make_credential(
 
     let user_id = {
         if let Some(rkp) = rkparam {
-            rkp.user_id.to_vec()
+            rkp.id.to_vec()
         } else {
             [].to_vec()
         }
@@ -47,8 +48,8 @@ pub fn make_credential(
         params.option_uv = uv;
 
         if let Some(rkp) = rkparam {
-            params.user_name = rkp.user_name.to_string();
-            params.user_display_name = rkp.user_display_name.to_string();
+            params.user_name = rkp.name.to_string();
+            params.user_display_name = rkp.display_name.to_string();
         }
         //println!("- client_data_hash({:02})    = {:?}", params.client_data_hash.len(),util::to_hex_str(&params.client_data_hash));
 
@@ -84,7 +85,6 @@ pub fn make_credential(
             util::to_hex_str(&response_cbor)
         );
     }
-
 
     let att = make_credential_response::parse_cbor(&response_cbor)?;
     Ok(att)

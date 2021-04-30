@@ -19,7 +19,7 @@
                     "kind": "bin"
                 }
             },
-            "args": [],
+            "args": ["bio_enrollment","-r","0001","tempname"],
             "cwd": "${workspaceFolder}"
         },
         {

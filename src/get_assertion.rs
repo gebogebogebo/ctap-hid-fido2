@@ -16,7 +16,7 @@ pub fn get_assertion(
     credential_id: &[u8],
     pin: Option<&str>,
     up: bool,
-    uv: Option<bool>
+    uv: Option<bool>,
 ) -> Result<Vec<get_assertion_params::Assertion>, String> {
     // init
     let device = FidoKeyHid::new(hid_params)?;

@@ -1,4 +1,5 @@
 use crate::get_assertion_params;
+use crate::public_key_credential_user_entity::PublicKeyCredentialUserEntity;
 use crate::util;
 use byteorder::{BigEndian, ReadBytesExt};
 use serde_cbor::Value;
@@ -35,86 +36,29 @@ fn parse_cbor_authdata(authdata: Vec<u8>, ass: &mut get_assertion_params::Assert
     //index = ret.1;
 }
 
-fn parse_cbor_public_key_credential_user_entity(
-    obj: &Value,
-    ass: &mut get_assertion_params::Assertion,
-) {
-    if let Value::Map(xs) = obj {
-        for (key, val) in xs {
-            if let Value::Text(s) = key {
-                let ss = s.as_str();
-                match ss {
-                    "id" => ass.user_id = util::cbor_value_to_vec_u8(val).unwrap(),
-                    "name" => {
-                        if let Value::Text(s) = val {
-                            ass.user_name = s.to_string();
-                        }
-                    }
-                    "displayName" => {
-                        if let Value::Text(s) = val {
-                            ass.user_display_name = s.to_string();
-                        }
-                    }
-                    _ => {}
-                }
-            }
-        }
-    }
-}
-
-fn parse_cbor_member(member: i128, val: &Value, ass: &mut get_assertion_params::Assertion) {
-    //util::cbor_value_print(val);
-
-    match member {
-        1 => {
-            // 0x01:credential
-            if let Value::Map(xs) = val {
-                for (key, val2) in xs {
-                    if let Value::Text(s) = key {
-                        let ss = s.as_str();
-                        match ss {
-                            "id" => ass.credential_id = util::cbor_value_to_vec_u8(val2).unwrap(),
-                            "type" => {}
-                            _ => {}
-                        }
-                    }
-                }
-            }
-        }
-        2 => {
-            // 0x02:AuthData
-            if let Value::Bytes(xs) = val {
-                parse_cbor_authdata(xs.to_vec(), ass);
-            }
-        }
-        3 => {
-            // 0x03:signature
-            ass.signature = util::cbor_value_to_vec_u8(val).unwrap();
-        }
-        4 => {
-            // 0x04:user
-            parse_cbor_public_key_credential_user_entity(val, ass);
-        }
-        5 => {
-            // 0x05:numberOfCredentials
-            ass.number_of_credentials = util::cbor_cast_value(val).unwrap();
-        }
-        _ => println!("- anything error"),
-    }
-}
-
 pub fn parse_cbor(bytes: &[u8]) -> Result<get_assertion_params::Assertion, String> {
     let mut ass = get_assertion_params::Assertion::default();
-
-    let cbor: Value = serde_cbor::from_slice(bytes).unwrap();
-    if let Value::Map(map) = cbor {
-        for (key, val) in &map {
-            if let Value::Integer(member) = key {
-                parse_cbor_member(*member, val, &mut ass);
+    let maps = util::cbor_bytes_to_map(bytes)?;
+    for (key, val) in &maps {
+        if let Value::Integer(member) = key {
+            match member {
+                0x01 => ass.credential_id = util::cbor_get_bytes_from_map(val, "id")?,
+                0x02 => {
+                    if let Value::Bytes(xs) = val {
+                        parse_cbor_authdata(xs.to_vec(), &mut ass);
+                    }
+                }
+                0x03 => ass.signature = util::cbor_value_to_vec_u8(val)?,
+                0x04 => {
+                    ass.user = PublicKeyCredentialUserEntity::default()
+                        .get_id(val)
+                        .get_name(val)
+                        .get_display_name(val)
+                }
+                0x05 => ass.number_of_credentials = util::cbor_value_to_num(val)?,
+                _ => println!("- anything error"),
             }
         }
-        Ok(ass)
-    } else {
-        Err(String::from("parse error!"))
     }
+    Ok(ass)
 }
