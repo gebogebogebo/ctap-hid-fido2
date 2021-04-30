@@ -1,9 +1,10 @@
 #[allow(unused_imports)]
 use crate::util;
 
-use crate::credential_management_params;
 use crate::ctapdef;
 use crate::pintoken;
+use crate::public_key_credential_descriptor::PublicKeyCredentialDescriptor;
+use crate::public_key_credential_user_entity::PublicKeyCredentialUserEntity;
 use serde_cbor::to_vec;
 use serde_cbor::Value;
 use std::collections::BTreeMap;
@@ -55,11 +56,11 @@ fn parse_test(cbor:Value){
 */
 
 pub fn create_payload(
-    pin_token: pintoken::PinToken,
+    pin_token: Option<pintoken::PinToken>,
     sub_command: SubCommand,
     rpid_hash: Option<Vec<u8>>,
-    pkcd: Option<credential_management_params::PublicKeyCredentialDescriptor>,
-    pkcue: Option<credential_management_params::PublicKeyCredentialUserEntity>,
+    pkcd: Option<PublicKeyCredentialDescriptor>,
+    pkcue: Option<PublicKeyCredentialUserEntity>,
 ) -> Vec<u8> {
     let mut map = BTreeMap::new();
 
@@ -83,7 +84,8 @@ pub fn create_payload(
             SubCommand::DeleteCredential | SubCommand::UpdateUserInformation => {
                 let param;
                 if sub_command == SubCommand::UpdateUserInformation {
-                    param = create_public_key_credential_descriptor_pend(pkcd.unwrap(),pkcue.unwrap());
+                    param =
+                        create_public_key_credential_descriptor_pend(pkcd.unwrap(), pkcue.unwrap());
                 } else {
                     // credentialId (0x02): PublicKeyCredentialDescriptor of the credential to be deleted or updated.
                     param = create_public_key_credential_descriptor(pkcd.unwrap());
@@ -99,15 +101,12 @@ pub fn create_payload(
         }
     }
 
-    // pinProtocol(0x03)
-    {
+    if let Some(pin_token) = pin_token {
+        // pinProtocol(0x03)
         let pin_protocol = Value::Integer(1);
         map.insert(Value::Integer(0x03), pin_protocol);
-    }
 
-    // pinUvAuthParam(0x04)
-    {
-        // pinUvAuthParam (0x04): 
+        // pinUvAuthParam (0x04):
         // - authenticate(pinUvAuthToken, getCredsMetadata (0x01)).
         // - authenticate(pinUvAuthToken, enumerateCredentialsBegin (0x04) || subCommandParams).
         // -- First 16 bytes of HMAC-SHA-256 of contents using pinUvAuthToken.
@@ -142,18 +141,10 @@ fn create_rpid_hash(rpid_hash: Vec<u8>) -> Value {
     Value::Map(param)
 }
 
-fn create_public_key_credential_descriptor(
-    in_param: credential_management_params::PublicKeyCredentialDescriptor,
-) -> Value {
+fn create_public_key_credential_descriptor(in_param: PublicKeyCredentialDescriptor) -> Value {
     let mut map = BTreeMap::new();
-    map.insert(
-        Value::Text("id".to_string()),
-        Value::Bytes(in_param.id),
-    );
-    map.insert(
-        Value::Text("type".to_string()),
-        Value::Text(in_param.ctype),
-    );
+    map.insert(Value::Text("id".to_string()), Value::Bytes(in_param.id));
+    map.insert(Value::Text("type".to_string()), Value::Text(in_param.ctype));
 
     let mut param = BTreeMap::new();
     param.insert(Value::Integer(0x02), Value::Map(map));
@@ -161,29 +152,20 @@ fn create_public_key_credential_descriptor(
 }
 
 fn create_public_key_credential_descriptor_pend(
-    in_param: credential_management_params::PublicKeyCredentialDescriptor,
-    pkcuee: credential_management_params::PublicKeyCredentialUserEntity,
+    in_param: PublicKeyCredentialDescriptor,
+    pkcuee: PublicKeyCredentialUserEntity,
 ) -> Value {
     let mut param = BTreeMap::new();
     {
         let mut map = BTreeMap::new();
-        map.insert(
-            Value::Text("id".to_string()),
-            Value::Bytes(in_param.id),
-        );
-        map.insert(
-            Value::Text("type".to_string()),
-            Value::Text(in_param.ctype),
-        );    
+        map.insert(Value::Text("id".to_string()), Value::Bytes(in_param.id));
+        map.insert(Value::Text("type".to_string()), Value::Text(in_param.ctype));
         param.insert(Value::Integer(0x02), Value::Map(map));
     }
 
     {
         let mut user = BTreeMap::new();
-        user.insert(
-            Value::Text("id".to_string()),
-            Value::Bytes(pkcuee.id),
-        );
+        user.insert(Value::Text("id".to_string()), Value::Bytes(pkcuee.id));
         user.insert(
             Value::Text("name".to_string()),
             Value::Text(pkcuee.name.to_string()),

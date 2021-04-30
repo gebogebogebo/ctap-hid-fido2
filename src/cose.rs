@@ -47,13 +47,13 @@ impl CoseKey {
 
                 if let Value::Integer(member) = key {
                     match member {
-                        1 => cose.key_type = util::cbor_cast_value(val).unwrap(),
-                        3 => cose.algorithm = util::cbor_cast_value(val).unwrap(),
+                        1 => cose.key_type = util::cbor_value_to_num(val)?,
+                        3 => cose.algorithm = util::cbor_value_to_num(val)?,
                         -1 => {
                             //println!("member = {:?} , val = {:?}",member,val);
                             cose.parameters.insert(
                                 NumCast::from(*member).unwrap(),
-                                Value::Integer(util::cbor_cast_value(val).unwrap()),
+                                Value::Integer(util::cbor_value_to_num(val)?),
                             );
                         }
                         -2 | -3 => {

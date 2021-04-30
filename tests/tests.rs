@@ -3,6 +3,9 @@
 //
 
 use ctap_hid_fido2::*;
+//use ctap_hid_fido2::util;
+//use ctap_hid_fido2::HidParam;
+//use ctap_hid_fido2::InfoParam;
 
 #[test]
 fn test_get_hid_devices() {
@@ -26,6 +29,16 @@ fn test_get_info() {
 
 #[test]
 fn test_get_info_u2f() {
+    match ctap_hid_fido2::enable_info_param(&HidParam::get_default_params(),InfoParam::VersionsU2FV2) {
+        Ok(result) => {
+            if !result {
+                // Skip
+                return;
+            }
+        }
+        Err(_) => assert!(false),
+    };
+
     let hid_params = HidParam::get_default_params();
     get_info_u2f(&hid_params).unwrap();
     assert!(true);
@@ -49,23 +62,32 @@ fn test_make_credential_with_pin_non_rk() {
     let params = HidParam::get_default_params();
 
     let att = make_credential(&params, rpid, &challenge, Some(pin)).unwrap();
-    att.print("Attestation");
+    println!("Attestation");
+    println!("{}", att);
 
-    let ass = get_assertion(&params, rpid, &challenge, &att.credential_id, Some(pin)).unwrap();
-    ass.print("Assertion");
+    let ass = get_assertion(
+        &params,
+        rpid,
+        &challenge,
+        &att.credential_descriptor.id,
+        Some(pin),
+    )
+    .unwrap();
+    println!("Assertion");
+    println!("{}", ass);
 
     assert!(true);
 }
 
 #[test]
 fn test_credential_management_get_creds_metadata() {
-    match ctap_hid_fido2::enable_ctap_2_1(&ctap_hid_fido2::HidParam::get_default_params()) {
+    match ctap_hid_fido2::enable_info_param(&HidParam::get_default_params(),InfoParam::VersionsFIDO21PRE) {
         Ok(result) => {
             if !result {
                 // Skip
                 return;
             }
-        },
+        }
         Err(_) => assert!(false),
     };
 
@@ -81,18 +103,70 @@ fn test_credential_management_get_creds_metadata() {
 
 #[test]
 fn test_credential_management_enumerate_rps() {
-    match ctap_hid_fido2::enable_ctap_2_1(&ctap_hid_fido2::HidParam::get_default_params()) {
+    match ctap_hid_fido2::enable_info_param(&HidParam::get_default_params(),InfoParam::VersionsFIDO21PRE) {
         Ok(result) => {
             if !result {
                 // Skip
                 return;
             }
-        },
+        }
         Err(_) => assert!(false),
     };
 
     let pin = "1234";
     match ctap_hid_fido2::credential_management_enumerate_rps(
+        &ctap_hid_fido2::HidParam::get_default_params(),
+        Some(pin),
+    ) {
+        Ok(_) => assert!(true),
+        Err(_) => assert!(false),
+    };
+}
+
+#[test]
+fn test_bio_enrollment_get_fingerprint_sensor_info() {
+    let mut skip = true;
+    match ctap_hid_fido2::enable_info_option(&HidParam::get_default_params(),InfoOption::UserVerificationMgmtPreview) {
+        Ok(result) => {
+            //println!("result = {:?}", result);
+            if let Some(v) = result {
+                //println!("some value = {}", v);
+                if v {skip=false};
+            }
+        }
+        Err(_) => assert!(false),
+    };
+
+    // skip
+    if skip {return};
+
+    match ctap_hid_fido2::bio_enrollment_get_fingerprint_sensor_info(
+        &HidParam::get_default_params())
+    {
+        Ok(_) => assert!(true),
+        Err(_) => assert!(false),
+    };
+}
+
+#[test]
+fn test_bio_enrollment_enumerate_enrollments() {
+    let mut skip = true;
+    match ctap_hid_fido2::enable_info_option(&HidParam::get_default_params(),InfoOption::UserVerificationMgmtPreview) {
+        Ok(result) => {
+            //println!("result = {:?}", result);
+            if let Some(v) = result {
+                //println!("some value = {}", v);
+                if v {skip=false};
+            }
+        }
+        Err(_) => assert!(false),
+    };
+
+    // skip
+    if skip {return};
+
+    let pin = "1234";
+    match ctap_hid_fido2::bio_enrollment_enumerate_enrollments(
         &ctap_hid_fido2::HidParam::get_default_params(),
         Some(pin),
     ) {

@@ -5,6 +5,10 @@
 
 */
 
+mod bio_enrollment;
+mod bio_enrollment_command;
+pub mod bio_enrollment_params;
+mod bio_enrollment_response;
 mod client_pin;
 mod client_pin_command;
 mod client_pin_response;
@@ -33,10 +37,20 @@ mod make_credential_response;
 pub mod nitrokey;
 mod p256;
 mod pintoken;
+pub mod public_key;
+pub mod public_key_credential_descriptor;
+pub mod public_key_credential_rp_entity;
+pub mod public_key_credential_user_entity;
 mod selection_command;
 mod ss;
 pub mod util;
 pub mod verifier;
+
+//
+use anyhow::{Result,Error};
+use crate::bio_enrollment_params::{FingerprintKind, Modality,TemplateInfo,EnrollStatus1,EnrollStatus2};
+use crate::public_key_credential_descriptor::PublicKeyCredentialDescriptor;
+use crate::public_key_credential_user_entity::PublicKeyCredentialUserEntity;
 
 #[cfg(not(target_os = "linux"))]
 mod fidokey;
@@ -139,36 +153,33 @@ pub fn get_fidokey_devices() -> Vec<(String, HidParam)> {
 }
 
 /// Lights the LED on the FIDO key
-pub fn wink(hid_params: &[HidParam]) -> Result<(), String> {
-    let device = FidoKeyHid::new(hid_params)?;
-    let cid = ctaphid::ctaphid_init(&device)?;
-    ctaphid::ctaphid_wink(&device, &cid)
+pub fn wink(hid_params: &[HidParam]) -> Result<()> {
+    let device = FidoKeyHid::new(hid_params).map_err(Error::msg)?;
+    let cid = ctaphid::ctaphid_init(&device).map_err(Error::msg)?;
+    ctaphid::ctaphid_wink(&device, &cid).map_err(Error::msg)
 }
 
 /// Get FIDO key information
-pub fn get_info(hid_params: &[HidParam]) -> Result<get_info_params::Info, String> {
-    get_info::get_info(hid_params)
+pub fn get_info(hid_params: &[HidParam]) -> Result<get_info_params::Info> {
+    get_info::get_info(hid_params).map_err(Error::msg)
 }
 
 /// Get FIDO key information (CTAP 1.0)
-pub fn get_info_u2f(hid_params: &[HidParam]) -> Result<String, String> {
-    get_info::get_info_u2f(hid_params)
+pub fn get_info_u2f(hid_params: &[HidParam]) -> Result<String> {
+    get_info::get_info_u2f(hid_params).map_err(Error::msg)
 }
 
 /// Get PIN retry count
-pub fn get_pin_retries(hid_params: &[HidParam]) -> Result<i32, String> {
-    let device = FidoKeyHid::new(hid_params)?;
-    let cid = ctaphid::ctaphid_init(&device)?;
+pub fn get_pin_retries(hid_params: &[HidParam]) -> Result<i32> {
+    let device = FidoKeyHid::new(hid_params).map_err(Error::msg)?;
+    let cid = ctaphid::ctaphid_init(&device).map_err(Error::msg)?;
 
     let send_payload =
-        client_pin_command::create_payload(client_pin_command::SubCommand::GetRetries)?;
-    //println!("{}",util::to_hex_str(&send_payload));
+        client_pin_command::create_payload(client_pin_command::SubCommand::GetRetries).map_err(Error::msg)?;
 
-    let response_cbor = ctaphid::ctaphid_cbor(&device, &cid, &send_payload)?;
+    let response_cbor = ctaphid::ctaphid_cbor(&device, &cid, &send_payload).map_err(Error::msg)?;
 
-    let pin = client_pin_response::parse_cbor_client_pin_get_retries(&response_cbor)?;
-    //println!("authenticatorClientPIN (0x06) - getRetries");
-    //println!("- retries       = {:?}", pin.retries);
+    let pin = client_pin_response::parse_cbor_client_pin_get_retries(&response_cbor).map_err(Error::msg)?;
 
     Ok(pin.retries)
 }
@@ -179,8 +190,8 @@ pub fn make_credential(
     rpid: &str,
     challenge: &[u8],
     pin: Option<&str>,
-) -> Result<make_credential_params::Attestation, String> {
-    make_credential::make_credential(hid_params, rpid, challenge, pin, false, None, None)
+) -> Result<make_credential_params::Attestation> {
+    make_credential::make_credential(hid_params, rpid, challenge, pin, false, None, None).map_err(Error::msg)
 }
 
 /// Registration command.Generate credentials(with PIN ,Resident Key)
@@ -189,9 +200,9 @@ pub fn make_credential_rk(
     rpid: &str,
     challenge: &[u8],
     pin: Option<&str>,
-    rkparam: &make_credential_params::RkParam,
-) -> Result<make_credential_params::Attestation, String> {
-    make_credential::make_credential(hid_params, rpid, challenge, pin, true, Some(rkparam),None)
+    rkparam: &PublicKeyCredentialUserEntity,
+) -> Result<make_credential_params::Attestation> {
+    make_credential::make_credential(hid_params, rpid, challenge, pin, true, Some(rkparam), None).map_err(Error::msg)
 }
 
 /// Registration command.Generate credentials(without PIN ,non Resident Key)
@@ -199,8 +210,8 @@ pub fn make_credential_without_pin(
     hid_params: &[HidParam],
     rpid: &str,
     challenge: &[u8],
-) -> Result<make_credential_params::Attestation, String> {
-    make_credential::make_credential(hid_params, rpid, challenge, None, false, None,None)
+) -> Result<make_credential_params::Attestation> {
+    make_credential::make_credential(hid_params, rpid, challenge, None, false, None, None).map_err(Error::msg)
 }
 
 /// Authentication command(with PIN , non Resident Key)
@@ -210,8 +221,9 @@ pub fn get_assertion(
     challenge: &[u8],
     credential_id: &[u8],
     pin: Option<&str>,
-) -> Result<get_assertion_params::Assertion, String> {
-    let asss = get_assertion::get_assertion(hid_params, rpid, challenge, credential_id, pin, true, None)?;
+) -> Result<get_assertion_params::Assertion> {
+    let asss =
+        get_assertion::get_assertion(hid_params, rpid, challenge, credential_id, pin, true, None).map_err(Error::msg)?;
     Ok(asss[0].clone())
 }
 
@@ -221,34 +233,286 @@ pub fn get_assertions_rk(
     rpid: &str,
     challenge: &[u8],
     pin: Option<&str>,
-) -> Result<Vec<get_assertion_params::Assertion>, String> {
+) -> Result<Vec<get_assertion_params::Assertion>> {
     let dmy: [u8; 0] = [];
-    get_assertion::get_assertion(hid_params, rpid, challenge, &dmy, pin, true, None)
+    get_assertion::get_assertion(hid_params, rpid, challenge, &dmy, pin, true, None).map_err(Error::msg)
 }
 
-pub fn enable_ctap_2_1(hid_params: &[HidParam]) -> Result<bool,String>{
-    let info = get_info::get_info(hid_params)?;
-    let find = info.versions.iter().find(|v| v.contains("FIDO_2_1"));
-    match find {
-        Some(_) => Ok(true),
-        None => Ok(false),
-    }
+#[derive(Debug, Clone, PartialEq)]
+pub enum InfoParam {
+    VersionsU2FV2,
+    VersionsFIDO20,
+    VersionsFIDO21PRE,
+    VersionsFIDO21,
+    ExtensionsCredProtect,
+    ExtensionsCredBlob,
+    ExtensionsLargeBlobKey,
+    ExtensionsMinPinLength,
+    ExtensionsHmacSecret,
 }
 
-pub fn enable_ctap_2_1_pre(hid_params: &[HidParam]) -> Result<bool,String>{
-    let info = get_info::get_info(hid_params)?;
-    let find = info.versions.iter().find(|v| v.contains("FIDO_2_1_PRE"));
-    match find {
-        Some(_) => Ok(true),
-        None => Ok(false),
+pub fn enable_info_param(hid_params: &[HidParam],info_param: InfoParam) -> Result<bool> {
+    let info = get_info::get_info(hid_params).map_err(Error::msg)?;
+    let find = match info_param {
+        InfoParam::VersionsU2FV2 => "U2F_V2",
+        InfoParam::VersionsFIDO20 => "FIDO_2_0",
+        InfoParam::VersionsFIDO21PRE => "FIDO_2_1_PRE",
+        InfoParam::VersionsFIDO21 => "FIDO_2_1",
+        InfoParam::ExtensionsCredProtect => "credProtect",
+        InfoParam::ExtensionsCredBlob => "credBlob",
+        InfoParam::ExtensionsLargeBlobKey => "credBlobKey",
+        InfoParam::ExtensionsMinPinLength => "minPinLength",
+        InfoParam::ExtensionsHmacSecret => "hmac-secret",
+    };
+    let ret = info.versions.iter().find(|v| *v==find);
+    if let Some(_) = ret {
+        return Ok(true);
     }
+    let ret = info.extensions.iter().find(|v| *v==find);
+    if let Some(_) = ret {
+        return Ok(true);
+    }
+    Ok(false)
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum InfoOption {
+    Rk,
+    Up,
+    Uv,
+    Plat,
+    ClinetPin,
+    CredentialMgmtPreview,
+    CredMgmt,
+    UserVerificationMgmtPreview,
+    BioEnroll,
+}
+pub fn enable_info_option(hid_params: &[HidParam],info_option: InfoOption) -> Result<Option<bool>> {
+    let info = get_info::get_info(hid_params).map_err(Error::msg)?;
+    let find = match info_option {
+        InfoOption::Rk => "rk",
+        InfoOption::Up => "up",
+        InfoOption::Uv => "uv",
+        InfoOption::Plat => "plat",
+        InfoOption::ClinetPin => "plat",
+        InfoOption::CredentialMgmtPreview => "credentialMgmtPreview",
+        InfoOption::CredMgmt => "credMgmt",
+        InfoOption::UserVerificationMgmtPreview => "userVerificationMgmtPreview",
+        InfoOption::BioEnroll => "bioEnroll",
+    };
+    let ret = info.options.iter().find(|v| (*v).0==find);
+    if let Some(v) = ret {
+        // v.1 == true or false
+        // - present and set to true.
+        // - present and set to false.
+        return Ok(Some(v.1));
+    }
+    // absent.
+    Ok(None)
+}
+
+/// BioEnrollment - getFingerprintSensorInfo (CTAP 2.1-PRE)
+pub fn bio_enrollment_get_fingerprint_sensor_info(
+    hid_params: &[HidParam],
+) -> Result<(Modality, FingerprintKind)> {
+    let init = bio_enrollment::bio_enrollment_init(hid_params,None).map_err(Error::msg)?;
+
+    // 6.7.2. Get bio modality
+    let data = bio_enrollment::bio_enrollment(&init.0,&init.1,None, None, None, None).map_err(Error::msg)?;
+    if util::is_debug() {
+        println!("{}", data);
+    }
+    let modality: Modality = match data.modality{
+        0x01 => Modality::Fingerprint,
+        _ => Modality::Unknown,
+    };
+
+    // 6.7.3. Get fingerprint sensor info
+    let data = bio_enrollment::bio_enrollment(
+        &init.0,
+        &init.1,
+        None,
+        Some(bio_enrollment_command::SubCommand::GetFingerprintSensorInfo),
+        None,
+        None,
+    ).map_err(Error::msg)?;
+    if util::is_debug() {
+        println!("{}", data);
+    }
+    let fptype = match data.fingerprint_kind{
+        0x01 => FingerprintKind::TouchType,
+        0x02 => FingerprintKind::SwipeType,
+        _ => FingerprintKind::Unknown,
+    };
+
+    Ok((modality, fptype))
+}
+
+/// BioEnrollment - EnrollBegin
+pub fn bio_enrollment_begin(
+    hid_params: &[HidParam],
+    pin: Option<&str>,
+    timeout_milliseconds: Option<u16>,
+) -> Result<(EnrollStatus1,EnrollStatus2)> {
+    let init = bio_enrollment::bio_enrollment_init(hid_params,pin).map_err(Error::msg)?;
+
+    let data = bio_enrollment::bio_enrollment(
+        &init.0,
+        &init.1,
+        init.2.as_ref(),
+        Some(bio_enrollment_command::SubCommand::EnrollBegin),
+        None,
+        timeout_milliseconds,
+    ).map_err(Error::msg)?;
+    if util::is_debug() {
+        println!("{}", data);
+    }
+    let result1 = EnrollStatus1 {
+        device : init.0,
+        cid : init.1,
+        pin_token : init.2,
+        template_id : data.template_id.to_vec(),
+    };
+    let finish = if data.last_enroll_sample_status == 0x00 && data.remaining_samples == 0 {
+        true
+    }else{
+        false
+    };
+    let result2 = EnrollStatus2 {
+        status : data.last_enroll_sample_status as u8,
+        message : ctapdef::get_ctap_last_enroll_sample_status_message(data.last_enroll_sample_status as u8),
+        remaining_samples : data.remaining_samples,
+        is_finish : finish,
+    };
+    Ok((result1,result2))
+}
+
+/// BioEnrollment - CaptureNext
+pub fn bio_enrollment_next(
+    enroll_status: &EnrollStatus1,
+    timeout_milliseconds: Option<u16>,
+) -> Result<EnrollStatus2> {
+    let template_info = TemplateInfo::new(enroll_status.template_id.to_vec(), None);
+    let data = bio_enrollment::bio_enrollment(
+        &enroll_status.device,
+        &enroll_status.cid,
+        enroll_status.pin_token.as_ref(),
+        Some(bio_enrollment_command::SubCommand::EnrollCaptureNextSample),
+        Some(template_info),
+        timeout_milliseconds,
+    ).map_err(Error::msg)?;
+    if util::is_debug() {
+        println!("{}", data);
+    }
+    let finish = if data.last_enroll_sample_status == 0x00 && data.remaining_samples == 0 {
+        true
+    }else{
+        false
+    };
+    let result = EnrollStatus2 {
+        status : data.last_enroll_sample_status as u8,
+        message : ctapdef::get_ctap_last_enroll_sample_status_message(data.last_enroll_sample_status as u8),
+        remaining_samples : data.remaining_samples,
+        is_finish : finish,
+    };
+    Ok(result)
+}
+
+/// BioEnrollment - Cancel current enrollment
+pub fn bio_enrollment_cancel(
+    enroll_status: &EnrollStatus1,
+) -> Result<()> {
+    let data = bio_enrollment::bio_enrollment(
+        &enroll_status.device,
+        &enroll_status.cid,
+        enroll_status.pin_token.as_ref(),
+        Some(bio_enrollment_command::SubCommand::CancelCurrentEnrollment),
+        None,
+        None,
+    ).map_err(Error::msg)?;
+    if util::is_debug() {
+        println!("{}", data);
+    }
+    Ok(())
+}
+
+/// BioEnrollment - enumerateEnrollments (CTAP 2.1-PRE)
+/// 6.7.6. Enumerate enrollments
+pub fn bio_enrollment_enumerate_enrollments(
+    hid_params: &[HidParam],
+    pin: Option<&str>,
+) -> Result<Vec<TemplateInfo>> {
+    let init = bio_enrollment::bio_enrollment_init(hid_params,pin).map_err(Error::msg)?;
+    let pin_token = init.2.unwrap();
+
+    let data = bio_enrollment::bio_enrollment(
+        &init.0,
+        &init.1,
+        Some(&pin_token),
+        Some(bio_enrollment_command::SubCommand::EnumerateEnrollments),
+        None,
+        None,
+    ).map_err(Error::msg)?;
+    if util::is_debug() {
+        println!("{}", data);
+    }
+
+    Ok(data.template_infos)
+}
+
+/// BioEnrollment - Rename/Set FriendlyName
+/// 6.7.7. Rename/Set FriendlyName
+pub fn bio_enrollment_set_friendly_name(
+    hid_params: &[HidParam],
+    pin: Option<&str>,
+    template_info: TemplateInfo,
+) -> Result<()> {
+    let init = bio_enrollment::bio_enrollment_init(hid_params,pin).map_err(Error::msg)?;
+    let pin_token = init.2.unwrap();
+
+    let data = bio_enrollment::bio_enrollment(
+        &init.0,
+        &init.1,
+        Some(&pin_token),
+        Some(bio_enrollment_command::SubCommand::SetFriendlyName),
+        Some(template_info),
+        None,
+    ).map_err(Error::msg)?;
+    if util::is_debug() {
+        println!("{}", data);
+    }
+    Ok(())
+}
+
+/// 6.7.8. Remove enrollment
+pub fn bio_enrollment_remove(
+    hid_params: &[HidParam],
+    pin: Option<&str>,
+    template_id: Vec<u8>,
+) -> Result<()> {
+    let init = bio_enrollment::bio_enrollment_init(hid_params,pin).map_err(Error::msg)?;
+    let pin_token = init.2.unwrap();
+
+    let template_info = TemplateInfo::new(template_id, None);
+    let data = bio_enrollment::bio_enrollment(
+        &init.0,
+        &init.1,
+        Some(&pin_token),
+        Some(bio_enrollment_command::SubCommand::RemoveEnrollment),
+        Some(template_info),
+        None,
+    ).map_err(Error::msg)?;
+    if util::is_debug() {
+        println!("{}", data);
+    }
+    Ok(())
 }
 
 /// CredentialManagement - getCredsMetadata (CTAP 2.1-PRE)
 pub fn credential_management_get_creds_metadata(
     hid_params: &[HidParam],
     pin: Option<&str>,
-) -> Result<credential_management_params::CredentialsCount, String> {
+) -> Result<credential_management_params::CredentialsCount> {
     let meta = credential_management::credential_management(
         hid_params,
         pin,
@@ -256,7 +520,7 @@ pub fn credential_management_get_creds_metadata(
         None,
         None,
         None,
-    )?;
+    ).map_err(Error::msg)?;
     Ok(credential_management_params::CredentialsCount::new(&meta))
 }
 
@@ -264,7 +528,7 @@ pub fn credential_management_get_creds_metadata(
 pub fn credential_management_enumerate_rps(
     hid_params: &[HidParam],
     pin: Option<&str>,
-) -> Result<Vec<credential_management_params::Rp>, String> {
+) -> Result<Vec<credential_management_params::Rp>> {
     let mut datas: Vec<credential_management_params::Rp> = Vec::new();
     let data = credential_management::credential_management(
         hid_params,
@@ -273,7 +537,7 @@ pub fn credential_management_enumerate_rps(
         None,
         None,
         None,
-    )?;
+    ).map_err(Error::msg)?;
     datas.push(credential_management_params::Rp::new(&data));
     if data.total_rps > 0 {
         let roop_n = data.total_rps - 1;
@@ -285,7 +549,7 @@ pub fn credential_management_enumerate_rps(
                 None,
                 None,
                 None,
-            )?;
+            ).map_err(Error::msg)?;
             datas.push(credential_management_params::Rp::new(&data));
         }
     }
@@ -297,7 +561,7 @@ pub fn credential_management_enumerate_credentials(
     hid_params: &[HidParam],
     pin: Option<&str>,
     rpid_hash: Vec<u8>,
-) -> Result<Vec<credential_management_params::Credential>, String> {
+) -> Result<Vec<credential_management_params::Credential>> {
     let mut datas: Vec<credential_management_params::Credential> = Vec::new();
 
     let data = credential_management::credential_management(
@@ -307,7 +571,7 @@ pub fn credential_management_enumerate_credentials(
         Some(rpid_hash.to_vec()),
         None,
         None,
-    )?;
+    ).map_err(Error::msg)?;
     datas.push(credential_management_params::Credential::new(&data));
     if data.total_credentials > 0 {
         let roop_n = data.total_credentials - 1;
@@ -319,7 +583,7 @@ pub fn credential_management_enumerate_credentials(
                 Some(rpid_hash.to_vec()),
                 None,
                 None,
-            )?;
+            ).map_err(Error::msg)?;
             datas.push(credential_management_params::Credential::new(&data));
         }
     }
@@ -330,8 +594,8 @@ pub fn credential_management_enumerate_credentials(
 pub fn credential_management_delete_credential(
     hid_params: &[HidParam],
     pin: Option<&str>,
-    pkcd: Option<credential_management_params::PublicKeyCredentialDescriptor>,
-) -> Result<credential_management_params::CredsMetadata, String> {
+    pkcd: Option<PublicKeyCredentialDescriptor>,
+) -> Result<()> {
     credential_management::credential_management(
         hid_params,
         pin,
@@ -339,16 +603,17 @@ pub fn credential_management_delete_credential(
         None,
         pkcd,
         None,
-    )
+    ).map_err(Error::msg)?;
+    Ok(())
 }
 
 /// CredentialManagement - updateUserInformation (CTAP 2.1-PRE)
 pub fn credential_management_update_user_information(
     hid_params: &[HidParam],
     pin: Option<&str>,
-    pkcd: Option<credential_management_params::PublicKeyCredentialDescriptor>,
-    pkcue: Option<credential_management_params::PublicKeyCredentialUserEntity>,
-) -> Result<credential_management_params::CredsMetadata, String> {
+    pkcd: Option<PublicKeyCredentialDescriptor>,
+    pkcue: Option<public_key_credential_user_entity::PublicKeyCredentialUserEntity>,
+) -> Result<()> {
     credential_management::credential_management(
         hid_params,
         pin,
@@ -356,31 +621,32 @@ pub fn credential_management_update_user_information(
         None,
         pkcd,
         pkcue,
-    )
+    ).map_err(Error::msg)?;
+    Ok(())
 }
 
 /// Selection (CTAP 2.1-PRE)
-pub fn selection(hid_params: &[HidParam]) -> Result<String, String> {
-    let device = FidoKeyHid::new(hid_params)?;
-    let cid = ctaphid::ctaphid_init(&device)?;
+pub fn selection(hid_params: &[HidParam]) -> Result<String> {
+    let device = FidoKeyHid::new(hid_params).map_err(Error::msg)?;
+    let cid = ctaphid::ctaphid_init(&device).map_err(Error::msg)?;
 
     let send_payload = selection_command::create_payload();
     println!("{}", util::to_hex_str(&send_payload));
 
-    let _response_cbor = ctaphid::ctaphid_cbor(&device, &cid, &send_payload)?;
+    let _response_cbor = ctaphid::ctaphid_cbor(&device, &cid, &send_payload).map_err(Error::msg)?;
 
     Ok("".to_string())
 }
 
 /// Get Config (CTAP 2.1-PRE)
-pub fn config(hid_params: &[HidParam]) -> Result<String, String> {
-    let device = FidoKeyHid::new(hid_params)?;
-    let cid = ctaphid::ctaphid_init(&device)?;
+pub fn config(hid_params: &[HidParam]) -> Result<String> {
+    let device = FidoKeyHid::new(hid_params).map_err(Error::msg)?;
+    let cid = ctaphid::ctaphid_init(&device).map_err(Error::msg)?;
 
     let send_payload = config_command::create_payload_enable_enterprise_attestation();
     println!("{}", util::to_hex_str(&send_payload));
 
-    let _response_cbor = ctaphid::ctaphid_cbor(&device, &cid, &send_payload)?;
+    let _response_cbor = ctaphid::ctaphid_cbor(&device, &cid, &send_payload).map_err(Error::msg)?;
 
     Ok("".to_string())
 }
@@ -427,7 +693,7 @@ mod tests {
             let mut params =
                 make_credential_command::Params::new(rpid, challenge.to_vec(), [].to_vec());
             params.option_rk = false; // non rk
-            //params.option_uv = true;
+                                      //params.option_uv = true;
 
             println!(
                 "- client_data_hash({:02})    = {:?}",
@@ -447,7 +713,7 @@ mod tests {
                 util::to_hex_str(&send_payload)
             );
         }
-    
+
         let command = hex::encode(send_payload).to_uppercase();
         assert_eq!(command, check);
     }
@@ -469,5 +735,4 @@ mod tests {
 
         assert_eq!(check, hex::encode(pin_auth).to_uppercase());
     }
-    
 }

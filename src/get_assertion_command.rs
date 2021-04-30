@@ -56,7 +56,7 @@ pub fn create_payload(params: Params) -> Vec<u8> {
     options_val.insert(Value::Text("up".to_string()), Value::Bool(params.option_up));
     if let Some(v) = params.option_uv {
         options_val.insert(Value::Text("uv".to_string()), Value::Bool(v));
-    }        
+    }
 
     let options = Value::Map(options_val);
 

@@ -22,39 +22,11 @@ pub struct Info {
     pub algorithms: Vec<(String, String)>,
 }
 
-impl Info {
-    #[allow(dead_code)]
-    pub fn print(self: &Info, title: &str) {
-        println!("{}", title);
-        println!("- versions      = {:?}", self.versions);
-        println!("- extensions    = {:?}", self.extensions);
-        println!(
-            "- aaguid({:?})    = {:?}",
-            self.aaguid.len(),
-            util::to_hex_str(&self.aaguid)
-        );
-        println!("- options       = {:?}", self.options);
-        println!("- max_msg_size  = {:?}", self.max_msg_size);
-        println!("- pin_uv_auth_protocols = {:?}", self.pin_uv_auth_protocols);
-        println!(
-            "- max_credential_count_in_list = {:?}",
-            self.max_credential_count_in_list
-        );
-        println!(
-            "- max_credential_id_length = {:?}",
-            self.max_credential_id_length
-        );
-        println!("- algorithms    = {:?}", self.algorithms);
-
-        println!("");
-    }
-}
-
 impl fmt::Display for Info {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let tmp1 = format!("- versions                      = ");
         let tmp2 = format!("- extensions                    = ");
-        let tmp3 = format!("- aaguid({:02})                    = ",self.aaguid.len());
+        let tmp3 = format!("- aaguid({:02})                    = ", self.aaguid.len());
         let tmp4 = format!("- options                       = ");
         let tmp5 = format!("- max_msg_size                  = ");
         let tmp6 = format!("- pin_uv_auth_protocols         = ");
@@ -62,7 +34,7 @@ impl fmt::Display for Info {
         let tmp8 = format!("- max_credential_id_length      = ");
         let tmp9 = format!("- transports                    = ");
         let tmpa = format!("- algorithms                    = ");
-        
+
         write!(
             f,
             "{}{:?}\n{}{:?}\n{}{}\n{}{:?}\n{}{:?}\n{}{:?}\n{}{:?}\n{}{:?}\n{}{:?}\n{}{:?}",
