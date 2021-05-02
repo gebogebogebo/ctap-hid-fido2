@@ -3,6 +3,9 @@
 for Nitrokey FIDO2 only.
 */
 
+#[allow(unused_imports)]
+use crate::util;
+
 use crate::ctaphid;
 use crate::ctapihd_nitro;
 
@@ -167,6 +170,11 @@ pub fn solo_bootloader(hid_params: &[crate::HidParam]) -> Result<(), String> {
 
     // authenticate
     /*
+        Ctap1.INS.REGISTER = 0x01
+        Ctap1.INS.AUTHENTICATE = 0x02
+        Ctap1.INS.VERSION = 0x03
+    */
+    /*
     client_param = b"B" * 32
     app_param = b"A" * 32
     key_handle = format_request
@@ -196,7 +204,7 @@ pub fn solo_bootloader(hid_params: &[crate::HidParam]) -> Result<(), String> {
         // http://web-apps.nbookmark.com/ascii-converter/
         let _data: Vec<u8> = Vec::new();
 
-        match ctaphid::send_apdu(&device, &cid, 0, 3, 0, 0, &_data) {
+        match ctaphid::send_apdu(&device, &cid, 0, 0x44, 0, 0, &_data) {
             Ok(result) => {
                 let version: String = String::from_utf8(result).unwrap();
                 println!("U2F version = {}", version);
@@ -271,6 +279,109 @@ pub fn solo_bootloader(hid_params: &[crate::HidParam]) -> Result<(), String> {
         match ctaphid::send_apdu(&device, &cid, 0, 0, 0, 0, &data) {
             Ok(_result) => {
                 // PEND
+            }
+            Err(error) => {
+                println!("{}", error);
+            }
+        }
+    }
+
+    Ok(())
+}
+
+pub fn get_bootloader_version(hid_params: &[crate::HidParam]) -> Result<(), String> {
+    let device = FidoKeyHid::new(hid_params)?;
+    let cid = ctaphid::ctaphid_init(&device)?;
+    {
+        // client param
+        // (B * 32)
+        let mut client_param: Vec<u8> = vec![0; 32];
+        for counter in 0..32 {
+            client_param[counter] = 0x42;
+        }
+
+        // app param
+        // (A * 32)
+        let mut app_param: Vec<u8> = vec![0; 32];
+        for counter in 0..32 {
+            app_param[counter] = 0x41;
+        }
+
+        // create format_request
+        // \x44 \x00 \x00 \x00 \x8c \x27 \x90 \xf6 \x00 \x10 AAAAAAAAAAAAAAAA
+        let solo_bootloader_version = 0x44;
+        let mut format_request: Vec<u8> = vec![0; 26];
+        format_request[0] = solo_bootloader_version;
+        format_request[1] = 0x00;
+        format_request[2] = 0x00;
+        format_request[3] = 0x00;
+
+        // TAG
+        format_request[4] = 0x8c;
+        format_request[5] = 0x27;
+        format_request[6] = 0x90;
+        format_request[7] = 0xf6;
+
+        // length
+        format_request[8] = 0x0;
+        format_request[9] = 0x10;
+
+        // data(A x 16)
+        for counter in 0..16 {
+            format_request[10 + counter] = 0x41;
+        }
+        // format_request
+
+        // data
+        let mut data: Vec<u8> =
+            vec![0; client_param.len() + app_param.len() + 1 + format_request.len()];
+        let mut index = 0;
+        for counter in 0..client_param.len() {
+            data[index] = client_param[counter];
+            index = index + 1
+        }
+        for counter in 0..app_param.len() {
+            data[index] = app_param[counter];
+            index = index + 1;
+        }
+
+        data[index] = 26;
+        index = index + 1;
+
+        for counter in 0..format_request.len() {
+            data[index] = format_request[counter];
+            index = index + 1;
+        }
+
+        // CTAP1.INS.AUTHENTICATE = 2
+        match ctaphid::send_apdu(&device, &cid, 0, 2, 0, 0, &data) {
+            Ok(result) => {
+                // PEND
+                println!(
+                    "- response({:02})    = {:?}",
+                    result.len(),
+                    util::to_hex_str(&result)
+                );
+                // parse
+                {
+                    let ver1=result[6];
+                    let ver2=result[7];
+                    let ver3=result[8];
+                    println!("{}-{}-{}",ver1,ver2,ver3);
+                }
+                // result[9] = 0xff;
+                {
+                    let d=&result[10..41];
+                    let tmp = String::from_utf8(d.to_vec());
+                    println!("{}",tmp.unwrap());
+                }
+                // result[41] = 0xff;
+                {
+                    let d=&result[42..50];
+                    let tmp = String::from_utf8(d.to_vec());
+                    println!("{}",tmp.unwrap());
+                }
+                let a = 0;
             }
             Err(error) => {
                 println!("{}", error);
