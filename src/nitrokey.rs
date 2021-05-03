@@ -289,105 +289,88 @@ pub fn solo_bootloader(hid_params: &[crate::HidParam]) -> Result<(), String> {
     Ok(())
 }
 
-pub fn get_bootloader_version(hid_params: &[crate::HidParam]) -> Result<(), String> {
+fn create_data(nitro_command:u8) -> Result<Vec<u8>,String>{
+    // request
+    // - nitro_command(4byte) + TAG(4byte) + length(2byte) + A*16
+    let mut request: Vec<u8> = vec![0; 10];
+
+    // command
+    request[0] = nitro_command;
+
+    // TAG
+    request[4] = 0x8c;
+    request[5] = 0x27;
+    request[6] = 0x90;
+    request[7] = 0xf6;
+
+    // length
+    request[8] = 0x0;
+    request[9] = 0x10;
+
+    // request-data(A * 16)
+    request.append(&mut vec![0x41; 16]);
+
+    // data
+    let mut data: Vec<u8> = vec![];
+
+    // client param (B * 32)
+    data.append(&mut vec![0x42; 32]);
+    // app param (A * 32)
+    data.append(&mut vec![0x41; 32]);
+    // length
+    data.append(&mut vec![26]);
+    // request
+    data.append(&mut request);
+
+    Ok(data)
+}
+
+pub fn is_bootloader_mode(hid_params: &[crate::HidParam]) -> Result<bool, String> {
     let device = FidoKeyHid::new(hid_params)?;
     let cid = ctaphid::ctaphid_init(&device)?;
-    {
-        // client param
-        // (B * 32)
-        let mut client_param: Vec<u8> = vec![0; 32];
-        for counter in 0..32 {
-            client_param[counter] = 0x42;
-        }
 
-        // app param
-        // (A * 32)
-        let mut app_param: Vec<u8> = vec![0; 32];
-        for counter in 0..32 {
-            app_param[counter] = 0x41;
-        }
+    let solo_bootloader_version = 0x44;
+    let data = create_data(solo_bootloader_version)?;
 
-        // create format_request
-        // \x44 \x00 \x00 \x00 \x8c \x27 \x90 \xf6 \x00 \x10 AAAAAAAAAAAAAAAA
-        let solo_bootloader_version = 0x44;
-        let mut format_request: Vec<u8> = vec![0; 26];
-        format_request[0] = solo_bootloader_version;
-        format_request[1] = 0x00;
-        format_request[2] = 0x00;
-        format_request[3] = 0x00;
+    // CTAP1.INS.AUTHENTICATE = 2
+    let mut response = match ctaphid::send_apdu(&device, &cid, 0, 2, 0, 0, &data){
+        Ok(response) => response,
+        Err(_) => return Ok(false),
+    };
 
-        // TAG
-        format_request[4] = 0x8c;
-        format_request[5] = 0x27;
-        format_request[6] = 0x90;
-        format_request[7] = 0xf6;
+    if util::is_debug() == true {
+        println!(
+            "- response({:02})    = {:?}",
+            response.len(),
+            util::to_hex_str(&response)
+        );
+    }
 
-        // length
-        format_request[8] = 0x0;
-        format_request[9] = 0x10;
+    // remove headder
+    let mut response = response.split_off(3+2);
 
-        // data(A x 16)
-        for counter in 0..16 {
-            format_request[10 + counter] = 0x41;
-        }
-        // format_request
+    // status
+    if response[0] != 0 {
+        return Ok(false);
+    }
+    let response = response.split_off(1);
 
-        // data
-        let mut data: Vec<u8> =
-            vec![0; client_param.len() + app_param.len() + 1 + format_request.len()];
-        let mut index = 0;
-        for counter in 0..client_param.len() {
-            data[index] = client_param[counter];
-            index = index + 1
-        }
-        for counter in 0..app_param.len() {
-            data[index] = app_param[counter];
-            index = index + 1;
-        }
+    // split by 0xff
+    let datas: Vec<&[u8]> = response.split(|&x| x == 0xff).collect();
 
-        data[index] = 26;
-        index = index + 1;
+    // parse
+    for (i, val) in datas.iter().enumerate() {
+        //println!("{}: {}", i, val);
+        if val.len() == 0 {continue;}
 
-        for counter in 0..format_request.len() {
-            data[index] = format_request[counter];
-            index = index + 1;
-        }
-
-        // CTAP1.INS.AUTHENTICATE = 2
-        match ctaphid::send_apdu(&device, &cid, 0, 2, 0, 0, &data) {
-            Ok(result) => {
-                // PEND
-                println!(
-                    "- response({:02})    = {:?}",
-                    result.len(),
-                    util::to_hex_str(&result)
-                );
-                // parse
-                {
-                    let ver1=result[6];
-                    let ver2=result[7];
-                    let ver3=result[8];
-                    println!("{}-{}-{}",ver1,ver2,ver3);
-                }
-                // result[9] = 0xff;
-                {
-                    let d=&result[10..41];
-                    let tmp = String::from_utf8(d.to_vec());
-                    println!("{}",tmp.unwrap());
-                }
-                // result[41] = 0xff;
-                {
-                    let d=&result[42..50];
-                    let tmp = String::from_utf8(d.to_vec());
-                    println!("{}",tmp.unwrap());
-                }
-                let a = 0;
-            }
-            Err(error) => {
-                println!("{}", error);
-            }
+        if i == 0{
+            println!("{}{}{}",val[0],val[1],val[2]);
+        }else{
+            // string data
+            let tmp = String::from_utf8(val.to_vec());
+            println!("{}",tmp.unwrap());
         }
     }
 
-    Ok(())
+    Ok(true)
 }
