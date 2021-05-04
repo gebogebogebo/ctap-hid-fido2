@@ -49,14 +49,28 @@ fn main() -> Result<()> {
     let firmware_str = String::from_utf8(firmware_dec.to_vec())?;
 
     // str -> ihex recs
-    let reader = ihex::Reader::new(&firmware_str);
+    let mut reader = ihex::Reader::new(&firmware_str);
+
+    // offset
+    // get Record::ExtendedLinearAddress
+    let aaa = reader.find(|x|x.as_ref().unwrap().record_type() == 0x04);
+
     for rec in reader {
+        let tmp = rec.clone().unwrap();
+        let x = if let Record::ExtendedLinearAddress(x) = tmp {x}else{0};
+
         //if rec.clone().unwrap().record_type() != 0x00 {
             println!("rec: {:?}", rec);
         //}
     }
 
     //let result = ihex::create_object_file_representation(reader).unwrap();
+
+    // :020000040800F2
+    // :02 0000 04 08 00 F2
+    // offsetがほしい ->       134217728
+    //                            20480
+    // 正解 =                 134238208
 
     //rec: Ok(Data { offset: 20480, value: [0, 192, 0, 32, 209, 115, 0, 8, 33, 116, 0, 8, 33, 116, 0, 8] })
     //rec: Ok(ExtendedLinearAddress(2048))
