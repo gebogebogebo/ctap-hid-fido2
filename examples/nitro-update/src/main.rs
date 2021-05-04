@@ -47,15 +47,24 @@ fn main() -> Result<()> {
     };
     let firmware_dec = &decode(firmware_base64)?;
     let firmware_str = String::from_utf8(firmware_dec.to_vec())?;
-    
-    let records = &[
-        Record::Data { offset: 0x0010, value: vec![0x48,0x65,0x6C,0x6C,0x6F] },
-        //Record::Data { offset: 0x0010, value: firmware_bin.to_vec() },
-        Record::EndOfFile
-    ];
 
-    let object = ihex::create_object_file_representation(records)?;
-    println!("{}", object);
+    // str -> ihex recs
+    let reader = ihex::Reader::new(&firmware_str);
+    for rec in reader {
+        //if rec.clone().unwrap().record_type() != 0x00 {
+            println!("rec: {:?}", rec);
+        //}
+    }
+
+    //let result = ihex::create_object_file_representation(reader).unwrap();
+
+    //rec: Ok(Data { offset: 20480, value: [0, 192, 0, 32, 209, 115, 0, 8, 33, 116, 0, 8, 33, 116, 0, 8] })
+    //rec: Ok(ExtendedLinearAddress(2048))
+    //rec: Ok(ExtendedLinearAddress(2049))
+    //rec: Ok(StartLinearAddress(134247377))
+    //rec: Ok(EndOfFile)
+    let a = 0;
+
 
     //let signature = &v["versions"][">2.5.3"]["signature"];
 
