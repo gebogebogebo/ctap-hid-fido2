@@ -119,7 +119,7 @@ fn write_firmware(json: String) -> Result<Vec<u8>> {
         // PEND イテレータを元に戻すために作り直す（もっといい方法ないか）
         let mut reader = ihex::Reader::new(&firmware_str);
 
-        let _data = tobinarray(&mut reader, i, chunk)?;
+        let data = tobinarray(&mut reader, i, chunk)?;
         /*
         println!("{}", i);
         println!(
@@ -133,7 +133,7 @@ fn write_firmware(json: String) -> Result<Vec<u8>> {
         */
 
         //書き込み！
-        //self.write_flash(i, data)
+        nitrokey::write_flash(&HidParam::get_default_params(),i,&data)?;
     }
 
     Ok(signature_dec)
