@@ -2,6 +2,7 @@
 ## Nitrokey Custom Commands
 for Nitrokey FIDO2 only.
 */
+use anyhow::{Result,Error};
 
 #[allow(unused_imports)]
 use crate::util;
@@ -157,10 +158,10 @@ pub fn get_status(hid_params: &[crate::HidParam]) -> Result<NitrokeyStatus, Stri
     Ok(ret)
 }
 
-pub fn enter_boot(hid_params: &[crate::HidParam]) -> Result<(), String> {
-    let device = FidoKeyHid::new(hid_params)?;
-    let cid = ctaphid::ctaphid_init(&device)?;
-    let result = ctapihd_nitro::ctaphid_nitro_enter_boot(&device, &cid)?;
+pub fn enter_boot(hid_params: &[crate::HidParam]) -> Result<()> {
+    let device = FidoKeyHid::new(hid_params).map_err(Error::msg)?;
+    let cid = ctaphid::ctaphid_init(&device).map_err(Error::msg)?;
+    let result = ctapihd_nitro::ctaphid_nitro_enter_boot(&device, &cid).map_err(Error::msg)?;
     Ok(result)
 }
 
@@ -325,12 +326,12 @@ fn create_data(nitro_command:u8) -> Result<Vec<u8>,String>{
     Ok(data)
 }
 
-pub fn is_bootloader_mode(hid_params: &[crate::HidParam]) -> Result<bool, String> {
-    let device = FidoKeyHid::new(hid_params)?;
-    let cid = ctaphid::ctaphid_init(&device)?;
+pub fn is_bootloader_mode(hid_params: &[crate::HidParam]) -> Result<bool> {
+    let device = FidoKeyHid::new(hid_params).map_err(Error::msg)?;
+    let cid = ctaphid::ctaphid_init(&device).map_err(Error::msg)?;
 
     let solo_bootloader_version = 0x44;
-    let data = create_data(solo_bootloader_version)?;
+    let data = create_data(solo_bootloader_version).map_err(Error::msg)?;
 
     // CTAP1.INS.AUTHENTICATE = 2
     let mut response = match ctaphid::send_apdu(&device, &cid, 0, 2, 0, 0, &data){

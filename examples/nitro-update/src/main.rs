@@ -1,89 +1,167 @@
-use anyhow::Result;
-use serde_json::Value;
+use anyhow::{anyhow, Result};
+use base64_url;
+use ctap_hid_fido2::util;
 use ihex::Record;
-use base64::decode;
+use serde_json::Value;
 
-fn bootloader() {
-    let result = match ctap_hid_fido2::nitrokey::is_bootloader_mode(&ctap_hid_fido2::HidParam::get_default_params()){
-        Ok(result) => result,
-        Err(e) => {
-            println!("- error: {:?}", e);
-            return;
-        }
-    };
-
+fn set_bootloader_mode() -> Result<()> {
+    let result = ctap_hid_fido2::nitrokey::is_bootloader_mode(
+        &ctap_hid_fido2::HidParam::get_default_params(),
+    )?;
     if result {
         println!("Already in bootloader mode.");
-    }else{
+    } else {
         // ブートローダーモードに遷移する
         // キーをタッチしてグリーンのランプが点灯した状態で実行すると成功しやすい
         // 紫のランプ高速点滅状態になれば成功
-        match ctap_hid_fido2::nitrokey::enter_boot(&ctap_hid_fido2::HidParam::get_default_params()) {
-            Ok(_) => println!("enter boot Ok"),
-            Err(err) => println!("enter boot Error = {}", err),
-        };
+        ctap_hid_fido2::nitrokey::enter_boot(&ctap_hid_fido2::HidParam::get_default_params())?;
+        println!("enter bootloader mode.");
+    }
+    Ok(())
+}
+
+fn segments(reader: &mut ihex::Reader) -> Result<(u64, u64)> {
+    let mut segment_start = 0;
+    let mut segment_end = 0;
+
+    let mut ela: u64 = 0;
+    for rec in reader {
+        let rec = rec?;
+        //println!("rec: {:?}", rec);
+
+        match rec {
+            Record::ExtendedLinearAddress(x) => {
+                // python-intelhex reference
+                // https://github.com/python-intelhex/intelhex/blob/master/intelhex/__init__.py#L167
+                ela = x as u64 * 65536;
+            }
+            Record::Data { offset, ref value } => {
+                let addr = ela + offset as u64;
+                if segment_start == 0 {
+                    segment_start = addr;
+                } else {
+                    segment_end = addr + value.len() as u64;
+                }
+            }
+            _ => {}
+        }
+    }
+
+    if segment_start == 0 || segment_end == 0 || segment_start == segment_end {
+        Err(anyhow!("Error ELA"))
+    } else {
+        Ok((segment_start, segment_end))
     }
 }
 
-fn main() -> Result<()> {
-
-    println!("----- Nitrokey ENTERBOOT start -----");
-
-    if false {
-        bootloader();        
+fn tobinarray(reader: &mut ihex::Reader, start: u64, size: usize) -> Result<Vec<u8>> {
+    let mut data: Vec<u8> = vec![];
+    let mut ela: u64 = 0;
+    for rec in reader {
+        if data.len() >= size {
+            break;
+        }
+        let rec = rec?;
+        match rec {
+            Record::ExtendedLinearAddress(x) => {
+                ela = x as u64 * 65536;
+            }
+            Record::Data { offset, ref value } => {
+                let addr = ela + offset as u64;
+                if addr == start || data.len() > 0 {
+                    data.append(&mut value.to_vec());
+                }
+            }
+            _ => {}
+        }
     }
 
+    Ok(data)
+}
+
+fn write_firmware(json: String) -> Result<Vec<u8>> {
     // read from json file
-    let firmware_json = std::fs::File::open("/Users/suzuki/tmp/nitro/fido2_firmware.json")?;
+    let firmware_json = std::fs::File::open(json)?;
     let v: Value = serde_json::from_reader(firmware_json)?;
 
     // firmware-data => base64 => bin => string
     let firmware_base64 = {
         if let Value::String(v) = &v["firmware"] {
             v.to_string()
-        }else{
+        } else {
             "".to_string()
         }
     };
-    let firmware_dec = &decode(firmware_base64)?;
+    let firmware_dec = base64_url::decode(&firmware_base64)?;
     let firmware_str = String::from_utf8(firmware_dec.to_vec())?;
+
+    // get Sig
+    let signature_base64 = {
+        if let Value::String(v) = &v["versions"][">2.5.3"]["signature"] {
+            v.to_string()
+        } else {
+            "".to_string()
+        }
+    };
+    let signature_dec = base64_url::decode(&signature_base64)?;
 
     // str -> ihex recs
     let mut reader = ihex::Reader::new(&firmware_str);
 
-    // offset
-    // get Record::ExtendedLinearAddress
-    let aaa = reader.find(|x|x.as_ref().unwrap().record_type() == 0x04);
+    // ih.segments() = [(134238208, 134300340)]
+    let seg = segments(&mut reader)?;
 
-    for rec in reader {
-        let tmp = rec.clone().unwrap();
-        let x = if let Record::ExtendedLinearAddress(x) = tmp {x}else{0};
+    // size = 62132
+    //let size = seg.1 - seg.0;
 
-        //if rec.clone().unwrap().record_type() != 0x00 {
-            println!("rec: {:?}", rec);
-        //}
+    let chunk = 2048;
+    for i in (seg.0..seg.1).step_by(chunk) {
+        // PEND イテレータを元に戻すために作り直す（もっといい方法ないか）
+        let mut reader = ihex::Reader::new(&firmware_str);
+
+        let _data = tobinarray(&mut reader, i, chunk)?;
+        /*
+        println!("{}", i);
+        println!(
+            "{}:{},{},{},{}",
+            data.len(),
+            data[0],
+            data[1],
+            data[2],
+            data[3]
+        );
+        */
+
+        //書き込み！
+        //self.write_flash(i, data)
     }
 
-    //let result = ihex::create_object_file_representation(reader).unwrap();
+    Ok(signature_dec)
+}
 
-    // :020000040800F2
-    // :02 0000 04 08 00 F2
-    // offsetがほしい ->       134217728
-    //                            20480
-    // 正解 =                 134238208
+fn main() -> Result<()> {
+    println!("----- Nitrokey ENTERBOOT start -----");
 
-    //rec: Ok(Data { offset: 20480, value: [0, 192, 0, 32, 209, 115, 0, 8, 33, 116, 0, 8, 33, 116, 0, 8] })
-    //rec: Ok(ExtendedLinearAddress(2048))
-    //rec: Ok(ExtendedLinearAddress(2049))
-    //rec: Ok(StartLinearAddress(134247377))
-    //rec: Ok(EndOfFile)
-    let a = 0;
+    if false {
+        set_bootloader_mode()?;
+    }
 
+    // write
+    let signature = write_firmware("/Users/suzuki/tmp/nitro/fido2_firmware.json".to_string())?;
+    println!(
+        "- signature({:02})    = {:?}",
+        signature.len(),
+        util::to_hex_str(&signature)
+    );
 
-    //let signature = &v["versions"][">2.5.3"]["signature"];
+    /*
+    print("bootloader is verifying signature...")
+    print(f'Trying with {sig.hex()}')
+    self.verify_flash(sig)
+    print("...pass!")
+    success = True
+    */
 
-    
-    // read firmware file
     println!("----- Nitrokey ENTERBOOT end -----");
 
     Ok(())
