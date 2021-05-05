@@ -258,9 +258,13 @@ fn create_request_packet(nitro_command:u8,addr: u64,request_data:&[u8]) -> Resul
 
     // PEND
     //println!("{}",addr);
-    //println!("{}:{}-{}-{}-{} {}-{}-{}-{} {}-{}-{}-{}",request.len(),request[0],request[1],request[2],request[3],request[4],request[5],request[6],request[7],request[8],request[9],request[10],request[11]);
-    //println!("{}",addr);
     //println!("{}:{}",request.len(),util::to_hex_str(&request));
+
+    // max 255 (1byte)
+    if request.len() > 255 {
+        return Err("Error size".to_string());
+    }
+    let len = request.len() as u8;
 
     // data
     let mut data: Vec<u8> = vec![];
@@ -270,8 +274,6 @@ fn create_request_packet(nitro_command:u8,addr: u64,request_data:&[u8]) -> Resul
     // app param (A * 32)
     data.append(&mut vec![0x41; 32]);
     // length
-    let lena = request.len(); 
-    let len = request.len() as u8;
     data.append(&mut vec![len]);
     // request
     data.append(&mut request);

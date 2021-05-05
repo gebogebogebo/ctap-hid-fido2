@@ -65,14 +65,7 @@ pub fn ctaphid_nitro_enter_boot(device: &FidoKeyHid, cid: &[u8]) -> Result<(), S
 }
 
 pub fn ctaphid_nitro_boot(device: &FidoKeyHid, cid: &[u8],payload: &[u8]) -> Result<(), String> {
-    let result = ctaphid_nitro_send_and_response2(device, cid, CTAPHID_BOOT, payload)?;
-    //if util::is_debug() == true {
-        println!(
-            "- CTAPHID_BOOT response({:02})    = {:?}",
-            result.len(),
-            util::to_hex_str(&result)
-        );
-    //}
+    let _result = ctaphid_nitro_send_and_response2(device, cid, CTAPHID_BOOT, payload)?;
     Ok(())
 }
 
@@ -83,15 +76,19 @@ pub fn ctaphid_nitro_send_and_response2(
     payload: &[u8],
 ) -> Result<Vec<u8>, String> {
     let buf = ctaphid::ctaphid_xxx(device,cid,command,&payload.to_vec())?;
-    let st = ctaphid_cbor_responce_nitro(&buf);
+    let st = ctaphid_cbor_response_nitro(&buf);
     if st.0 != command {
-        Err("ctaphid_cbor_responce_nitro".into())
+        Err("ctaphid_cbor_response_nitro".into())
     }else{
-        Ok(st.1)
+        if st.1.len() < 1 || st.1[0] != 0x00{
+            Err("error response".into())
+        }else{
+            Ok(st.1)
+        }
     }
 }
 
-fn ctaphid_cbor_responce_nitro(packet: &[u8]) -> (u8, Vec<u8>) {
+fn ctaphid_cbor_response_nitro(packet: &[u8]) -> (u8, Vec<u8>) {
     // cid
     //println!("- cid: {:?}", &packet[0..4]);
     // cmd
