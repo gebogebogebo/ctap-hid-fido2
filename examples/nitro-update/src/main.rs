@@ -115,6 +115,7 @@ fn write_firmware(json: String) -> Result<Vec<u8>> {
     //let size = seg.1 - seg.0;
 
     let chunk = 2048;
+    //let chunk = 240;
     for i in (seg.0..seg.1).step_by(chunk) {
         // PEND イテレータを元に戻すために作り直す（もっといい方法ないか）
         let mut reader = ihex::Reader::new(&firmware_str);
