@@ -170,10 +170,14 @@ pub fn write_flash(hid_params: &[crate::HidParam],addr: u64,data: &[u8]) -> Resu
     let cid = ctaphid::ctaphid_init(&device).map_err(Error::msg)?;
 
     let solo_bootloader_write = 0x40;
-    let data = create_request_packet(solo_bootloader_write,addr,data).map_err(Error::msg)?;
+    let packet = create_request_packet2(solo_bootloader_write,addr,data).map_err(Error::msg)?;
 
-    let result = ctapihd_nitro::ctaphid_nitro_boot(&device, &cid, &data).map_err(Error::msg)?;
-    Ok(result)    
+    // PEND
+    //println!("{}",addr);
+    //println!("{}:{}",packet.len(),util::to_hex_str(&packet));
+
+    let result = ctapihd_nitro::ctaphid_nitro_boot(&device, &cid, &packet).map_err(Error::msg)?;
+    Ok(result)
 }
 
 pub fn verify_flash(hid_params: &[crate::HidParam],sig: &[u8]) -> Result<()> {
@@ -181,10 +185,46 @@ pub fn verify_flash(hid_params: &[crate::HidParam],sig: &[u8]) -> Result<()> {
     let cid = ctaphid::ctaphid_init(&device).map_err(Error::msg)?;
 
     let solo_bootloader_done = 0x41;
-    let data = create_request_packet(solo_bootloader_done,0,sig).map_err(Error::msg)?;
+    let data = create_request_packet2(solo_bootloader_done,0,sig).map_err(Error::msg)?;
     
     let result = ctapihd_nitro::ctaphid_nitro_boot(&device, &cid, &data).map_err(Error::msg)?;
     Ok(result)
+}
+
+fn create_request_packet2(nitro_command:u8,addr: u64,request_data:&[u8]) -> Result<Vec<u8>,String>{
+    // request
+    // - nitro_command(4byte) + TAG(4byte) + length(2byte) + A*16
+    let mut request: Vec<u8> = vec![0; 10];
+
+    // command
+    request[0] = nitro_command;
+
+    // addr
+    // to byte array in little-endian byte order.
+    let addr_bytes = addr.to_le_bytes();
+    request[1] = addr_bytes[0];
+    request[2] = addr_bytes[1];
+    request[3] = addr_bytes[2];
+    
+    // TAG
+    request[4] = 0x8c;
+    request[5] = 0x27;
+    request[6] = 0x90;
+    request[7] = 0xf6;
+
+    // High part of payload length
+    request[8] = (((request_data.len() as u16) >> 8) as u8) & 0xff;
+    // Low part of payload length
+    request[9] = (request_data.len() as u8) & 0xff;
+
+    // request-data(A * 16)
+    request.append(&mut request_data.into());
+
+    // PEND
+    //println!("{}",addr);
+    //println!("{}:{}-{}-{}-{} {}-{}-{}-{} {}-{}-{}-{}",request.len(),request[0],request[1],request[2],request[3],request[4],request[5],request[6],request[7],request[8],request[9],request[10],request[11]);
+
+    Ok(request)
 }
 
 fn create_request_packet(nitro_command:u8,addr: u64,request_data:&[u8]) -> Result<Vec<u8>,String>{
@@ -201,18 +241,6 @@ fn create_request_packet(nitro_command:u8,addr: u64,request_data:&[u8]) -> Resul
     request[1] = addr_bytes[0];
     request[2] = addr_bytes[1];
     request[3] = addr_bytes[2];
-
-    /*
-        // to byte array in little-endian byte order.
-        let aaaa = i.to_le_bytes();
-
-        addr = struct.pack("<L", addr)
-        cmd = struct.pack("B", cmd)
-        length = struct.pack(">H", len(data))
-
-        return cmd + addr[:3] + SoloBootloader.TAG + length + data
-
-    */
     
     // TAG
     request[4] = 0x8c;
@@ -228,6 +256,12 @@ fn create_request_packet(nitro_command:u8,addr: u64,request_data:&[u8]) -> Resul
     // request-data(A * 16)
     request.append(&mut request_data.into());
 
+    // PEND
+    //println!("{}",addr);
+    //println!("{}:{}-{}-{}-{} {}-{}-{}-{} {}-{}-{}-{}",request.len(),request[0],request[1],request[2],request[3],request[4],request[5],request[6],request[7],request[8],request[9],request[10],request[11]);
+    //println!("{}",addr);
+    //println!("{}:{}",request.len(),util::to_hex_str(&request));
+
     // data
     let mut data: Vec<u8> = vec![];
 
@@ -236,7 +270,9 @@ fn create_request_packet(nitro_command:u8,addr: u64,request_data:&[u8]) -> Resul
     // app param (A * 32)
     data.append(&mut vec![0x41; 32]);
     // length
-    data.append(&mut vec![26]);
+    let lena = request.len(); 
+    let len = request.len() as u8;
+    data.append(&mut vec![len]);
     // request
     data.append(&mut request);
 
