@@ -9,7 +9,7 @@ use crate::fidokey::*;
 use crate::fidokey_pi::*;
 
 // Nitrokey Custom commands between 0x40-0x7f
-//#define CTAPHID_BOOT            (TYPE_INIT | 0x50)
+const CTAPHID_BOOT: u8 = ctaphid::CTAP_FRAME_INIT | 0x50;
 const CTAPHID_ENTERBOOT: u8 = ctaphid::CTAP_FRAME_INIT | 0x51;
 //#define CTAPHID_ENTERSTBOOT     (TYPE_INIT | 0x52)
 //#define CTAPHID_REBOOT          (TYPE_INIT | 0x53)
@@ -24,7 +24,7 @@ const CTAPHID_GETSTATUS: u8 = ctaphid::CTAP_FRAME_INIT | 0x71;
 // GETVERSION
 pub fn ctaphid_nitro_get_version(device: &FidoKeyHid, cid: &[u8]) -> Result<String, String> {
     let payload: Vec<u8> = Vec::new();
-    let version = match ctaphid_nitro_send_and_response(device, cid, CTAPHID_GETVERSION, &payload) {
+    let version = match ctaphid_nitro_send_and_response2(device, cid, CTAPHID_GETVERSION, &payload) {
         Ok(version) => version,
         Err(err) => return Err(err),
     };
@@ -47,83 +47,48 @@ pub fn ctaphid_nitro_get_rng(
     rng_byte: u8,
 ) -> Result<String, String> {
     let payload: Vec<u8> = vec![rng_byte];
-    match ctaphid_nitro_send_and_response(device, cid, CTAPHID_GETRNG, &payload) {
-        Ok(result) => Ok(util::to_hex_str(&result)),
-        Err(err) => Err(err),
-    }
+    let result = ctaphid_nitro_send_and_response2(device, cid, CTAPHID_GETRNG, &payload)?;
+    Ok(util::to_hex_str(&result))
 }
 
 // GETSTATUS
 pub fn ctaphid_nitro_get_status(device: &FidoKeyHid, cid: &[u8]) -> Result<Vec<u8>, String> {
     let payload: Vec<u8> = vec![8];
-    match ctaphid_nitro_send_and_response(device, cid, CTAPHID_GETSTATUS, &payload) {
-        Ok(result) => Ok(result),
-        Err(err) => Err(err),
-    }
+    let result = ctaphid_nitro_send_and_response2(device, cid, CTAPHID_GETSTATUS, &payload)?;
+    Ok(result)
 }
 
-// ENTERBOOT
 pub fn ctaphid_nitro_enter_boot(device: &FidoKeyHid, cid: &[u8]) -> Result<(), String> {
     let payload: Vec<u8> = Vec::new();
-    match ctaphid_nitro_send_and_response(device, cid, CTAPHID_ENTERBOOT, &payload) {
-        Ok(_) => Ok(()),
-        Err(err) => return Err(err),
-    }
+    ctaphid_nitro_send_and_response2(device, cid, CTAPHID_ENTERBOOT, &payload)?;
+    Ok(())
 }
 
-pub fn ctaphid_nitro_send_and_response(
+pub fn ctaphid_nitro_boot(device: &FidoKeyHid, cid: &[u8],payload: &[u8]) -> Result<(), String> {
+    let result = ctaphid_nitro_send_and_response2(device, cid, CTAPHID_BOOT, payload)?;
+    //if util::is_debug() == true {
+        println!(
+            "- CTAPHID_BOOT response({:02})    = {:?}",
+            result.len(),
+            util::to_hex_str(&result)
+        );
+    //}
+    Ok(())
+}
+
+pub fn ctaphid_nitro_send_and_response2(
     device: &FidoKeyHid,
     cid: &[u8],
     command: u8,
-    payload: &Vec<u8>,
+    payload: &[u8],
 ) -> Result<Vec<u8>, String> {
-    let mut cmd: Vec<u8> = vec![0; ctaphid::PACKET_SIZE];
-
-    // Report ID
-    // The first byte of data must contain the Report ID.
-    // For devices which only support a single report, this must be set to 0x0.
-    cmd[0] = 0x00;
-
-    // cid
-    cmd[1] = cid[0];
-    cmd[2] = cid[1];
-    cmd[3] = cid[2];
-    cmd[4] = cid[3];
-
-    // Command identifier (bit 7 always set)
-    cmd[5] = command;
-
-    if payload.len() > 0 {
-        // High part of payload length
-        cmd[6] = (((payload.len() as u16) >> 8) as u8) & 0xff;
-        // Low part of payload length
-        cmd[7] = (payload.len() as u8) & 0xff;
-
-        for counter in 0..payload.len() {
-            cmd[8 + counter] = payload[counter];
-        }
-    }
-
-    // Write data to device
-    let _res = device.write(&cmd)?;
-    //println!("Wrote: {:?} byte", _res);
-
-    let buf = device.read()?;
-    //println!("Read: {:?}", &buf[.._res]);
-
-    /*
-    println!("");
-    println!("## res");
-    println!("{}", util::to_hex_str(&buf[..64]));
-    println!("##");
-    */
-
+    let buf = ctaphid::ctaphid_xxx(device,cid,command,&payload.to_vec())?;
     let st = ctaphid_cbor_responce_nitro(&buf);
     if st.0 != command {
-        return Err("ctaphid_cbor_responce_nitro".into());
+        Err("ctaphid_cbor_responce_nitro".into())
+    }else{
+        Ok(st.1)
     }
-
-    Ok(st.1)
 }
 
 fn ctaphid_cbor_responce_nitro(packet: &[u8]) -> (u8, Vec<u8>) {

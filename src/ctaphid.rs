@@ -282,6 +282,10 @@ fn ctaphid_cbormsg(
         };
         //println!("Read: {:?} byte", res);
 
+        if command != CTAPHID_CBOR && command != CTAPHID_MSG {
+            return Ok(buf);
+        }
+
         st = get_responce_status(&buf)?;
         if st.0 == CTAPHID_CBOR || st.0 == CTAPHID_MSG {
             packet_1st = buf;
@@ -357,6 +361,10 @@ pub fn ctaphid_cbor(device: &FidoKeyHid, cid: &[u8], payload: &Vec<u8>) -> Resul
 
 pub fn ctaphid_msg(device: &FidoKeyHid, cid: &[u8], payload: &Vec<u8>) -> Result<Vec<u8>, String> {
     ctaphid_cbormsg(device, cid, CTAPHID_MSG, payload)
+}
+
+pub fn ctaphid_xxx(device: &FidoKeyHid, cid: &[u8], xxx: u8,payload: &Vec<u8>) -> Result<Vec<u8>, String> {
+    ctaphid_cbormsg(device, cid, xxx, payload)
 }
 
 pub fn send_apdu(

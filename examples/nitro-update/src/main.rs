@@ -1,12 +1,12 @@
 use anyhow::{anyhow, Result};
 use base64_url;
-use ctap_hid_fido2::util;
+use ctap_hid_fido2::{util,HidParam,nitrokey};
 use ihex::Record;
 use serde_json::Value;
 
 fn set_bootloader_mode() -> Result<()> {
-    let result = ctap_hid_fido2::nitrokey::is_bootloader_mode(
-        &ctap_hid_fido2::HidParam::get_default_params(),
+    let result = nitrokey::is_bootloader_mode(
+        &HidParam::get_default_params(),
     )?;
     if result {
         println!("Already in bootloader mode.");
@@ -14,7 +14,7 @@ fn set_bootloader_mode() -> Result<()> {
         // ブートローダーモードに遷移する
         // キーをタッチしてグリーンのランプが点灯した状態で実行すると成功しやすい
         // 紫のランプ高速点滅状態になれば成功
-        ctap_hid_fido2::nitrokey::enter_boot(&ctap_hid_fido2::HidParam::get_default_params())?;
+        nitrokey::enter_boot(&HidParam::get_default_params())?;
         println!("enter bootloader mode.");
     }
     Ok(())
@@ -147,20 +147,25 @@ fn main() -> Result<()> {
     }
 
     // write
-    let signature = write_firmware("/Users/suzuki/tmp/nitro/fido2_firmware.json".to_string())?;
-    println!(
-        "- signature({:02})    = {:?}",
-        signature.len(),
-        util::to_hex_str(&signature)
-    );
+    if true {
+        let signature = write_firmware("/Users/suzuki/tmp/nitro/fido2_firmware.json".to_string())?;
+        println!(
+            "- signature({:02})    = {:?}",
+            signature.len(),
+            util::to_hex_str(&signature)
+        );
 
-    /*
-    print("bootloader is verifying signature...")
-    print(f'Trying with {sig.hex()}')
-    self.verify_flash(sig)
-    print("...pass!")
-    success = True
-    */
+        nitrokey::verify_flash(&HidParam::get_default_params(),&signature)?;
+        println!("verify_flash.");
+        /*
+        print("bootloader is verifying signature...")
+        print(f'Trying with {sig.hex()}')
+        self.verify_flash(sig)
+        print("...pass!")
+        success = True
+        */
+        
+    }
 
     println!("----- Nitrokey ENTERBOOT end -----");
 
