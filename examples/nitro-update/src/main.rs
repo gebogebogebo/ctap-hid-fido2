@@ -143,12 +143,13 @@ fn write_firmware(json: String) -> Result<Vec<u8>> {
 fn main() -> Result<()> {
     println!("----- Nitrokey ENTERBOOT start -----");
 
-    if false {
+    if true {
         set_bootloader_mode()?;
     }
 
     // write
-    if true {
+    if false {
+
         let signature = write_firmware("/Users/suzuki/tmp/nitro/fido2_firmware.json".to_string())?;
         println!(
             "- signature({:02})    = {:?}",
