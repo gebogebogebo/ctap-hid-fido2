@@ -165,18 +165,29 @@ pub fn enter_boot(hid_params: &[crate::HidParam]) -> Result<()> {
     Ok(result)
 }
 
+pub fn write_flash(hid_params: &[crate::HidParam],addr: u64,data: &[u8]) -> Result<()> {
+    let device = FidoKeyHid::new(hid_params).map_err(Error::msg)?;
+    let cid = ctaphid::ctaphid_init(&device).map_err(Error::msg)?;
+
+    let solo_bootloader_write = 0x40;
+    let data = create_request_packet(solo_bootloader_write,addr,data).map_err(Error::msg)?;
+
+    let result = ctapihd_nitro::ctaphid_nitro_boot(&device, &cid, &data).map_err(Error::msg)?;
+    Ok(result)    
+}
+
 pub fn verify_flash(hid_params: &[crate::HidParam],sig: &[u8]) -> Result<()> {
     let device = FidoKeyHid::new(hid_params).map_err(Error::msg)?;
     let cid = ctaphid::ctaphid_init(&device).map_err(Error::msg)?;
 
     let solo_bootloader_done = 0x41;
-    let data = create_data(solo_bootloader_done,sig).map_err(Error::msg)?;
+    let data = create_request_packet(solo_bootloader_done,0,sig).map_err(Error::msg)?;
     
     let result = ctapihd_nitro::ctaphid_nitro_boot(&device, &cid, &data).map_err(Error::msg)?;
     Ok(result)
 }
 
-fn create_data(nitro_command:u8,request_data:&[u8]) -> Result<Vec<u8>,String>{
+fn create_request_packet(nitro_command:u8,addr: u64,request_data:&[u8]) -> Result<Vec<u8>,String>{
     // request
     // - nitro_command(4byte) + TAG(4byte) + length(2byte) + A*16
     let mut request: Vec<u8> = vec![0; 10];
@@ -184,6 +195,25 @@ fn create_data(nitro_command:u8,request_data:&[u8]) -> Result<Vec<u8>,String>{
     // command
     request[0] = nitro_command;
 
+    // addr
+    // to byte array in little-endian byte order.
+    let addr_bytes = addr.to_le_bytes();
+    request[1] = addr_bytes[0];
+    request[2] = addr_bytes[1];
+    request[3] = addr_bytes[2];
+
+    /*
+        // to byte array in little-endian byte order.
+        let aaaa = i.to_le_bytes();
+
+        addr = struct.pack("<L", addr)
+        cmd = struct.pack("B", cmd)
+        length = struct.pack(">H", len(data))
+
+        return cmd + addr[:3] + SoloBootloader.TAG + length + data
+
+    */
+    
     // TAG
     request[4] = 0x8c;
     request[5] = 0x27;
@@ -220,7 +250,7 @@ pub fn is_bootloader_mode(hid_params: &[crate::HidParam]) -> Result<bool> {
     let solo_bootloader_version = 0x44;
     // request-data = A*16
     let request_data = vec![0x41; 16];
-    let data = create_data(solo_bootloader_version,&request_data).map_err(Error::msg)?;
+    let data = create_request_packet(solo_bootloader_version,0,&request_data).map_err(Error::msg)?;
 
     // CTAP1.INS.AUTHENTICATE = 2
     let mut response = match ctaphid::send_apdu(&device, &cid, 0, 2, 0, 0, &data){
