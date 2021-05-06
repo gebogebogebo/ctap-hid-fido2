@@ -43,6 +43,24 @@
         {
             "type": "lldb",
             "request": "launch",
+            "name": "Debug executable 'nitro-update flash'",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--bin=nitro-update",
+                    "--package=nitro-update"
+                ],
+                "filter": {
+                    "name": "nitro-update",
+                    "kind": "bin"
+                }
+            },
+            "args": ["-f","/Users/suzuki/tmp/nitro/fido2_firmware.json"],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
             "name": "Debug executable 'nitro-update'",
             "cargo": {
                 "args": [
