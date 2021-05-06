@@ -3,6 +3,8 @@ use base64_url;
 use ctap_hid_fido2::{util,HidParam,nitrokey};
 use ihex::Record;
 use serde_json::Value;
+extern crate clap;
+use clap::{App, Arg};
 
 fn set_bootloader_mode() -> Result<()> {
     let result = nitrokey::is_bootloader_mode(
@@ -79,7 +81,7 @@ fn tobinarray(reader: &mut ihex::Reader, start: u64, size: usize) -> Result<Vec<
     Ok(data)
 }
 
-fn write_firmware(json: String) -> Result<Vec<u8>> {
+fn write_firmware(json: &String) -> Result<()> {
     // read from json file
     let firmware_json = std::fs::File::open(json)?;
     let v: Value = serde_json::from_reader(firmware_json)?;
@@ -94,16 +96,6 @@ fn write_firmware(json: String) -> Result<Vec<u8>> {
     };
     let firmware_dec = base64_url::decode(&firmware_base64)?;
     let firmware_str = String::from_utf8(firmware_dec.to_vec())?;
-
-    // get Sig
-    let signature_base64 = {
-        if let Value::String(v) = &v["versions"][">2.5.3"]["signature"] {
-            v.to_string()
-        } else {
-            "".to_string()
-        }
-    };
-    let signature_dec = base64_url::decode(&signature_base64)?;
 
     // str -> ihex recs
     let mut reader = ihex::Reader::new(&firmware_str);
@@ -137,39 +129,110 @@ fn write_firmware(json: String) -> Result<Vec<u8>> {
         nitrokey::write_flash(&HidParam::get_default_params(),i,&data)?;
     }
 
-    Ok(signature_dec)
+    Ok(())
 }
 
-fn main() -> Result<()> {
-    println!("----- Nitrokey ENTERBOOT start -----");
+fn check_json(json: &String) -> Result<Vec<u8>> {
+    let firmware_json = std::fs::File::open(json)?;
+    let v: Value = serde_json::from_reader(firmware_json)?;
 
-    if true {
+    // get Sig
+    let signature_base64 = {
+        if let Value::String(v) = &v["versions"][">2.5.3"]["signature"] {
+            v.to_string()
+        } else {
+            "".to_string()
+        }
+    };
+    let signature_dec = base64_url::decode(&signature_base64)?;
+
+    Ok(signature_dec)
+}
+ 
+fn main() -> Result<()> {
+    let app = App::new("nitro-update")
+        .version("0.0.1")
+        .author("gebo")
+        .about("NitoroKey Firmwware Update Tool")
+        .arg(
+            Arg::with_name("download")
+                .help("Download Firmware json file from Web.")
+                .short("d")
+                .long("download")
+        )
+        .arg(
+            Arg::with_name("checkjson")
+                .help("Checking the json file.")
+                .short("j")
+                .long("json")
+                .takes_value(true)
+                .value_name("file")
+        )
+        .arg(
+            Arg::with_name("bootloader")
+                .help("Set to bootloader mode.")
+                .short("b")
+                .long("bootloader")
+        )
+        .arg(
+            Arg::with_name("flash")
+                .help("Write firmware.")
+                .short("f")
+                .long("flash")
+        );
+
+    // Parse arguments
+    let matches = app.get_matches();
+
+    // Start
+    ctap_hid_fido2::hello();
+
+    if matches.is_present("download") {
+        println!("Download Firmware json file from Web.");
+    }
+
+    if matches.is_present("checkjson") {
+        let json = matches.value_of("checkjson").unwrap().to_string();
+        let signature = check_json(&json)?;
+        println!(
+            "- signature({:02}) = {:?}",
+            signature.len(),
+            util::to_hex_str(&signature)
+        );
+    }
+
+    if matches.is_present("bootloader") {
+        println!("Set to bootloader mode.");
         set_bootloader_mode()?;
     }
 
-    // write
-    if false {
+    if matches.is_present("flash") {
+        println!("Write firmware.");
+        let json = matches.value_of("flash").unwrap().to_string();
+        let signature = check_json(&json)?;
+        write_firmware(&json)?;
 
-        let signature = write_firmware("/Users/suzuki/tmp/nitro/fido2_firmware.json".to_string())?;
+        nitrokey::verify_flash(&HidParam::get_default_params(),&signature)?;
+        println!("verify_flash.");
+    }
+
+    /*
+    // write
+    if true {
+        let json = "/Users/suzuki/tmp/nitro/fido2_firmware.json".to_string();
+        let signature = check_json(&json)?;
         println!(
-            "- signature({:02})    = {:?}",
+            "- signature({:02}) = {:?}",
             signature.len(),
             util::to_hex_str(&signature)
         );
 
+        write_firmware(&json)?;
+
         nitrokey::verify_flash(&HidParam::get_default_params(),&signature)?;
         println!("verify_flash.");
-        /*
-        print("bootloader is verifying signature...")
-        print(f'Trying with {sig.hex()}')
-        self.verify_flash(sig)
-        print("...pass!")
-        success = True
-        */
-        
     }
-
-    println!("----- Nitrokey ENTERBOOT end -----");
+    */
 
     Ok(())
 }
