@@ -162,7 +162,7 @@ fn main() -> Result<()> {
         )
         .arg(
             Arg::with_name("checkjson")
-                .help("Checking the json file.")
+                .help("Checking Firmware json file.")
                 .short("j")
                 .long("json")
                 .takes_value(true)
@@ -192,13 +192,18 @@ fn main() -> Result<()> {
     }
 
     if matches.is_present("checkjson") {
+        println!("Checking Firmware json file.");
         let json = matches.value_of("checkjson").unwrap().to_string();
-        let signature = check_json(&json)?;
+        println!("file = {}",json);
+        let _sig = check_json(&json)?;
+        /*
         println!(
             "- signature({:02}) = {:?}",
             signature.len(),
             util::to_hex_str(&signature)
         );
+        */
+        println!("");
     }
 
     if matches.is_present("bootloader") {
