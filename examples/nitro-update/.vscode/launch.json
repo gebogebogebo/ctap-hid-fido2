@@ -7,7 +7,7 @@
         {
             "type": "lldb",
             "request": "launch",
-            "name": "Debug executable 'nitro-update'",
+            "name": "Debug executable 'nitro-update checkjson'",
             "cargo": {
                 "args": [
                     "build",
@@ -19,17 +19,34 @@
                     "kind": "bin"
                 }
             },
-            "args": [],
+            "args": ["-j","/Users/suzuki/tmp/nitro/fido2_firmware.json"],
             "cwd": "${workspaceFolder}"
         },
         {
             "type": "lldb",
             "request": "launch",
-            "name": "Debug unit tests in executable 'nitro-update'",
+            "name": "Debug executable 'nitro-update bootloader'",
             "cargo": {
                 "args": [
-                    "test",
-                    "--no-run",
+                    "build",
+                    "--bin=nitro-update",
+                    "--package=nitro-update"
+                ],
+                "filter": {
+                    "name": "nitro-update",
+                    "kind": "bin"
+                }
+            },
+            "args": ["-b"],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug executable 'nitro-update'",
+            "cargo": {
+                "args": [
+                    "build",
                     "--bin=nitro-update",
                     "--package=nitro-update"
                 ],
