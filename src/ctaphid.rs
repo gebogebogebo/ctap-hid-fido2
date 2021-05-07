@@ -69,7 +69,7 @@ pub fn ctaphid_init(device: &FidoKeyHid) -> Result<[u8; 4], String> {
     Ok([buf[15], buf[16], buf[17], buf[18]])
 }
 
-fn get_responce_status(packet: &[u8]) -> (u8, u16, u8) {
+fn get_responce_status(packet: &[u8]) -> Result<(u8, u16, u8),String> {
     // cid
     //println!("- cid: {:?}", &packet[0..4]);
     // cmd
@@ -82,6 +82,10 @@ fn get_responce_status(packet: &[u8]) -> (u8, u16, u8) {
 
     // status
     let response_status = if command == CTAPHID_MSG {
+        // length check ()
+        if payload_size > packet.len() as u16 {
+            return Err("u2f response size error?".to_string());
+        }
         // U2F(last byte of data)
         packet[(4 + 2 + payload_size - 1) as usize]
     } else {
@@ -89,7 +93,7 @@ fn get_responce_status(packet: &[u8]) -> (u8, u16, u8) {
         packet[7]
     };
 
-    (command, payload_size, response_status)
+    Ok((command, payload_size, response_status))
 }
 
 fn is_responce_error(status: (u8, u16, u8)) -> bool {
@@ -278,7 +282,11 @@ fn ctaphid_cbormsg(
         };
         //println!("Read: {:?} byte", res);
 
-        st = get_responce_status(&buf);
+        if command != CTAPHID_CBOR && command != CTAPHID_MSG {
+            return Ok(buf);
+        }
+
+        st = get_responce_status(&buf)?;
         if st.0 == CTAPHID_CBOR || st.0 == CTAPHID_MSG {
             packet_1st = buf;
             break;
@@ -353,6 +361,10 @@ pub fn ctaphid_cbor(device: &FidoKeyHid, cid: &[u8], payload: &Vec<u8>) -> Resul
 
 pub fn ctaphid_msg(device: &FidoKeyHid, cid: &[u8], payload: &Vec<u8>) -> Result<Vec<u8>, String> {
     ctaphid_cbormsg(device, cid, CTAPHID_MSG, payload)
+}
+
+pub fn ctaphid_xxx(device: &FidoKeyHid, cid: &[u8], xxx: u8,payload: &Vec<u8>) -> Result<Vec<u8>, String> {
+    ctaphid_cbormsg(device, cid, xxx, payload)
 }
 
 pub fn send_apdu(
