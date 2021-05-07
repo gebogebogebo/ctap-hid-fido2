@@ -709,3 +709,27 @@ rng = D93C4D39DAA8FEF8
 ----- Nitrokey GETRNG end -----
 ```
 
+
+
+### Nitrokey Firmware Update Tool
+
+see [nitro-update](https://github.com/gebogebogebo/ctap-hid-fido2/tree/master/examples/nitro-update)
+
+```zsh
+NitoroKey Firmwware Update Tool(Non-Formula)
+
+USAGE:
+    nitro-update [FLAGS] [OPTIONS]
+
+FLAGS:
+    -b, --bootloader    Set to bootloader mode.
+    -d, --download      Download Firmware json file from Web.
+    -h, --help          Prints help information
+    -i, --info          Get Firmware Information.
+    -V, --version       Prints version information
+
+OPTIONS:
+    -j, --json <file>     Checking Firmware json file.
+    -f, --flash <file>    Write firmware.
+```
+
