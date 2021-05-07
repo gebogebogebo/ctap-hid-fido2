@@ -2,6 +2,10 @@
 ## Nitrokey Custom Commands
 for Nitrokey FIDO2 only.
 */
+use anyhow::{Result,Error};
+
+#[allow(unused_imports)]
+use crate::util;
 
 use crate::ctaphid;
 use crate::ctapihd_nitro;
@@ -100,27 +104,27 @@ impl NitrokeyStatus {
 }
 
 /// Query the firmware version of Nitrokey.
-pub fn get_version(hid_params: &[crate::HidParam]) -> Result<String, String> {
-    let device = FidoKeyHid::new(hid_params)?;
-    let cid = ctaphid::ctaphid_init(&device)?;
-    let version = ctapihd_nitro::ctaphid_nitro_get_version(&device, &cid)?;
+pub fn get_version(hid_params: &[crate::HidParam]) -> Result<String> {
+    let device = FidoKeyHid::new(hid_params).map_err(Error::msg)?;
+    let cid = ctaphid::ctaphid_init(&device).map_err(Error::msg)?;
+    let version = ctapihd_nitro::ctaphid_nitro_get_version(&device, &cid).map_err(Error::msg)?;
     Ok(version)
 }
 
 /// Generate a random number.
 /// - rng_byte : The number of digits of random numbers to generate.
-pub fn get_rng(hid_params: &[crate::HidParam], rng_byte: u8) -> Result<String, String> {
-    let device = FidoKeyHid::new(hid_params)?;
-    let cid = ctaphid::ctaphid_init(&device)?;
-    let status = ctapihd_nitro::ctaphid_nitro_get_rng(&device, &cid, rng_byte)?;
+pub fn get_rng(hid_params: &[crate::HidParam], rng_byte: u8) -> Result<String> {
+    let device = FidoKeyHid::new(hid_params).map_err(Error::msg)?;
+    let cid = ctaphid::ctaphid_init(&device).map_err(Error::msg)?;
+    let status = ctapihd_nitro::ctaphid_nitro_get_rng(&device, &cid, rng_byte).map_err(Error::msg)?;
     Ok(status)
 }
 
 /// Query the Status of Nitrokey.
-pub fn get_status(hid_params: &[crate::HidParam]) -> Result<NitrokeyStatus, String> {
-    let device = FidoKeyHid::new(hid_params)?;
-    let cid = ctaphid::ctaphid_init(&device)?;
-    let status = ctapihd_nitro::ctaphid_nitro_get_status(&device, &cid)?;
+pub fn get_status(hid_params: &[crate::HidParam]) -> Result<NitrokeyStatus> {
+    let device = FidoKeyHid::new(hid_params).map_err(Error::msg)?;
+    let cid = ctaphid::ctaphid_init(&device).map_err(Error::msg)?;
+    let status = ctapihd_nitro::ctaphid_nitro_get_status(&device, &cid).map_err(Error::msg)?;
 
     let mut ret = NitrokeyStatus::default();
     if status[0] == 1 {
@@ -154,129 +158,146 @@ pub fn get_status(hid_params: &[crate::HidParam]) -> Result<NitrokeyStatus, Stri
     Ok(ret)
 }
 
-pub fn enter_boot(hid_params: &[crate::HidParam]) -> Result<(), String> {
-    let device = FidoKeyHid::new(hid_params)?;
-    let cid = ctaphid::ctaphid_init(&device)?;
-    let result = ctapihd_nitro::ctaphid_nitro_enter_boot(&device, &cid)?;
+/// firmware update API.
+pub fn enter_boot(hid_params: &[crate::HidParam]) -> Result<()> {
+    let device = FidoKeyHid::new(hid_params).map_err(Error::msg)?;
+    let cid = ctaphid::ctaphid_init(&device).map_err(Error::msg)?;
+    let result = ctapihd_nitro::ctaphid_nitro_enter_boot(&device, &cid).map_err(Error::msg)?;
     Ok(result)
 }
 
-pub fn solo_bootloader(hid_params: &[crate::HidParam]) -> Result<(), String> {
-    let device = FidoKeyHid::new(hid_params)?;
-    let cid = ctaphid::ctaphid_init(&device)?;
+/// firmware update API.
+pub fn write_flash(hid_params: &[crate::HidParam],addr: u64,data: &[u8]) -> Result<()> {
+    let device = FidoKeyHid::new(hid_params).map_err(Error::msg)?;
+    let cid = ctaphid::ctaphid_init(&device).map_err(Error::msg)?;
 
-    // authenticate
-    /*
-    client_param = b"B" * 32
-    app_param = b"A" * 32
-    key_handle = format_request
+    let solo_bootloader_write = 0x40;
+    let packet = create_request_packet(solo_bootloader_write,addr,data,false).map_err(Error::msg)?;
 
-    def authenticate(self, client_param, app_param, key_handle, check_only=False):
-        """Authenticate a previously registered credential.
-        :param client_param: SHA256 hash of the ClientData used for the request.
-        :param app_param: SHA256 hash of the app ID used for the request.
-        :param key_handle: The binary key handle of the credential.
-        :param check_only: True to send a "check-only" request, which is used to
-            determine if a key handle is known.
-        :return: The authentication response from the authenticator.
-        """
-        data = (
-            client_param + app_param + struct.pack(">B", len(key_handle)) + key_handle
-        )
-        p1 = 0x07 if check_only else 0x03
-        response = self.send_apdu(ins=Ctap1.INS.AUTHENTICATE, p1=p1, data=data)
-        return SignatureData(response)
-    */
-
-    {
-        // CTAP1_INS.Version = 3
-        //　　　 　　　　U  2  F  _  V  2
-        // result = 0x55 32 46 5F 56 32 90 -> U2F_V2
-        //            85 50 70 95 86 50
-        // http://web-apps.nbookmark.com/ascii-converter/
-        let _data: Vec<u8> = Vec::new();
-
-        match ctaphid::send_apdu(&device, &cid, 0, 3, 0, 0, &_data) {
-            Ok(result) => {
-                let version: String = String::from_utf8(result).unwrap();
-                println!("U2F version = {}", version);
-            }
-            Err(error) => {
-                println!("{}", error);
-            }
-        }
-    }
-
-    {
-        // client param
-        // (B * 32)
-        let mut client_param: Vec<u8> = vec![0; 32];
-        for counter in 0..32 {
-            client_param[counter] = 0x42;
-        }
-
-        // app param
-        // (A * 32)
-        let mut app_param: Vec<u8> = vec![0; 32];
-        for counter in 0..32 {
-            app_param[counter] = 0x41;
-        }
-
-        // create format_request
-        // \x44 \x00 \x00 \x00 \x8c \x27 \x90 \xf6 \x00 \x10 AAAAAAAAAAAAAAAA
-        let solo_bootloader_version = 0x44;
-        let mut format_request: Vec<u8> = vec![0; 26];
-        format_request[0] = solo_bootloader_version;
-        format_request[1] = 0x00;
-        format_request[2] = 0x00;
-        format_request[3] = 0x00;
-
-        // TAG
-        format_request[4] = 0x8c;
-        format_request[5] = 0x27;
-        format_request[6] = 0x90;
-        format_request[7] = 0xf6;
-
-        // length
-        format_request[8] = 0x0;
-        format_request[9] = 0x10;
-
-        // data(A x 16)
-        for counter in 0..16 {
-            format_request[10 + counter] = 0x41;
-        }
-        // format_request
-
-        // data
-        let mut data: Vec<u8> =
-            vec![0; client_param.len() + app_param.len() + 1 + format_request.len()];
-        let mut index = 0;
-        for counter in 0..client_param.len() {
-            data[index] = client_param[counter];
-            index = index + 1
-        }
-        for counter in 0..app_param.len() {
-            data[index] = app_param[counter];
-            index = index + 1;
-        }
-
-        data[index] = 26;
-        index = index + 1;
-
-        for counter in 0..format_request.len() {
-            data[index] = format_request[counter];
-            index = index + 1;
-        }
-
-        match ctaphid::send_apdu(&device, &cid, 0, 0, 0, 0, &data) {
-            Ok(_result) => {
-                // PEND
-            }
-            Err(error) => {
-                println!("{}", error);
-            }
-        }
-    }
-
+    ctapihd_nitro::ctaphid_nitro_boot(&device, &cid, &packet).map_err(Error::msg)?;
     Ok(())
+}
+
+/// firmware update API.
+pub fn verify_flash(hid_params: &[crate::HidParam],sig: &[u8]) -> Result<()> {
+    let device = FidoKeyHid::new(hid_params).map_err(Error::msg)?;
+    let cid = ctaphid::ctaphid_init(&device).map_err(Error::msg)?;
+
+    let solo_bootloader_done = 0x41;
+    let data = create_request_packet(solo_bootloader_done,0,sig,false).map_err(Error::msg)?;
+    
+    ctapihd_nitro::ctaphid_nitro_boot(&device, &cid, &data).map_err(Error::msg)?;
+    Ok(())
+}
+
+fn create_request_packet(nitro_command:u8,addr: u64,request_data:&[u8],is_u2f:bool) -> Result<Vec<u8>,String>{
+    // request
+    // - nitro_command(4byte) + TAG(4byte) + length(2byte) + A*16
+    let mut request: Vec<u8> = vec![0; 10];
+
+    // command
+    request[0] = nitro_command;
+
+    // addr
+    // to byte array in little-endian byte order.
+    let addr_bytes = addr.to_le_bytes();
+    request[1] = addr_bytes[0];
+    request[2] = addr_bytes[1];
+    request[3] = addr_bytes[2];
+    
+    // TAG
+    request[4] = 0x8c;
+    request[5] = 0x27;
+    request[6] = 0x90;
+    request[7] = 0xf6;
+
+    // High part of payload length
+    request[8] = (((request_data.len() as u16) >> 8) as u8) & 0xff;
+    // Low part of payload length
+    request[9] = (request_data.len() as u8) & 0xff;
+
+    // request-data(A * 16)
+    request.append(&mut request_data.into());
+
+    // for debug
+    //println!("{}",addr);
+    //println!("{}:{}",request.len(),util::to_hex_str(&request));
+
+    if !is_u2f {
+        return Ok(request);
+    }
+
+    // u2f-format
+    // max 255 (1byte)
+    if request.len() > 255 {
+        return Err("Error size".to_string());
+    }
+    let len = request.len() as u8;
+
+    // data
+    let mut data: Vec<u8> = vec![];
+
+    // client param (B * 32)
+    data.append(&mut vec![0x42; 32]);
+    // app param (A * 32)
+    data.append(&mut vec![0x41; 32]);
+    // length
+    data.append(&mut vec![len]);
+    // request
+    data.append(&mut request);
+
+    Ok(data)
+}
+
+/// firmware update API.
+pub fn is_bootloader_mode(hid_params: &[crate::HidParam]) -> Result<bool> {
+    let device = FidoKeyHid::new(hid_params).map_err(Error::msg)?;
+    let cid = ctaphid::ctaphid_init(&device).map_err(Error::msg)?;
+
+    let solo_bootloader_version = 0x44;
+    // request-data = A*16
+    let request_data = vec![0x41; 16];
+    let data = create_request_packet(solo_bootloader_version,0,&request_data,true).map_err(Error::msg)?;
+
+    // CTAP1.INS.AUTHENTICATE = 2
+    let mut response = match ctaphid::send_apdu(&device, &cid, 0, 2, 0, 0, &data){
+        Ok(r) => r,
+        Err(_) => return Ok(false),
+    };
+
+    if util::is_debug() == true {
+        println!(
+            "- response({:02})    = {:?}",
+            response.len(),
+            util::to_hex_str(&response)
+        );
+    }
+
+    // remove headder
+    let mut response = response.split_off(3+2);
+
+    // status
+    if response[0] != 0 {
+        return Ok(false);
+    }
+    let response = response.split_off(1);
+
+    // split by 0xff
+    let datas: Vec<&[u8]> = response.split(|&x| x == 0xff).collect();
+
+    // parse
+    for (i, val) in datas.iter().enumerate() {
+        //println!("{}: {}", i, val);
+        if val.len() == 0 {continue;}
+
+        if i == 0{
+            println!("{}{}{}",val[0],val[1],val[2]);
+        }else{
+            // string data
+            let tmp = String::from_utf8(val.to_vec());
+            println!("{}",tmp.unwrap());
+        }
+    }
+
+    Ok(true)
 }
