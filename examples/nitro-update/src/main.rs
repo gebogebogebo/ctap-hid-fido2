@@ -175,8 +175,28 @@ fn main() -> Result<()> {
     // Parse arguments
     let matches = app.get_matches();
 
+    println!("");
+    println!("This is Nitrokey Firmware Update Tool (Non-Formula).");
+    println!("This is Non-Formula.");
+    println!("THE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND, EXPRESS OR");
+    println!("IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,");
+    println!("FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE");
+    println!("AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER");
+    println!("LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,");
+    println!("OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE");
+    println!("SOFTWARE.");
+    println!("");
+    println!("yes/no");
+    let mut word = String::new();
+    std::io::stdin().read_line(&mut word).ok();
+    let answer = word.trim().to_string();
+    if answer != "yes"{
+        return Ok(());
+    }
+
     // Start
     ctap_hid_fido2::hello();
+    println!("");
 
     if matches.is_present("info") {
         println!("Get Firmware Information.");
@@ -186,7 +206,7 @@ fn main() -> Result<()> {
     }
 
     if matches.is_present("download") {
-        println!("Download Firmware json file from Web.");
+        println!("Please Download Firmware json file from Web.");
         println!("https://github.com/Nitrokey/nitrokey-fido2-firmware/releases/");
         println!("");
     }

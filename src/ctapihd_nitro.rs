@@ -80,11 +80,7 @@ pub fn ctaphid_nitro_send_and_response2(
     if st.0 != command {
         Err("ctaphid_cbor_response_nitro".into())
     }else{
-        if st.1.len() < 1 {
-            Err("error response".into())
-        }else{
-            Ok(st.1)
-        }
+        Ok(st.1)
     }
 }
 

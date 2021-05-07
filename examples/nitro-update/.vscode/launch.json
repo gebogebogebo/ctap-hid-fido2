@@ -19,7 +19,7 @@
                     "kind": "bin"
                 }
             },
-            "args": ["-j","/Users/suzuki/tmp/nitro/fido2_firmware.json"],
+            "args": ["-j","/Users/suzuki/tmp/nitro/nitrokey-fido2-firmware-2.4.0.json"],
             "cwd": "${workspaceFolder}"
         },
         {
@@ -55,7 +55,7 @@
                     "kind": "bin"
                 }
             },
-            "args": ["-f","/Users/suzuki/tmp/nitro/fido2_firmware.json"],
+            "args": ["-f","/Users/suzuki/tmp/nitro/nitrokey-fido2-firmware-2.4.0.json"],
             "cwd": "${workspaceFolder}"
         },
         {
