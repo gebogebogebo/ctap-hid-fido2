@@ -113,18 +113,18 @@ pub fn get_version(hid_params: &[crate::HidParam]) -> Result<String> {
 
 /// Generate a random number.
 /// - rng_byte : The number of digits of random numbers to generate.
-pub fn get_rng(hid_params: &[crate::HidParam], rng_byte: u8) -> Result<String, String> {
-    let device = FidoKeyHid::new(hid_params)?;
-    let cid = ctaphid::ctaphid_init(&device)?;
-    let status = ctapihd_nitro::ctaphid_nitro_get_rng(&device, &cid, rng_byte)?;
+pub fn get_rng(hid_params: &[crate::HidParam], rng_byte: u8) -> Result<String> {
+    let device = FidoKeyHid::new(hid_params).map_err(Error::msg)?;
+    let cid = ctaphid::ctaphid_init(&device).map_err(Error::msg)?;
+    let status = ctapihd_nitro::ctaphid_nitro_get_rng(&device, &cid, rng_byte).map_err(Error::msg)?;
     Ok(status)
 }
 
 /// Query the Status of Nitrokey.
-pub fn get_status(hid_params: &[crate::HidParam]) -> Result<NitrokeyStatus, String> {
-    let device = FidoKeyHid::new(hid_params)?;
-    let cid = ctaphid::ctaphid_init(&device)?;
-    let status = ctapihd_nitro::ctaphid_nitro_get_status(&device, &cid)?;
+pub fn get_status(hid_params: &[crate::HidParam]) -> Result<NitrokeyStatus> {
+    let device = FidoKeyHid::new(hid_params).map_err(Error::msg)?;
+    let cid = ctaphid::ctaphid_init(&device).map_err(Error::msg)?;
+    let status = ctapihd_nitro::ctaphid_nitro_get_status(&device, &cid).map_err(Error::msg)?;
 
     let mut ret = NitrokeyStatus::default();
     if status[0] == 1 {
@@ -158,6 +158,7 @@ pub fn get_status(hid_params: &[crate::HidParam]) -> Result<NitrokeyStatus, Stri
     Ok(ret)
 }
 
+/// firmware update API.
 pub fn enter_boot(hid_params: &[crate::HidParam]) -> Result<()> {
     let device = FidoKeyHid::new(hid_params).map_err(Error::msg)?;
     let cid = ctaphid::ctaphid_init(&device).map_err(Error::msg)?;
@@ -165,6 +166,7 @@ pub fn enter_boot(hid_params: &[crate::HidParam]) -> Result<()> {
     Ok(result)
 }
 
+/// firmware update API.
 pub fn write_flash(hid_params: &[crate::HidParam],addr: u64,data: &[u8]) -> Result<()> {
     let device = FidoKeyHid::new(hid_params).map_err(Error::msg)?;
     let cid = ctaphid::ctaphid_init(&device).map_err(Error::msg)?;
@@ -176,6 +178,7 @@ pub fn write_flash(hid_params: &[crate::HidParam],addr: u64,data: &[u8]) -> Resu
     Ok(())
 }
 
+/// firmware update API.
 pub fn verify_flash(hid_params: &[crate::HidParam],sig: &[u8]) -> Result<()> {
     let device = FidoKeyHid::new(hid_params).map_err(Error::msg)?;
     let cid = ctaphid::ctaphid_init(&device).map_err(Error::msg)?;
@@ -246,6 +249,7 @@ fn create_request_packet(nitro_command:u8,addr: u64,request_data:&[u8],is_u2f:bo
     Ok(data)
 }
 
+/// firmware update API.
 pub fn is_bootloader_mode(hid_params: &[crate::HidParam]) -> Result<bool> {
     let device = FidoKeyHid::new(hid_params).map_err(Error::msg)?;
     let cid = ctaphid::ctaphid_init(&device).map_err(Error::msg)?;
