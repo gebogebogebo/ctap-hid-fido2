@@ -9,6 +9,17 @@ pub enum Modality {
     Unknown,
     Fingerprint,
 }
+impl Default for Modality {
+    fn default() -> Self { Modality::Unknown }
+}
+impl From<u32> for Modality {
+    fn from(from: u32) -> Modality {
+        match from{
+            0x01 => Modality::Fingerprint,
+            _ => Modality::Unknown,
+        }
+    }
+}
 
 #[allow(dead_code)]
 #[derive(Debug, Copy, Clone, PartialEq)]
@@ -16,6 +27,18 @@ pub enum FingerprintKind {
     Unknown = 0,
     TouchType = 1,
     SwipeType = 2,
+}
+impl Default for FingerprintKind {
+    fn default() -> Self { FingerprintKind::Unknown }
+}
+impl From<u32> for FingerprintKind {
+    fn from(from: u32) -> FingerprintKind {
+        match from{
+            0x01 => FingerprintKind::TouchType,
+            0x02 => FingerprintKind::SwipeType,
+            _ => FingerprintKind::Unknown,
+        }
+    }
 }
 
 #[derive(Debug, Default, Clone)]
