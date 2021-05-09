@@ -318,17 +318,13 @@ pub fn bio_enrollment_get_fingerprint_sensor_info(
     let init = bio_enrollment::bio_enrollment_init(hid_params,None).map_err(Error::msg)?;
 
     // 6.7.2. Get bio modality
-    let data = bio_enrollment::bio_enrollment(&init.0,&init.1,None, None, None, None).map_err(Error::msg)?;
+    let data1 = bio_enrollment::bio_enrollment(&init.0,&init.1,None, None, None, None).map_err(Error::msg)?;
     if util::is_debug() {
-        println!("{}", data);
+        println!("{}", data1);
     }
-    let modality: Modality = match data.modality{
-        0x01 => Modality::Fingerprint,
-        _ => Modality::Unknown,
-    };
 
     // 6.7.3. Get fingerprint sensor info
-    let data = bio_enrollment::bio_enrollment(
+    let data2 = bio_enrollment::bio_enrollment(
         &init.0,
         &init.1,
         None,
@@ -337,15 +333,9 @@ pub fn bio_enrollment_get_fingerprint_sensor_info(
         None,
     ).map_err(Error::msg)?;
     if util::is_debug() {
-        println!("{}", data);
+        println!("{}", data2);
     }
-    let fptype = match data.fingerprint_kind{
-        0x01 => FingerprintKind::TouchType,
-        0x02 => FingerprintKind::SwipeType,
-        _ => FingerprintKind::Unknown,
-    };
-
-    Ok((modality, fptype))
+    Ok((data1.modality.into(), data2.fingerprint_kind.into()))
 }
 
 /// BioEnrollment - EnrollBegin

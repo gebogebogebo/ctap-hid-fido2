@@ -71,18 +71,42 @@ impl fmt::Display for Rp {
     }
 }
 
+#[allow(dead_code)]
+#[derive(Debug, Copy, Clone, PartialEq)]
+pub enum CredentialProtectionPolicy {
+    Unknown,
+    UserVerificationOptional,
+    UserVerificationOptionalWithCredentialIDList,
+    UserVerificationRequired,
+}
+impl Default for CredentialProtectionPolicy {
+    fn default() -> Self { CredentialProtectionPolicy::Unknown }
+}
+impl From<u32> for CredentialProtectionPolicy {
+    fn from(from: u32) -> CredentialProtectionPolicy {
+        match from{
+            0x01 => CredentialProtectionPolicy::UserVerificationOptional,
+            0x02 => CredentialProtectionPolicy::UserVerificationOptionalWithCredentialIDList,
+            0x03 => CredentialProtectionPolicy::UserVerificationRequired,
+            _ => CredentialProtectionPolicy::Unknown,
+        }
+    }
+}
+
 #[derive(Debug, Default, Clone)]
 pub struct Credential {
     pub public_key_credential_user_entity: PublicKeyCredentialUserEntity,
     pub public_key_credential_descriptor: PublicKeyCredentialDescriptor,
     pub public_key: PublicKey,
+    pub cred_protect: CredentialProtectionPolicy,
 }
 impl Credential {
-    pub(crate) fn new(meta: &CredentialManagementData) -> Credential {
+    pub(crate) fn new(d: &CredentialManagementData) -> Credential {
         let mut ret = Credential::default();
-        ret.public_key_credential_user_entity = meta.public_key_credential_user_entity.clone();
-        ret.public_key_credential_descriptor = meta.public_key_credential_descriptor.clone();
-        ret.public_key = meta.public_key.clone();
+        ret.public_key_credential_user_entity = d.public_key_credential_user_entity.clone();
+        ret.public_key_credential_descriptor = d.public_key_credential_descriptor.clone();
+        ret.public_key = d.public_key.clone();
+        ret.cred_protect = d.cred_protect.into();
         ret
     }
 }
@@ -91,15 +115,18 @@ impl fmt::Display for Credential {
         let tmp1 = "- public_key_credential_user_entity = ";
         let tmp2 = "- public_key_credential_descriptor  = ";
         let tmp3 = "- public_key                        = ";
+        let tmp4 = "- cred_protect                      = ";
         write!(
             f,
-            "{}{}\n{}{}\n{}{}",
+            "{}{}\n{}{}\n{}{}\n{}{:?}",
             tmp1,
             self.public_key_credential_user_entity,
             tmp2,
             self.public_key_credential_descriptor,
             tmp3,
-            self.public_key
+            self.public_key,
+            tmp4,
+            self.cred_protect,
         )
     }
 }
