@@ -7,6 +7,10 @@ use ctap_hid_fido2::HidParam;
 fn main() -> Result<()> {
     println!("----- test-with-pin-non-rk start -----");
 
+    // PEND
+    let ext = ctap_hid_fido2::make_credential_params::Extensions::HmacSecret(false);
+    let ex_str:String = ext.into();
+
     // parameter
     let rpid = "test.com";
     let pin = "1234";

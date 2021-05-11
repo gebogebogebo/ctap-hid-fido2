@@ -6,6 +6,7 @@ use crate::public_key::PublicKey;
 use crate::public_key_credential_descriptor::PublicKeyCredentialDescriptor;
 use crate::util;
 use std::fmt;
+use crate::credential_management_params::CredentialProtectionPolicy;
 
 /// Attestation Object
 /// [https://www.w3.org/TR/webauthn/#sctn-attestation](https://www.w3.org/TR/webauthn/#sctn-attestation)
@@ -86,5 +87,33 @@ impl fmt::Display for Attestation {
             //tmpd,
             //util::to_hex_str(&self.attstmt_x5c[0]),
         )
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum Extensions {
+    CredProtect(CredentialProtectionPolicy),        // credProtect 0x01
+    CredBlob(Vec<u8>),          //  "credBlob": Byte String containing the credBlob value
+    MinPinLength(bool),         // "minPinLength": true
+    HmacSecret(bool),           //"hmac-secret": true
+}
+/*
+impl From<String> for Extensions {
+    fn from(from: String) -> Extensions {
+        if from == "hmac-secret"{
+            Extensions::HmacSecret(true)
+        }else{
+            Extensions::HmacSecret(false)
+        }
+    }
+}
+*/
+impl From<Extensions> for String {
+    fn from(from: Extensions) -> String {
+        if let Extensions::HmacSecret(_) = from {
+            "hmac-secret".to_string()
+        } else {
+            "".to_string()
+        }
     }
 }
