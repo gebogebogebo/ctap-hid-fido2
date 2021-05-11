@@ -194,6 +194,15 @@ pub fn make_credential(
     make_credential::make_credential(hid_params, rpid, challenge, pin, false, None, None).map_err(Error::msg)
 }
 
+pub fn make_credential_with_options(
+    hid_params: &[HidParam],
+    rpid: &str,
+    challenge: &[u8],
+    pin: Option<&str>,
+) -> Result<make_credential_params::Attestation> {
+    make_credential::make_credential(hid_params, rpid, challenge, pin, false, None, None).map_err(Error::msg)
+}
+
 /// Registration command.Generate credentials(with PIN ,Resident Key)
 pub fn make_credential_rk(
     hid_params: &[HidParam],
