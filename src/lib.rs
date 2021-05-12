@@ -51,6 +51,7 @@ use anyhow::{Result,Error};
 use crate::bio_enrollment_params::{FingerprintKind, Modality,TemplateInfo,EnrollStatus1,EnrollStatus2};
 use crate::public_key_credential_descriptor::PublicKeyCredentialDescriptor;
 use crate::public_key_credential_user_entity::PublicKeyCredentialUserEntity;
+use crate::make_credential_params::Extension;
 
 #[cfg(not(target_os = "linux"))]
 mod fidokey;
@@ -191,7 +192,7 @@ pub fn make_credential(
     challenge: &[u8],
     pin: Option<&str>,
 ) -> Result<make_credential_params::Attestation> {
-    make_credential::make_credential(hid_params, rpid, challenge, pin, false, None, None).map_err(Error::msg)
+    make_credential::make_credential(hid_params, rpid, challenge, pin, false, None, None, None).map_err(Error::msg)
 }
 
 pub fn make_credential_with_options(
@@ -199,8 +200,9 @@ pub fn make_credential_with_options(
     rpid: &str,
     challenge: &[u8],
     pin: Option<&str>,
+    extensions: Option<&Vec<Extension>>,
 ) -> Result<make_credential_params::Attestation> {
-    make_credential::make_credential(hid_params, rpid, challenge, pin, false, None, None).map_err(Error::msg)
+    make_credential::make_credential(hid_params, rpid, challenge, pin, false, None, None, extensions).map_err(Error::msg)
 }
 
 /// Registration command.Generate credentials(with PIN ,Resident Key)
@@ -211,7 +213,7 @@ pub fn make_credential_rk(
     pin: Option<&str>,
     rkparam: &PublicKeyCredentialUserEntity,
 ) -> Result<make_credential_params::Attestation> {
-    make_credential::make_credential(hid_params, rpid, challenge, pin, true, Some(rkparam), None).map_err(Error::msg)
+    make_credential::make_credential(hid_params, rpid, challenge, pin, true, Some(rkparam), None, None).map_err(Error::msg)
 }
 
 /// Registration command.Generate credentials(without PIN ,non Resident Key)
@@ -220,7 +222,7 @@ pub fn make_credential_without_pin(
     rpid: &str,
     challenge: &[u8],
 ) -> Result<make_credential_params::Attestation> {
-    make_credential::make_credential(hid_params, rpid, challenge, None, false, None, None).map_err(Error::msg)
+    make_credential::make_credential(hid_params, rpid, challenge, None, false, None, None, None).map_err(Error::msg)
 }
 
 /// Authentication command(with PIN , non Resident Key)
@@ -702,7 +704,7 @@ mod tests {
 
             params.pin_auth = pin_auth.to_vec();
 
-            make_credential_command::create_payload(params)
+            make_credential_command::create_payload(params,None)
         };
 
         if util::is_debug() == true {

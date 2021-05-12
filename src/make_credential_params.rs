@@ -91,11 +91,11 @@ impl fmt::Display for Attestation {
 }
 
 #[derive(Debug, Clone, PartialEq)]
-pub enum Extensions {
+pub enum Extension {
     CredProtect(CredentialProtectionPolicy),        // credProtect 0x01
     CredBlob(Vec<u8>),          //  "credBlob": Byte String containing the credBlob value
     MinPinLength(bool),         // "minPinLength": true
-    HmacSecret(bool),           //"hmac-secret": true
+    HmacSecret(bool),
 }
 /*
 impl From<String> for Extensions {
@@ -108,9 +108,10 @@ impl From<String> for Extensions {
     }
 }
 */
-impl From<Extensions> for String {
-    fn from(from: Extensions) -> String {
-        if let Extensions::HmacSecret(_) = from {
+// PEND 結局いらないかも
+impl From<Extension> for String {
+    fn from(from: Extension) -> String {
+        if let Extension::HmacSecret(_) = from {
             "hmac-secret".to_string()
         } else {
             "".to_string()
