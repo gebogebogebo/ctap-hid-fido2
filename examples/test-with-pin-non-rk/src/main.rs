@@ -3,13 +3,10 @@ use ctap_hid_fido2;
 use ctap_hid_fido2::util;
 use ctap_hid_fido2::verifier;
 use ctap_hid_fido2::HidParam;
+use ctap_hid_fido2::make_credential_params::Extension;
 
 fn main() -> Result<()> {
     println!("----- test-with-pin-non-rk start -----");
-
-    // PEND
-    let ext = ctap_hid_fido2::make_credential_params::Extensions::HmacSecret(false);
-    let ex_str:String = ext.into();
 
     // parameter
     let rpid = "test.com";
@@ -25,11 +22,23 @@ fn main() -> Result<()> {
         util::to_hex_str(&challenge)
     );
 
+    /*
     let att = ctap_hid_fido2::make_credential(
         &HidParam::get_default_params(),
         rpid,
         &challenge,
         Some(pin),
+    )?;
+    */
+
+    // PEND
+    let ext = Extension::HmacSecret(true);
+    let att = ctap_hid_fido2::make_credential_with_options(
+        &HidParam::get_default_params(),
+        rpid,
+        &challenge,
+        Some(pin),
+        Some(&vec![ext])
     )?;
 
     println!("- Register Success!!");

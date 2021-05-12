@@ -6,6 +6,7 @@ use crate::make_credential_response;
 use crate::public_key_credential_user_entity::PublicKeyCredentialUserEntity;
 use crate::FidoKeyHid;
 use crate::HidParam;
+use crate::make_credential_params::Extension;
 
 #[allow(unused_imports)]
 use crate::util;
@@ -18,6 +19,7 @@ pub fn make_credential(
     rk: bool,
     rkparam: Option<&PublicKeyCredentialUserEntity>,
     uv: Option<bool>,
+    extensions: Option<&Vec<Extension>>,
 ) -> Result<make_credential_params::Attestation, String> {
     // init
     let device = FidoKeyHid::new(hid_params)?;
@@ -64,7 +66,7 @@ pub fn make_credential(
             }
         }
 
-        make_credential_command::create_payload(params)
+        make_credential_command::create_payload(params,extensions)
     };
 
     if util::is_debug() == true {

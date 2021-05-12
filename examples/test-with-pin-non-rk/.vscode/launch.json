@@ -21,25 +21,6 @@
             },
             "args": [],
             "cwd": "${workspaceFolder}"
-        },
-        {
-            "type": "lldb",
-            "request": "launch",
-            "name": "Debug unit tests in executable 'test-with-pin-non-rk'",
-            "cargo": {
-                "args": [
-                    "test",
-                    "--no-run",
-                    "--bin=test-with-pin-non-rk",
-                    "--package=test-with-pin-non-rk"
-                ],
-                "filter": {
-                    "name": "test-with-pin-non-rk",
-                    "kind": "bin"
-                }
-            },
-            "args": [],
-            "cwd": "${workspaceFolder}"
         }
     ]
 }

@@ -3,6 +3,7 @@ use crate::util;
 use serde_cbor::to_vec;
 use serde_cbor::Value;
 use std::collections::BTreeMap;
+use crate::make_credential_params::Extension;
 
 #[derive(Debug, Default)]
 pub struct Params {
@@ -28,7 +29,7 @@ impl Params {
     }
 }
 
-pub fn create_payload(params: Params) -> Vec<u8> {
+pub fn create_payload(params: Params,extensions: Option<&Vec<Extension>>,) -> Vec<u8> {
     // 0x01 : clientDataHash
     let cdh = Value::Bytes(params.client_data_hash);
 
@@ -94,6 +95,29 @@ pub fn create_payload(params: Params) -> Vec<u8> {
     let tmp = Value::Map(pub_key_cred_params_val);
     let pub_key_cred_params = Value::Array(vec![tmp]);
 
+    // 0x06 : extensions
+    let extensions = if let Some(extensions) = extensions {
+        let mut map = BTreeMap::new();
+        for ext in extensions{
+            if let Extension::HmacSecret(n) = *ext {
+                map.insert(Value::Text("hmac_secret".into()), Value::Bool(n));
+            }
+        }
+        Some(Value::Map(map))
+    }else{
+        None
+    };
+
+    /*
+    let user_id = {
+        if let Some(rkp) = rkparam {
+            rkp.id.to_vec()
+        } else {
+            [].to_vec()
+        }
+    };
+    */
+
     // 0x07 : options
     let options = {
         let mut options_val = BTreeMap::new();
@@ -125,6 +149,7 @@ pub fn create_payload(params: Params) -> Vec<u8> {
     make_credential.insert(Value::Integer(0x02), rp);
     make_credential.insert(Value::Integer(0x03), user);
     make_credential.insert(Value::Integer(0x04), pub_key_cred_params);
+    if let Some(x) = extensions { make_credential.insert(Value::Integer(0x06), x); }
     make_credential.insert(Value::Integer(0x07), options);
     if let Some(x) = pin_auth {
         make_credential.insert(Value::Integer(0x08), x);
