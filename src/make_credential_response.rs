@@ -4,6 +4,7 @@ use crate::util;
 use byteorder::{BigEndian, ReadBytesExt};
 use serde_cbor::Value;
 use std::io::Cursor;
+use serde;
 
 fn parse_cbor_att_stmt(obj: &Value, att: &mut Attestation) -> Result<(), String> {
     if let Value::Map(xs) = obj {
@@ -72,11 +73,37 @@ fn parse_cbor_authdata(authdata: &[u8], attestation: &mut Attestation) -> Result
     attestation.credential_descriptor.id = ret.0;
     index = ret.1;
 
-    if attestation.flags_attested_credential_data_included {
-        let slice = authdata[index..authdata.len()].to_vec();
-        let cbor = serde_cbor::from_slice(&slice).unwrap();
-        attestation.credential_publickey = attestation.credential_publickey.get(&cbor);
-    }
+    // rest is cbor objects
+    // - [0] credentialPublicKey
+    // - [1] extensions
+    let slice = if attestation.flags_attested_credential_data_included {
+            let slice = &authdata[index..authdata.len()];
+            // PEND
+            //println!("{:02} - {:?}",slice.len(),util::to_hex_str(&slice));
+            let mut deserializer = serde_cbor::Deserializer::from_slice(&slice);
+            let value:Value = serde::de::Deserialize::deserialize(&mut deserializer).unwrap();
+            attestation.credential_publickey = attestation.credential_publickey.get(&value);
+            slice[deserializer.byte_offset()..].to_vec()
+    } else {
+        authdata[index..authdata.len()].to_vec()
+    };
+
+    if attestation.flags_user_present_result {
+        // PEND
+        println!("{:02} - {:?}",slice.len(),util::to_hex_str(&slice));
+        let maps = util::cbor_bytes_to_map(&slice)?;
+        for (key, val) in &maps {
+            if let Value::Text(member) = key {
+                if member == "hmac-secret"{
+                    if let Value::Bool(b) = val {
+                        let val = b;
+                    }
+                }
+            }
+        }    
+        let a = 0;
+    };
+
     Ok(())
 }
 
@@ -86,19 +113,9 @@ pub fn parse_cbor(bytes: &[u8]) -> Result<Attestation, String> {
     for (key, val) in &maps {
         if let Value::Integer(member) = key {
             match member {
-                0x01 => {
-                    if let Value::Text(s) = val {
-                        attestation.fmt = s.to_string();
-                    }
-                }
-                0x02 => {
-                    if let Value::Bytes(xs) = val {
-                        parse_cbor_authdata(xs, &mut attestation)?;
-                    }
-                }
-                0x03 => {
-                    parse_cbor_att_stmt(val, &mut attestation)?;
-                }
+                0x01 => attestation.fmt = util::cbor_value_to_str(val)?,
+                0x02 => parse_cbor_authdata(&util::cbor_value_to_vec_u8(val)?, &mut attestation)?,
+                0x03 => parse_cbor_att_stmt(val, &mut attestation)?,
                 _ => println!("- anything error"),
             }
         }
