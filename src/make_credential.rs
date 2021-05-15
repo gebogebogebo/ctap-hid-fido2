@@ -2,11 +2,11 @@ use crate::client_pin;
 use crate::ctaphid;
 use crate::make_credential_command;
 use crate::make_credential_params;
+use crate::make_credential_params::Extension;
 use crate::make_credential_response;
 use crate::public_key_credential_user_entity::PublicKeyCredentialUserEntity;
 use crate::FidoKeyHid;
 use crate::HidParam;
-use crate::make_credential_params::Extension;
 
 #[allow(unused_imports)]
 use crate::util;
@@ -66,7 +66,7 @@ pub fn make_credential(
             }
         }
 
-        make_credential_command::create_payload(params,extensions)
+        make_credential_command::create_payload(params, extensions)
     };
 
     if util::is_debug() == true {

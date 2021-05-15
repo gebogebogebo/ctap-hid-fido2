@@ -1,12 +1,12 @@
-use crate::util;
+use crate::credential_management_params::CredentialProtectionPolicy;
 use crate::make_credential_params::Attestation;
 use crate::make_credential_params::Extension;
-use crate::credential_management_params::CredentialProtectionPolicy;
+use crate::util;
 
 use byteorder::{BigEndian, ReadBytesExt};
+use serde;
 use serde_cbor::Value;
 use std::io::Cursor;
-use serde;
 
 fn parse_cbor_att_stmt(obj: &Value, att: &mut Attestation) -> Result<(), String> {
     if let Value::Map(xs) = obj {
@@ -79,18 +79,18 @@ fn parse_cbor_authdata(authdata: &[u8], attestation: &mut Attestation) -> Result
     // - [0] credentialPublicKey
     // - [1] extensions
     let slice = if attestation.flags_attested_credential_data_included {
-            let slice = &authdata[index..authdata.len()];
-            let mut deserializer = serde_cbor::Deserializer::from_slice(&slice);
-            let value:Value = serde::de::Deserialize::deserialize(&mut deserializer).unwrap();
-            attestation.credential_publickey = attestation.credential_publickey.get(&value);
-            slice[deserializer.byte_offset()..].to_vec()
+        let slice = &authdata[index..authdata.len()];
+        let mut deserializer = serde_cbor::Deserializer::from_slice(&slice);
+        let value: Value = serde::de::Deserialize::deserialize(&mut deserializer).unwrap();
+        attestation.credential_publickey = attestation.credential_publickey.get(&value);
+        slice[deserializer.byte_offset()..].to_vec()
     } else {
         authdata[index..authdata.len()].to_vec()
     };
 
     if attestation.flags_extension_data_included {
         // PEND
-        println!("{:02} - {:?}",slice.len(),util::to_hex_str(&slice));
+        println!("{:02} - {:?}", slice.len(), util::to_hex_str(&slice));
         let maps = util::cbor_bytes_to_map(&slice)?;
         for (key, val) in &maps {
             if let Value::Text(member) = key {
@@ -98,11 +98,13 @@ fn parse_cbor_authdata(authdata: &[u8], attestation: &mut Attestation) -> Result
                     let v = util::cbor_value_to_bool(val)?;
                     attestation.extensions.push(Extension::HmacSecret(v));
                 } else if member == "credProtect" {
-                    let v:u32 = util::cbor_value_to_num(val)?;
-                    attestation.extensions.push(Extension::CredProtect(CredentialProtectionPolicy::from(v)));
+                    let v: u32 = util::cbor_value_to_num(val)?;
+                    attestation
+                        .extensions
+                        .push(Extension::CredProtect(CredentialProtectionPolicy::from(v)));
                 }
             }
-        }    
+        }
     };
 
     Ok(())

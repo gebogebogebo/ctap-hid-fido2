@@ -1,6 +1,6 @@
+use crate::ctapdef;
 #[allow(unused_imports)]
 use crate::util;
-use crate::ctapdef;
 
 #[cfg(not(target_os = "linux"))]
 use crate::fidokey::*;
@@ -69,7 +69,7 @@ pub fn ctaphid_init(device: &FidoKeyHid) -> Result<[u8; 4], String> {
     Ok([buf[15], buf[16], buf[17], buf[18]])
 }
 
-fn get_responce_status(packet: &[u8]) -> Result<(u8, u16, u8),String> {
+fn get_responce_status(packet: &[u8]) -> Result<(u8, u16, u8), String> {
     // cid
     //println!("- cid: {:?}", &packet[0..4]);
     // cmd
@@ -363,7 +363,12 @@ pub fn ctaphid_msg(device: &FidoKeyHid, cid: &[u8], payload: &Vec<u8>) -> Result
     ctaphid_cbormsg(device, cid, CTAPHID_MSG, payload)
 }
 
-pub fn ctaphid_xxx(device: &FidoKeyHid, cid: &[u8], xxx: u8,payload: &Vec<u8>) -> Result<Vec<u8>, String> {
+pub fn ctaphid_xxx(
+    device: &FidoKeyHid,
+    cid: &[u8],
+    xxx: u8,
+    payload: &Vec<u8>,
+) -> Result<Vec<u8>, String> {
     ctaphid_cbormsg(device, cid, xxx, payload)
 }
 

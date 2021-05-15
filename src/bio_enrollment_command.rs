@@ -1,12 +1,12 @@
 #[allow(unused_imports)]
 use crate::util;
 
+use crate::bio_enrollment_params::TemplateInfo;
 use crate::ctapdef;
 use crate::pintoken;
 use serde_cbor::to_vec;
 use serde_cbor::Value;
 use std::collections::BTreeMap;
-use crate::bio_enrollment_params::{TemplateInfo};
 
 #[allow(dead_code)]
 #[derive(Debug, Copy, Clone, PartialEq)]
@@ -40,16 +40,16 @@ pub fn create_payload(
         let mut sub_command_params_cbor = Vec::new();
         if need_sub_command_param(sub_command) {
             let value = match sub_command {
-                SubCommand::EnrollBegin | SubCommand::EnrollCaptureNextSample =>{
-                    let param = to_value_timeout(template_info,timeout_milliseconds);
+                SubCommand::EnrollBegin | SubCommand::EnrollCaptureNextSample => {
+                    let param = to_value_timeout(template_info, timeout_milliseconds);
                     map.insert(Value::Integer(0x03), param.clone());
                     Some(param)
-                },
-                SubCommand::SetFriendlyName | SubCommand::RemoveEnrollment =>{
+                }
+                SubCommand::SetFriendlyName | SubCommand::RemoveEnrollment => {
                     let param = to_value_template_info(template_info.unwrap());
                     map.insert(Value::Integer(0x03), param.clone());
                     Some(param)
-                },
+                }
                 _ => (None),
             };
 
@@ -87,27 +87,30 @@ pub fn create_payload(
 }
 
 fn need_sub_command_param(sub_command: SubCommand) -> bool {
-    sub_command == SubCommand::EnrollBegin ||
-    sub_command == SubCommand::EnrollCaptureNextSample ||
-    sub_command == SubCommand::SetFriendlyName ||
-    sub_command == SubCommand::RemoveEnrollment
+    sub_command == SubCommand::EnrollBegin
+        || sub_command == SubCommand::EnrollCaptureNextSample
+        || sub_command == SubCommand::SetFriendlyName
+        || sub_command == SubCommand::RemoveEnrollment
 }
 
 fn to_value_template_info(in_param: TemplateInfo) -> Value {
     let mut param = BTreeMap::new();
     param.insert(Value::Integer(0x01), Value::Bytes(in_param.template_id));
-    if let Some(v) = in_param.template_friendly_name{
+    if let Some(v) = in_param.template_friendly_name {
         param.insert(Value::Integer(0x02), Value::Text(v.to_string()));
     }
     Value::Map(param)
 }
 
-fn to_value_timeout(template_info: Option<TemplateInfo>,timeout_milliseconds: Option<u16>) -> Value {
+fn to_value_timeout(
+    template_info: Option<TemplateInfo>,
+    timeout_milliseconds: Option<u16>,
+) -> Value {
     let mut param = BTreeMap::new();
-    if let Some(v) = template_info{
+    if let Some(v) = template_info {
         param.insert(Value::Integer(0x01), Value::Bytes(v.template_id));
     }
-    if let Some(v) = timeout_milliseconds{
+    if let Some(v) = timeout_milliseconds {
         param.insert(Value::Integer(0x03), Value::Integer(v as i128));
     }
     Value::Map(param)

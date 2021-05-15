@@ -144,7 +144,7 @@ pub(crate) fn cbor_value_to_vec_bytes(value: &Value) -> Result<Vec<Vec<u8>>, Str
 pub(crate) fn cbor_bytes_to_map(bytes: &[u8]) -> Result<BTreeMap<Value, Value>, String> {
     if bytes.len() == 0 {
         return Ok(BTreeMap::new());
-    }    
+    }
     match serde_cbor::from_slice(bytes) {
         Ok(cbor) => {
             if let Value::Map(n) = cbor {
