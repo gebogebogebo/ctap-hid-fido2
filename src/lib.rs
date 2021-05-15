@@ -45,6 +45,7 @@ mod selection_command;
 mod ss;
 pub mod util;
 pub mod verifier;
+mod str_buf;
 
 //
 use anyhow::{Result,Error};
