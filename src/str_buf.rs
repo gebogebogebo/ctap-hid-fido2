@@ -1,22 +1,23 @@
 use crate::util;
+use std::fmt::Display;
 
 //#[derive(Default)]
-pub(crate) struct StrBuf {
+pub struct StrBuf {
     buf: String,
 }
 impl StrBuf {
-    pub(crate) fn new() -> Self {
+    pub fn new() -> Self {
         StrBuf {
             buf: String::from(""),
         }
     }
 
-    pub(crate) fn append<T: std::fmt::Display>(&mut self, title: &str, val: &T) -> &mut Self {
+    pub fn append<T: Display>(&mut self, title: &str, val: &T) -> &mut Self {
         let tmp = format!("{} = {}\n", title, val);
         self.buf = self.buf.to_string() + &tmp;
         self
     }
-    pub(crate) fn appenh(&mut self, title: &str, bytes: &[u8]) -> &mut Self {
+    pub fn appenh(&mut self, title: &str, bytes: &[u8]) -> &mut Self {
         let tmp = format!(
             "{}({:02}) = {}\n",
             title,
@@ -27,7 +28,7 @@ impl StrBuf {
         self
     }
 
-    pub(crate) fn build(&self) -> &str {
+    pub fn build(&self) -> &str {
         &self.buf
     }
 }

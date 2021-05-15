@@ -33,7 +33,7 @@ pub struct Attestation {
 impl fmt::Display for Attestation {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let mut strbuf = StrBuf::new();
-        let buf = strbuf
+        strbuf
             .appenh("- rpid_hash", &self.rpid_hash)
             .append(
                 "- flags_user_present_result",
@@ -53,10 +53,13 @@ impl fmt::Display for Attestation {
             .append("- credential_publickey", &self.credential_publickey)
             .append("- attstmt_alg", &self.attstmt_alg)
             .appenh("- attstmt_sig", &self.attstmt_sig)
-            .append("- attstmt_alg", &self.attstmt_alg)
-            .append("- attstmt_x5c_num", &self.attstmt_x5c.len())
-            .build();
-        write!(f, "{}", buf)
+            .append("- attstmt_x5c_num", &self.attstmt_x5c.len());
+
+        for ex in &self.extensions{
+            strbuf.append("- extension", &format!("{:?}",ex));
+        }
+                
+        write!(f, "{}", strbuf.build())
     }
 }
 
@@ -78,13 +81,16 @@ impl From<String> for Extensions {
     }
 }
 */
-// PEND 結局いらないかも
+
+/// let aaa:String = Extension::HmacSecret(true).into();
+/// aaa is "hmac-secret"
 impl From<Extension> for String {
     fn from(from: Extension) -> String {
-        if let Extension::HmacSecret(_) = from {
-            "hmac-secret".to_string()
-        } else {
-            "".to_string()
+        match from {
+            Extension::CredProtect(_) => "CredProtect".to_string(),
+            Extension::CredBlob(_) => "CredBlob".to_string(),
+            Extension::MinPinLength(_) => "MinPinLength".to_string(),
+            Extension::HmacSecret(_) => "hmac-secret".to_string(),
         }
     }
 }
