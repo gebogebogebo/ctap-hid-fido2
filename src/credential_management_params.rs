@@ -80,11 +80,13 @@ pub enum CredentialProtectionPolicy {
     UserVerificationRequired,
 }
 impl Default for CredentialProtectionPolicy {
-    fn default() -> Self { CredentialProtectionPolicy::Unknown }
+    fn default() -> Self {
+        CredentialProtectionPolicy::Unknown
+    }
 }
 impl From<u32> for CredentialProtectionPolicy {
     fn from(from: u32) -> CredentialProtectionPolicy {
-        match from{
+        match from {
             0x01 => CredentialProtectionPolicy::UserVerificationOptional,
             0x02 => CredentialProtectionPolicy::UserVerificationOptionalWithCredentialIDList,
             0x03 => CredentialProtectionPolicy::UserVerificationRequired,

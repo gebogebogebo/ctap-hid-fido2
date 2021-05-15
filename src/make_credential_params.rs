@@ -2,11 +2,11 @@
 make_credential API parameters
 */
 
+use crate::credential_management_params::CredentialProtectionPolicy;
 use crate::public_key::PublicKey;
 use crate::public_key_credential_descriptor::PublicKeyCredentialDescriptor;
 use crate::str_buf::StrBuf;
 use std::fmt;
-use crate::credential_management_params::CredentialProtectionPolicy;
 
 /// Attestation Object
 /// [https://www.w3.org/TR/webauthn/#sctn-attestation](https://www.w3.org/TR/webauthn/#sctn-attestation)
@@ -34,28 +34,37 @@ impl fmt::Display for Attestation {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let mut strbuf = StrBuf::new();
         let buf = strbuf
-            .appenh("- rpid_hash",&self.rpid_hash)
-            .append("- flags_user_present_result",&self.flags_user_present_result)
-            .append("- flags_attested_credential_data_included",&self.flags_attested_credential_data_included)
-            .append("- flags_extension_data_included",&self.flags_extension_data_included)
-            .append("- sign_count",&self.sign_count)
-            .appenh("- aaguid",&self.aaguid)
-            .append("- credential_descriptor",&self.credential_descriptor)
-            .append("- credential_publickey",&self.credential_publickey)
-            .append("- attstmt_alg",&self.attstmt_alg)
-            .appenh("- attstmt_sig",&self.attstmt_sig)
-            .append("- attstmt_alg",&self.attstmt_alg)
-            .append("- attstmt_x5c_num",&self.attstmt_x5c.len())
+            .appenh("- rpid_hash", &self.rpid_hash)
+            .append(
+                "- flags_user_present_result",
+                &self.flags_user_present_result,
+            )
+            .append(
+                "- flags_attested_credential_data_included",
+                &self.flags_attested_credential_data_included,
+            )
+            .append(
+                "- flags_extension_data_included",
+                &self.flags_extension_data_included,
+            )
+            .append("- sign_count", &self.sign_count)
+            .appenh("- aaguid", &self.aaguid)
+            .append("- credential_descriptor", &self.credential_descriptor)
+            .append("- credential_publickey", &self.credential_publickey)
+            .append("- attstmt_alg", &self.attstmt_alg)
+            .appenh("- attstmt_sig", &self.attstmt_sig)
+            .append("- attstmt_alg", &self.attstmt_alg)
+            .append("- attstmt_x5c_num", &self.attstmt_x5c.len())
             .build();
-        write!(f,"{}",buf)
+        write!(f, "{}", buf)
     }
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Extension {
-    CredProtect(CredentialProtectionPolicy),        // credProtect 0x01
-    CredBlob(Vec<u8>),          //  "credBlob": Byte String containing the credBlob value
-    MinPinLength(bool),         // "minPinLength": true
+    CredProtect(CredentialProtectionPolicy), // credProtect 0x01
+    CredBlob(Vec<u8>),  //  "credBlob": Byte String containing the credBlob value
+    MinPinLength(bool), // "minPinLength": true
     HmacSecret(bool),
 }
 /*

@@ -1,7 +1,7 @@
-use crate::util;
-use std::fmt;
-use crate::FidoKeyHid;
 use crate::pintoken::PinToken;
+use crate::util;
+use crate::FidoKeyHid;
+use std::fmt;
 
 #[allow(dead_code)]
 #[derive(Debug, Copy, Clone, PartialEq)]
@@ -10,11 +10,13 @@ pub enum Modality {
     Fingerprint,
 }
 impl Default for Modality {
-    fn default() -> Self { Modality::Unknown }
+    fn default() -> Self {
+        Modality::Unknown
+    }
 }
 impl From<u32> for Modality {
     fn from(from: u32) -> Modality {
-        match from{
+        match from {
             0x01 => Modality::Fingerprint,
             _ => Modality::Unknown,
         }
@@ -29,11 +31,13 @@ pub enum FingerprintKind {
     SwipeType = 2,
 }
 impl Default for FingerprintKind {
-    fn default() -> Self { FingerprintKind::Unknown }
+    fn default() -> Self {
+        FingerprintKind::Unknown
+    }
 }
 impl From<u32> for FingerprintKind {
     fn from(from: u32) -> FingerprintKind {
-        match from{
+        match from {
             0x01 => FingerprintKind::TouchType,
             0x02 => FingerprintKind::SwipeType,
             _ => FingerprintKind::Unknown,
@@ -66,8 +70,8 @@ impl fmt::Display for BioEnrollmentData {
         let tmp7 = format!("- max_template_friendly_name              = ");
         let tmp8 = format!("- template_infos                          = ");
         let mut tmp8_val = "".to_string();
-        for i in self.template_infos.iter(){
-            let tmp = format!("{}",i);
+        for i in self.template_infos.iter() {
+            let tmp = format!("{}", i);
             tmp8_val.push_str(&tmp);
         }
         write!(
@@ -99,12 +103,12 @@ pub struct TemplateInfo {
     pub template_friendly_name: Option<String>,
 }
 impl TemplateInfo {
-    pub fn new(template_id: Vec<u8>,template_friendly_name: Option<&str>) -> TemplateInfo {
+    pub fn new(template_id: Vec<u8>, template_friendly_name: Option<&str>) -> TemplateInfo {
         let mut ret = TemplateInfo::default();
         ret.template_id = template_id.clone();
         if let Some(v) = template_friendly_name {
             ret.template_friendly_name = Some(v.to_string());
-        }else{
+        } else {
             ret.template_friendly_name = None;
         }
         ret
@@ -113,10 +117,7 @@ impl TemplateInfo {
 
 impl fmt::Display for TemplateInfo {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let tmp1 = format!(
-            "({:02}byte)0x",
-            self.template_id.len()
-        );
+        let tmp1 = format!("({:02}byte)0x", self.template_id.len());
         let tmp2 = format!("");
         write!(
             f,
@@ -131,7 +132,7 @@ impl fmt::Display for TemplateInfo {
 
 pub struct EnrollStatus1 {
     pub device: FidoKeyHid,
-    pub cid: [u8;4],
+    pub cid: [u8; 4],
     pub pin_token: Option<PinToken>,
     pub template_id: Vec<u8>,
 }

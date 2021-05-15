@@ -1,9 +1,9 @@
 use crate::ctapdef;
+use crate::make_credential_params::Extension;
 use crate::util;
 use serde_cbor::to_vec;
 use serde_cbor::Value;
 use std::collections::BTreeMap;
-use crate::make_credential_params::Extension;
 
 #[derive(Debug, Default)]
 pub struct Params {
@@ -29,7 +29,7 @@ impl Params {
     }
 }
 
-pub fn create_payload(params: Params,extensions: Option<&Vec<Extension>>,) -> Vec<u8> {
+pub fn create_payload(params: Params, extensions: Option<&Vec<Extension>>) -> Vec<u8> {
     // 0x01 : clientDataHash
     let cdh = Value::Bytes(params.client_data_hash);
 
@@ -98,17 +98,20 @@ pub fn create_payload(params: Params,extensions: Option<&Vec<Extension>>,) -> Ve
     // 0x06 : extensions
     let extensions = if let Some(extensions) = extensions {
         let mut map = BTreeMap::new();
-        for ext in extensions{
+        for ext in extensions {
             match *ext {
-                Extension::CredProtect(n) => {map.insert(Value::Text("credProtect".into()), Value::Integer(n as i128));},
+                Extension::CredProtect(n) => {
+                    map.insert(Value::Text("credProtect".into()), Value::Integer(n as i128));
+                }
                 Extension::CredBlob(_) => (),
                 Extension::MinPinLength(_) => (),
-                Extension::HmacSecret(n) => {map.insert(Value::Text("hmac-secret".into()), Value::Bool(n));}
+                Extension::HmacSecret(n) => {
+                    map.insert(Value::Text("hmac-secret".into()), Value::Bool(n));
+                }
             };
-        
         }
         Some(Value::Map(map))
-    }else{
+    } else {
         None
     };
 
@@ -153,7 +156,9 @@ pub fn create_payload(params: Params,extensions: Option<&Vec<Extension>>,) -> Ve
     make_credential.insert(Value::Integer(0x02), rp);
     make_credential.insert(Value::Integer(0x03), user);
     make_credential.insert(Value::Integer(0x04), pub_key_cred_params);
-    if let Some(x) = extensions { make_credential.insert(Value::Integer(0x06), x); }
+    if let Some(x) = extensions {
+        make_credential.insert(Value::Integer(0x06), x);
+    }
     make_credential.insert(Value::Integer(0x07), options);
     if let Some(x) = pin_auth {
         make_credential.insert(Value::Integer(0x08), x);
