@@ -1,5 +1,7 @@
-use crate::make_credential_params::Attestation;
 use crate::util;
+use crate::make_credential_params::Attestation;
+use crate::make_credential_params::Extension;
+use crate::credential_management_params::CredentialProtectionPolicy;
 
 use byteorder::{BigEndian, ReadBytesExt};
 use serde_cbor::Value;
@@ -78,8 +80,6 @@ fn parse_cbor_authdata(authdata: &[u8], attestation: &mut Attestation) -> Result
     // - [1] extensions
     let slice = if attestation.flags_attested_credential_data_included {
             let slice = &authdata[index..authdata.len()];
-            // PEND
-            //println!("{:02} - {:?}",slice.len(),util::to_hex_str(&slice));
             let mut deserializer = serde_cbor::Deserializer::from_slice(&slice);
             let value:Value = serde::de::Deserialize::deserialize(&mut deserializer).unwrap();
             attestation.credential_publickey = attestation.credential_publickey.get(&value);
@@ -88,20 +88,21 @@ fn parse_cbor_authdata(authdata: &[u8], attestation: &mut Attestation) -> Result
         authdata[index..authdata.len()].to_vec()
     };
 
-    if attestation.flags_user_present_result {
+    if attestation.flags_extension_data_included {
         // PEND
         println!("{:02} - {:?}",slice.len(),util::to_hex_str(&slice));
         let maps = util::cbor_bytes_to_map(&slice)?;
         for (key, val) in &maps {
             if let Value::Text(member) = key {
-                if member == "hmac-secret"{
-                    if let Value::Bool(b) = val {
-                        let val = b;
-                    }
+                if member == "hmac-secret" {
+                    let v = util::cbor_value_to_bool(val)?;
+                    attestation.extensions.push(Extension::HmacSecret(v));
+                } else if member == "credProtect" {
+                    let v:u32 = util::cbor_value_to_num(val)?;
+                    attestation.extensions.push(Extension::CredProtect(CredentialProtectionPolicy::from(v)));
                 }
             }
         }    
-        let a = 0;
     };
 
     Ok(())

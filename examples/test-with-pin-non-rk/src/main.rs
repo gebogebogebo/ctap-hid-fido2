@@ -33,8 +33,8 @@ fn main() -> Result<()> {
     */
 
     // PEND
-    let ext = Extension::HmacSecret(true);
-    //let ext = Extension::CredProtect(CredentialProtectionPolicy::UserVerificationRequired);
+    //let ext = Extension::HmacSecret(true);
+    let ext = Extension::CredProtect(CredentialProtectionPolicy::UserVerificationRequired);
     let att = ctap_hid_fido2::make_credential_with_extensions(
         &HidParam::get_default_params(),
         rpid,

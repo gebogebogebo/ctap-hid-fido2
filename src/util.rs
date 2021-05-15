@@ -103,6 +103,15 @@ pub(crate) fn cbor_value_to_str(value: &Value) -> Result<String, String> {
 }
 
 #[allow(dead_code)]
+pub(crate) fn cbor_value_to_bool(value: &Value) -> Result<bool, String> {
+    if let Value::Bool(v) = value {
+        Ok(*v)
+    } else {
+        Err("Cast Error : Value is not a Bool.".to_string())
+    }
+}
+
+#[allow(dead_code)]
 pub(crate) fn cbor_value_to_vec_string(value: &Value) -> Result<Vec<String>, String> {
     if let Value::Array(x) = value {
         let mut strings = [].to_vec();
