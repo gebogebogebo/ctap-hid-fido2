@@ -99,9 +99,13 @@ pub fn create_payload(params: Params,extensions: Option<&Vec<Extension>>,) -> Ve
     let extensions = if let Some(extensions) = extensions {
         let mut map = BTreeMap::new();
         for ext in extensions{
-            if let Extension::HmacSecret(n) = *ext {
-                map.insert(Value::Text("hmac_secret".into()), Value::Bool(n));
-            }
+            match *ext {
+                Extension::CredProtect(n) => {map.insert(Value::Text("credProtect".into()), Value::Bool(false));},
+                Extension::CredBlob(_) => (),
+                Extension::MinPinLength(_) => (),
+                Extension::HmacSecret(n) => {map.insert(Value::Text("hmac-secret".into()), Value::Bool(n));}
+            };
+        
         }
         Some(Value::Map(map))
     }else{

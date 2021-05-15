@@ -195,7 +195,7 @@ pub fn make_credential(
     make_credential::make_credential(hid_params, rpid, challenge, pin, false, None, None, None).map_err(Error::msg)
 }
 
-pub fn make_credential_with_options(
+pub fn make_credential_with_extensions(
     hid_params: &[HidParam],
     rpid: &str,
     challenge: &[u8],
@@ -227,6 +227,18 @@ pub fn make_credential_without_pin(
 
 /// Authentication command(with PIN , non Resident Key)
 pub fn get_assertion(
+    hid_params: &[HidParam],
+    rpid: &str,
+    challenge: &[u8],
+    credential_id: &[u8],
+    pin: Option<&str>,
+) -> Result<get_assertion_params::Assertion> {
+    let asss =
+        get_assertion::get_assertion(hid_params, rpid, challenge, credential_id, pin, true, None).map_err(Error::msg)?;
+    Ok(asss[0].clone())
+}
+
+pub fn get_assertion_with_extensios(
     hid_params: &[HidParam],
     rpid: &str,
     challenge: &[u8],

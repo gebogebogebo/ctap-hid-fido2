@@ -4,6 +4,7 @@ use ctap_hid_fido2::util;
 use ctap_hid_fido2::verifier;
 use ctap_hid_fido2::HidParam;
 use ctap_hid_fido2::make_credential_params::Extension;
+use ctap_hid_fido2::credential_management_params::CredentialProtectionPolicy;
 
 fn main() -> Result<()> {
     println!("----- test-with-pin-non-rk start -----");
@@ -33,7 +34,8 @@ fn main() -> Result<()> {
 
     // PEND
     let ext = Extension::HmacSecret(true);
-    let att = ctap_hid_fido2::make_credential_with_options(
+    //let ext = Extension::CredProtect(CredentialProtectionPolicy::UserVerificationRequired);
+    let att = ctap_hid_fido2::make_credential_with_extensions(
         &HidParam::get_default_params(),
         rpid,
         &challenge,
