@@ -21,11 +21,12 @@ pub struct Params {
 
 impl Params {
     pub fn new(rp_id: &str, challenge: Vec<u8>, user_id: Vec<u8>) -> Params {
-        let mut params = Params::default();
-        params.rp_id = rp_id.to_string();
-        params.user_id = user_id.to_vec();
-        params.client_data_hash = util::create_clientdata_hash(challenge);
-        params
+        Params {
+            rp_id: rp_id.to_string(),
+            user_id: user_id.to_vec(),
+            client_data_hash: util::create_clientdata_hash(challenge),
+            ..Default::default()
+        }
     }
 }
 
@@ -50,7 +51,7 @@ pub fn create_payload(params: Params, extensions: Option<&Vec<Extension>>) -> Ve
     // user id
     {
         let user_id = {
-            if params.user_id.len() > 0 {
+            if !params.user_id.is_empty() {
                 params.user_id.to_vec()
             } else {
                 vec![0x00]
@@ -61,7 +62,7 @@ pub fn create_payload(params: Params, extensions: Option<&Vec<Extension>>) -> Ve
     // user name
     {
         let user_name = {
-            if params.user_name.len() > 0 {
+            if !params.user_name.is_empty() {
                 params.user_name.to_string()
             } else {
                 " ".to_string()
@@ -72,7 +73,7 @@ pub fn create_payload(params: Params, extensions: Option<&Vec<Extension>>) -> Ve
     // displayName
     {
         let display_name = {
-            if params.user_display_name.len() > 0 {
+            if !params.user_display_name.is_empty() {
                 params.user_display_name.to_string()
             } else {
                 " ".to_string()
@@ -140,7 +141,7 @@ pub fn create_payload(params: Params, extensions: Option<&Vec<Extension>>) -> Ve
 
     // pinAuth(0x08)
     let pin_auth = {
-        if params.pin_auth.len() > 0 {
+        if !params.pin_auth.is_empty() {
             Some(Value::Bytes(params.pin_auth))
         } else {
             None
