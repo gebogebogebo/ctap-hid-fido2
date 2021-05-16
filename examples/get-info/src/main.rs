@@ -1,4 +1,3 @@
-use ctap_hid_fido2;
 use ctap_hid_fido2::HidParam;
 
 fn main() {

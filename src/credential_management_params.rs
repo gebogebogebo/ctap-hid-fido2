@@ -4,6 +4,7 @@ use crate::public_key_credential_rp_entity::PublicKeyCredentialRpEntity;
 use crate::public_key_credential_user_entity::PublicKeyCredentialUserEntity;
 use crate::util;
 use std::fmt;
+use crate::str_buf::StrBuf;
 
 #[derive(Debug, Default, Clone)]
 pub(crate) struct CredentialManagementData {
@@ -104,31 +105,21 @@ pub struct Credential {
 }
 impl Credential {
     pub(crate) fn new(d: &CredentialManagementData) -> Credential {
-        let mut ret = Credential::default();
-        ret.public_key_credential_user_entity = d.public_key_credential_user_entity.clone();
-        ret.public_key_credential_descriptor = d.public_key_credential_descriptor.clone();
-        ret.public_key = d.public_key.clone();
-        ret.cred_protect = d.cred_protect.into();
-        ret
+        Credential {
+            public_key_credential_user_entity: d.public_key_credential_user_entity.clone(),
+            public_key_credential_descriptor: d.public_key_credential_descriptor.clone(),
+            public_key: d.public_key.clone(), cred_protect: d.cred_protect.into()
+        }
     }
 }
 impl fmt::Display for Credential {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let tmp1 = "- public_key_credential_user_entity = ";
-        let tmp2 = "- public_key_credential_descriptor  = ";
-        let tmp3 = "- public_key                        = ";
-        let tmp4 = "- cred_protect                      = ";
-        write!(
-            f,
-            "{}{}\n{}{}\n{}{}\n{}{:?}",
-            tmp1,
-            self.public_key_credential_user_entity,
-            tmp2,
-            self.public_key_credential_descriptor,
-            tmp3,
-            self.public_key,
-            tmp4,
-            self.cred_protect,
-        )
+        let mut strbuf = StrBuf::new(42);
+        strbuf
+            .append("- public_key_credential_user_entity", &self.public_key_credential_user_entity)
+            .append("- public_key_credential_descriptor", &self.public_key_credential_descriptor)
+            .append("- public_key",&self.public_key)
+            .append("- cred_protect", &format!("{:?}",self.cred_protect));
+        write!(f, "{}", strbuf.build())
     }
 }

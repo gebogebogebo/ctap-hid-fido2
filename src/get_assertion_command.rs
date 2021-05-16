@@ -16,11 +16,12 @@ pub struct Params {
 
 impl Params {
     pub fn new(rp_id: &str, challenge: Vec<u8>, credential_id: Vec<u8>) -> Params {
-        let mut params = Params::default();
-        params.rp_id = rp_id.to_string();
-        params.client_data_hash = util::create_clientdata_hash(challenge);
-        params.allowlist_credential_id = credential_id.to_vec();
-        params
+        Params {
+            rp_id: rp_id.to_string(),
+            client_data_hash: util::create_clientdata_hash(challenge),
+            allowlist_credential_id: credential_id.to_vec(),
+            ..Default::default()
+        }
     }
 }
 
@@ -33,7 +34,7 @@ pub fn create_payload(params: Params) -> Vec<u8> {
 
     // 0x03 : allowList
     let allow_list = {
-        if params.allowlist_credential_id.len() > 0 {
+        if !params.allowlist_credential_id.is_empty() {
             let mut allow_list_val = BTreeMap::new();
             allow_list_val.insert(
                 Value::Text("id".to_string()),
@@ -62,7 +63,7 @@ pub fn create_payload(params: Params) -> Vec<u8> {
 
     // pinAuth(0x06)
     let pin_auth = {
-        if params.pin_auth.len() > 0 {
+        if !params.pin_auth.is_empty() {
             Some(Value::Bytes(params.pin_auth))
         } else {
             None
