@@ -3,8 +3,8 @@ get_assertion API parameters
 */
 
 use crate::public_key_credential_user_entity::PublicKeyCredentialUserEntity;
-use crate::util;
 use std::fmt;
+use crate::str_buf::StrBuf;
 
 /// Assertion Object
 #[derive(Debug, Default, Clone)]
@@ -31,49 +31,18 @@ pub struct Assertion {
 
 impl fmt::Display for Assertion {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let tmp1 = format!(
-            "- rpid_hash({:02})                           = ",
-            self.rpid_hash.len(),
-        );
-        let tmp2 = format!("- flags_user_present_result               = ");
-        let tmp3 = format!("- flags_user_verified_result              = ");
-        let tmp4 = format!("- flags_attested_credential_data_included = ");
-        let tmp5 = format!("- flags_extension_data_included           = ");
-        let tmp6 = format!("- sign_count                              = ");
-        let tmp7 = format!("- number_of_credentials                   = ");
-        let tmp8 = format!(
-            "- signature({:02})                           = ",
-            self.signature.len(),
-        );
-        let tmp9 = format!("- user                                    = ");
-        let tmpa = format!(
-            "- credential_id({:02})                       = ",
-            self.credential_id.len(),
-        );
-
-        write!(
-            f,
-            "{}{}\n{}{}\n{}{}\n{}{}\n{}{}\n{}{}\n{}{}\n{}{}\n{}{}\n{}{}",
-            tmp1,
-            util::to_hex_str(&self.rpid_hash),
-            tmp2,
-            self.flags_user_present_result,
-            tmp3,
-            self.flags_user_verified_result,
-            tmp4,
-            self.flags_attested_credential_data_included,
-            tmp5,
-            self.flags_extension_data_included,
-            tmp6,
-            self.sign_count,
-            tmp7,
-            self.number_of_credentials,
-            tmp8,
-            util::to_hex_str(&self.signature),
-            tmp9,
-            self.user,
-            tmpa,
-            util::to_hex_str(&self.credential_id),
-        )
+        let mut strbuf = StrBuf::new(42);
+        strbuf
+            .appenh("- rpid_hash", &self.rpid_hash)
+            .append("- flags_user_present_result", &self.flags_user_present_result)
+            .append("- flags_user_verified_result",&self.flags_user_verified_result)
+            .append("- flags_attested_credential_data_included", &self.flags_attested_credential_data_included)
+            .append("- flags_extension_data_included", &self.flags_extension_data_included)
+            .append("- sign_count", &self.sign_count)
+            .append("- number_of_credentials", &self.number_of_credentials)
+            .appenh("- signature", &self.signature)
+            .append("- user", &self.user)
+            .appenh("- credential_id", &self.credential_id);
+        write!(f, "{}", strbuf.build())
     }
 }

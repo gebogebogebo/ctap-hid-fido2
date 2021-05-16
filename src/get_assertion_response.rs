@@ -20,11 +20,11 @@ fn parse_cbor_authdata(authdata: Vec<u8>, ass: &mut get_assertion_params::Assert
 
     // flags(1)
     let byte = authdata[index];
-    ass.flags_user_present_result = if let 0x01 = byte & 0x01 { true } else { false };
-    ass.flags_user_verified_result = if let 0x04 = byte & 0x04 { true } else { false };
-    ass.flags_attested_credential_data_included = if let 0x40 = byte & 0x40 { true } else { false };
-    ass.flags_extension_data_included = if let 0x80 = byte & 0x80 { true } else { false };
-    index = index + 1;
+    ass.flags_user_present_result = matches!(byte & 0x01, 0x01);
+    ass.flags_user_verified_result = matches!(byte & 0x04, 0x04);
+    ass.flags_attested_credential_data_included = matches!(byte & 0x40, 0x40);
+    ass.flags_extension_data_included = matches!(byte & 0x80, 0x80);
+    index += 1;
 
     // signCount(4)
     let clo = |idx: usize, x: usize| {

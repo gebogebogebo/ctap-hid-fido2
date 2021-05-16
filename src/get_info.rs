@@ -11,7 +11,7 @@ pub fn get_info(hid_params: &[HidParam]) -> Result<get_info_params::Info, String
     let cid = ctaphid::ctaphid_init(&device)?;
 
     let send_payload = get_info_command::create_payload();
-    if util::is_debug() == true {
+    if util::is_debug() {
         println!(
             "- get_info({:02})    = {:?}",
             send_payload.len(),
@@ -20,7 +20,7 @@ pub fn get_info(hid_params: &[HidParam]) -> Result<get_info_params::Info, String
     }
 
     let response_cbor = ctaphid::ctaphid_cbor(&device, &cid, &send_payload)?;
-    if util::is_debug() == true {
+    if util::is_debug() {
         println!(
             "- response_cbor({:02})    = {:?}",
             response_cbor.len(),

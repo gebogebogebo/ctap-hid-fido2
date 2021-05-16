@@ -58,7 +58,7 @@ pub fn get_assertion(
         get_assertion_command::create_payload(params)
     };
 
-    if util::is_debug() == true {
+    if util::is_debug() {
         println!(
             "- get_assertion({:02})    = {:?}",
             send_payload.len(),
@@ -69,7 +69,7 @@ pub fn get_assertion(
     // send & response
     let response_cbor = ctaphid::ctaphid_cbor(&device, &cid, &send_payload)?;
 
-    if util::is_debug() == true {
+    if util::is_debug() {
         println!(
             "- response_cbor({:02})    = {:?}",
             response_cbor.len(),

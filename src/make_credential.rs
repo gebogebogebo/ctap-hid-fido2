@@ -57,7 +57,7 @@ pub fn make_credential(
 
         // get pintoken & create pin auth
         if let Some(pin) = pin {
-            if pin.len() > 0 {
+            if !pin.is_empty() {
                 let pin_auth = client_pin::get_pin_token(&device, &cid, pin)?
                     .authenticate_v1(&params.client_data_hash);
 
