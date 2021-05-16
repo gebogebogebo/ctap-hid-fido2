@@ -37,7 +37,8 @@ fn main() -> Result<()> {
     let ext = Extension::CredProtect(Some(CredentialProtectionPolicy::UserVerificationOptionalWithCredentialIDList));
     //let aaa:String = Extension::CredProtect(None).to_string();
     //let aaa:String = Extension::HmacSecret(None).to_string();
-
+    //let xxx = Extension::HmacSecret(None).as_ref();
+    
     let att = ctap_hid_fido2::make_credential_with_extensions(
         &HidParam::get_default_params(),
         rpid,

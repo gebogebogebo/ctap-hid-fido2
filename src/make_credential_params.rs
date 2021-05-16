@@ -8,6 +8,7 @@ use crate::public_key_credential_descriptor::PublicKeyCredentialDescriptor;
 use crate::str_buf::StrBuf;
 use std::fmt;
 use strum_macros;
+use strum_macros::AsRefStr;
 
 /// Attestation Object
 /// [https://www.w3.org/TR/webauthn/#sctn-attestation](https://www.w3.org/TR/webauthn/#sctn-attestation)
@@ -64,14 +65,14 @@ impl fmt::Display for Attestation {
     }
 }
 
-#[derive(Debug, Clone, strum_macros::ToString)]
+#[derive(Debug, Clone, strum_macros::ToString,AsRefStr)]
 pub enum Extension {
     #[strum(serialize = "credProtect")]
     CredProtect(Option<CredentialProtectionPolicy>),
     #[strum(serialize = "credBlob")]
-    CredBlob(Vec<u8>),  //  "credBlob": Byte String containing the credBlob value
+    CredBlob(Option<Vec<u8>>),  //  "credBlob": Byte String containing the credBlob value
     #[strum(serialize = "minPinLength")]
-    MinPinLength(bool), // "minPinLength": true
+    MinPinLength(Option<bool>), // "minPinLength": true
     #[strum(serialize = "hmac-secret")]
     HmacSecret(Option<bool>),
 }
