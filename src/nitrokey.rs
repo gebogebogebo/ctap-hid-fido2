@@ -163,8 +163,8 @@ pub fn get_status(hid_params: &[crate::HidParam]) -> Result<NitrokeyStatus> {
 pub fn enter_boot(hid_params: &[crate::HidParam]) -> Result<()> {
     let device = FidoKeyHid::new(hid_params).map_err(Error::msg)?;
     let cid = ctaphid::ctaphid_init(&device).map_err(Error::msg)?;
-    let result = ctapihd_nitro::ctaphid_nitro_enter_boot(&device, &cid).map_err(Error::msg)?;
-    Ok(result)
+    ctapihd_nitro::ctaphid_nitro_enter_boot(&device, &cid).map_err(Error::msg)?;
+    Ok(())
 }
 
 /// firmware update API.
@@ -219,9 +219,9 @@ fn create_request_packet(
     request[7] = 0xf6;
 
     // High part of payload length
-    request[8] = (((request_data.len() as u16) >> 8) as u8) & 0xff;
+    request[8] = ((request_data.len() as u16) >> 8) as u8;
     // Low part of payload length
-    request[9] = (request_data.len() as u8) & 0xff;
+    request[9] = request_data.len() as u8;
 
     // request-data(A * 16)
     request.append(&mut request_data.into());
@@ -273,7 +273,7 @@ pub fn is_bootloader_mode(hid_params: &[crate::HidParam]) -> Result<bool> {
         Err(_) => return Ok(false),
     };
 
-    if util::is_debug() == true {
+    if util::is_debug() {
         println!(
             "- response({:02})    = {:?}",
             response.len(),
@@ -296,7 +296,7 @@ pub fn is_bootloader_mode(hid_params: &[crate::HidParam]) -> Result<bool> {
     // parse
     for (i, val) in datas.iter().enumerate() {
         //println!("{}: {}", i, val);
-        if val.len() == 0 {
+        if val.is_empty() {
             continue;
         }
 
