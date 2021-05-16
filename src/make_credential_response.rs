@@ -89,8 +89,7 @@ fn parse_cbor_authdata(authdata: &[u8], attestation: &mut Attestation) -> Result
     };
 
     if attestation.flags_extension_data_included {
-        // PEND
-        println!("{:02} - {:?}", slice.len(), util::to_hex_str(&slice));
+        //println!("{:02} - {:?}", slice.len(), util::to_hex_str(&slice));
         let maps = util::cbor_bytes_to_map(&slice)?;
         for (key, val) in &maps {
             if let Value::Text(member) = key {
