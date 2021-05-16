@@ -40,12 +40,11 @@ fn parse_cbor_authdata(authdata: &[u8], attestation: &mut Attestation) -> Result
 
     // flags(1)
     let byte = authdata[index];
-    attestation.flags_user_present_result = if let 0x01 = byte & 0x01 { true } else { false };
-    attestation.flags_user_verified_result = if let 0x04 = byte & 0x04 { true } else { false };
-    attestation.flags_attested_credential_data_included =
-        if let 0x40 = byte & 0x40 { true } else { false };
-    attestation.flags_extension_data_included = if let 0x80 = byte & 0x80 { true } else { false };
-    index = index + 1;
+    attestation.flags_user_present_result = matches!(byte & 0x01, 0x01);
+    attestation.flags_user_verified_result = matches!(byte & 0x04, 0x04);
+    attestation.flags_attested_credential_data_included = matches!(byte & 0x40, 0x40);
+    attestation.flags_extension_data_included = matches!(byte & 0x80, 0x80);
+    index += 1;
 
     // signCount(4)
     let clo = |idx: usize, x: usize| {

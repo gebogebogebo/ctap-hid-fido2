@@ -311,11 +311,11 @@ pub fn enable_info_param(hid_params: &[HidParam], info_param: InfoParam) -> Resu
         InfoParam::ExtensionsHmacSecret => Extension::HmacSecret(None).as_ref(),
     };
     let ret = info.versions.iter().find(|v| *v == find);
-    if let Some(_) = ret {
+    if ret.is_some() {
         return Ok(true);
     }
     let ret = info.extensions.iter().find(|v| *v == find);
-    if let Some(_) = ret {
+    if ret.is_some() {
         return Ok(true);
     }
     Ok(false)
@@ -415,11 +415,7 @@ pub fn bio_enrollment_begin(
         pin_token: init.2,
         template_id: data.template_id.to_vec(),
     };
-    let finish = if data.last_enroll_sample_status == 0x00 && data.remaining_samples == 0 {
-        true
-    } else {
-        false
-    };
+    let finish = data.last_enroll_sample_status == 0x00 && data.remaining_samples == 0;
     let result2 = EnrollStatus2 {
         status: data.last_enroll_sample_status as u8,
         message: ctapdef::get_ctap_last_enroll_sample_status_message(
@@ -449,11 +445,7 @@ pub fn bio_enrollment_next(
     if util::is_debug() {
         println!("{}", data);
     }
-    let finish = if data.last_enroll_sample_status == 0x00 && data.remaining_samples == 0 {
-        true
-    } else {
-        false
-    };
+    let finish = data.last_enroll_sample_status == 0x00 && data.remaining_samples == 0;
     let result = EnrollStatus2 {
         status: data.last_enroll_sample_status as u8,
         message: ctapdef::get_ctap_last_enroll_sample_status_message(

@@ -1,10 +1,9 @@
 use anyhow::Result;
-use ctap_hid_fido2;
 use ctap_hid_fido2::util;
 use ctap_hid_fido2::verifier;
 use ctap_hid_fido2::HidParam;
 use ctap_hid_fido2::make_credential_params::Extension;
-use ctap_hid_fido2::credential_management_params::CredentialProtectionPolicy;
+//use ctap_hid_fido2::credential_management_params::CredentialProtectionPolicy;
 
 fn main() -> Result<()> {
     println!("----- test-with-pin-non-rk start -----");
@@ -33,8 +32,8 @@ fn main() -> Result<()> {
     */
 
     // PEND
-    //let ext = Extension::HmacSecret(Some(true));
-    let ext = Extension::CredProtect(Some(CredentialProtectionPolicy::UserVerificationOptionalWithCredentialIDList));
+    let ext = Extension::HmacSecret(Some(true));
+    //let ext = Extension::CredProtect(Some(CredentialProtectionPolicy::UserVerificationOptionalWithCredentialIDList));
     //let aaa:String = Extension::CredProtect(None).to_string();
     //let aaa:String = Extension::HmacSecret(None).to_string();
     //let xxx = Extension::HmacSecret(None).as_ref();
@@ -67,7 +66,7 @@ fn main() -> Result<()> {
         verify_result.credential_publickey_der.len(),
         util::to_hex_str(&verify_result.credential_publickey_der)
     );
-    println!("");
+    println!();
 
     // Authenticate
     println!("Authenticate - get_assertion_with_pin()");

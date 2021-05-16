@@ -29,7 +29,7 @@ pub fn print_typename<T>(_: T) {
 // for debug
 #[allow(dead_code)]
 pub(crate) fn is_debug() -> bool {
-    true
+    false
 }
 
 // for cbor
@@ -142,7 +142,7 @@ pub(crate) fn cbor_value_to_vec_bytes(value: &Value) -> Result<Vec<Vec<u8>>, Str
 }
 
 pub(crate) fn cbor_bytes_to_map(bytes: &[u8]) -> Result<BTreeMap<Value, Value>, String> {
-    if bytes.len() == 0 {
+    if bytes.is_empty() {
         return Ok(BTreeMap::new());
     }
     match serde_cbor::from_slice(bytes) {
@@ -201,22 +201,15 @@ pub(crate) fn convert_to_publickey_pem(public_key_der: &[u8]) -> String {
                 pem_base = pem_base + &"\n".to_string();
                 counter = 0;
             } else {
-                counter = counter + 1;
+                counter += 1;
             }
         }
         pem_base + &"\n".to_string()
     };
 
     // 3. Header and footer
-    let pem_data = "-----BEGIN PUBLIC KEY-----\n".to_string()
-        + &pem_base
-        + &"-----END PUBLIC KEY-----".to_string();
+    "-----BEGIN PUBLIC KEY-----\n".to_string()
+    + &pem_base
+    + &"-----END PUBLIC KEY-----".to_string()
 
-    /*
-    println!(
-        "- public_key_pem  = {:?}",pem_data
-    );
-    */
-
-    pem_data
 }
