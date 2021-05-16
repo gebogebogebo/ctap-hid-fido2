@@ -101,12 +101,12 @@ pub fn create_payload(params: Params, extensions: Option<&Vec<Extension>>) -> Ve
         for ext in extensions {
             match *ext {
                 Extension::CredProtect(n) => {
-                    map.insert(Value::Text("credProtect".into()), Value::Integer(n.unwrap() as i128));
+                    map.insert(Value::Text(ext.to_string()), Value::Integer(n.unwrap() as i128));
                 }
                 Extension::CredBlob(_) => (),
                 Extension::MinPinLength(_) => (),
                 Extension::HmacSecret(n) => {
-                    map.insert(Value::Text("hmac-secret".into()), Value::Bool(n.unwrap()));
+                    map.insert(Value::Text(ext.to_string()), Value::Bool(n.unwrap()));
                 }
             };
         }
