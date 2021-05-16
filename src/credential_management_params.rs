@@ -72,7 +72,7 @@ impl fmt::Display for Rp {
 }
 
 #[allow(dead_code)]
-#[derive(Debug, Copy, Clone, PartialEq)]
+#[derive(Debug, Copy, Clone)]
 pub enum CredentialProtectionPolicy {
     Unknown,
     UserVerificationOptional,

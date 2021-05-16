@@ -28,4 +28,5 @@ base64 = "0.13.0"
 hmac = "0.10.1"
 anyhow = "1.0"
 serde = "1.0.126"
-
+strum = "0.20"
+strum_macros = "0.20"
