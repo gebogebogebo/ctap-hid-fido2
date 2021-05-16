@@ -94,14 +94,14 @@ fn parse_cbor_authdata(authdata: &[u8], attestation: &mut Attestation) -> Result
         let maps = util::cbor_bytes_to_map(&slice)?;
         for (key, val) in &maps {
             if let Value::Text(member) = key {
-                if member == "hmac-secret" {
+                if *member == Extension::HmacSecret(None).to_string() {
                     let v = util::cbor_value_to_bool(val)?;
-                    attestation.extensions.push(Extension::HmacSecret(v));
-                } else if member == "credProtect" {
+                    attestation.extensions.push(Extension::HmacSecret(Some(v)));
+                } else if *member == Extension::CredProtect(None).to_string() {
                     let v: u32 = util::cbor_value_to_num(val)?;
                     attestation
                         .extensions
-                        .push(Extension::CredProtect(CredentialProtectionPolicy::from(v)));
+                        .push(Extension::CredProtect(Some(CredentialProtectionPolicy::from(v))));
                 }
             }
         }

@@ -7,6 +7,7 @@ use crate::public_key::PublicKey;
 use crate::public_key_credential_descriptor::PublicKeyCredentialDescriptor;
 use crate::str_buf::StrBuf;
 use std::fmt;
+use strum_macros;
 
 /// Attestation Object
 /// [https://www.w3.org/TR/webauthn/#sctn-attestation](https://www.w3.org/TR/webauthn/#sctn-attestation)
@@ -63,34 +64,14 @@ impl fmt::Display for Attestation {
     }
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, strum_macros::ToString)]
 pub enum Extension {
-    CredProtect(CredentialProtectionPolicy), // credProtect 0x01
+    #[strum(serialize = "credProtect")]
+    CredProtect(Option<CredentialProtectionPolicy>),
+    #[strum(serialize = "credBlob")]
     CredBlob(Vec<u8>),  //  "credBlob": Byte String containing the credBlob value
+    #[strum(serialize = "minPinLength")]
     MinPinLength(bool), // "minPinLength": true
-    HmacSecret(bool),
-}
-/*
-impl From<String> for Extensions {
-    fn from(from: String) -> Extensions {
-        if from == "hmac-secret"{
-            Extensions::HmacSecret(true)
-        }else{
-            Extensions::HmacSecret(false)
-        }
-    }
-}
-*/
-
-/// let aaa:String = Extension::HmacSecret(true).into();
-/// aaa is "hmac-secret"
-impl From<Extension> for String {
-    fn from(from: Extension) -> String {
-        match from {
-            Extension::CredProtect(_) => "CredProtect".to_string(),
-            Extension::CredBlob(_) => "CredBlob".to_string(),
-            Extension::MinPinLength(_) => "MinPinLength".to_string(),
-            Extension::HmacSecret(_) => "hmac-secret".to_string(),
-        }
-    }
+    #[strum(serialize = "hmac-secret")]
+    HmacSecret(Option<bool>),
 }
