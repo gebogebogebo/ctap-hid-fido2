@@ -69,7 +69,7 @@ pub fn make_credential(
         make_credential_command::create_payload(params, extensions)
     };
 
-    if util::is_debug() == true {
+    if util::is_debug() {
         println!(
             "- make_credential({:02})    = {:?}",
             send_payload.len(),
@@ -80,7 +80,7 @@ pub fn make_credential(
     // send & response
     let response_cbor = ctaphid::ctaphid_cbor(&device, &cid, &send_payload)?;
 
-    if util::is_debug() == true {
+    if util::is_debug() {
         println!(
             "- response_cbor({:02})    = {:?}",
             response_cbor.len(),

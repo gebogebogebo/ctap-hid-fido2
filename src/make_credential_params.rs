@@ -34,7 +34,7 @@ pub struct Attestation {
 
 impl fmt::Display for Attestation {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let mut strbuf = StrBuf::new();
+        let mut strbuf = StrBuf::new(42);
         strbuf
             .appenh("- rpid_hash", &self.rpid_hash)
             .append(
