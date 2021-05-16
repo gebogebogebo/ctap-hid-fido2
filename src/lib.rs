@@ -304,11 +304,11 @@ pub fn enable_info_param(hid_params: &[HidParam], info_param: InfoParam) -> Resu
         InfoParam::VersionsFIDO20 => "FIDO_2_0",
         InfoParam::VersionsFIDO21PRE => "FIDO_2_1_PRE",
         InfoParam::VersionsFIDO21 => "FIDO_2_1",
-        InfoParam::ExtensionsCredProtect => "credProtect",
+        InfoParam::ExtensionsCredProtect => Extension::CredProtect(None).as_ref(),
         InfoParam::ExtensionsCredBlob => "credBlob",
         InfoParam::ExtensionsLargeBlobKey => "credBlobKey",
         InfoParam::ExtensionsMinPinLength => "minPinLength",
-        InfoParam::ExtensionsHmacSecret => "hmac-secret",
+        InfoParam::ExtensionsHmacSecret => Extension::HmacSecret(None).as_ref(),
     };
     let ret = info.versions.iter().find(|v| *v == find);
     if let Some(_) = ret {

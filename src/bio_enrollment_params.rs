@@ -4,7 +4,7 @@ use crate::FidoKeyHid;
 use std::fmt;
 
 #[allow(dead_code)]
-#[derive(Debug, Copy, Clone, PartialEq)]
+#[derive(Debug, Copy, Clone)]
 pub enum Modality {
     Unknown,
     Fingerprint,
@@ -24,7 +24,7 @@ impl From<u32> for Modality {
 }
 
 #[allow(dead_code)]
-#[derive(Debug, Copy, Clone, PartialEq)]
+#[derive(Debug, Copy, Clone)]
 pub enum FingerprintKind {
     Unknown = 0,
     TouchType = 1,
