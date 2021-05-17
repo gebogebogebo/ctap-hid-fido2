@@ -168,11 +168,11 @@ fn create_public_key_credential_descriptor_pend(
         user.insert(Value::Text("id".to_string()), Value::Bytes(pkcuee.id));
         user.insert(
             Value::Text("name".to_string()),
-            Value::Text(pkcuee.name.to_string()),
+            Value::Text(pkcuee.name),
         );
         user.insert(
             Value::Text("displayName".to_string()),
-            Value::Text(pkcuee.display_name.to_string()),
+            Value::Text(pkcuee.display_name),
         );
         param.insert(Value::Integer(0x03), Value::Map(user));
     }
