@@ -4,7 +4,6 @@ use crate::make_credential_params::Extension;
 use crate::util;
 
 use byteorder::{BigEndian, ReadBytesExt};
-use serde;
 use serde_cbor::Value;
 use std::io::Cursor;
 

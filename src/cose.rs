@@ -95,10 +95,8 @@ impl CoseKey {
 
     #[allow(dead_code)]
     pub fn convert_to_publickey_der(&self) -> Vec<u8> {
-        let mut pub_key = vec![];
-
         // 1.0x04
-        pub_key.push(0x04);
+        let mut pub_key = vec![0x04];
 
         // 2.add X
         if let Some(Value::Bytes(bytes)) = self.parameters.get(&-2) {

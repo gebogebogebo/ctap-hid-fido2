@@ -20,11 +20,10 @@ pub(crate) fn parse_cbor(bytes: &[u8]) -> Result<BioEnrollmentData, String> {
                 0x07 => {
                     if let Value::Array(xs) = val {
                         for x in xs {
-                            let mut template = TemplateInfo::default();
-                            template.template_id = util::cbor_get_bytes_from_map(x, "1")?;
-                            template.template_friendly_name =
-                                Some(util::cbor_get_string_from_map(x, "2")?);
-                            data.template_infos.push(template);
+                            data.template_infos.push(TemplateInfo {
+                                template_id: util::cbor_get_bytes_from_map(x, "1")?,
+                                template_friendly_name: Some(util::cbor_get_string_from_map(x, "2")?)
+                            });
                         }
                     }
                 }

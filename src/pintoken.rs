@@ -1,9 +1,3 @@
-//use crate::util;
-
-// v1
-use ring;
-
-// v2
 use hmac::{Hmac, Mac, NewMac};
 use sha2::Sha256;
 
