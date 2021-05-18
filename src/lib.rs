@@ -286,10 +286,10 @@ pub fn get_assertions_rk(
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum InfoParam {
-    VersionsU2FV2,
-    VersionsFIDO20,
-    VersionsFIDO21PRE,
-    VersionsFIDO21,
+    VersionsU2Fv2,
+    VersionsFido20,
+    VersionsFido21Pre,
+    VersionsFido21,
     ExtensionsCredProtect,
     ExtensionsCredBlob,
     ExtensionsLargeBlobKey,
@@ -300,10 +300,10 @@ pub enum InfoParam {
 pub fn enable_info_param(hid_params: &[HidParam], info_param: InfoParam) -> Result<bool> {
     let info = get_info::get_info(hid_params).map_err(Error::msg)?;
     let find = match info_param {
-        InfoParam::VersionsU2FV2 => "U2F_V2",
-        InfoParam::VersionsFIDO20 => "FIDO_2_0",
-        InfoParam::VersionsFIDO21PRE => "FIDO_2_1_PRE",
-        InfoParam::VersionsFIDO21 => "FIDO_2_1",
+        InfoParam::VersionsU2Fv2 => "U2F_V2",
+        InfoParam::VersionsFido20 => "FIDO_2_0",
+        InfoParam::VersionsFido21Pre => "FIDO_2_1_PRE",
+        InfoParam::VersionsFido21 => "FIDO_2_1",
         InfoParam::ExtensionsCredProtect => Extension::CredProtect(None).as_ref(),
         InfoParam::ExtensionsCredBlob => "credBlob",
         InfoParam::ExtensionsLargeBlobKey => "credBlobKey",
@@ -588,7 +588,7 @@ pub fn credential_management_enumerate_rps(
             let data = credential_management::credential_management(
                 hid_params,
                 pin,
-                credential_management_command::SubCommand::EnumerateRPsGetNextRP,
+                credential_management_command::SubCommand::EnumerateRPsGetNextRp,
                 None,
                 None,
                 None,

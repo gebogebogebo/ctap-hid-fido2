@@ -84,8 +84,10 @@ pub struct TemplateInfo {
 }
 impl TemplateInfo {
     pub fn new(template_id: Vec<u8>, template_friendly_name: Option<&str>) -> TemplateInfo {
-        let mut ret = TemplateInfo::default();
-        ret.template_id = template_id;
+        let mut ret = TemplateInfo { 
+            template_id,
+            ..Default::default()
+        };
         if let Some(v) = template_friendly_name {
             ret.template_friendly_name = Some(v.to_string());
         } else {

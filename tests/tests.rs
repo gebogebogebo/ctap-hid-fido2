@@ -31,7 +31,7 @@ fn test_get_info() {
 fn test_get_info_u2f() {
     match ctap_hid_fido2::enable_info_param(
         &HidParam::get_default_params(),
-        InfoParam::VersionsU2FV2,
+        InfoParam::VersionsU2Fv2,
     ) {
         Ok(result) => {
             if !result {
@@ -86,7 +86,7 @@ fn test_make_credential_with_pin_non_rk() {
 fn test_credential_management_get_creds_metadata() {
     match ctap_hid_fido2::enable_info_param(
         &HidParam::get_default_params(),
-        InfoParam::VersionsFIDO21PRE,
+        InfoParam::VersionsFido21Pre,
     ) {
         Ok(result) => {
             if !result {
@@ -111,7 +111,7 @@ fn test_credential_management_get_creds_metadata() {
 fn test_credential_management_enumerate_rps() {
     match ctap_hid_fido2::enable_info_param(
         &HidParam::get_default_params(),
-        InfoParam::VersionsFIDO21PRE,
+        InfoParam::VersionsFido21Pre,
     ) {
         Ok(result) => {
             if !result {
