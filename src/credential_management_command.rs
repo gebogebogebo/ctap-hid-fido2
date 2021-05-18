@@ -14,7 +14,7 @@ use std::collections::BTreeMap;
 pub enum SubCommand {
     GetCredsMetadata = 0x01,
     EnumerateRPsBegin = 0x02,
-    EnumerateRPsGetNextRP = 0x03,
+    EnumerateRPsGetNextRp = 0x03,
     EnumerateCredentialsBegin = 0x04,
     EnumerateCredentialsGetNextCredential = 0x05,
     DeleteCredential = 0x06,

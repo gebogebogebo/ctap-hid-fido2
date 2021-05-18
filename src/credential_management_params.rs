@@ -71,7 +71,7 @@ impl fmt::Display for Rp {
 pub enum CredentialProtectionPolicy {
     Unknown,
     UserVerificationOptional,
-    UserVerificationOptionalWithCredentialIDList,
+    UserVerificationOptionalWithCredentialIdList,
     UserVerificationRequired,
 }
 impl Default for CredentialProtectionPolicy {
@@ -83,7 +83,7 @@ impl From<u32> for CredentialProtectionPolicy {
     fn from(from: u32) -> CredentialProtectionPolicy {
         match from {
             0x01 => CredentialProtectionPolicy::UserVerificationOptional,
-            0x02 => CredentialProtectionPolicy::UserVerificationOptionalWithCredentialIDList,
+            0x02 => CredentialProtectionPolicy::UserVerificationOptionalWithCredentialIdList,
             0x03 => CredentialProtectionPolicy::UserVerificationRequired,
             _ => CredentialProtectionPolicy::Unknown,
         }

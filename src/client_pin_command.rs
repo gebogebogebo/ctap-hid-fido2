@@ -8,9 +8,9 @@ use std::collections::BTreeMap;
 pub enum SubCommand {
     GetRetries = 0x01,
     GetKeyAgreement = 0x02,
-    SetPIN = 0x03,
-    ChangePIN = 0x04,
-    GetPINToken = 0x05,
+    SetPin = 0x03,
+    ChangePin = 0x04,
+    GetPinToken = 0x05,
 }
 
 fn create_payload_get_keyagreement() -> Vec<u8> {
@@ -59,7 +59,7 @@ pub fn create_payload_get_pin_token(
     let pin_prot = Value::Integer(1);
 
     // 0x02 : subCommand
-    let sub_cmd = Value::Integer(SubCommand::GetPINToken as i128);
+    let sub_cmd = Value::Integer(SubCommand::GetPinToken as i128);
 
     // 0x03:keyAgreement : COSE_Key
     let mut ka_val = BTreeMap::new();
@@ -102,9 +102,9 @@ pub fn create_payload_get_pin_token(
 pub fn create_payload(sub_command: SubCommand) -> Result<Vec<u8>, String> {
     match sub_command {
         SubCommand::GetRetries => Ok(create_payload_get_retries()),
-        SubCommand::ChangePIN => Err(String::from("Not Supported")),
+        SubCommand::ChangePin => Err(String::from("Not Supported")),
         SubCommand::GetKeyAgreement => Ok(create_payload_get_keyagreement()),
-        SubCommand::GetPINToken => Err(String::from("Not Supported")),
-        SubCommand::SetPIN => Err(String::from("Not Supported")),
+        SubCommand::GetPinToken => Err(String::from("Not Supported")),
+        SubCommand::SetPin => Err(String::from("Not Supported")),
     }
 }

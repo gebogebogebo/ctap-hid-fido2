@@ -30,7 +30,7 @@ pub fn create_payload(
 
     if let Some(sub_command) = sub_command {
         // modality (0x01) = fingerprint (0x01)
-        map.insert(Value::Integer(0x01), Value::Integer(0x01 as i128));
+        map.insert(Value::Integer(0x01), Value::Integer(0x01_i128));
 
         // subCommand(0x02)
         let sub_cmd = Value::Integer(sub_command as i128);
@@ -65,7 +65,7 @@ pub fn create_payload(
 
             // pinUvAuthParam (0x05)
             // - authenticate(pinUvAuthToken, fingerprint (0x01) || enumerateEnrollments (0x04)).
-            let mut message = vec![0x01 as u8];
+            let mut message = vec![0x01_u8];
             message.append(&mut vec![sub_command as u8]);
             message.append(&mut sub_command_params_cbor.to_vec());
             let pin_uv_auth_param = pin_token.authenticate_v2(&message, 16);
@@ -97,7 +97,7 @@ fn to_value_template_info(in_param: TemplateInfo) -> Value {
     let mut param = BTreeMap::new();
     param.insert(Value::Integer(0x01), Value::Bytes(in_param.template_id));
     if let Some(v) = in_param.template_friendly_name {
-        param.insert(Value::Integer(0x02), Value::Text(v.to_string()));
+        param.insert(Value::Integer(0x02), Value::Text(v));
     }
     Value::Map(param)
 }

@@ -7,7 +7,7 @@ use std::collections::BTreeMap;
 pub enum SubCommand {
     EnableEnterpriseAttestation = 0x01,
     ToggleAlwaysUv = 0x02,
-    SetMinPINLength = 0x03,
+    SetMinPinLength = 0x03,
     VendorPrototype = 0x04,
 }
 
