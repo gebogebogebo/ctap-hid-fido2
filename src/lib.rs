@@ -43,7 +43,7 @@ pub mod public_key_credential_rp_entity;
 pub mod public_key_credential_user_entity;
 mod selection_command;
 mod ss;
-mod str_buf;
+pub mod str_buf;
 pub mod util;
 pub mod verifier;
 

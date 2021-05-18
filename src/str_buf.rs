@@ -15,6 +15,12 @@ impl StrBuf {
         }
     }
 
+    pub fn appent(&mut self, title: &str) -> &mut Self {
+        let tmp = format!("{}\n", title);
+        self.buf = self.buf.to_string() + &tmp;
+        self
+    }
+
     pub fn append<T: Display>(&mut self, title: &str, val: &T) -> &mut Self {
         let tmp = format!("{} = {}\n", title.pad_to_width(self.pad), val);
         self.buf = self.buf.to_string() + &tmp;

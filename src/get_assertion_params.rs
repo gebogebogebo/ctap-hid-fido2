@@ -5,6 +5,7 @@ get_assertion API parameters
 use crate::public_key_credential_user_entity::PublicKeyCredentialUserEntity;
 use std::fmt;
 use crate::str_buf::StrBuf;
+use strum_macros::AsRefStr;
 
 /// Assertion Object
 #[derive(Debug, Default, Clone)]
@@ -45,4 +46,10 @@ impl fmt::Display for Assertion {
             .appenh("- credential_id", &self.credential_id);
         write!(f, "{}", strbuf.build())
     }
+}
+
+#[derive(Debug, Clone, strum_macros::ToString,AsRefStr)]
+pub enum Extension {
+    #[strum(serialize = "hmac-secret")]
+    HmacSecret(Option<Vec<u8>>),
 }

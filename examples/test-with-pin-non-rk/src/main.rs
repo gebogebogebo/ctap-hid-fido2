@@ -1,9 +1,10 @@
 use anyhow::Result;
-use ctap_hid_fido2::util;
+use crypto::digest::Digest;
+use crypto::sha2::Sha256;
+use ctap_hid_fido2::make_credential_params;
+use ctap_hid_fido2::str_buf::StrBuf;
 use ctap_hid_fido2::verifier;
 use ctap_hid_fido2::HidParam;
-use ctap_hid_fido2::make_credential_params::Extension;
-//use ctap_hid_fido2::credential_management_params::CredentialProtectionPolicy;
 
 fn main() -> Result<()> {
     println!("----- test-with-pin-non-rk start -----");
@@ -14,12 +15,14 @@ fn main() -> Result<()> {
     let challenge = verifier::create_challenge();
 
     // Register
-    println!("Register - make_credential()");
-    println!("- rpid          = {:?}", rpid);
+    let mut strbuf = StrBuf::new(30);
     println!(
-        "- challenge({:02}) = {:?}",
-        challenge.len(),
-        util::to_hex_str(&challenge)
+        "{}",
+        strbuf
+            .appent("Register - make_credential()")
+            .append("- rpid", &rpid)
+            .appenh("- challenge", &challenge)
+            .build()
     );
 
     /*
@@ -31,19 +34,14 @@ fn main() -> Result<()> {
     )?;
     */
 
-    // PEND
-    let ext = Extension::HmacSecret(Some(true));
-    //let ext = Extension::CredProtect(Some(CredentialProtectionPolicy::UserVerificationOptionalWithCredentialIDList));
-    //let aaa:String = Extension::CredProtect(None).to_string();
-    //let aaa:String = Extension::HmacSecret(None).to_string();
-    //let xxx = Extension::HmacSecret(None).as_ref();
-    
+    // with extensions
+    let ext = make_credential_params::Extension::HmacSecret(Some(true));
     let att = ctap_hid_fido2::make_credential_with_extensions(
         &HidParam::get_default_params(),
         rpid,
         &challenge,
         Some(pin),
-        Some(&vec![ext])
+        Some(&vec![ext]),
     )?;
 
     println!("- Register Success!!");
@@ -52,30 +50,30 @@ fn main() -> Result<()> {
 
     println!("Verify");
     let verify_result = verifier::verify_attestation(rpid, &challenge, &att);
+
+    let mut strbuf = StrBuf::new(30);
     println!(
-        "- is_success                   = {:?}",
-        verify_result.is_success
+        "{}",
+        strbuf
+            .append("- is_success", &verify_result.is_success)
+            .appenh("- credential_id", &verify_result.credential_id)
+            .build()
     );
-    println!(
-        "- credential_id({:02})            = {:?}",
-        verify_result.credential_id.len(),
-        util::to_hex_str(&verify_result.credential_id)
-    );
-    println!(
-        "- credential_publickey_der({:02}) = {:?}",
-        verify_result.credential_publickey_der.len(),
-        util::to_hex_str(&verify_result.credential_publickey_der)
-    );
-    println!();
+
+    // PEND
+    let message = "this is test.";
+    let mut salt = [0u8; 32];
+    let mut digest = Sha256::new();
+    digest.input(&message.as_bytes());
+    digest.result(&mut salt);
+    let mut strbuf = StrBuf::new(30);
+    println!("{}", strbuf.appenh("- salt", &salt).build());
+    //
 
     // Authenticate
     println!("Authenticate - get_assertion_with_pin()");
     let challenge = verifier::create_challenge();
-    println!(
-        "- challenge({:02}) = {:?}",
-        challenge.len(),
-        util::to_hex_str(&challenge)
-    );
+    println!("{}", strbuf.appenh("- challenge", &challenge).build());
 
     let ass = ctap_hid_fido2::get_assertion(
         &HidParam::get_default_params(),
