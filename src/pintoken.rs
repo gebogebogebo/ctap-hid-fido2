@@ -7,6 +7,13 @@ pub struct PinToken {
 }
 
 impl PinToken {
+    pub fn new(data: &[u8]) -> PinToken {
+        PinToken {
+            signing_key: ring::hmac::SigningKey::new(&ring::digest::SHA256, &data),
+            key: data.to_vec(),
+        }
+    }
+    
     pub fn authenticate_v1(&self, data: &[u8]) -> [u8; 16] {
         let signature = ring::hmac::sign(&self.signing_key, &data);
         let mut out = [0; 16];

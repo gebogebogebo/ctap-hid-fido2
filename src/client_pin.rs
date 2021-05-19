@@ -9,6 +9,7 @@ use crate::FidoKeyHid;
 use crate::client_pin_command::SubCommand as PinCmd;
 
 use ring::{digest, hmac};
+use pintoken::PinToken;
 
 pub fn get_pin_token(
     device: &FidoKeyHid,

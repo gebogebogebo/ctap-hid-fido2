@@ -9,7 +9,6 @@ use crate::util;
 use crate::FidoKeyHid;
 use crate::HidParam;
 use crate::get_assertion_params::Extension as Gext;
-use crate::str_buf::StrBuf;
 
 pub fn get_assertion(
     hid_params: &[HidParam],
@@ -35,8 +34,16 @@ pub fn get_assertion(
     };
     */
 
-    let dmy : [u8;32] = Default::default();
-    client_pin::get_data(&device, &cid,&dmy,None)?;
+    if let Some(extensions) = extensions {
+        for ext in extensions {
+            match ext {
+                Gext::HmacSecret(n) => {
+                    let dmy : [u8;32] = Default::default();
+                    client_pin::get_data(&device, &cid,&dmy,None)?;
+                }
+            }
+        }
+    };
 
     // pin token
     let pin_token = {
@@ -62,17 +69,11 @@ pub fn get_assertion(
 
         get_assertion_command::create_payload(params)
     };
-
-    if util::is_debug() {
-        println!("{}",StrBuf::bufh("- get_assertion",&send_payload));
-    }
+    util::debugp("- get_assertion",&send_payload);
 
     // send & response
     let response_cbor = ctaphid::ctaphid_cbor(&device, &cid, &send_payload)?;
-
-    if util::is_debug() {
-        println!("{}",StrBuf::bufh("- response_cbor",&response_cbor));
-    }
+    util::debugp("- response_cbor",&response_cbor);
 
     let ass = get_assertion_response::parse_cbor(&response_cbor)?;
 
