@@ -35,6 +35,9 @@ pub fn get_assertion(
     };
     */
 
+    let dmy : [u8;32] = Default::default();
+    client_pin::get_data(&device, &cid,&dmy,None)?;
+
     // pin token
     let pin_token = {
         if let Some(pin) = pin {
