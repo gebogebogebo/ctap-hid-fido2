@@ -56,20 +56,20 @@ impl fmt::Display for Attestation {
             .appenh("- attstmt_sig", &self.attstmt_sig)
             .append("- attstmt_x5c_num", &self.attstmt_x5c.len());
 
-        for ex in &self.extensions{
-            strbuf.append("- extension", &format!("{:?}",ex));
+        for ex in &self.extensions {
+            strbuf.append("- extension", &format!("{:?}", ex));
         }
-                
+
         write!(f, "{}", strbuf.build())
     }
 }
 
-#[derive(Debug, Clone, strum_macros::ToString,AsRefStr)]
+#[derive(Debug, Clone, strum_macros::ToString, AsRefStr)]
 pub enum Extension {
     #[strum(serialize = "credProtect")]
     CredProtect(Option<CredentialProtectionPolicy>),
     #[strum(serialize = "credBlob")]
-    CredBlob(Option<Vec<u8>>),  //  "credBlob": Byte String containing the credBlob value
+    CredBlob(Option<Vec<u8>>), //  "credBlob": Byte String containing the credBlob value
     #[strum(serialize = "minPinLength")]
     MinPinLength(Option<bool>), // "minPinLength": true
     #[strum(serialize = "hmac-secret")]

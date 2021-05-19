@@ -166,10 +166,7 @@ fn create_public_key_credential_descriptor_pend(
     {
         let mut user = BTreeMap::new();
         user.insert(Value::Text("id".to_string()), Value::Bytes(pkcuee.id));
-        user.insert(
-            Value::Text("name".to_string()),
-            Value::Text(pkcuee.name),
-        );
+        user.insert(Value::Text("name".to_string()), Value::Text(pkcuee.name));
         user.insert(
             Value::Text("displayName".to_string()),
             Value::Text(pkcuee.display_name),

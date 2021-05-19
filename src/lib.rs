@@ -48,10 +48,13 @@ pub mod util;
 pub mod verifier;
 
 //
+use crate::bio_enrollment_command::SubCommand as BioCmd;
 use crate::bio_enrollment_params::{
     EnrollStatus1, EnrollStatus2, FingerprintKind, Modality, TemplateInfo,
 };
-use crate::make_credential_params::Extension;
+use crate::client_pin_command::SubCommand as PinCmd;
+use crate::get_assertion_params::Extension as Gext;
+use crate::make_credential_params::Extension as Mext;
 use crate::public_key_credential_descriptor::PublicKeyCredentialDescriptor;
 use crate::public_key_credential_user_entity::PublicKeyCredentialUserEntity;
 use anyhow::{Error, Result};
@@ -179,8 +182,7 @@ pub fn get_pin_retries(hid_params: &[HidParam]) -> Result<i32> {
     let cid = ctaphid::ctaphid_init(&device).map_err(Error::msg)?;
 
     let send_payload =
-        client_pin_command::create_payload(client_pin_command::SubCommand::GetRetries)
-            .map_err(Error::msg)?;
+        client_pin_command::create_payload(PinCmd::GetRetries).map_err(Error::msg)?;
 
     let response_cbor = ctaphid::ctaphid_cbor(&device, &cid, &send_payload).map_err(Error::msg)?;
 
@@ -206,7 +208,7 @@ pub fn make_credential_with_extensions(
     rpid: &str,
     challenge: &[u8],
     pin: Option<&str>,
-    extensions: Option<&Vec<Extension>>,
+    extensions: Option<&Vec<Mext>>,
 ) -> Result<make_credential_params::Attestation> {
     make_credential::make_credential(
         hid_params, rpid, challenge, pin, false, None, None, extensions,
@@ -254,7 +256,7 @@ pub fn get_assertion(
     pin: Option<&str>,
 ) -> Result<get_assertion_params::Assertion> {
     let asss =
-        get_assertion::get_assertion(hid_params, rpid, challenge, credential_id, pin, true, None)
+        get_assertion::get_assertion(hid_params, rpid, challenge, credential_id, pin, true, None,None)
             .map_err(Error::msg)?;
     Ok(asss[0].clone())
 }
@@ -265,9 +267,10 @@ pub fn get_assertion_with_extensios(
     challenge: &[u8],
     credential_id: &[u8],
     pin: Option<&str>,
+    extensions: Option<&Vec<Gext>>,
 ) -> Result<get_assertion_params::Assertion> {
     let asss =
-        get_assertion::get_assertion(hid_params, rpid, challenge, credential_id, pin, true, None)
+        get_assertion::get_assertion(hid_params, rpid, challenge, credential_id, pin, true, None,extensions)
             .map_err(Error::msg)?;
     Ok(asss[0].clone())
 }
@@ -280,7 +283,7 @@ pub fn get_assertions_rk(
     pin: Option<&str>,
 ) -> Result<Vec<get_assertion_params::Assertion>> {
     let dmy: [u8; 0] = [];
-    get_assertion::get_assertion(hid_params, rpid, challenge, &dmy, pin, true, None)
+    get_assertion::get_assertion(hid_params, rpid, challenge, &dmy, pin, true, None,None)
         .map_err(Error::msg)
 }
 
@@ -304,11 +307,11 @@ pub fn enable_info_param(hid_params: &[HidParam], info_param: InfoParam) -> Resu
         InfoParam::VersionsFido20 => "FIDO_2_0",
         InfoParam::VersionsFido21Pre => "FIDO_2_1_PRE",
         InfoParam::VersionsFido21 => "FIDO_2_1",
-        InfoParam::ExtensionsCredProtect => Extension::CredProtect(None).as_ref(),
+        InfoParam::ExtensionsCredProtect => Mext::CredProtect(None).as_ref(),
         InfoParam::ExtensionsCredBlob => "credBlob",
         InfoParam::ExtensionsLargeBlobKey => "credBlobKey",
         InfoParam::ExtensionsMinPinLength => "minPinLength",
-        InfoParam::ExtensionsHmacSecret => Extension::HmacSecret(None).as_ref(),
+        InfoParam::ExtensionsHmacSecret => Mext::HmacSecret(None).as_ref(),
     };
     let ret = info.versions.iter().find(|v| *v == find);
     if ret.is_some() {
@@ -378,7 +381,7 @@ pub fn bio_enrollment_get_fingerprint_sensor_info(
         &init.0,
         &init.1,
         None,
-        Some(bio_enrollment_command::SubCommand::GetFingerprintSensorInfo),
+        Some(BioCmd::GetFingerprintSensorInfo),
         None,
         None,
     )
@@ -401,7 +404,7 @@ pub fn bio_enrollment_begin(
         &init.0,
         &init.1,
         init.2.as_ref(),
-        Some(bio_enrollment_command::SubCommand::EnrollBegin),
+        Some(BioCmd::EnrollBegin),
         None,
         timeout_milliseconds,
     )
@@ -437,7 +440,7 @@ pub fn bio_enrollment_next(
         &enroll_status.device,
         &enroll_status.cid,
         enroll_status.pin_token.as_ref(),
-        Some(bio_enrollment_command::SubCommand::EnrollCaptureNextSample),
+        Some(BioCmd::EnrollCaptureNextSample),
         Some(template_info),
         timeout_milliseconds,
     )
@@ -463,7 +466,7 @@ pub fn bio_enrollment_cancel(enroll_status: &EnrollStatus1) -> Result<()> {
         &enroll_status.device,
         &enroll_status.cid,
         enroll_status.pin_token.as_ref(),
-        Some(bio_enrollment_command::SubCommand::CancelCurrentEnrollment),
+        Some(BioCmd::CancelCurrentEnrollment),
         None,
         None,
     )
@@ -487,7 +490,7 @@ pub fn bio_enrollment_enumerate_enrollments(
         &init.0,
         &init.1,
         Some(&pin_token),
-        Some(bio_enrollment_command::SubCommand::EnumerateEnrollments),
+        Some(BioCmd::EnumerateEnrollments),
         None,
         None,
     )
@@ -513,7 +516,7 @@ pub fn bio_enrollment_set_friendly_name(
         &init.0,
         &init.1,
         Some(&pin_token),
-        Some(bio_enrollment_command::SubCommand::SetFriendlyName),
+        Some(BioCmd::SetFriendlyName),
         Some(template_info),
         None,
     )
@@ -538,7 +541,7 @@ pub fn bio_enrollment_remove(
         &init.0,
         &init.1,
         Some(&pin_token),
-        Some(bio_enrollment_command::SubCommand::RemoveEnrollment),
+        Some(BioCmd::RemoveEnrollment),
         Some(template_info),
         None,
     )
@@ -715,9 +718,7 @@ mod tests {
         let device = FidoKeyHid::new(&hid_params).unwrap();
         let cid = ctaphid::ctaphid_init(&device).unwrap();
 
-        let send_payload =
-            client_pin_command::create_payload(client_pin_command::SubCommand::GetKeyAgreement)
-                .unwrap();
+        let send_payload = client_pin_command::create_payload(PinCmd::GetKeyAgreement).unwrap();
         let response_cbor = ctaphid::ctaphid_cbor(&device, &cid, &send_payload).unwrap();
         //println!("{}",util::to_hex_str(&send_payload));
 

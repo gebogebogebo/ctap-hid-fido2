@@ -96,9 +96,9 @@ fn parse_cbor_authdata(authdata: &[u8], attestation: &mut Attestation) -> Result
                     attestation.extensions.push(Extension::HmacSecret(Some(v)));
                 } else if *member == Extension::CredProtect(None).to_string() {
                     let v: u32 = util::cbor_value_to_num(val)?;
-                    attestation
-                        .extensions
-                        .push(Extension::CredProtect(Some(CredentialProtectionPolicy::from(v))));
+                    attestation.extensions.push(Extension::CredProtect(Some(
+                        CredentialProtectionPolicy::from(v),
+                    )));
                 }
             }
         }

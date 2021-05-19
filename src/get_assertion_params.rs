@@ -3,8 +3,8 @@ get_assertion API parameters
 */
 
 use crate::public_key_credential_user_entity::PublicKeyCredentialUserEntity;
-use std::fmt;
 use crate::str_buf::StrBuf;
+use std::fmt;
 use strum_macros::AsRefStr;
 
 /// Assertion Object
@@ -35,10 +35,22 @@ impl fmt::Display for Assertion {
         let mut strbuf = StrBuf::new(42);
         strbuf
             .appenh("- rpid_hash", &self.rpid_hash)
-            .append("- flags_user_present_result", &self.flags_user_present_result)
-            .append("- flags_user_verified_result",&self.flags_user_verified_result)
-            .append("- flags_attested_credential_data_included", &self.flags_attested_credential_data_included)
-            .append("- flags_extension_data_included", &self.flags_extension_data_included)
+            .append(
+                "- flags_user_present_result",
+                &self.flags_user_present_result,
+            )
+            .append(
+                "- flags_user_verified_result",
+                &self.flags_user_verified_result,
+            )
+            .append(
+                "- flags_attested_credential_data_included",
+                &self.flags_attested_credential_data_included,
+            )
+            .append(
+                "- flags_extension_data_included",
+                &self.flags_extension_data_included,
+            )
             .append("- sign_count", &self.sign_count)
             .append("- number_of_credentials", &self.number_of_credentials)
             .appenh("- signature", &self.signature)
@@ -48,7 +60,7 @@ impl fmt::Display for Assertion {
     }
 }
 
-#[derive(Debug, Clone, strum_macros::ToString,AsRefStr)]
+#[derive(Debug, Clone, strum_macros::ToString, AsRefStr)]
 pub enum Extension {
     #[strum(serialize = "hmac-secret")]
     HmacSecret(Option<Vec<u8>>),
