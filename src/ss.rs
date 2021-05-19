@@ -48,6 +48,7 @@ impl SharedSecret {
         Ok(res)
     }
 
+    /*
     pub fn encrypt_pin(&self, pin: &str) -> Result<[u8; 16], String> {
         let mut encryptor = aes::cbc_encryptor(
             aes::KeySize::KeySize256,
@@ -57,6 +58,27 @@ impl SharedSecret {
         );
         let pin_bytes = pin.as_bytes();
         let hash = digest::digest(&digest::SHA256, &pin_bytes);
+        let in_bytes = &hash.as_ref()[0..16];
+        let mut input = RefReadBuffer::new(&in_bytes);
+        let mut out_bytes = [0; 16];
+        let mut output = RefWriteBuffer::new(&mut out_bytes);
+        encryptor.encrypt(&mut input, &mut output, true).unwrap();
+        Ok(out_bytes)
+    }
+    */
+
+    pub fn encrypt_pin(&self, pin: &str) -> Result<[u8; 16], String> {
+        self.encrypt(pin.as_bytes())
+    }
+
+    pub fn encrypt(&self, data: &[u8]) -> Result<[u8; 16], String> {
+        let mut encryptor = aes::cbc_encryptor(
+            aes::KeySize::KeySize256,
+            &self.shared_secret,
+            &[0u8; 16],
+            NoPadding,
+        );
+        let hash = digest::digest(&digest::SHA256, &data);
         let in_bytes = &hash.as_ref()[0..16];
         let mut input = RefReadBuffer::new(&in_bytes);
         let mut out_bytes = [0; 16];
