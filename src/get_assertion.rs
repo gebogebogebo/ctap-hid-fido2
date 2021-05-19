@@ -8,6 +8,8 @@ use crate::get_next_assertion_command;
 use crate::util;
 use crate::FidoKeyHid;
 use crate::HidParam;
+use crate::get_assertion_params::Extension as Gext;
+use crate::str_buf::StrBuf;
 
 pub fn get_assertion(
     hid_params: &[HidParam],
@@ -17,6 +19,7 @@ pub fn get_assertion(
     pin: Option<&str>,
     up: bool,
     uv: Option<bool>,
+    extensions: Option<&Vec<Gext>>,
 ) -> Result<Vec<get_assertion_params::Assertion>, String> {
     // init
     let device = FidoKeyHid::new(hid_params)?;
@@ -51,7 +54,6 @@ pub fn get_assertion(
         // create pin auth
         if let Some(pin_token) = pin_token {
             let pin_auth = pin_token.authenticate_v1(&params.client_data_hash);
-            //println!("- pin_auth({:02})    = {:?}", pin_auth.len(),util::to_hex_str(&pin_auth));
             params.pin_auth = pin_auth.to_vec();
         }
 
@@ -59,22 +61,14 @@ pub fn get_assertion(
     };
 
     if util::is_debug() {
-        println!(
-            "- get_assertion({:02})    = {:?}",
-            send_payload.len(),
-            util::to_hex_str(&send_payload)
-        );
+        println!("{}",StrBuf::bufh("- get_assertion",&send_payload));
     }
 
     // send & response
     let response_cbor = ctaphid::ctaphid_cbor(&device, &cid, &send_payload)?;
 
     if util::is_debug() {
-        println!(
-            "- response_cbor({:02})    = {:?}",
-            response_cbor.len(),
-            util::to_hex_str(&response_cbor)
-        );
+        println!("{}",StrBuf::bufh("- response_cbor",&response_cbor));
     }
 
     let ass = get_assertion_response::parse_cbor(&response_cbor)?;

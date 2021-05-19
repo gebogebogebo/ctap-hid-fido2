@@ -2,8 +2,8 @@
 get_info API parameters
 */
 
-use std::fmt;
 use crate::str_buf::StrBuf;
+use std::fmt;
 
 #[derive(Debug, Default)]
 pub struct Info {
@@ -26,16 +26,22 @@ impl fmt::Display for Info {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let mut strbuf = StrBuf::new(30);
         strbuf
-            .append("- versions", &format!("{:?}",self.versions))
-            .append("- extensions", &format!("{:?}",self.extensions))
-            .appenh("- aaguid",&self.aaguid)
-            .append("- options", &format!("{:?}",self.options))
+            .append("- versions", &format!("{:?}", self.versions))
+            .append("- extensions", &format!("{:?}", self.extensions))
+            .appenh("- aaguid", &self.aaguid)
+            .append("- options", &format!("{:?}", self.options))
             .append("- max_msg_size", &self.max_msg_size)
-            .append("- pin_uv_auth_protocols", &format!("{:?}",self.pin_uv_auth_protocols))
-            .append("- max_credential_count_in_list", &self.max_credential_count_in_list)
+            .append(
+                "- pin_uv_auth_protocols",
+                &format!("{:?}", self.pin_uv_auth_protocols),
+            )
+            .append(
+                "- max_credential_count_in_list",
+                &self.max_credential_count_in_list,
+            )
             .append("- max_credential_id_length", &self.max_credential_id_length)
-            .append("- transports", &format!("{:?}",self.transports))
-            .append("- algorithms", &format!("{:?}",self.algorithms));
+            .append("- transports", &format!("{:?}", self.transports))
+            .append("- algorithms", &format!("{:?}", self.algorithms));
         write!(f, "{}", strbuf.build())
     }
 }

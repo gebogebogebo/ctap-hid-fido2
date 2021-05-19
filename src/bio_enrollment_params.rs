@@ -1,7 +1,7 @@
 use crate::pintoken::PinToken;
+use crate::str_buf::StrBuf;
 use crate::FidoKeyHid;
 use std::fmt;
-use crate::str_buf::StrBuf;
 
 #[allow(dead_code)]
 #[derive(Debug, Copy, Clone)]
@@ -67,11 +67,20 @@ impl fmt::Display for BioEnrollmentData {
         strbuf
             .append("- modality", &self.modality)
             .append("- fingerprint_kind", &self.fingerprint_kind)
-            .append("- max_capture_samples_required_for_enroll", &self.max_capture_samples_required_for_enroll)
+            .append(
+                "- max_capture_samples_required_for_enroll",
+                &self.max_capture_samples_required_for_enroll,
+            )
             .appenh("- template_id", &self.template_id)
-            .append("- last_enroll_sample_status", &self.last_enroll_sample_status)
+            .append(
+                "- last_enroll_sample_status",
+                &self.last_enroll_sample_status,
+            )
             .append("- remaining_samples", &self.remaining_samples)
-            .append("- max_template_friendly_name", &self.max_template_friendly_name)
+            .append(
+                "- max_template_friendly_name",
+                &self.max_template_friendly_name,
+            )
             .append("- template_infos", &tmp_val);
         write!(f, "{}", strbuf.build())
     }
@@ -84,7 +93,7 @@ pub struct TemplateInfo {
 }
 impl TemplateInfo {
     pub fn new(template_id: Vec<u8>, template_friendly_name: Option<&str>) -> TemplateInfo {
-        let mut ret = TemplateInfo { 
+        let mut ret = TemplateInfo {
             template_id,
             ..Default::default()
         };

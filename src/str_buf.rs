@@ -1,6 +1,6 @@
 use crate::util;
-use std::fmt::Display;
 use pad::PadStr;
+use std::fmt::Display;
 
 //#[derive(Default)]
 pub struct StrBuf {
@@ -8,11 +8,16 @@ pub struct StrBuf {
     pad: usize,
 }
 impl StrBuf {
-    pub fn new(pad_to_width:usize) -> Self {
+    pub fn new(pad_to_width: usize) -> Self {
         StrBuf {
             buf: String::from(""),
             pad: pad_to_width,
         }
+    }
+
+    pub fn bufh(title: &str, bytes: &[u8]) -> String {
+        let mut strbuf = StrBuf::new(0);
+        strbuf.appenh(title, bytes).build().to_string()
     }
 
     pub fn appent(&mut self, title: &str) -> &mut Self {
@@ -27,7 +32,7 @@ impl StrBuf {
         self
     }
     pub fn appenh(&mut self, title: &str, bytes: &[u8]) -> &mut Self {
-        let title2 = format!("{}({:02})",title,bytes.len());
+        let title2 = format!("{}({:02})", title, bytes.len());
         let tmp = format!(
             "{} = {}\n",
             title2.pad_to_width(self.pad),

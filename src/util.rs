@@ -29,7 +29,7 @@ pub fn print_typename<T>(_: T) {
 // for debug
 #[allow(dead_code)]
 pub(crate) fn is_debug() -> bool {
-    false
+    true
 }
 
 // for cbor
@@ -208,8 +208,5 @@ pub(crate) fn convert_to_publickey_pem(public_key_der: &[u8]) -> String {
     };
 
     // 3. Header and footer
-    "-----BEGIN PUBLIC KEY-----\n".to_string()
-    + &pem_base
-    + &"-----END PUBLIC KEY-----".to_string()
-
+    "-----BEGIN PUBLIC KEY-----\n".to_string() + &pem_base + &"-----END PUBLIC KEY-----".to_string()
 }
