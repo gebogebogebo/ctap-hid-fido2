@@ -2,13 +2,12 @@ use crypto::aes;
 use crypto::blockmodes::NoPadding;
 use crypto::buffer::{RefReadBuffer, RefWriteBuffer};
 use ring::error::Unspecified;
-use ring::{agreement, digest, hmac, rand};
+use ring::{agreement, digest, rand};
 use untrusted::Input;
 
 use crate::cose;
 use crate::p256;
-use crate::pintoken;
-//use crate::util;
+use crate::pintoken::PinToken;
 
 #[derive(Debug)]
 pub struct SharedSecret {
@@ -87,7 +86,7 @@ impl SharedSecret {
         Ok(out_bytes)
     }
 
-    pub fn decrypt_token(&self, data: &mut [u8]) -> Result<pintoken::PinToken, String> {
+    pub fn decrypt_token(&self, data: &mut [u8]) -> Result<PinToken, String> {
         let mut decryptor = aes::cbc_decryptor(
             aes::KeySize::KeySize256,
             &self.shared_secret,
@@ -95,16 +94,11 @@ impl SharedSecret {
             NoPadding,
         );
         let mut input = RefReadBuffer::new(data);
-        //let mut out_bytes = [0; 16];
         let mut out_bytes = [0; 32];
         let mut output = RefWriteBuffer::new(&mut out_bytes);
         decryptor.decrypt(&mut input, &mut output, true).unwrap();
-        //println!("- out_bytes({:?})       = {:?}", out_bytes.len(), util::to_hex_str(&out_bytes));
 
-        let pin_token = pintoken::PinToken {
-            signing_key: hmac::SigningKey::new(&digest::SHA256, &out_bytes),
-            key: out_bytes.to_vec(),
-        };
+        let pin_token = PinToken::new(&out_bytes);
         Ok(pin_token)
     }
 }
