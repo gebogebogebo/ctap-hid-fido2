@@ -9,6 +9,8 @@ use crate::util;
 use crate::FidoKeyHid;
 use crate::HidParam;
 use crate::get_assertion_params::Extension as Gext;
+use crate::hmac::HmacExt;
+use anyhow::{Error, Result};
 
 pub fn get_assertion(
     hid_params: &[HidParam],
@@ -19,10 +21,10 @@ pub fn get_assertion(
     up: bool,
     uv: Option<bool>,
     extensions: Option<&Vec<Gext>>,
-) -> Result<Vec<get_assertion_params::Assertion>, String> {
+) -> Result<Vec<get_assertion_params::Assertion>> {
     // init
-    let device = FidoKeyHid::new(hid_params)?;
-    let cid = ctaphid::ctaphid_init(&device)?;
+    let device = FidoKeyHid::new(hid_params).map_err(Error::msg)?;
+    let cid = ctaphid::ctaphid_init(&device).map_err(Error::msg)?;
 
     /*
     // uv
@@ -34,11 +36,13 @@ pub fn get_assertion(
     };
     */
 
+
+    let mut hmac_ext = HmacExt::default();
     if let Some(extensions) = extensions {
         for ext in extensions {
             match ext {
                 Gext::HmacSecret(n) => {
-                    let data = client_pin::get_data(&device, &cid,&n.unwrap(),None)?;
+                    hmac_ext.create(&device, &cid,&n.unwrap(),None)?;
                 }
             }
         }
@@ -47,7 +51,7 @@ pub fn get_assertion(
     // pin token
     let pin_token = {
         if let Some(pin) = pin {
-            Some(client_pin::get_pin_token(&device, &cid, pin)?)
+            Some(client_pin::get_pin_token(&device, &cid, pin).map_err(Error::msg)?)
         } else {
             None
         }
@@ -66,20 +70,19 @@ pub fn get_assertion(
             params.pin_auth = pin_auth.to_vec();
         }
 
-        get_assertion_command::create_payload(params)
+        get_assertion_command::create_payload(params,Some(hmac_ext))
     };
     util::debugp("- get_assertion",&send_payload);
 
     // send & response
-    let response_cbor = ctaphid::ctaphid_cbor(&device, &cid, &send_payload)?;
+    let response_cbor = ctaphid::ctaphid_cbor(&device, &cid, &send_payload).map_err(Error::msg)?;
     util::debugp("- response_cbor",&response_cbor);
 
-    let ass = get_assertion_response::parse_cbor(&response_cbor)?;
+    let ass = get_assertion_response::parse_cbor(&response_cbor).map_err(Error::msg)?;
 
     let mut asss = vec![ass];
-
     for _ in 0..(asss[0].number_of_credentials - 1) {
-        let ass = get_next_assertion(&device, &cid)?;
+        let ass = get_next_assertion(&device, &cid).map_err(Error::msg)?;
         asss.push(ass);
     }
 

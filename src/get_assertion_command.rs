@@ -3,6 +3,7 @@ use crate::util;
 use serde_cbor::to_vec;
 use serde_cbor::Value;
 use std::collections::BTreeMap;
+use crate::hmac::HmacExt;
 
 #[derive(Debug, Default)]
 pub struct Params {
@@ -25,7 +26,7 @@ impl Params {
     }
 }
 
-pub fn create_payload(params: Params) -> Vec<u8> {
+pub fn create_payload(params: Params,hmac_ext:Option<HmacExt>) -> Vec<u8> {
     // 0x01 : rpid
     let rpid = Value::Text(params.rp_id.to_string());
 
@@ -52,6 +53,29 @@ pub fn create_payload(params: Params) -> Vec<u8> {
         }
     };
 
+
+    // 0x04 : HMAC Secret Extension 
+    if let Some(hmac_ext) = hmac_ext {
+        let mut param = BTreeMap::new();
+        {
+            // TODO
+            // keyAgreement(0x01)
+            /*
+            let mut map = BTreeMap::new();
+            map.insert(Value::Text("id".to_string()), Value::Bytes(in_param.id));
+            map.insert(Value::Text("type".to_string()), Value::Text(in_param.ctype));
+            param.insert(Value::Integer(0x01), Value::Map(map));
+            */
+        }
+    
+        // saltEnc(0x02)
+        param.insert(Value::Integer(0x02), Value::Bytes(hmac_ext.salt_enc));
+
+        // saltAuth(0x03)
+        param.insert(Value::Integer(0x03), Value::Bytes(hmac_ext.salt_auth));
+    };
+
+    
     // 0x05 : options
     let mut options_val = BTreeMap::new();
     options_val.insert(Value::Text("up".to_string()), Value::Bool(params.option_up));
