@@ -38,8 +38,7 @@ pub fn get_assertion(
         for ext in extensions {
             match ext {
                 Gext::HmacSecret(n) => {
-                    let dmy : [u8;32] = Default::default();
-                    client_pin::get_data(&device, &cid,&dmy,None)?;
+                    let data = client_pin::get_data(&device, &cid,&n.unwrap(),None)?;
                 }
             }
         }

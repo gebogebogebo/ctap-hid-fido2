@@ -1,7 +1,8 @@
 use anyhow::Result;
 use crypto::digest::Digest;
 use crypto::sha2::Sha256;
-use ctap_hid_fido2::make_credential_params;
+use ctap_hid_fido2::make_credential_params::Extension as Mext;
+use ctap_hid_fido2::get_assertion_params::Extension as Gext;
 use ctap_hid_fido2::str_buf::StrBuf;
 use ctap_hid_fido2::verifier;
 use ctap_hid_fido2::HidParam;
@@ -35,7 +36,7 @@ fn main() -> Result<()> {
     */
 
     // with extensions
-    let ext = make_credential_params::Extension::HmacSecret(Some(true));
+    let ext = Mext::HmacSecret(Some(true));
     let att = ctap_hid_fido2::make_credential_with_extensions(
         &HidParam::get_default_params(),
         rpid,
@@ -68,6 +69,7 @@ fn main() -> Result<()> {
     digest.result(&mut salt);
     let mut strbuf = StrBuf::new(30);
     println!("{}", strbuf.appenh("- salt", &salt).build());
+    let ext = Gext::HmacSecret(Some(salt));
     //
 
     // Authenticate
@@ -75,6 +77,7 @@ fn main() -> Result<()> {
     let challenge = verifier::create_challenge();
     println!("{}", strbuf.appenh("- challenge", &challenge).build());
 
+    /*
     let ass = ctap_hid_fido2::get_assertion(
         &HidParam::get_default_params(),
         rpid,
@@ -82,6 +85,16 @@ fn main() -> Result<()> {
         &verify_result.credential_id,
         Some(pin),
     )?;
+    */
+    let ass = ctap_hid_fido2::get_assertion_with_extensios(
+        &HidParam::get_default_params(),
+        rpid,
+        &challenge,
+        &verify_result.credential_id,
+        Some(pin),
+        Some(&vec![ext]),
+    )?;
+
     println!("- Authenticate Success!!");
     println!("Assertion");
     println!("{}", ass);

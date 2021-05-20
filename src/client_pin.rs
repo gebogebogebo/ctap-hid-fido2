@@ -3,13 +3,9 @@ use crate::client_pin_response;
 use crate::ctaphid;
 use crate::pintoken;
 use crate::ss;
-#[allow(unused_imports)]
-use crate::util;
 use crate::FidoKeyHid;
 use crate::client_pin_command::SubCommand as PinCmd;
-
 use ring::{digest, hmac};
-use pintoken::PinToken;
 
 pub fn get_pin_token(
     device: &FidoKeyHid,
@@ -53,7 +49,7 @@ pub fn get_data(
     cid: &[u8],
     salt1: &[u8; 32],
     salt2: Option<&[u8; 32]>
-) -> Result<(), String> {
+) -> Result<Vec<u8>, String> {
     let send_payload =
         client_pin_command::create_payload(PinCmd::GetKeyAgreement)?;
     let response_cbor = ctaphid::ctaphid_cbor(device, cid, &send_payload)?;
@@ -86,7 +82,5 @@ pub fn get_data(
 
     let salt_auth = pin_token.authenticate_v2(&salt_enc, 16);
 
-
-
-    Ok(())
+    Ok(salt_auth)
 }
