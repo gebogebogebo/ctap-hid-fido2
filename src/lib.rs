@@ -46,6 +46,7 @@ mod ss;
 pub mod str_buf;
 pub mod util;
 pub mod verifier;
+mod hmac;
 
 //
 use crate::bio_enrollment_command::SubCommand as BioCmd;
@@ -256,11 +257,11 @@ pub fn get_assertion(
     pin: Option<&str>,
 ) -> Result<get_assertion_params::Assertion> {
     let asss =
-        get_assertion::get_assertion(hid_params, rpid, challenge, credential_id, pin, true, None,None)
-            .map_err(Error::msg)?;
+        get_assertion::get_assertion(hid_params, rpid, challenge, credential_id, pin, true, None,None)?;
     Ok(asss[0].clone())
 }
 
+/// Authentication command(with PIN , non Resident Key , Extension)
 pub fn get_assertion_with_extensios(
     hid_params: &[HidParam],
     rpid: &str,
@@ -270,8 +271,7 @@ pub fn get_assertion_with_extensios(
     extensions: Option<&Vec<Gext>>,
 ) -> Result<get_assertion_params::Assertion> {
     let asss =
-        get_assertion::get_assertion(hid_params, rpid, challenge, credential_id, pin, true, None,extensions)
-            .map_err(Error::msg)?;
+        get_assertion::get_assertion(hid_params, rpid, challenge, credential_id, pin, true, None,extensions)?;
     Ok(asss[0].clone())
 }
 
@@ -284,7 +284,6 @@ pub fn get_assertions_rk(
 ) -> Result<Vec<get_assertion_params::Assertion>> {
     let dmy: [u8; 0] = [];
     get_assertion::get_assertion(hid_params, rpid, challenge, &dmy, pin, true, None,None)
-        .map_err(Error::msg)
 }
 
 #[derive(Debug, Clone, PartialEq)]
