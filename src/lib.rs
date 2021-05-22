@@ -30,6 +30,7 @@ mod get_info_command;
 pub mod get_info_params;
 mod get_info_response;
 mod get_next_assertion_command;
+mod hmac;
 mod make_credential;
 mod make_credential_command;
 pub mod make_credential_params;
@@ -46,7 +47,6 @@ mod ss;
 pub mod str_buf;
 pub mod util;
 pub mod verifier;
-mod hmac;
 
 //
 use crate::bio_enrollment_command::SubCommand as BioCmd;
@@ -256,8 +256,16 @@ pub fn get_assertion(
     credential_id: &[u8],
     pin: Option<&str>,
 ) -> Result<get_assertion_params::Assertion> {
-    let asss =
-        get_assertion::get_assertion(hid_params, rpid, challenge, credential_id, pin, true, None,None)?;
+    let asss = get_assertion::get_assertion(
+        hid_params,
+        rpid,
+        challenge,
+        credential_id,
+        pin,
+        true,
+        None,
+        None,
+    )?;
     Ok(asss[0].clone())
 }
 
@@ -270,8 +278,16 @@ pub fn get_assertion_with_extensios(
     pin: Option<&str>,
     extensions: Option<&Vec<Gext>>,
 ) -> Result<get_assertion_params::Assertion> {
-    let asss =
-        get_assertion::get_assertion(hid_params, rpid, challenge, credential_id, pin, true, None,extensions)?;
+    let asss = get_assertion::get_assertion(
+        hid_params,
+        rpid,
+        challenge,
+        credential_id,
+        pin,
+        true,
+        None,
+        extensions,
+    )?;
     Ok(asss[0].clone())
 }
 
@@ -283,7 +299,7 @@ pub fn get_assertions_rk(
     pin: Option<&str>,
 ) -> Result<Vec<get_assertion_params::Assertion>> {
     let dmy: [u8; 0] = [];
-    get_assertion::get_assertion(hid_params, rpid, challenge, &dmy, pin, true, None,None)
+    get_assertion::get_assertion(hid_params, rpid, challenge, &dmy, pin, true, None, None)
 }
 
 #[derive(Debug, Clone, PartialEq)]

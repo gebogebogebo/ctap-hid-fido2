@@ -2,11 +2,11 @@
 Utility API
 */
 
+use crate::str_buf::StrBuf;
 use num::NumCast;
 use serde_cbor::Value;
 use sha2::{Digest, Sha256};
 use std::collections::BTreeMap;
-use crate::str_buf::StrBuf;
 
 pub fn to_hex_str(bytes: &[u8]) -> String {
     bytes
@@ -34,9 +34,9 @@ pub(crate) fn is_debug() -> bool {
 }
 
 #[allow(dead_code)]
-pub(crate) fn debugp(title: &str, bytes: &[u8]){
+pub(crate) fn debugp(title: &str, bytes: &[u8]) {
     if is_debug() {
-        println!("{}",StrBuf::bufh(title,bytes));
+        println!("{}", StrBuf::bufh(title, bytes));
     }
 }
 

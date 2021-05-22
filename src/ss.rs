@@ -93,11 +93,20 @@ impl SharedSecret {
             &[0u8; 16],
             NoPadding,
         );
-        let hash = digest::digest(&digest::SHA256, &data);
+
+        // PEND
+        //let hash = digest::digest(&digest::SHA256, &data);
+        let message = "this is test.";
+        let data_pend = message.as_bytes();
+        // PEND
+        
+        let hash = digest::digest(&digest::SHA256, &data_pend);
+
         let in_bytes = &hash.as_ref()[0..32];
         let mut input = RefReadBuffer::new(&in_bytes);
         let mut out_bytes = [0; 32];
         let mut output = RefWriteBuffer::new(&mut out_bytes);
+
         encryptor.encrypt(&mut input, &mut output, true).unwrap();
         Ok(out_bytes)
     }

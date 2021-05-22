@@ -2,14 +2,14 @@ use crate::client_pin;
 use crate::ctaphid;
 use crate::get_assertion_command;
 use crate::get_assertion_params;
+use crate::get_assertion_params::Extension as Gext;
 use crate::get_assertion_response;
 use crate::get_next_assertion_command;
+use crate::hmac::HmacExt;
 #[allow(unused_imports)]
 use crate::util;
 use crate::FidoKeyHid;
 use crate::HidParam;
-use crate::get_assertion_params::Extension as Gext;
-use crate::hmac::HmacExt;
 use anyhow::{Error, Result};
 
 pub fn get_assertion(
@@ -36,12 +36,14 @@ pub fn get_assertion(
     };
     */
 
-    let hmac_ext = create_hmacext(&device, &cid,extensions)?;
+    let hmac_ext = create_hmacext(&device, &cid, extensions)?;
 
     // pin token
     let pin_token = {
         if let Some(pin) = pin {
-            Some(client_pin::get_pin_token(&device, &cid, pin).map_err(Error::msg)?)
+            let shared_secret = client_pin::get_shared_secret(&device, &cid, pin).map_err(Error::msg)?;
+            Some(client_pin::get_pin_token2(&shared_secret, &device, &cid, pin).map_err(Error::msg)?)
+            //Some(client_pin::get_pin_token(&device, &cid, pin).map_err(Error::msg)?)
         } else {
             None
         }
@@ -60,13 +62,13 @@ pub fn get_assertion(
             params.pin_auth = pin_auth.to_vec();
         }
 
-        get_assertion_command::create_payload(params,hmac_ext)
+        get_assertion_command::create_payload(params, hmac_ext)
     };
-    util::debugp("- get_assertion",&send_payload);
+    util::debugp("- get_assertion", &send_payload);
 
     // send & response
     let response_cbor = ctaphid::ctaphid_cbor(&device, &cid, &send_payload).map_err(Error::msg)?;
-    util::debugp("- response_cbor",&response_cbor);
+    util::debugp("- response_cbor", &response_cbor);
 
     let ass = get_assertion_response::parse_cbor(&response_cbor).map_err(Error::msg)?;
 
@@ -90,25 +92,21 @@ fn get_next_assertion(
 
 fn create_hmacext(
     device: &FidoKeyHid,
-    cid: &[u8;4],
+    cid: &[u8; 4],
     extensions: Option<&Vec<Gext>>,
-) -> Result<Option<HmacExt>>{
+) -> Result<Option<HmacExt>> {
     if let Some(extensions) = extensions {
         for ext in extensions {
             match ext {
                 Gext::HmacSecret(n) => {
                     let mut hmac_ext = HmacExt::default();
-                    hmac_ext.create(device, cid,&n.unwrap(),None)?;
-
-                    // debug
-                    println!("{}", hmac_ext.key_agreement);
-                    
+                    hmac_ext.create(device, cid, &n.unwrap(), None)?;
                     return Ok(Some(hmac_ext));
                 }
             }
         }
         Ok(None)
-    }else{
+    } else {
         Ok(None)
     }
 }
