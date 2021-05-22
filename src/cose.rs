@@ -5,6 +5,8 @@ use serde_cbor::Value;
 use std::collections::HashMap;
 use std::collections::BTreeMap;
 use anyhow::{Result};
+use crate::str_buf::StrBuf;
+use std::fmt;
 
 #[derive(Debug, Default)]
 pub struct CoseKey {
@@ -13,31 +15,26 @@ pub struct CoseKey {
     pub parameters: HashMap<i16, Value>,
 }
 
-impl CoseKey {
-    #[allow(dead_code)]
-    pub fn print(self: &CoseKey, title: &str) {
-        println!("{}", title);
-        println!("- kty       = {:?}", self.key_type);
-        println!("- alg       = {:?}", self.algorithm);
+impl fmt::Display for CoseKey {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let mut strbuf = StrBuf::new(12);
+        strbuf
+            .append("- key_type",&self.key_type)
+            .append("- algorithm",&self.algorithm);
         if let Some(Value::Integer(intval)) = self.parameters.get(&-1) {
-            println!("- crv       = {:?}", intval);
+            strbuf.append("- crv",&intval);
         }
         if let Some(Value::Bytes(bytes)) = self.parameters.get(&-2) {
-            println!(
-                "- x({:02})     = {:?}",
-                bytes.len(),
-                util::to_hex_str(bytes)
-            );
+            strbuf.appenh("- x",&bytes);
         }
         if let Some(Value::Bytes(bytes)) = self.parameters.get(&-3) {
-            println!(
-                "- y({:02})     = {:?}",
-                bytes.len(),
-                util::to_hex_str(bytes)
-            );
+            strbuf.appenh("- y",&bytes);
         }
+        write!(f, "{}", strbuf.build())
     }
+}
 
+impl CoseKey {
     #[allow(dead_code)]
     pub fn decode(cbor: &Value) -> Result<Self, String> {
         let mut cose = CoseKey::default();

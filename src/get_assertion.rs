@@ -99,6 +99,10 @@ fn create_hmacext(
                 Gext::HmacSecret(n) => {
                     let mut hmac_ext = HmacExt::default();
                     hmac_ext.create(device, cid,&n.unwrap(),None)?;
+
+                    // debug
+                    println!("{}", hmac_ext.key_agreement);
+                    
                     return Ok(Some(hmac_ext));
                 }
             }
