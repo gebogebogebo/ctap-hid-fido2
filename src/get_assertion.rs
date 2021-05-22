@@ -36,17 +36,7 @@ pub fn get_assertion(
     };
     */
 
-
-    let mut hmac_ext = HmacExt::default();
-    if let Some(extensions) = extensions {
-        for ext in extensions {
-            match ext {
-                Gext::HmacSecret(n) => {
-                    hmac_ext.create(&device, &cid,&n.unwrap(),None)?;
-                }
-            }
-        }
-    };
+    let hmac_ext = create_hmacext(&device, &cid,extensions)?;
 
     // pin token
     let pin_token = {
@@ -70,7 +60,7 @@ pub fn get_assertion(
             params.pin_auth = pin_auth.to_vec();
         }
 
-        get_assertion_command::create_payload(params,Some(hmac_ext))
+        get_assertion_command::create_payload(params,hmac_ext)
     };
     util::debugp("- get_assertion",&send_payload);
 
@@ -96,4 +86,25 @@ fn get_next_assertion(
     let send_payload = get_next_assertion_command::create_payload();
     let response_cbor = ctaphid::ctaphid_cbor(&device, &cid, &send_payload)?;
     get_assertion_response::parse_cbor(&response_cbor)
+}
+
+fn create_hmacext(
+    device: &FidoKeyHid,
+    cid: &[u8;4],
+    extensions: Option<&Vec<Gext>>,
+) -> Result<Option<HmacExt>>{
+    if let Some(extensions) = extensions {
+        for ext in extensions {
+            match ext {
+                Gext::HmacSecret(n) => {
+                    let mut hmac_ext = HmacExt::default();
+                    hmac_ext.create(device, cid,&n.unwrap(),None)?;
+                    return Ok(Some(hmac_ext));
+                }
+            }
+        }
+        Ok(None)
+    }else{
+        Ok(None)
+    }
 }
