@@ -44,7 +44,7 @@ impl HmacExt {
         //  encrypt(key, demPlaintext) → ciphertext
         //      Encrypts a plaintext to produce a ciphertext, which may be longer than the plaintext. 
         //      The plaintext is restricted to being a multiple of the AES block size (16 bytes) in length.
-        self.salt_enc = shared_secret.encrypt(salt1).map_err(Error::msg)?.to_vec();
+        self.salt_enc = shared_secret.encrypt2(salt1).map_err(Error::msg)?.to_vec();
     
     
         // saltAuth(0x03)

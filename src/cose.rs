@@ -3,6 +3,8 @@ use byteorder::{BigEndian, WriteBytesExt};
 use num::NumCast;
 use serde_cbor::Value;
 use std::collections::HashMap;
+use std::collections::BTreeMap;
+use anyhow::{Result};
 
 #[derive(Debug, Default)]
 pub struct CoseKey {
@@ -70,6 +72,17 @@ impl CoseKey {
         }
         Ok(cose)
     }
+
+    pub fn to_value(&self) -> Result<Value> {
+
+        let mut map = BTreeMap::new();
+        map.insert(Value::Integer(1), Value::Integer(self.key_type.into()));
+        map.insert(Value::Integer(3), Value::Integer(self.algorithm.into()));
+        map.insert(Value::Integer(-1), self.parameters.get(&-1).unwrap().clone());
+        map.insert(Value::Integer(-2), self.parameters.get(&-2).unwrap().clone());
+        map.insert(Value::Integer(-3), self.parameters.get(&-3).unwrap().clone());
+        Ok(Value::Map(map))
+    } 
 
     #[allow(dead_code)]
     pub fn encode(&self) -> Vec<u8> {

@@ -16,6 +16,13 @@ fn main() -> Result<()> {
     println!("Register - make_credential()");
     let challenge = verifier::create_challenge();
     let rkparam = PublicKeyCredentialUserEntity::new(Some(b"1111"),Some("gebo"),Some("GEBO GEBO"));
+    /*
+    let rkparam = PublicKeyCredentialUserEntity::new(
+        Some(b"1111"),
+        Some("123456788901234567889012345678890123456789012345678901234567890"),
+        Some("123456788901234567889012345678890123456789012345678901234567890")
+    );
+    */
 
     println!("- rpid          = {:?}", rpid);
     println!(
