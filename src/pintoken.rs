@@ -13,7 +13,7 @@ impl PinToken {
             key: data.to_vec(),
         }
     }
-    
+
     pub fn authenticate_v1(&self, data: &[u8]) -> [u8; 16] {
         let signature = ring::hmac::sign(&self.signing_key, &data);
         let mut out = [0; 16];

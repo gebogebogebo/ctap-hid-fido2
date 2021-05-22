@@ -68,11 +68,11 @@ pub fn make_credential(
 
         make_credential_command::create_payload(params, extensions)
     };
-    util::debugp("- make_credential",&send_payload);
+    util::debugp("- make_credential", &send_payload);
 
     // send & response
     let response_cbor = ctaphid::ctaphid_cbor(&device, &cid, &send_payload)?;
-    util::debugp("- response_cbor",&response_cbor);
+    util::debugp("- response_cbor", &response_cbor);
 
     let att = make_credential_response::parse_cbor(&response_cbor)?;
     Ok(att)

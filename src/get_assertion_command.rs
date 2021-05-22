@@ -1,9 +1,9 @@
 use crate::ctapdef;
+use crate::hmac::HmacExt;
 use crate::util;
 use serde_cbor::to_vec;
 use serde_cbor::Value;
 use std::collections::BTreeMap;
-use crate::hmac::HmacExt;
 
 #[derive(Debug, Default)]
 pub struct Params {
@@ -26,7 +26,7 @@ impl Params {
     }
 }
 
-pub fn create_payload(params: Params,hmac_ext:Option<HmacExt>) -> Vec<u8> {
+pub fn create_payload(params: Params, hmac_ext: Option<HmacExt>) -> Vec<u8> {
     // 0x01 : rpid
     let rpid = Value::Text(params.rp_id.to_string());
 
@@ -53,8 +53,7 @@ pub fn create_payload(params: Params,hmac_ext:Option<HmacExt>) -> Vec<u8> {
         }
     };
 
-
-    // 0x04 : HMAC Secret Extension 
+    // 0x04 : HMAC Secret Extension
     let mut ext_val = BTreeMap::new();
 
     let extensions = {
@@ -74,12 +73,11 @@ pub fn create_payload(params: Params,hmac_ext:Option<HmacExt>) -> Vec<u8> {
             ext_val.insert(Value::Text("hmac-secret".to_string()), Value::Map(param));
 
             Some(Value::Map(ext_val))
-        }else{
+        } else {
             None
         }
     };
 
-    
     // 0x05 : options
     let mut options_val = BTreeMap::new();
     options_val.insert(Value::Text("up".to_string()), Value::Bool(params.option_up));
