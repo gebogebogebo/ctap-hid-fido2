@@ -55,24 +55,28 @@ pub fn create_payload(params: Params,hmac_ext:Option<HmacExt>) -> Vec<u8> {
 
 
     // 0x04 : HMAC Secret Extension 
-    if let Some(hmac_ext) = hmac_ext {
-        let mut param = BTreeMap::new();
-        {
-            // TODO
-            // keyAgreement(0x01)
-            /*
-            let mut map = BTreeMap::new();
-            map.insert(Value::Text("id".to_string()), Value::Bytes(in_param.id));
-            map.insert(Value::Text("type".to_string()), Value::Text(in_param.ctype));
-            param.insert(Value::Integer(0x01), Value::Map(map));
-            */
-        }
-    
-        // saltEnc(0x02)
-        param.insert(Value::Integer(0x02), Value::Bytes(hmac_ext.salt_enc));
+    let mut ext_val = BTreeMap::new();
 
-        // saltAuth(0x03)
-        param.insert(Value::Integer(0x03), Value::Bytes(hmac_ext.salt_auth));
+    let extensions = {
+        if let Some(hmac_ext) = hmac_ext {
+            let mut param = BTreeMap::new();
+
+            // keyAgreement(0x01)
+            let val = hmac_ext.key_agreement.to_value().unwrap();
+            param.insert(Value::Integer(0x01), val);
+
+            // saltEnc(0x02)
+            param.insert(Value::Integer(0x02), Value::Bytes(hmac_ext.salt_enc));
+
+            // saltAuth(0x03)
+            param.insert(Value::Integer(0x03), Value::Bytes(hmac_ext.salt_auth));
+
+            ext_val.insert(Value::Text("hmac-secret".to_string()), Value::Map(param));
+
+            Some(Value::Map(ext_val))
+        }else{
+            None
+        }
     };
 
     
@@ -103,6 +107,9 @@ pub fn create_payload(params: Params,hmac_ext:Option<HmacExt>) -> Vec<u8> {
     get_assertion.insert(Value::Integer(0x02), cdh);
     if let Some(obj) = allow_list {
         get_assertion.insert(Value::Integer(0x03), obj);
+    }
+    if let Some(extensions) = extensions {
+        get_assertion.insert(Value::Integer(0x04), extensions);
     }
     get_assertion.insert(Value::Integer(0x05), options);
     if let Some(x) = pin_auth {

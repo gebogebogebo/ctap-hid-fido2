@@ -86,6 +86,22 @@ impl SharedSecret {
         Ok(out_bytes)
     }
 
+    pub fn encrypt2(&self, data: &[u8]) -> Result<[u8; 32], String> {
+        let mut encryptor = aes::cbc_encryptor(
+            aes::KeySize::KeySize256,
+            &self.shared_secret,
+            &[0u8; 16],
+            NoPadding,
+        );
+        let hash = digest::digest(&digest::SHA256, &data);
+        let in_bytes = &hash.as_ref()[0..32];
+        let mut input = RefReadBuffer::new(&in_bytes);
+        let mut out_bytes = [0; 32];
+        let mut output = RefWriteBuffer::new(&mut out_bytes);
+        encryptor.encrypt(&mut input, &mut output, true).unwrap();
+        Ok(out_bytes)
+    }
+
     pub fn decrypt_token(&self, data: &mut [u8]) -> Result<PinToken, String> {
         let mut decryptor = aes::cbc_decryptor(
             aes::KeySize::KeySize256,
