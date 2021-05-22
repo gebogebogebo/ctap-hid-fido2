@@ -6,6 +6,7 @@ use crate::ss::SharedSecret;
 use crate::FidoKeyHid;
 use crate::pintoken::PinToken;
 
+/*
 pub fn get_shared_secret(
     device: &FidoKeyHid,
     cid: &[u8],
@@ -53,7 +54,7 @@ pub fn get_pin_token2(
         Err("pin not set".to_string())
     }
 }
-
+*/
 
 pub fn get_pin_token(
     device: &FidoKeyHid,

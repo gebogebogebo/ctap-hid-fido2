@@ -47,6 +47,7 @@ mod ss;
 pub mod str_buf;
 pub mod util;
 pub mod verifier;
+pub mod auth_data;
 
 //
 use crate::bio_enrollment_command::SubCommand as BioCmd;
@@ -739,7 +740,8 @@ mod tests {
 
         let key_agreement =
             client_pin_response::parse_cbor_client_pin_get_keyagreement(&response_cbor).unwrap();
-        key_agreement.print("authenticatorClientPIN (0x06) - getKeyAgreement");
+        println!("authenticatorClientPIN (0x06) - getKeyAgreement");
+        println!("{}",key_agreement);
 
         assert!(true);
     }

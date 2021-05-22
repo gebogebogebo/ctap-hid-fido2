@@ -6,27 +6,19 @@ use crate::public_key_credential_user_entity::PublicKeyCredentialUserEntity;
 use crate::str_buf::StrBuf;
 use std::fmt;
 use strum_macros::AsRefStr;
+use crate::auth_data::Flags;
 
 /// Assertion Object
 #[derive(Debug, Default, Clone)]
 pub struct Assertion {
     pub rpid_hash: Vec<u8>,
-
-    pub flags_user_present_result: bool,
-    pub flags_user_verified_result: bool,
-    pub flags_attested_credential_data_included: bool,
-    pub flags_extension_data_included: bool,
-
+    pub flags: Flags,
     pub sign_count: u32,
-
     pub number_of_credentials: i32,
-
     pub signature: Vec<u8>,
-
     pub user: PublicKeyCredentialUserEntity,
-
     pub credential_id: Vec<u8>,
-
+    pub extensions: Vec<Extension>,
     pub auth_data: Vec<u8>,
 }
 
@@ -35,23 +27,8 @@ impl fmt::Display for Assertion {
         let mut strbuf = StrBuf::new(42);
         strbuf
             .appenh("- rpid_hash", &self.rpid_hash)
-            .append(
-                "- flags_user_present_result",
-                &self.flags_user_present_result,
-            )
-            .append(
-                "- flags_user_verified_result",
-                &self.flags_user_verified_result,
-            )
-            .append(
-                "- flags_attested_credential_data_included",
-                &self.flags_attested_credential_data_included,
-            )
-            .append(
-                "- flags_extension_data_included",
-                &self.flags_extension_data_included,
-            )
             .append("- sign_count", &self.sign_count)
+            .add(&format!("{}",&self.flags))
             .append("- number_of_credentials", &self.number_of_credentials)
             .appenh("- signature", &self.signature)
             .append("- user", &self.user)

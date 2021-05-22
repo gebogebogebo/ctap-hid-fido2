@@ -77,6 +77,7 @@ fn main() -> Result<()> {
     let challenge = verifier::create_challenge();
     println!("{}", strbuf.appenh("- challenge", &challenge).build());
 
+    /*
     let ass = ctap_hid_fido2::get_assertion(
         &HidParam::get_default_params(),
         rpid,
@@ -84,7 +85,7 @@ fn main() -> Result<()> {
         &verify_result.credential_id,
         Some(pin),
     )?;
-    /*
+    */
     let ass = ctap_hid_fido2::get_assertion_with_extensios(
         &HidParam::get_default_params(),
         rpid,
@@ -93,7 +94,6 @@ fn main() -> Result<()> {
         Some(pin),
         Some(&vec![ext]),
     )?;
-    */
 
     println!("- Authenticate Success!!");
     println!("Assertion");

@@ -20,6 +20,11 @@ impl StrBuf {
         strbuf.appenh(title, bytes).build().to_string()
     }
 
+    pub fn add(&mut self, val: &str) -> &mut Self {
+        self.buf = self.buf.to_string() + val;
+        self
+    }
+
     pub fn appent(&mut self, title: &str) -> &mut Self {
         let tmp = format!("{}\n", title);
         self.buf = self.buf.to_string() + &tmp;
