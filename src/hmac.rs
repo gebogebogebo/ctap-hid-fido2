@@ -33,14 +33,14 @@ impl HmacExt {
         let response_cbor =
             ctaphid::ctaphid_cbor(device, cid, &send_payload).map_err(Error::msg)?;
 
-        self.key_agreement =
+        let key_agreement =
             client_pin_response::parse_cbor_client_pin_get_keyagreement(&response_cbor)
                 .map_err(Error::msg)?;
 
         //println!("key_agreement");
         //println!("{}", self.key_agreement);
 
-        let shared_secret = ss::SharedSecret::new(&self.key_agreement).map_err(Error::msg)?;
+        let shared_secret = ss::SharedSecret::new(&key_agreement).map_err(Error::msg)?;
 
         println!("shared_secret.public_key");
         println!("{}", shared_secret.public_key);
@@ -48,6 +48,8 @@ impl HmacExt {
             "{}",
             StrBuf::bufh("shared_secret.shared_secret", &shared_secret.shared_secret)
         );
+
+        self.key_agreement = shared_secret.public_key.clone();
 
         // https://fidoalliance.org/specs/fido-v2.1-rd-20210309/fido-client-to-authenticator-protocol-v2.1-rd-20210309.html#sctn-hmac-secret-extension
 

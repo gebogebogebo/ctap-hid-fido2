@@ -8,7 +8,7 @@ use std::collections::BTreeMap;
 use std::collections::HashMap;
 use std::fmt;
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default,Clone)]
 pub struct CoseKey {
     pub key_type: u16,
     pub algorithm: i32,

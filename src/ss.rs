@@ -4,6 +4,7 @@ use crypto::buffer::{RefReadBuffer, RefWriteBuffer};
 use ring::error::Unspecified;
 use ring::{agreement, digest, rand};
 use untrusted::Input;
+use cose::CoseKey;
 
 use crate::cose;
 use crate::p256;
@@ -11,12 +12,12 @@ use crate::pintoken::PinToken;
 
 #[derive(Debug)]
 pub struct SharedSecret {
-    pub public_key: cose::CoseKey,
+    pub public_key: CoseKey,
     pub shared_secret: [u8; 32],
 }
 
 impl SharedSecret {
-    pub fn new(peer_key: &cose::CoseKey) -> Result<Self, String> {
+    pub fn new(peer_key: &CoseKey) -> Result<Self, String> {
         let rng = rand::SystemRandom::new();
         let private =
             agreement::EphemeralPrivateKey::generate(&agreement::ECDH_P256, &rng).unwrap();
