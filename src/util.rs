@@ -30,7 +30,7 @@ pub fn print_typename<T>(_: T) {
 // for debug
 #[allow(dead_code)]
 pub(crate) fn is_debug() -> bool {
-    true
+    false
 }
 
 #[allow(dead_code)]
