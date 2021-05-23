@@ -5,10 +5,10 @@ get_assertion API parameters
 use crate::auth_data::Flags;
 use crate::public_key_credential_user_entity::PublicKeyCredentialUserEntity;
 use crate::str_buf::StrBuf;
+use crypto::digest::Digest;
+use crypto::sha2::Sha256;
 use std::fmt;
 use strum_macros::AsRefStr;
-use crypto::sha2::Sha256;
-use crypto::digest::Digest;
 
 /// Assertion Object
 #[derive(Debug, Default, Clone)]
@@ -47,7 +47,7 @@ pub enum Extension {
 }
 
 impl Extension {
-    pub fn create_hmac_secret_from_string(message: &str) -> Extension{
+    pub fn create_hmac_secret_from_string(message: &str) -> Extension {
         let mut salt = [0u8; 32];
         let mut digest = Sha256::new();
         digest.input(&message.as_bytes());

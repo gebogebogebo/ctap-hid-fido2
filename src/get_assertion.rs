@@ -1,5 +1,6 @@
 use crate::client_pin;
 use crate::ctaphid;
+use crate::enc_hmac_sha_256;
 use crate::get_assertion_command;
 use crate::get_assertion_params::Assertion;
 use crate::get_assertion_params::Extension as Gext;
@@ -58,8 +59,8 @@ pub fn get_assertion(
 
         // create pin auth
         if let Some(pin_token) = pin_token {
-            let pin_auth = pin_token.authenticate_v1(&params.client_data_hash);
-            params.pin_auth = pin_auth.to_vec();
+            let sig = enc_hmac_sha_256::authenticate(&pin_token.key, &params.client_data_hash);
+            params.pin_auth = sig[0..16].to_vec();
         }
 
         get_assertion_command::create_payload(params, hmac_ext)

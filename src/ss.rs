@@ -9,6 +9,7 @@ use untrusted::Input;
 use crate::cose;
 use crate::p256;
 use crate::pintoken::PinToken;
+use crate::enc_aes256_cbc;
 
 #[derive(Debug, Default, Clone)]
 pub struct SharedSecret {
@@ -48,41 +49,20 @@ impl SharedSecret {
         Ok(res)
     }
 
-    /*
-    pub fn encrypt_pin(&self, pin: &str) -> Result<[u8; 16], String> {
-        let mut encryptor = aes::cbc_encryptor(
-            aes::KeySize::KeySize256,
-            &self.shared_secret,
-            &[0u8; 16],
-            NoPadding,
-        );
-        let pin_bytes = pin.as_bytes();
-        let hash = digest::digest(&digest::SHA256, &pin_bytes);
-        let in_bytes = &hash.as_ref()[0..16];
-        let mut input = RefReadBuffer::new(&in_bytes);
-        let mut out_bytes = [0; 16];
-        let mut output = RefWriteBuffer::new(&mut out_bytes);
-        encryptor.encrypt(&mut input, &mut output, true).unwrap();
-        Ok(out_bytes)
-    }
-    */
-
     pub fn encrypt_pin(&self, pin: &str) -> Result<[u8; 16], String> {
         self.encrypt(pin.as_bytes())
     }
 
     pub fn encrypt(&self, data: &[u8]) -> Result<[u8; 16], String> {
-        let mut encryptor =
-            aes::cbc_encryptor(aes::KeySize::KeySize256, &self.data, &[0u8; 16], NoPadding);
         let hash = digest::digest(&digest::SHA256, &data);
-        let in_bytes = &hash.as_ref()[0..16];
-        let mut input = RefReadBuffer::new(&in_bytes);
+        let message = &hash.as_ref()[0..16];
+        let enc = enc_aes256_cbc::encrypt_message(&self.data, message);
         let mut out_bytes = [0; 16];
-        let mut output = RefWriteBuffer::new(&mut out_bytes);
-        encryptor.encrypt(&mut input, &mut output, true).unwrap();
+        out_bytes.copy_from_slice(&enc[0..16]);
         Ok(out_bytes)
     }
 
+    // TODO Refactor
     pub fn decrypt_token(&self, data: &mut [u8]) -> Result<PinToken, String> {
         let mut decryptor =
             aes::cbc_decryptor(aes::KeySize::KeySize256, &self.data, &[0u8; 16], NoPadding);

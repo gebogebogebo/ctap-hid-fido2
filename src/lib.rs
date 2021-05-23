@@ -726,9 +726,6 @@ pub fn config(hid_params: &[HidParam]) -> Result<String> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    //use serde_cbor::Value;
-    //use num::NumCast;
-    use ring::{digest, hmac};
 
     #[test]
     fn test_client_pin_get_keyagreement() {
@@ -738,7 +735,6 @@ mod tests {
 
         let send_payload = client_pin_command::create_payload(PinCmd::GetKeyAgreement).unwrap();
         let response_cbor = ctaphid::ctaphid_cbor(&device, &cid, &send_payload).unwrap();
-        //println!("{}",util::to_hex_str(&send_payload));
 
         let key_agreement =
             client_pin_response::parse_cbor_client_pin_get_keyagreement(&response_cbor).unwrap();
@@ -792,15 +788,9 @@ mod tests {
         let client_data_hash =
             hex::decode("E61E2BD6C4612662960B159CD54CF8EFF1A998C89B3742519D11F85E0F5E7876")
                 .unwrap();
-        //println!("- out_bytes({:?})       = {:?}", out_bytes.len(), util::to_hex_str(&out_bytes));
         let check = "F0AC99D6AAD2E199AF9CF25F6568A6F5".to_string();
-
-        let pin_token_dec = pintoken::PinToken {
-            signing_key: hmac::SigningKey::new(&digest::SHA256, &out_bytes),
-            key: out_bytes.to_vec(),
-        };
-        let pin_auth = pin_token_dec.authenticate_v1(&client_data_hash);
-
+        let sig = enc_hmac_sha_256::authenticate(&out_bytes, &client_data_hash);
+        let pin_auth = sig[0..16].to_vec();
         assert_eq!(check, hex::encode(pin_auth).to_uppercase());
     }
 }
