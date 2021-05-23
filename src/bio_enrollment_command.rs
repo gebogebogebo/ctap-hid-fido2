@@ -7,6 +7,7 @@ use crate::pintoken;
 use serde_cbor::to_vec;
 use serde_cbor::Value;
 use std::collections::BTreeMap;
+use crate::enc_hmac_sha_256;
 
 #[allow(dead_code)]
 #[derive(Debug, Copy, Clone, PartialEq)]
@@ -68,7 +69,9 @@ pub fn create_payload(
             let mut message = vec![0x01_u8];
             message.append(&mut vec![sub_command as u8]);
             message.append(&mut sub_command_params_cbor.to_vec());
-            let pin_uv_auth_param = pin_token.authenticate_v2(&message, 16);
+
+            let sig = enc_hmac_sha_256::authenticate(&pin_token.key, &message);
+            let pin_uv_auth_param = sig[0..16].to_vec();
 
             map.insert(Value::Integer(0x05), Value::Bytes(pin_uv_auth_param));
         }
