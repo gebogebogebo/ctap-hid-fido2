@@ -3,9 +3,6 @@
 //
 
 use ctap_hid_fido2::*;
-//use ctap_hid_fido2::util;
-//use ctap_hid_fido2::HidParam;
-//use ctap_hid_fido2::InfoParam;
 use crypto::digest::Digest;
 use crypto::sha2::Sha256;
 use ctap_hid_fido2::str_buf::StrBuf;
@@ -175,9 +172,7 @@ fn test_bio_enrollment_enumerate_enrollments() {
         InfoOption::UserVerificationMgmtPreview,
     ) {
         Ok(result) => {
-            //println!("result = {:?}", result);
             if let Some(v) = result {
-                //println!("some value = {}", v);
                 if v {
                     skip = false
                 };
@@ -238,8 +233,6 @@ fn test_enc_aes256_cbc() {
         util::to_str_hex("37455A8392187439EFAA249617AAB5C2")
     );
 
-    //let dec_data = enc_aes256_cbc::decrypt_message(&key, &enc_data);
-    //println!("{}", StrBuf::bufh("- dec_data", &dec_data));
     let dec_data = enc_aes256_cbc::decrypt_message_str(&key, &enc_data);
     print!("- dec_data = {}", dec_data);
     assert_eq!(dec_data, message);
