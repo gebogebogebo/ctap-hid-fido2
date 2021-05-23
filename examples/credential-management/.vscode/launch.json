@@ -7,7 +7,7 @@
         {
             "type": "lldb",
             "request": "launch",
-            "name": "Debug executable 'credential-management'",
+            "name": "credential-management",
             "cargo": {
                 "args": [
                     "build",
@@ -20,25 +20,6 @@
                 }
             },
             "args": ["-c","0BDF390F1237B556DB51AF378D5795D5531385CCECDB4499D6BAFBD8918460CA"],
-            "cwd": "${workspaceFolder}"
-        },
-        {
-            "type": "lldb",
-            "request": "launch",
-            "name": "Debug unit tests in executable 'credential-management'",
-            "cargo": {
-                "args": [
-                    "test",
-                    "--no-run",
-                    "--bin=credential-management",
-                    "--package=credential-management"
-                ],
-                "filter": {
-                    "name": "credential-management",
-                    "kind": "bin"
-                }
-            },
-            "args": [],
             "cwd": "${workspaceFolder}"
         }
     ]
