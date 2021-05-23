@@ -7,6 +7,8 @@ use crate::public_key_credential_user_entity::PublicKeyCredentialUserEntity;
 use crate::str_buf::StrBuf;
 use std::fmt;
 use strum_macros::AsRefStr;
+use crypto::sha2::Sha256;
+use crypto::digest::Digest;
 
 /// Assertion Object
 #[derive(Debug, Default, Clone)]
@@ -42,4 +44,15 @@ impl fmt::Display for Assertion {
 pub enum Extension {
     #[strum(serialize = "hmac-secret")]
     HmacSecret(Option<[u8; 32]>),
+}
+
+impl Extension {
+    pub fn create_hmac_secret_from_string(message: &str) -> Extension{
+        let mut salt = [0u8; 32];
+        let mut digest = Sha256::new();
+        digest.input(&message.as_bytes());
+        digest.result(&mut salt);
+        //print!("{}", StrBuf::bufh("- salt", &salt));
+        Extension::HmacSecret(Some(salt))
+    }
 }
