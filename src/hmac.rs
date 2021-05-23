@@ -48,11 +48,11 @@ impl HmacExt {
         //  encrypt(key, demPlaintext) → ciphertext
         //      Encrypts a plaintext to produce a ciphertext, which may be longer than the plaintext.
         //      The plaintext is restricted to being a multiple of the AES block size (16 bytes) in length.
-        self.salt_enc = enc_aes256_cbc::encrypt_message(&self.shared_secret.data, salt1);
+        self.salt_enc = enc_aes256_cbc::encrypt_message(&self.shared_secret.secret, salt1);
         //println!("{}", StrBuf::bufh("salt_enc", &self.salt_enc));
 
         // saltAuth
-        let sig = enc_hmac_sha_256::authenticate(&self.shared_secret.data, &self.salt_enc);
+        let sig = enc_hmac_sha_256::authenticate(&self.shared_secret.secret, &self.salt_enc);
         self.salt_auth = sig[0..16].to_vec();
         //println!("{}", StrBuf::bufh("salt_auth", &self.salt_auth));
 
