@@ -1,11 +1,14 @@
 use crate::client_pin;
 use crate::ctaphid;
+use crate::enc_aes256_cbc;
+use crate::enc_hmac_sha_256;
 use crate::get_assertion_command;
 use crate::get_assertion_params::Assertion;
 use crate::get_assertion_params::Extension as Gext;
 use crate::get_assertion_response;
 use crate::get_next_assertion_command;
 use crate::hmac::HmacExt;
+use crate::str_buf::StrBuf;
 #[allow(unused_imports)]
 use crate::util;
 use crate::FidoKeyHid;
@@ -43,6 +46,33 @@ pub fn get_assertion(
     //  - 2) Shared Secret と salt_enc を使って salt_authを生成してみる
     //  - 3) 送られてきた salt_auth と自分が生成した salt_auth が同じであれば verify OK
     //  - 4) salt_enc を復号して salt を導き出す
+    let hmac_ext_tmp = hmac_ext.clone().unwrap();
+
+    // salt_authのチェック
+    let key = &hmac_ext_tmp.shared_secret.data;
+    let message = &hmac_ext_tmp.salt_enc;
+    let sig = enc_hmac_sha_256::authenticate(key, message);
+    println!("{}", StrBuf::bufh("- sig      ", &sig));
+    println!("{}", StrBuf::bufh("- salt_auth", &hmac_ext_tmp.salt_auth));
+
+    let verify = enc_hmac_sha_256::verify(key, message, &sig);
+    println!("- verify    {}", verify);
+
+    let extensions_tmp = extensions.clone();
+    let ext = extensions_tmp.unwrap()[0].clone();
+    let salt;
+    match ext {
+        Gext::HmacSecret(n) => {
+            salt = n.unwrap().to_vec();
+        }
+    }
+    let cbc = enc_aes256_cbc::encrypt_message(key, &salt);
+    print!("{}", StrBuf::bufh("- cbc     ", &cbc));
+    print!("{}", StrBuf::bufh("- salt_enc", &hmac_ext_tmp.salt_enc));
+
+    let a = 0;
+
+    // salt_encのチェック
 
     // TODO memo こちら側でできること
     //  - 1) 送られてきたデータはAES256-CBCなので自分の持っている Shared Secret で復号できる
@@ -91,14 +121,11 @@ pub fn get_assertion(
         let ass = get_next_assertion(&device, &cid).map_err(Error::msg)?;
         asss.push(ass);
     }
-    
+
     Ok(asss)
 }
 
-fn get_next_assertion(
-    device: &FidoKeyHid,
-    cid: &[u8],
-) -> Result<Assertion, String> {
+fn get_next_assertion(device: &FidoKeyHid, cid: &[u8]) -> Result<Assertion, String> {
     let send_payload = get_next_assertion_command::create_payload();
     let response_cbor = ctaphid::ctaphid_cbor(&device, &cid, &send_payload)?;
     get_assertion_response::parse_cbor(&response_cbor)

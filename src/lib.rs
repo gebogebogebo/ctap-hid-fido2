@@ -5,6 +5,7 @@
 
 */
 
+pub mod auth_data;
 mod bio_enrollment;
 mod bio_enrollment_command;
 pub mod bio_enrollment_params;
@@ -21,6 +22,8 @@ mod credential_management_response;
 mod ctapdef;
 mod ctaphid;
 mod ctapihd_nitro;
+pub mod enc_aes256_cbc;
+pub mod enc_hmac_sha_256;
 mod get_assertion;
 mod get_assertion_command;
 pub mod get_assertion_params;
@@ -47,8 +50,6 @@ mod ss;
 pub mod str_buf;
 pub mod util;
 pub mod verifier;
-pub mod auth_data;
-pub mod enc_aes256_cbc;
 
 //
 use crate::bio_enrollment_command::SubCommand as BioCmd;
@@ -742,7 +743,7 @@ mod tests {
         let key_agreement =
             client_pin_response::parse_cbor_client_pin_get_keyagreement(&response_cbor).unwrap();
         println!("authenticatorClientPIN (0x06) - getKeyAgreement");
-        println!("{}",key_agreement);
+        println!("{}", key_agreement);
 
         assert!(true);
     }

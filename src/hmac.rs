@@ -2,14 +2,13 @@ use crate::client_pin_command;
 use crate::client_pin_command::SubCommand as PinCmd;
 use crate::client_pin_response;
 use crate::ctaphid;
-use crate::pintoken;
+use crate::enc_aes256_cbc;
+use crate::enc_hmac_sha_256;
 use crate::ss::SharedSecret;
-//use crate::str_buf::StrBuf;
 use crate::FidoKeyHid;
 use anyhow::{Error, Result};
-use ring::{digest, hmac};
 
-#[derive(Debug, Default,Clone)]
+#[derive(Debug, Default, Clone)]
 pub struct HmacExt {
     pub shared_secret: SharedSecret,
     pub salt_enc: Vec<u8>,
@@ -41,16 +40,7 @@ impl HmacExt {
 
         self.shared_secret = SharedSecret::new(&key_agreement).map_err(Error::msg)?;
 
-        //println!("shared_secret.public_key");
-        //println!("{}", shared_secret.public_key);
-        //println!(
-        //    "{}",
-        //    StrBuf::bufh("shared_secret.shared_secret", &shared_secret.shared_secret)
-        //);
-
-        // https://fidoalliance.org/specs/fido-v2.1-rd-20210309/fido-client-to-authenticator-protocol-v2.1-rd-20210309.html#sctn-hmac-secret-extension
-
-        // saltEnc(0x02)
+        // saltEnc
         //  Encryption of the one or two salts (called salt1 (32 bytes)
         //  and salt2 (32 bytes)) using the shared secret as follows
         // One salt case: encrypt(shared secret, salt1)
@@ -58,18 +48,12 @@ impl HmacExt {
         //  encrypt(key, demPlaintext) → ciphertext
         //      Encrypts a plaintext to produce a ciphertext, which may be longer than the plaintext.
         //      The plaintext is restricted to being a multiple of the AES block size (16 bytes) in length.
-        self.salt_enc = self.shared_secret.encrypt2(salt1).map_err(Error::msg)?.to_vec();
+        self.salt_enc = enc_aes256_cbc::encrypt_message(&self.shared_secret.data, salt1);
         //println!("{}", StrBuf::bufh("salt_enc", &self.salt_enc));
 
-        // saltAuth(0x03)
-        //  authenticate(shared secret, saltEnc)
-        //   authenticate(key, message) → signature
-        let token = pintoken::PinToken {
-            signing_key: hmac::SigningKey::new(&digest::SHA256, &self.shared_secret.data),
-            key: self.shared_secret.data.to_vec(),
-        };
-
-        self.salt_auth = token.authenticate_v2(&self.salt_enc, 16);
+        // saltAuth
+        let sig = enc_hmac_sha_256::authenticate(&self.shared_secret.data, &self.salt_enc);
+        self.salt_auth = sig[0..16].to_vec();
         //println!("{}", StrBuf::bufh("salt_auth", &self.salt_auth));
 
         Ok(())
