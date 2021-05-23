@@ -6,8 +6,30 @@ use ctap_hid_fido2::get_assertion_params::Extension as Gext;
 use ctap_hid_fido2::str_buf::StrBuf;
 use ctap_hid_fido2::verifier;
 use ctap_hid_fido2::HidParam;
+use ctap_hid_fido2::enc_aes256_cbc;
 
 fn main() -> Result<()> {
+    // PEND
+    {
+        // create key
+        let key_str = "this is key.";
+        let mut key = [0u8; 32];
+        let mut digest = Sha256::new();
+        digest.input(&key_str.as_bytes());
+        digest.result(&mut key);
+    
+        let message = "this is message.";
+        let enc_data = enc_aes256_cbc::encrypt_message_str(&key, message);
+        println!("{}", StrBuf::bufh("- enc_data", &enc_data));
+
+        //let dec_data = enc_aes256_cbc::decrypt_message(&key, &enc_data);
+        //println!("{}", StrBuf::bufh("- dec_data", &dec_data));
+        let dec_data = enc_aes256_cbc::decrypt_message_str(&key, &enc_data);
+        println!("- dec_data = {}", dec_data);
+        let a = 0;
+    }
+
+
     println!("----- test-with-pin-non-rk start -----");
 
     // parameter

@@ -48,6 +48,7 @@ pub mod str_buf;
 pub mod util;
 pub mod verifier;
 pub mod auth_data;
+pub mod enc_aes256_cbc;
 
 //
 use crate::bio_enrollment_command::SubCommand as BioCmd;
