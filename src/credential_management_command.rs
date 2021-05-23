@@ -2,13 +2,13 @@
 use crate::util;
 
 use crate::ctapdef;
+use crate::enc_hmac_sha_256;
 use crate::pintoken;
 use crate::public_key_credential_descriptor::PublicKeyCredentialDescriptor;
 use crate::public_key_credential_user_entity::PublicKeyCredentialUserEntity;
 use serde_cbor::to_vec;
 use serde_cbor::Value;
 use std::collections::BTreeMap;
-use crate::enc_hmac_sha_256;
 
 #[allow(dead_code)]
 #[derive(Debug, Copy, Clone, PartialEq)]

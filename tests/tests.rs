@@ -212,9 +212,12 @@ fn test_enc_hmac_sha_256() {
     let message = "this is message.";
     let sig = enc_hmac_sha_256::authenticate(&key, message.as_bytes());
     print!("{}", StrBuf::bufh("- hmac signature", &sig));
-    assert_eq!(sig,util::to_str_hex("BF3D3FCFC4462CDCBEBBBC8AF82EA38B7B5ED4259B2061322C57B5CA696D6080"));
+    assert_eq!(
+        sig,
+        util::to_str_hex("BF3D3FCFC4462CDCBEBBBC8AF82EA38B7B5ED4259B2061322C57B5CA696D6080")
+    );
 
-    let result = enc_hmac_sha_256::verify(&key, message.as_bytes(),&sig);
+    let result = enc_hmac_sha_256::verify(&key, message.as_bytes(), &sig);
     println!("- hmac verify = {}", result);
     assert!(result)
 }
@@ -230,11 +233,14 @@ fn test_enc_aes256_cbc() {
     let message = "this is message.";
     let enc_data = enc_aes256_cbc::encrypt_message_str(&key, message);
     print!("{}", StrBuf::bufh("- enc_data", &enc_data));
-    assert_eq!(enc_data,util::to_str_hex("37455A8392187439EFAA249617AAB5C2"));
+    assert_eq!(
+        enc_data,
+        util::to_str_hex("37455A8392187439EFAA249617AAB5C2")
+    );
 
     //let dec_data = enc_aes256_cbc::decrypt_message(&key, &enc_data);
     //println!("{}", StrBuf::bufh("- dec_data", &dec_data));
     let dec_data = enc_aes256_cbc::decrypt_message_str(&key, &enc_data);
     print!("- dec_data = {}", dec_data);
-    assert_eq!(dec_data,message);
+    assert_eq!(dec_data, message);
 }

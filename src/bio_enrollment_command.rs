@@ -3,11 +3,11 @@ use crate::util;
 
 use crate::bio_enrollment_params::TemplateInfo;
 use crate::ctapdef;
+use crate::enc_hmac_sha_256;
 use crate::pintoken;
 use serde_cbor::to_vec;
 use serde_cbor::Value;
 use std::collections::BTreeMap;
-use crate::enc_hmac_sha_256;
 
 #[allow(dead_code)]
 #[derive(Debug, Copy, Clone, PartialEq)]
