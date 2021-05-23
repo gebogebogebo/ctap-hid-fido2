@@ -10,10 +10,10 @@ use crate::cose;
 use crate::p256;
 use crate::pintoken::PinToken;
 
-#[derive(Debug)]
+#[derive(Debug, Default, Clone)]
 pub struct SharedSecret {
     pub public_key: CoseKey,
-    pub shared_secret: [u8; 32],
+    pub data: [u8; 32],
 }
 
 impl SharedSecret {
@@ -42,9 +42,9 @@ impl SharedSecret {
 
         let mut res = SharedSecret {
             public_key: p256::P256Key::from_bytes(&public).unwrap().to_cose(),
-            shared_secret: [0; 32],
+            data: [0; 32],
         };
-        res.shared_secret.copy_from_slice(shared_secret.as_ref());
+        res.data.copy_from_slice(shared_secret.as_ref());
         Ok(res)
     }
 
@@ -74,7 +74,7 @@ impl SharedSecret {
     pub fn encrypt(&self, data: &[u8]) -> Result<[u8; 16], String> {
         let mut encryptor = aes::cbc_encryptor(
             aes::KeySize::KeySize256,
-            &self.shared_secret,
+            &self.data,
             &[0u8; 16],
             NoPadding,
         );
@@ -90,21 +90,12 @@ impl SharedSecret {
     pub fn encrypt2(&self, data: &[u8]) -> Result<[u8; 32], String> {
         let mut encryptor = aes::cbc_encryptor(
             aes::KeySize::KeySize256,
-            &self.shared_secret,
+            &self.data,
             &[0u8; 16],
             NoPadding,
         );
-
-        // PEND
-        //let hash = digest::digest(&digest::SHA256, &data);
-        let message = "this is test.";
-        let data_pend = message.as_bytes();
-        // PEND
         
-        let hash = digest::digest(&digest::SHA256, &data_pend);
-
-        let in_bytes = &hash.as_ref()[0..32];
-        let mut input = RefReadBuffer::new(&in_bytes);
+        let mut input = RefReadBuffer::new(data);
         let mut out_bytes = [0; 32];
         let mut output = RefWriteBuffer::new(&mut out_bytes);
 
@@ -115,7 +106,7 @@ impl SharedSecret {
     pub fn decrypt_token(&self, data: &mut [u8]) -> Result<PinToken, String> {
         let mut decryptor = aes::cbc_decryptor(
             aes::KeySize::KeySize256,
-            &self.shared_secret,
+            &self.data,
             &[0u8; 16],
             NoPadding,
         );

@@ -19,6 +19,7 @@ pub struct Assertion {
     pub user: PublicKeyCredentialUserEntity,
     pub credential_id: Vec<u8>,
     pub extensions: Vec<Extension>,
+    // row - audh_data
     pub auth_data: Vec<u8>,
 }
 

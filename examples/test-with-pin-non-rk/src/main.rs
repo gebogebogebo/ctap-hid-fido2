@@ -62,20 +62,19 @@ fn main() -> Result<()> {
     );
 
     // PEND
-    let message = "this is test.";
+    let message = "this is test test case 2.";
     let mut salt = [0u8; 32];
     let mut digest = Sha256::new();
     digest.input(&message.as_bytes());
     digest.result(&mut salt);
-    let mut strbuf = StrBuf::new(30);
-    println!("{}", strbuf.appenh("- salt", &salt).build());
+    println!("{}", StrBuf::bufh("- salt", &salt));
     let ext = Gext::HmacSecret(Some(salt));
     //
 
     // Authenticate
     println!("Authenticate - get_assertion_with_pin()");
     let challenge = verifier::create_challenge();
-    println!("{}", strbuf.appenh("- challenge", &challenge).build());
+    println!("{}", StrBuf::bufh("- challenge", &challenge));
 
     /*
     let ass = ctap_hid_fido2::get_assertion(
@@ -98,6 +97,18 @@ fn main() -> Result<()> {
     println!("- Authenticate Success!!");
     println!("Assertion");
     println!("{}", ass);
+
+    println!("Assertion - Extension");
+    for e in &ass.extensions{
+        match e{
+            Gext::HmacSecret(d) => {
+                if let Some(output1_enc) = d{
+                    println!("{}", StrBuf::bufh("- AES256-CBC(SharedSecret,IV=0,output1)", output1_enc));
+                }
+            }
+            
+        }
+    }
 
     println!("Verify");
     let is_success = verifier::verify_assertion(
