@@ -8,7 +8,7 @@
         {
             "type": "lldb",
             "request": "launch",
-            "name": "Debug executable 'get-info'",
+            "name": "get-info",
             "cargo": {
                 "args": [
                     "build",

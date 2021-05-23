@@ -7,7 +7,7 @@
         {
             "type": "lldb",
             "request": "launch",
-            "name": "Debug executable 'nitro-update checkjson'",
+            "name": "nitro-update checkjson",
             "cargo": {
                 "args": [
                     "build",
@@ -25,7 +25,7 @@
         {
             "type": "lldb",
             "request": "launch",
-            "name": "Debug executable 'nitro-update bootloader'",
+            "name": "nitro-update bootloader",
             "cargo": {
                 "args": [
                     "build",
@@ -43,7 +43,7 @@
         {
             "type": "lldb",
             "request": "launch",
-            "name": "Debug executable 'nitro-update flash'",
+            "name": "nitro-update flash",
             "cargo": {
                 "args": [
                     "build",
@@ -61,7 +61,7 @@
         {
             "type": "lldb",
             "request": "launch",
-            "name": "Debug executable 'nitro-update'",
+            "name": "nitro-update",
             "cargo": {
                 "args": [
                     "build",
