@@ -8,44 +8,6 @@ use ctap_hid_fido2::verifier;
 use ctap_hid_fido2::HidParam;
 
 fn main() -> Result<()> {
-    /*
-    {
-        // create key
-        let key_str = "this is key.";
-        let mut key = [0u8; 32];
-        let mut digest = Sha256::new();
-        digest.input(&key_str.as_bytes());
-        digest.result(&mut key);
-
-        let message = "this is message.";
-        let sig = enc_hmac_sha_256::authenticate(&key, message.as_bytes());
-        println!("{}", StrBuf::bufh("- hmac signature", &sig));
-
-        let result = enc_hmac_sha_256::verify(&key, message.as_bytes(),&sig);
-        println!("- hmac verify = {}", resutl);
-    }
-     */
-    /*
-    // PEND
-    {
-        // create key
-        let key_str = "this is key.";
-        let mut key = [0u8; 32];
-        let mut digest = Sha256::new();
-        digest.input(&key_str.as_bytes());
-        digest.result(&mut key);
-
-        let message = "this is message.";
-        let enc_data = enc_aes256_cbc::encrypt_message_str(&key, message);
-        println!("{}", StrBuf::bufh("- enc_data", &enc_data));
-
-        //let dec_data = enc_aes256_cbc::decrypt_message(&key, &enc_data);
-        //println!("{}", StrBuf::bufh("- dec_data", &dec_data));
-        let dec_data = enc_aes256_cbc::decrypt_message_str(&key, &enc_data);
-        println!("- dec_data = {}", dec_data);
-    }
-     */
-
     println!("----- test-with-pin-non-rk start -----");
 
     // parameter
@@ -71,7 +33,7 @@ fn main() -> Result<()> {
         &challenge,
         Some(pin),
     )?;
-    */
+     */
 
     // with extensions
     let ext = Mext::HmacSecret(Some(true));
@@ -105,7 +67,7 @@ fn main() -> Result<()> {
     let mut digest = Sha256::new();
     digest.input(&message.as_bytes());
     digest.result(&mut salt);
-    println!("{}", StrBuf::bufh("- salt", &salt));
+    print!("{}", StrBuf::bufh("- salt", &salt));
     let ext = Gext::HmacSecret(Some(salt));
     //
 

@@ -6,6 +6,10 @@ use ctap_hid_fido2::*;
 //use ctap_hid_fido2::util;
 //use ctap_hid_fido2::HidParam;
 //use ctap_hid_fido2::InfoParam;
+use crypto::digest::Digest;
+use crypto::sha2::Sha256;
+use ctap_hid_fido2::str_buf::StrBuf;
+use ctap_hid_fido2::util;
 
 #[test]
 fn test_get_hid_devices() {
@@ -195,4 +199,42 @@ fn test_bio_enrollment_enumerate_enrollments() {
         Ok(_) => assert!(true),
         Err(_) => assert!(false),
     };
+}
+
+#[test]
+fn test_enc_hmac_sha_256() {
+    let key_str = "this is key.";
+    let mut key = [0u8; 32];
+    let mut digest = Sha256::new();
+    digest.input(&key_str.as_bytes());
+    digest.result(&mut key);
+
+    let message = "this is message.";
+    let sig = enc_hmac_sha_256::authenticate(&key, message.as_bytes());
+    print!("{}", StrBuf::bufh("- hmac signature", &sig));
+    assert_eq!(sig,util::to_str_hex("BF3D3FCFC4462CDCBEBBBC8AF82EA38B7B5ED4259B2061322C57B5CA696D6080"));
+
+    let result = enc_hmac_sha_256::verify(&key, message.as_bytes(),&sig);
+    println!("- hmac verify = {}", result);
+    assert!(result)
+}
+
+#[test]
+fn test_enc_aes256_cbc() {
+    let key_str = "this is key.";
+    let mut key = [0u8; 32];
+    let mut digest = Sha256::new();
+    digest.input(&key_str.as_bytes());
+    digest.result(&mut key);
+
+    let message = "this is message.";
+    let enc_data = enc_aes256_cbc::encrypt_message_str(&key, message);
+    print!("{}", StrBuf::bufh("- enc_data", &enc_data));
+    assert_eq!(enc_data,util::to_str_hex("37455A8392187439EFAA249617AAB5C2"));
+
+    //let dec_data = enc_aes256_cbc::decrypt_message(&key, &enc_data);
+    //println!("{}", StrBuf::bufh("- dec_data", &dec_data));
+    let dec_data = enc_aes256_cbc::decrypt_message_str(&key, &enc_data);
+    print!("- dec_data = {}", dec_data);
+    assert_eq!(dec_data,message);
 }
