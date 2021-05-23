@@ -1,6 +1,7 @@
 use anyhow::Result;
-use ctap_hid_fido2;
-use ctap_hid_fido2::util;
+use ctap_hid_fido2::get_assertion_params::Extension as Gext;
+use ctap_hid_fido2::make_credential_params::Extension as Mext;
+use ctap_hid_fido2::str_buf::StrBuf;
 use ctap_hid_fido2::verifier;
 use ctap_hid_fido2::HidParam;
 
@@ -8,65 +9,94 @@ fn main() -> Result<()> {
     println!("----- test-with-pin-non-rk start -----");
 
     // parameter
+    let hmac_make=false;
+    let hmac_get=false;
     let rpid = "test.com";
     let pin = "1234";
     let challenge = verifier::create_challenge();
 
     // Register
-    println!("Register - make_credential()");
-    println!("- rpid          = {:?}", rpid);
+    let mut strbuf = StrBuf::new(30);
     println!(
-        "- challenge({:02}) = {:?}",
-        challenge.len(),
-        util::to_hex_str(&challenge)
+        "{}",
+        strbuf
+            .appent("Register - make_credential()")
+            .append("- rpid", &rpid)
+            .appenh("- challenge", &challenge)
+            .append("- hmac-secret", &hmac_make)
+            .build()
     );
 
-    let att = ctap_hid_fido2::make_credential(
-        &HidParam::get_default_params(),
-        rpid,
-        &challenge,
-        Some(pin),
-    )?;
+    let att = if hmac_make{
+        // with extensions
+        let ext = Mext::HmacSecret(Some(true));
+        ctap_hid_fido2::make_credential_with_extensions(
+            &HidParam::get_default_params(),
+            rpid,
+            &challenge,
+            Some(pin),
+            Some(&vec![ext]),
+        )?
+    }else{
+        ctap_hid_fido2::make_credential(
+            &HidParam::get_default_params(),
+            rpid,
+            &challenge,
+            Some(pin),
+        )?
+    };
 
-    println!("- Register Success!!");
+
+    println!("!! Register Success !!");
     println!("Attestation");
     println!("{}", att);
 
     println!("Verify");
     let verify_result = verifier::verify_attestation(rpid, &challenge, &att);
+
+    let mut strbuf = StrBuf::new(30);
     println!(
-        "- is_success                   = {:?}",
-        verify_result.is_success
+        "{}",
+        strbuf
+            .append("- is_success", &verify_result.is_success)
+            .appenh("- credential_id", &verify_result.credential_id)
+            .build()
     );
-    println!(
-        "- credential_id({:02})            = {:?}",
-        verify_result.credential_id.len(),
-        util::to_hex_str(&verify_result.credential_id)
-    );
-    println!(
-        "- credential_publickey_der({:02}) = {:?}",
-        verify_result.credential_publickey_der.len(),
-        util::to_hex_str(&verify_result.credential_publickey_der)
-    );
-    println!("");
 
     // Authenticate
-    println!("Authenticate - get_assertion_with_pin()");
     let challenge = verifier::create_challenge();
+    let mut strbuf = StrBuf::new(30);
     println!(
-        "- challenge({:02}) = {:?}",
-        challenge.len(),
-        util::to_hex_str(&challenge)
+        "{}",
+        strbuf
+            .appent("Authenticate - get_assertion_with_pin()")
+            .appenh("- challenge", &challenge)
+            .append("- hmac-secret", &hmac_get)
+            .build()
     );
 
-    let ass = ctap_hid_fido2::get_assertion(
-        &HidParam::get_default_params(),
-        rpid,
-        &challenge,
-        &verify_result.credential_id,
-        Some(pin),
-    )?;
-    println!("- Authenticate Success!!");
+
+    let ass = if hmac_get{
+        let ext = Gext::create_hmac_secret_from_string("this is test");
+        ctap_hid_fido2::get_assertion_with_extensios(
+            &HidParam::get_default_params(),
+            rpid,
+            &challenge,
+            &verify_result.credential_id,
+            Some(pin),
+            Some(&vec![ext]),
+        )?    
+    }else{
+        ctap_hid_fido2::get_assertion(
+            &HidParam::get_default_params(),
+            rpid,
+            &challenge,
+            &verify_result.credential_id,
+            Some(pin),
+        )?
+    };
+
+    println!("!! Authenticate Success !!");
     println!("Assertion");
     println!("{}", ass);
 

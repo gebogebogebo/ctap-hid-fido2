@@ -7,29 +7,10 @@
         {
             "type": "lldb",
             "request": "launch",
-            "name": "Debug executable 'nitro'",
+            "name": "nitro",
             "cargo": {
                 "args": [
                     "build",
-                    "--bin=nitro",
-                    "--package=nitro"
-                ],
-                "filter": {
-                    "name": "nitro",
-                    "kind": "bin"
-                }
-            },
-            "args": [],
-            "cwd": "${workspaceFolder}"
-        },
-        {
-            "type": "lldb",
-            "request": "launch",
-            "name": "Debug unit tests in executable 'nitro'",
-            "cargo": {
-                "args": [
-                    "test",
-                    "--no-run",
                     "--bin=nitro",
                     "--package=nitro"
                 ],

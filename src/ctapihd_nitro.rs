@@ -24,7 +24,8 @@ const CTAPHID_GETSTATUS: u8 = ctaphid::CTAP_FRAME_INIT | 0x71;
 // GETVERSION
 pub fn ctaphid_nitro_get_version(device: &FidoKeyHid, cid: &[u8]) -> Result<String, String> {
     let payload: Vec<u8> = Vec::new();
-    let version = match ctaphid_nitro_send_and_response2(device, cid, CTAPHID_GETVERSION, &payload) {
+    let version = match ctaphid_nitro_send_and_response2(device, cid, CTAPHID_GETVERSION, &payload)
+    {
         Ok(version) => version,
         Err(err) => return Err(err),
     };
@@ -64,7 +65,7 @@ pub fn ctaphid_nitro_enter_boot(device: &FidoKeyHid, cid: &[u8]) -> Result<(), S
     Ok(())
 }
 
-pub fn ctaphid_nitro_boot(device: &FidoKeyHid, cid: &[u8],payload: &[u8]) -> Result<(), String> {
+pub fn ctaphid_nitro_boot(device: &FidoKeyHid, cid: &[u8], payload: &[u8]) -> Result<(), String> {
     let _result = ctaphid_nitro_send_and_response2(device, cid, CTAPHID_BOOT, payload)?;
     Ok(())
 }
@@ -75,11 +76,11 @@ pub fn ctaphid_nitro_send_and_response2(
     command: u8,
     payload: &[u8],
 ) -> Result<Vec<u8>, String> {
-    let buf = ctaphid::ctaphid_xxx(device,cid,command,&payload.to_vec())?;
+    let buf = ctaphid::ctaphid_xxx(device, cid, command, &payload.to_vec())?;
     let st = ctaphid_cbor_response_nitro(&buf);
     if st.0 != command {
         Err("ctaphid_cbor_response_nitro".into())
-    }else{
+    } else {
         Ok(st.1)
     }
 }

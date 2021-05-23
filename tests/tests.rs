@@ -3,9 +3,10 @@
 //
 
 use ctap_hid_fido2::*;
-//use ctap_hid_fido2::util;
-//use ctap_hid_fido2::HidParam;
-//use ctap_hid_fido2::InfoParam;
+use crypto::digest::Digest;
+use crypto::sha2::Sha256;
+use ctap_hid_fido2::str_buf::StrBuf;
+use ctap_hid_fido2::util;
 
 #[test]
 fn test_get_hid_devices() {
@@ -29,7 +30,10 @@ fn test_get_info() {
 
 #[test]
 fn test_get_info_u2f() {
-    match ctap_hid_fido2::enable_info_param(&HidParam::get_default_params(),InfoParam::VersionsU2FV2) {
+    match ctap_hid_fido2::enable_info_param(
+        &HidParam::get_default_params(),
+        InfoParam::VersionsU2Fv2,
+    ) {
         Ok(result) => {
             if !result {
                 // Skip
@@ -81,7 +85,10 @@ fn test_make_credential_with_pin_non_rk() {
 
 #[test]
 fn test_credential_management_get_creds_metadata() {
-    match ctap_hid_fido2::enable_info_param(&HidParam::get_default_params(),InfoParam::VersionsFIDO21PRE) {
+    match ctap_hid_fido2::enable_info_param(
+        &HidParam::get_default_params(),
+        InfoParam::VersionsFido21Pre,
+    ) {
         Ok(result) => {
             if !result {
                 // Skip
@@ -103,7 +110,10 @@ fn test_credential_management_get_creds_metadata() {
 
 #[test]
 fn test_credential_management_enumerate_rps() {
-    match ctap_hid_fido2::enable_info_param(&HidParam::get_default_params(),InfoParam::VersionsFIDO21PRE) {
+    match ctap_hid_fido2::enable_info_param(
+        &HidParam::get_default_params(),
+        InfoParam::VersionsFido21Pre,
+    ) {
         Ok(result) => {
             if !result {
                 // Skip
@@ -126,22 +136,28 @@ fn test_credential_management_enumerate_rps() {
 #[test]
 fn test_bio_enrollment_get_fingerprint_sensor_info() {
     let mut skip = true;
-    match ctap_hid_fido2::enable_info_option(&HidParam::get_default_params(),InfoOption::UserVerificationMgmtPreview) {
+    match ctap_hid_fido2::enable_info_option(
+        &HidParam::get_default_params(),
+        InfoOption::UserVerificationMgmtPreview,
+    ) {
         Ok(result) => {
             //println!("result = {:?}", result);
             if let Some(v) = result {
                 //println!("some value = {}", v);
-                if v {skip=false};
+                if v {
+                    skip = false
+                };
             }
         }
         Err(_) => assert!(false),
     };
 
     // skip
-    if skip {return};
+    if skip {
+        return;
+    };
 
-    match ctap_hid_fido2::bio_enrollment_get_fingerprint_sensor_info(
-        &HidParam::get_default_params())
+    match ctap_hid_fido2::bio_enrollment_get_fingerprint_sensor_info(&HidParam::get_default_params())
     {
         Ok(_) => assert!(true),
         Err(_) => assert!(false),
@@ -151,19 +167,24 @@ fn test_bio_enrollment_get_fingerprint_sensor_info() {
 #[test]
 fn test_bio_enrollment_enumerate_enrollments() {
     let mut skip = true;
-    match ctap_hid_fido2::enable_info_option(&HidParam::get_default_params(),InfoOption::UserVerificationMgmtPreview) {
+    match ctap_hid_fido2::enable_info_option(
+        &HidParam::get_default_params(),
+        InfoOption::UserVerificationMgmtPreview,
+    ) {
         Ok(result) => {
-            //println!("result = {:?}", result);
             if let Some(v) = result {
-                //println!("some value = {}", v);
-                if v {skip=false};
+                if v {
+                    skip = false
+                };
             }
         }
         Err(_) => assert!(false),
     };
 
     // skip
-    if skip {return};
+    if skip {
+        return;
+    };
 
     let pin = "1234";
     match ctap_hid_fido2::bio_enrollment_enumerate_enrollments(
@@ -173,4 +194,46 @@ fn test_bio_enrollment_enumerate_enrollments() {
         Ok(_) => assert!(true),
         Err(_) => assert!(false),
     };
+}
+
+#[test]
+fn test_enc_hmac_sha_256() {
+    let key_str = "this is key.";
+    let mut key = [0u8; 32];
+    let mut digest = Sha256::new();
+    digest.input(&key_str.as_bytes());
+    digest.result(&mut key);
+
+    let message = "this is message.";
+    let sig = enc_hmac_sha_256::authenticate(&key, message.as_bytes());
+    print!("{}", StrBuf::bufh("- hmac signature", &sig));
+    assert_eq!(
+        sig,
+        util::to_str_hex("BF3D3FCFC4462CDCBEBBBC8AF82EA38B7B5ED4259B2061322C57B5CA696D6080")
+    );
+
+    let result = enc_hmac_sha_256::verify(&key, message.as_bytes(), &sig);
+    println!("- hmac verify = {}", result);
+    assert!(result)
+}
+
+#[test]
+fn test_enc_aes256_cbc() {
+    let key_str = "this is key.";
+    let mut key = [0u8; 32];
+    let mut digest = Sha256::new();
+    digest.input(&key_str.as_bytes());
+    digest.result(&mut key);
+
+    let message = "this is message.";
+    let enc_data = enc_aes256_cbc::encrypt_message_str(&key, message);
+    print!("{}", StrBuf::bufh("- enc_data", &enc_data));
+    assert_eq!(
+        enc_data,
+        util::to_str_hex("37455A8392187439EFAA249617AAB5C2")
+    );
+
+    let dec_data = enc_aes256_cbc::decrypt_message_str(&key, &enc_data);
+    print!("- dec_data = {}", dec_data);
+    assert_eq!(dec_data, message);
 }

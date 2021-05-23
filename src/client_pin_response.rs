@@ -18,7 +18,7 @@ pub fn parse_cbor_client_pin_get_pin_token(bytes: &[u8]) -> Result<Vec<u8>, Stri
             }
         }
     }
-    return Err("parse_cbor_client_pin_get_pin_token error".into());
+    Err("parse_cbor_client_pin_get_pin_token error".into())
 }
 
 pub fn parse_cbor_client_pin_get_keyagreement(bytes: &[u8]) -> Result<cose::CoseKey, String> {
@@ -33,7 +33,7 @@ pub fn parse_cbor_client_pin_get_keyagreement(bytes: &[u8]) -> Result<cose::Cose
             }
         }
     }
-    return Err("parse_cbor_client_pin_get_keyagreement error".into());
+    Err("parse_cbor_client_pin_get_keyagreement error".into())
 }
 
 pub fn parse_cbor_client_pin_get_retries(bytes: &[u8]) -> Result<Pin, String> {

@@ -2,7 +2,7 @@
 get_info API parameters
 */
 
-use crate::util;
+use crate::str_buf::StrBuf;
 use std::fmt;
 
 #[derive(Debug, Default)]
@@ -24,40 +24,24 @@ pub struct Info {
 
 impl fmt::Display for Info {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let tmp1 = format!("- versions                      = ");
-        let tmp2 = format!("- extensions                    = ");
-        let tmp3 = format!("- aaguid({:02})                    = ", self.aaguid.len());
-        let tmp4 = format!("- options                       = ");
-        let tmp5 = format!("- max_msg_size                  = ");
-        let tmp6 = format!("- pin_uv_auth_protocols         = ");
-        let tmp7 = format!("- max_credential_count_in_list  = ");
-        let tmp8 = format!("- max_credential_id_length      = ");
-        let tmp9 = format!("- transports                    = ");
-        let tmpa = format!("- algorithms                    = ");
-
-        write!(
-            f,
-            "{}{:?}\n{}{:?}\n{}{}\n{}{:?}\n{}{:?}\n{}{:?}\n{}{:?}\n{}{:?}\n{}{:?}\n{}{:?}",
-            tmp1,
-            self.versions,
-            tmp2,
-            self.extensions,
-            tmp3,
-            util::to_hex_str(&self.aaguid),
-            tmp4,
-            self.options,
-            tmp5,
-            self.max_msg_size,
-            tmp6,
-            self.pin_uv_auth_protocols,
-            tmp7,
-            self.max_credential_count_in_list,
-            tmp8,
-            self.max_credential_id_length,
-            tmp9,
-            self.transports,
-            tmpa,
-            self.algorithms,
-        )
+        let mut strbuf = StrBuf::new(30);
+        strbuf
+            .append("- versions", &format!("{:?}", self.versions))
+            .append("- extensions", &format!("{:?}", self.extensions))
+            .appenh("- aaguid", &self.aaguid)
+            .append("- options", &format!("{:?}", self.options))
+            .append("- max_msg_size", &self.max_msg_size)
+            .append(
+                "- pin_uv_auth_protocols",
+                &format!("{:?}", self.pin_uv_auth_protocols),
+            )
+            .append(
+                "- max_credential_count_in_list",
+                &self.max_credential_count_in_list,
+            )
+            .append("- max_credential_id_length", &self.max_credential_id_length)
+            .append("- transports", &format!("{:?}", self.transports))
+            .append("- algorithms", &format!("{:?}", self.algorithms));
+        write!(f, "{}", strbuf.build())
     }
 }

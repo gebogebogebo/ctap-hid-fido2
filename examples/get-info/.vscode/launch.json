@@ -8,7 +8,7 @@
         {
             "type": "lldb",
             "request": "launch",
-            "name": "Debug executable 'get-info'",
+            "name": "get-info",
             "cargo": {
                 "args": [
                     "build",
@@ -22,25 +22,6 @@
             },
             "args": [],
             "cwd": "${workspaceFolder}"
-        },
-        {
-            "type": "lldb",
-            "request": "launch",
-            "name": "Debug unit tests in executable 'get-info'",
-            "cargo": {
-                "args": [
-                    "test",
-                    "--no-run",
-                    "--bin=get-info",
-                    "--package=get-info"
-                ],
-                "filter": {
-                    "name": "get-info",
-                    "kind": "bin"
-                }
-            },
-            "args": [],
-            "cwd": "${workspaceFolder}"
         }
-    ]
+   ]
 }

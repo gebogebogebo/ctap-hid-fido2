@@ -1,7 +1,9 @@
 use crate::client_pin;
 use crate::ctaphid;
+use crate::enc_hmac_sha_256;
 use crate::make_credential_command;
 use crate::make_credential_params;
+use crate::make_credential_params::Extension;
 use crate::make_credential_response;
 use crate::public_key_credential_user_entity::PublicKeyCredentialUserEntity;
 use crate::FidoKeyHid;
@@ -18,6 +20,7 @@ pub fn make_credential(
     rk: bool,
     rkparam: Option<&PublicKeyCredentialUserEntity>,
     uv: Option<bool>,
+    extensions: Option<&Vec<Extension>>,
 ) -> Result<make_credential_params::Attestation, String> {
     // init
     let device = FidoKeyHid::new(hid_params)?;
@@ -51,40 +54,23 @@ pub fn make_credential(
             params.user_name = rkp.name.to_string();
             params.user_display_name = rkp.display_name.to_string();
         }
-        //println!("- client_data_hash({:02})    = {:?}", params.client_data_hash.len(),util::to_hex_str(&params.client_data_hash));
 
         // get pintoken & create pin auth
         if let Some(pin) = pin {
-            if pin.len() > 0 {
-                let pin_auth = client_pin::get_pin_token(&device, &cid, pin)?
-                    .authenticate_v1(&params.client_data_hash);
-
-                //println!("- pin_auth({:02})    = {:?}", pin_auth.len(),util::to_hex_str(&pin_auth));
-                params.pin_auth = pin_auth.to_vec();
+            if !pin.is_empty() {
+                let pin_token = client_pin::get_pin_token(&device, &cid, pin)?;
+                let sig = enc_hmac_sha_256::authenticate(&pin_token.key, &params.client_data_hash);
+                params.pin_auth = sig[0..16].to_vec();
             }
         }
 
-        make_credential_command::create_payload(params)
+        make_credential_command::create_payload(params, extensions)
     };
-
-    if util::is_debug() == true {
-        println!(
-            "- make_credential({:02})    = {:?}",
-            send_payload.len(),
-            util::to_hex_str(&send_payload)
-        );
-    }
+    util::debugp("- make_credential", &send_payload);
 
     // send & response
     let response_cbor = ctaphid::ctaphid_cbor(&device, &cid, &send_payload)?;
-
-    if util::is_debug() == true {
-        println!(
-            "- response_cbor({:02})    = {:?}",
-            response_cbor.len(),
-            util::to_hex_str(&response_cbor)
-        );
-    }
+    util::debugp("- response_cbor", &response_cbor);
 
     let att = make_credential_response::parse_cbor(&response_cbor)?;
     Ok(att)

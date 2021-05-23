@@ -77,7 +77,7 @@ fn main() -> Result<()> {
 
     match ctap_hid_fido2::enable_info_param(
         &HidParam::get_default_params(),
-        InfoParam::VersionsFIDO21PRE,
+        InfoParam::VersionsFido21Pre,
     ) {
         Ok(result) => println!("FIDO 2.1 PRE = {:?}", result),
         Err(error) => println!("- error: {:?}", error),
@@ -101,7 +101,7 @@ fn main() -> Result<()> {
         &HidParam::get_default_params(),
         InfoOption::UserVerificationMgmtPreview,
     ) {
-        Ok(result) => println!("CredentialMgmtPreview = {:?}", result),
+        Ok(result) => println!("UserVerificationMgmtPreview = {:?}", result),
         Err(error) => println!("- error: {:?}", error),
     }
 
