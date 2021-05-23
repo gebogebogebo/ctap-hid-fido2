@@ -4,6 +4,7 @@ use crate::util;
 use serde_cbor::to_vec;
 use serde_cbor::Value;
 use std::collections::BTreeMap;
+use crate::get_assertion_params::Extension;
 
 #[derive(Debug, Default)]
 pub struct Params {
@@ -70,7 +71,7 @@ pub fn create_payload(params: Params, hmac_ext: Option<HmacExt>) -> Vec<u8> {
             // saltAuth(0x03)
             param.insert(Value::Integer(0x03), Value::Bytes(hmac_ext.salt_auth));
 
-            ext_val.insert(Value::Text("hmac-secret".to_string()), Value::Map(param));
+            ext_val.insert(Value::Text(Extension::HmacSecret(None).to_string()), Value::Map(param));
 
             Some(Value::Map(ext_val))
         } else {
