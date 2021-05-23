@@ -8,7 +8,7 @@ use std::collections::BTreeMap;
 use std::collections::HashMap;
 use std::fmt;
 
-#[derive(Debug, Default,Clone)]
+#[derive(Debug, Default, Clone)]
 pub struct CoseKey {
     pub key_type: u16,
     pub algorithm: i32,
@@ -132,8 +132,10 @@ impl CoseKey {
     pub fn create(&mut self, key_type: u16, algorithm: i32, crv: i32, x: &str, y: &str) {
         self.key_type = key_type;
         self.algorithm = algorithm;
-        self.parameters.insert(-1,Value::Integer(crv.into()));
-        self.parameters.insert(-2,Value::Bytes(util::to_str_hex(x)));
-        self.parameters.insert(-3,Value::Bytes(util::to_str_hex(y)));
+        self.parameters.insert(-1, Value::Integer(crv.into()));
+        self.parameters
+            .insert(-2, Value::Bytes(util::to_str_hex(x)));
+        self.parameters
+            .insert(-3, Value::Bytes(util::to_str_hex(y)));
     }
 }

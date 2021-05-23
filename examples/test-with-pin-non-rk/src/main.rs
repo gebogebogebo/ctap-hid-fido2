@@ -1,14 +1,31 @@
 use anyhow::Result;
 use crypto::digest::Digest;
 use crypto::sha2::Sha256;
-use ctap_hid_fido2::make_credential_params::Extension as Mext;
 use ctap_hid_fido2::get_assertion_params::Extension as Gext;
+use ctap_hid_fido2::make_credential_params::Extension as Mext;
 use ctap_hid_fido2::str_buf::StrBuf;
 use ctap_hid_fido2::verifier;
 use ctap_hid_fido2::HidParam;
-use ctap_hid_fido2::enc_aes256_cbc;
 
 fn main() -> Result<()> {
+    /*
+    {
+        // create key
+        let key_str = "this is key.";
+        let mut key = [0u8; 32];
+        let mut digest = Sha256::new();
+        digest.input(&key_str.as_bytes());
+        digest.result(&mut key);
+
+        let message = "this is message.";
+        let sig = enc_hmac_sha_256::authenticate(&key, message.as_bytes());
+        println!("{}", StrBuf::bufh("- hmac signature", &sig));
+
+        let result = enc_hmac_sha_256::verify(&key, message.as_bytes(),&sig);
+        println!("- hmac verify = {}", resutl);
+    }
+     */
+    /*
     // PEND
     {
         // create key
@@ -17,7 +34,7 @@ fn main() -> Result<()> {
         let mut digest = Sha256::new();
         digest.input(&key_str.as_bytes());
         digest.result(&mut key);
-    
+
         let message = "this is message.";
         let enc_data = enc_aes256_cbc::encrypt_message_str(&key, message);
         println!("{}", StrBuf::bufh("- enc_data", &enc_data));
@@ -26,9 +43,8 @@ fn main() -> Result<()> {
         //println!("{}", StrBuf::bufh("- dec_data", &dec_data));
         let dec_data = enc_aes256_cbc::decrypt_message_str(&key, &enc_data);
         println!("- dec_data = {}", dec_data);
-        let a = 0;
     }
-
+     */
 
     println!("----- test-with-pin-non-rk start -----");
 
@@ -121,14 +137,16 @@ fn main() -> Result<()> {
     println!("{}", ass);
 
     println!("Assertion - Extension");
-    for e in &ass.extensions{
-        match e{
+    for e in &ass.extensions {
+        match e {
             Gext::HmacSecret(d) => {
-                if let Some(output1_enc) = d{
-                    println!("{}", StrBuf::bufh("- AES256-CBC(SharedSecret,IV=0,output1)", output1_enc));
+                if let Some(output1_enc) = d {
+                    println!(
+                        "{}",
+                        StrBuf::bufh("- AES256-CBC(SharedSecret,IV=0,output1)", output1_enc)
+                    );
                 }
             }
-            
         }
     }
 

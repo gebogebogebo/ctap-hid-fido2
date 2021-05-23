@@ -2,9 +2,9 @@ use crate::client_pin_command;
 use crate::client_pin_command::SubCommand as PinCmd;
 use crate::client_pin_response;
 use crate::ctaphid;
+use crate::pintoken::PinToken;
 use crate::ss::SharedSecret;
 use crate::FidoKeyHid;
-use crate::pintoken::PinToken;
 
 /*
 pub fn get_shared_secret(
@@ -56,11 +56,7 @@ pub fn get_pin_token2(
 }
 */
 
-pub fn get_pin_token(
-    device: &FidoKeyHid,
-    cid: &[u8],
-    pin: &str,
-) -> Result<PinToken, String> {
+pub fn get_pin_token(device: &FidoKeyHid, cid: &[u8], pin: &str) -> Result<PinToken, String> {
     if !pin.is_empty() {
         let send_payload = client_pin_command::create_payload(PinCmd::GetKeyAgreement)?;
         let response_cbor = ctaphid::ctaphid_cbor(device, cid, &send_payload)?;

@@ -1,13 +1,16 @@
+use crate::auth_data::Flags;
 use crate::get_assertion_params;
+use crate::get_assertion_params::Extension;
 use crate::public_key_credential_user_entity::PublicKeyCredentialUserEntity;
 use crate::util;
 use byteorder::{BigEndian, ReadBytesExt};
 use serde_cbor::Value;
 use std::io::Cursor;
-use crate::auth_data::Flags;
-use crate::get_assertion_params::Extension;
 
-fn parse_cbor_authdata(authdata: Vec<u8>, ass: &mut get_assertion_params::Assertion) -> Result<(),String>{
+fn parse_cbor_authdata(
+    authdata: Vec<u8>,
+    ass: &mut get_assertion_params::Assertion,
+) -> Result<(), String> {
     // copy
     ass.auth_data = authdata.to_vec();
 
@@ -55,7 +58,8 @@ fn parse_cbor_authdata(authdata: Vec<u8>, ass: &mut get_assertion_params::Assert
                     let v = util::cbor_value_to_vec_u8(val)?;
                     let mut hmac_secret_0 = [0u8; 32];
                     hmac_secret_0.copy_from_slice(&v[0..32]);
-                    ass.extensions.push(Extension::HmacSecret(Some(hmac_secret_0)));
+                    ass.extensions
+                        .push(Extension::HmacSecret(Some(hmac_secret_0)));
                 }
             }
         }

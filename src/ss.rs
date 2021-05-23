@@ -1,10 +1,10 @@
+use cose::CoseKey;
 use crypto::aes;
 use crypto::blockmodes::NoPadding;
 use crypto::buffer::{RefReadBuffer, RefWriteBuffer};
 use ring::error::Unspecified;
 use ring::{agreement, digest, rand};
 use untrusted::Input;
-use cose::CoseKey;
 
 use crate::cose;
 use crate::p256;
@@ -72,12 +72,8 @@ impl SharedSecret {
     }
 
     pub fn encrypt(&self, data: &[u8]) -> Result<[u8; 16], String> {
-        let mut encryptor = aes::cbc_encryptor(
-            aes::KeySize::KeySize256,
-            &self.data,
-            &[0u8; 16],
-            NoPadding,
-        );
+        let mut encryptor =
+            aes::cbc_encryptor(aes::KeySize::KeySize256, &self.data, &[0u8; 16], NoPadding);
         let hash = digest::digest(&digest::SHA256, &data);
         let in_bytes = &hash.as_ref()[0..16];
         let mut input = RefReadBuffer::new(&in_bytes);
@@ -87,29 +83,9 @@ impl SharedSecret {
         Ok(out_bytes)
     }
 
-    pub fn encrypt2(&self, data: &[u8]) -> Result<[u8; 32], String> {
-        let mut encryptor = aes::cbc_encryptor(
-            aes::KeySize::KeySize256,
-            &self.data,
-            &[0u8; 16],
-            NoPadding,
-        );
-        
-        let mut input = RefReadBuffer::new(data);
-        let mut out_bytes = [0; 32];
-        let mut output = RefWriteBuffer::new(&mut out_bytes);
-
-        encryptor.encrypt(&mut input, &mut output, true).unwrap();
-        Ok(out_bytes)
-    }
-
     pub fn decrypt_token(&self, data: &mut [u8]) -> Result<PinToken, String> {
-        let mut decryptor = aes::cbc_decryptor(
-            aes::KeySize::KeySize256,
-            &self.data,
-            &[0u8; 16],
-            NoPadding,
-        );
+        let mut decryptor =
+            aes::cbc_decryptor(aes::KeySize::KeySize256, &self.data, &[0u8; 16], NoPadding);
         let mut input = RefReadBuffer::new(data);
         let mut out_bytes = [0; 32];
         let mut output = RefWriteBuffer::new(&mut out_bytes);
