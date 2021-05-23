@@ -1,6 +1,4 @@
 use anyhow::Result;
-use crypto::digest::Digest;
-use crypto::sha2::Sha256;
 use ctap_hid_fido2::get_assertion_params::Extension as Gext;
 use ctap_hid_fido2::make_credential_params::Extension as Mext;
 use ctap_hid_fido2::str_buf::StrBuf;
@@ -61,16 +59,6 @@ fn main() -> Result<()> {
             .build()
     );
 
-    // PEND
-    let message = "this is test test case 2.";
-    let mut salt = [0u8; 32];
-    let mut digest = Sha256::new();
-    digest.input(&message.as_bytes());
-    digest.result(&mut salt);
-    print!("{}", StrBuf::bufh("- salt", &salt));
-    let ext = Gext::HmacSecret(Some(salt));
-    //
-
     // Authenticate
     println!("Authenticate - get_assertion_with_pin()");
     let challenge = verifier::create_challenge();
@@ -85,6 +73,7 @@ fn main() -> Result<()> {
         Some(pin),
     )?;
     */
+    let ext = Gext::create_hmac_secret_from_string("this is test");
     let ass = ctap_hid_fido2::get_assertion_with_extensios(
         &HidParam::get_default_params(),
         rpid,
