@@ -26,7 +26,7 @@ impl P256Key {
             key.y.copy_from_slice(y);
             return Ok(key);
         }
-        return Err(String::from("Err KeyType"));
+        Err(String::from("Err KeyType"))
     }
 
     pub fn from_bytes(bytes: &[u8]) -> Result<Self, String> {

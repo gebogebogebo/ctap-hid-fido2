@@ -7,7 +7,7 @@
         {
             "type": "lldb",
             "request": "launch",
-            "name": "Debug executable 'test-ctap21'",
+            "name": "test-ctap21",
             "cargo": {
                 "args": [
                     "build",
@@ -19,26 +19,7 @@
                     "kind": "bin"
                 }
             },
-            "args": ["bio_enrollment","-r","0001","tempname"],
-            "cwd": "${workspaceFolder}"
-        },
-        {
-            "type": "lldb",
-            "request": "launch",
-            "name": "Debug unit tests in executable 'test-ctap21'",
-            "cargo": {
-                "args": [
-                    "test",
-                    "--no-run",
-                    "--bin=test-ctap21",
-                    "--package=test-ctap21"
-                ],
-                "filter": {
-                    "name": "test-ctap21",
-                    "kind": "bin"
-                }
-            },
-            "args": [],
+            "args": ["bio_enrollment","-e"],
             "cwd": "${workspaceFolder}"
         }
     ]

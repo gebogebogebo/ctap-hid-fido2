@@ -33,7 +33,7 @@ pub fn verify_attestation(
     challenge: &[u8],
     attestation: &make_credential_params::Attestation,
 ) -> AttestationVerifyResult {
-    if verify_rpid(rpid, &attestation.rpid_hash) == false {
+    if !verify_rpid(rpid, &attestation.rpid_hash) {
         return AttestationVerifyResult::default();
     }
 
@@ -61,12 +61,12 @@ pub fn verify_attestation(
         &attestation.attstmt_sig,
     );
 
-    let mut att_result = AttestationVerifyResult::default();
-    att_result.is_success = result;
-    att_result.credential_id = attestation.credential_descriptor.id.to_vec();
-    att_result.credential_publickey_pem = attestation.credential_publickey.pem.to_string();
-    att_result.credential_publickey_der = attestation.credential_publickey.der.to_vec();
-    att_result
+    AttestationVerifyResult {
+        is_success: result,
+        credential_id: attestation.credential_descriptor.id.to_vec(),
+        credential_publickey_pem: attestation.credential_publickey.pem.to_string(),
+        credential_publickey_der: attestation.credential_publickey.der.to_vec(),
+    }
 }
 
 /// Verify Assertion Object
@@ -77,7 +77,7 @@ pub fn verify_assertion(
     assertion: &get_assertion_params::Assertion,
 ) -> bool {
     // Verify rpid
-    if verify_rpid(rpid, &assertion.rpid_hash) == false {
+    if !verify_rpid(rpid, &assertion.rpid_hash) {
         return false;
     }
 
@@ -137,11 +137,7 @@ fn verify_rpid(rpid: &str, rpid_hash: &[u8]) -> bool {
         util::to_hex_str(hash.as_ref())
     };
 
-    if rpid_hash_comp == util::to_hex_str(rpid_hash) {
-        true
-    } else {
-        false
-    }
+    rpid_hash_comp == util::to_hex_str(rpid_hash)
 }
 
 fn print_verify_info(
@@ -150,7 +146,7 @@ fn print_verify_info(
     sig: &[u8],
     verify_result: &Result<(), ring::error::Unspecified>,
 ) {
-    if util::is_debug() == false {
+    if !util::is_debug() {
         return;
     }
 

@@ -5,6 +5,7 @@
 
 */
 
+pub mod auth_data;
 mod bio_enrollment;
 mod bio_enrollment_command;
 pub mod bio_enrollment_params;
@@ -21,6 +22,8 @@ mod credential_management_response;
 mod ctapdef;
 mod ctaphid;
 mod ctapihd_nitro;
+pub mod enc_aes256_cbc;
+pub mod enc_hmac_sha_256;
 mod get_assertion;
 mod get_assertion_command;
 pub mod get_assertion_params;
@@ -30,6 +33,7 @@ mod get_info_command;
 pub mod get_info_params;
 mod get_info_response;
 mod get_next_assertion_command;
+mod hmac;
 mod make_credential;
 mod make_credential_command;
 pub mod make_credential_params;
@@ -43,14 +47,21 @@ pub mod public_key_credential_rp_entity;
 pub mod public_key_credential_user_entity;
 mod selection_command;
 mod ss;
+pub mod str_buf;
 pub mod util;
 pub mod verifier;
 
 //
-use anyhow::{Result,Error};
-use crate::bio_enrollment_params::{FingerprintKind, Modality,TemplateInfo,EnrollStatus1,EnrollStatus2};
+use crate::bio_enrollment_command::SubCommand as BioCmd;
+use crate::bio_enrollment_params::{
+    EnrollStatus1, EnrollStatus2, FingerprintKind, Modality, TemplateInfo,
+};
+use crate::client_pin_command::SubCommand as PinCmd;
+use crate::get_assertion_params::Extension as Gext;
+use crate::make_credential_params::Extension as Mext;
 use crate::public_key_credential_descriptor::PublicKeyCredentialDescriptor;
 use crate::public_key_credential_user_entity::PublicKeyCredentialUserEntity;
+use anyhow::{Error, Result};
 
 #[cfg(not(target_os = "linux"))]
 mod fidokey;
@@ -175,11 +186,12 @@ pub fn get_pin_retries(hid_params: &[HidParam]) -> Result<i32> {
     let cid = ctaphid::ctaphid_init(&device).map_err(Error::msg)?;
 
     let send_payload =
-        client_pin_command::create_payload(client_pin_command::SubCommand::GetRetries).map_err(Error::msg)?;
+        client_pin_command::create_payload(PinCmd::GetRetries).map_err(Error::msg)?;
 
     let response_cbor = ctaphid::ctaphid_cbor(&device, &cid, &send_payload).map_err(Error::msg)?;
 
-    let pin = client_pin_response::parse_cbor_client_pin_get_retries(&response_cbor).map_err(Error::msg)?;
+    let pin = client_pin_response::parse_cbor_client_pin_get_retries(&response_cbor)
+        .map_err(Error::msg)?;
 
     Ok(pin.retries)
 }
@@ -191,7 +203,21 @@ pub fn make_credential(
     challenge: &[u8],
     pin: Option<&str>,
 ) -> Result<make_credential_params::Attestation> {
-    make_credential::make_credential(hid_params, rpid, challenge, pin, false, None, None).map_err(Error::msg)
+    make_credential::make_credential(hid_params, rpid, challenge, pin, false, None, None, None)
+        .map_err(Error::msg)
+}
+
+pub fn make_credential_with_extensions(
+    hid_params: &[HidParam],
+    rpid: &str,
+    challenge: &[u8],
+    pin: Option<&str>,
+    extensions: Option<&Vec<Mext>>,
+) -> Result<make_credential_params::Attestation> {
+    make_credential::make_credential(
+        hid_params, rpid, challenge, pin, false, None, None, extensions,
+    )
+    .map_err(Error::msg)
 }
 
 /// Registration command.Generate credentials(with PIN ,Resident Key)
@@ -202,7 +228,17 @@ pub fn make_credential_rk(
     pin: Option<&str>,
     rkparam: &PublicKeyCredentialUserEntity,
 ) -> Result<make_credential_params::Attestation> {
-    make_credential::make_credential(hid_params, rpid, challenge, pin, true, Some(rkparam), None).map_err(Error::msg)
+    make_credential::make_credential(
+        hid_params,
+        rpid,
+        challenge,
+        pin,
+        true,
+        Some(rkparam),
+        None,
+        None,
+    )
+    .map_err(Error::msg)
 }
 
 /// Registration command.Generate credentials(without PIN ,non Resident Key)
@@ -211,7 +247,8 @@ pub fn make_credential_without_pin(
     rpid: &str,
     challenge: &[u8],
 ) -> Result<make_credential_params::Attestation> {
-    make_credential::make_credential(hid_params, rpid, challenge, None, false, None, None).map_err(Error::msg)
+    make_credential::make_credential(hid_params, rpid, challenge, None, false, None, None, None)
+        .map_err(Error::msg)
 }
 
 /// Authentication command(with PIN , non Resident Key)
@@ -222,8 +259,38 @@ pub fn get_assertion(
     credential_id: &[u8],
     pin: Option<&str>,
 ) -> Result<get_assertion_params::Assertion> {
-    let asss =
-        get_assertion::get_assertion(hid_params, rpid, challenge, credential_id, pin, true, None).map_err(Error::msg)?;
+    let asss = get_assertion::get_assertion(
+        hid_params,
+        rpid,
+        challenge,
+        credential_id,
+        pin,
+        true,
+        None,
+        None,
+    )?;
+    Ok(asss[0].clone())
+}
+
+/// Authentication command(with PIN , non Resident Key , Extension)
+pub fn get_assertion_with_extensios(
+    hid_params: &[HidParam],
+    rpid: &str,
+    challenge: &[u8],
+    credential_id: &[u8],
+    pin: Option<&str>,
+    extensions: Option<&Vec<Gext>>,
+) -> Result<get_assertion_params::Assertion> {
+    let asss = get_assertion::get_assertion(
+        hid_params,
+        rpid,
+        challenge,
+        credential_id,
+        pin,
+        true,
+        None,
+        extensions,
+    )?;
     Ok(asss[0].clone())
 }
 
@@ -235,15 +302,15 @@ pub fn get_assertions_rk(
     pin: Option<&str>,
 ) -> Result<Vec<get_assertion_params::Assertion>> {
     let dmy: [u8; 0] = [];
-    get_assertion::get_assertion(hid_params, rpid, challenge, &dmy, pin, true, None).map_err(Error::msg)
+    get_assertion::get_assertion(hid_params, rpid, challenge, &dmy, pin, true, None, None)
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum InfoParam {
-    VersionsU2FV2,
-    VersionsFIDO20,
-    VersionsFIDO21PRE,
-    VersionsFIDO21,
+    VersionsU2Fv2,
+    VersionsFido20,
+    VersionsFido21Pre,
+    VersionsFido21,
     ExtensionsCredProtect,
     ExtensionsCredBlob,
     ExtensionsLargeBlobKey,
@@ -251,25 +318,25 @@ pub enum InfoParam {
     ExtensionsHmacSecret,
 }
 
-pub fn enable_info_param(hid_params: &[HidParam],info_param: InfoParam) -> Result<bool> {
+pub fn enable_info_param(hid_params: &[HidParam], info_param: InfoParam) -> Result<bool> {
     let info = get_info::get_info(hid_params).map_err(Error::msg)?;
     let find = match info_param {
-        InfoParam::VersionsU2FV2 => "U2F_V2",
-        InfoParam::VersionsFIDO20 => "FIDO_2_0",
-        InfoParam::VersionsFIDO21PRE => "FIDO_2_1_PRE",
-        InfoParam::VersionsFIDO21 => "FIDO_2_1",
-        InfoParam::ExtensionsCredProtect => "credProtect",
+        InfoParam::VersionsU2Fv2 => "U2F_V2",
+        InfoParam::VersionsFido20 => "FIDO_2_0",
+        InfoParam::VersionsFido21Pre => "FIDO_2_1_PRE",
+        InfoParam::VersionsFido21 => "FIDO_2_1",
+        InfoParam::ExtensionsCredProtect => Mext::CredProtect(None).as_ref(),
         InfoParam::ExtensionsCredBlob => "credBlob",
         InfoParam::ExtensionsLargeBlobKey => "credBlobKey",
         InfoParam::ExtensionsMinPinLength => "minPinLength",
-        InfoParam::ExtensionsHmacSecret => "hmac-secret",
+        InfoParam::ExtensionsHmacSecret => Mext::HmacSecret(None).as_ref(),
     };
-    let ret = info.versions.iter().find(|v| *v==find);
-    if let Some(_) = ret {
+    let ret = info.versions.iter().find(|v| *v == find);
+    if ret.is_some() {
         return Ok(true);
     }
-    let ret = info.extensions.iter().find(|v| *v==find);
-    if let Some(_) = ret {
+    let ret = info.extensions.iter().find(|v| *v == find);
+    if ret.is_some() {
         return Ok(true);
     }
     Ok(false)
@@ -287,7 +354,10 @@ pub enum InfoOption {
     UserVerificationMgmtPreview,
     BioEnroll,
 }
-pub fn enable_info_option(hid_params: &[HidParam],info_option: InfoOption) -> Result<Option<bool>> {
+pub fn enable_info_option(
+    hid_params: &[HidParam],
+    info_option: InfoOption,
+) -> Result<Option<bool>> {
     let info = get_info::get_info(hid_params).map_err(Error::msg)?;
     let find = match info_option {
         InfoOption::Rk => "rk",
@@ -300,7 +370,7 @@ pub fn enable_info_option(hid_params: &[HidParam],info_option: InfoOption) -> Re
         InfoOption::UserVerificationMgmtPreview => "userVerificationMgmtPreview",
         InfoOption::BioEnroll => "bioEnroll",
     };
-    let ret = info.options.iter().find(|v| (*v).0==find);
+    let ret = info.options.iter().find(|v| (*v).0 == find);
     if let Some(v) = ret {
         // v.1 == true or false
         // - present and set to true.
@@ -315,37 +385,29 @@ pub fn enable_info_option(hid_params: &[HidParam],info_option: InfoOption) -> Re
 pub fn bio_enrollment_get_fingerprint_sensor_info(
     hid_params: &[HidParam],
 ) -> Result<(Modality, FingerprintKind)> {
-    let init = bio_enrollment::bio_enrollment_init(hid_params,None).map_err(Error::msg)?;
+    let init = bio_enrollment::bio_enrollment_init(hid_params, None).map_err(Error::msg)?;
 
     // 6.7.2. Get bio modality
-    let data = bio_enrollment::bio_enrollment(&init.0,&init.1,None, None, None, None).map_err(Error::msg)?;
+    let data1 = bio_enrollment::bio_enrollment(&init.0, &init.1, None, None, None, None)
+        .map_err(Error::msg)?;
     if util::is_debug() {
-        println!("{}", data);
+        println!("{}", data1);
     }
-    let modality: Modality = match data.modality{
-        0x01 => Modality::Fingerprint,
-        _ => Modality::Unknown,
-    };
 
     // 6.7.3. Get fingerprint sensor info
-    let data = bio_enrollment::bio_enrollment(
+    let data2 = bio_enrollment::bio_enrollment(
         &init.0,
         &init.1,
         None,
-        Some(bio_enrollment_command::SubCommand::GetFingerprintSensorInfo),
+        Some(BioCmd::GetFingerprintSensorInfo),
         None,
         None,
-    ).map_err(Error::msg)?;
+    )
+    .map_err(Error::msg)?;
     if util::is_debug() {
-        println!("{}", data);
+        println!("{}", data2);
     }
-    let fptype = match data.fingerprint_kind{
-        0x01 => FingerprintKind::TouchType,
-        0x02 => FingerprintKind::SwipeType,
-        _ => FingerprintKind::Unknown,
-    };
-
-    Ok((modality, fptype))
+    Ok((data1.modality.into(), data2.fingerprint_kind.into()))
 }
 
 /// BioEnrollment - EnrollBegin
@@ -353,38 +415,37 @@ pub fn bio_enrollment_begin(
     hid_params: &[HidParam],
     pin: Option<&str>,
     timeout_milliseconds: Option<u16>,
-) -> Result<(EnrollStatus1,EnrollStatus2)> {
-    let init = bio_enrollment::bio_enrollment_init(hid_params,pin).map_err(Error::msg)?;
+) -> Result<(EnrollStatus1, EnrollStatus2)> {
+    let init = bio_enrollment::bio_enrollment_init(hid_params, pin).map_err(Error::msg)?;
 
     let data = bio_enrollment::bio_enrollment(
         &init.0,
         &init.1,
         init.2.as_ref(),
-        Some(bio_enrollment_command::SubCommand::EnrollBegin),
+        Some(BioCmd::EnrollBegin),
         None,
         timeout_milliseconds,
-    ).map_err(Error::msg)?;
+    )
+    .map_err(Error::msg)?;
     if util::is_debug() {
         println!("{}", data);
     }
     let result1 = EnrollStatus1 {
-        device : init.0,
-        cid : init.1,
-        pin_token : init.2,
-        template_id : data.template_id.to_vec(),
+        device: init.0,
+        cid: init.1,
+        pin_token: init.2,
+        template_id: data.template_id.to_vec(),
     };
-    let finish = if data.last_enroll_sample_status == 0x00 && data.remaining_samples == 0 {
-        true
-    }else{
-        false
-    };
+    let finish = data.last_enroll_sample_status == 0x00 && data.remaining_samples == 0;
     let result2 = EnrollStatus2 {
-        status : data.last_enroll_sample_status as u8,
-        message : ctapdef::get_ctap_last_enroll_sample_status_message(data.last_enroll_sample_status as u8),
-        remaining_samples : data.remaining_samples,
-        is_finish : finish,
+        status: data.last_enroll_sample_status as u8,
+        message: ctapdef::get_ctap_last_enroll_sample_status_message(
+            data.last_enroll_sample_status as u8,
+        ),
+        remaining_samples: data.remaining_samples,
+        is_finish: finish,
     };
-    Ok((result1,result2))
+    Ok((result1, result2))
 }
 
 /// BioEnrollment - CaptureNext
@@ -397,39 +458,37 @@ pub fn bio_enrollment_next(
         &enroll_status.device,
         &enroll_status.cid,
         enroll_status.pin_token.as_ref(),
-        Some(bio_enrollment_command::SubCommand::EnrollCaptureNextSample),
+        Some(BioCmd::EnrollCaptureNextSample),
         Some(template_info),
         timeout_milliseconds,
-    ).map_err(Error::msg)?;
+    )
+    .map_err(Error::msg)?;
     if util::is_debug() {
         println!("{}", data);
     }
-    let finish = if data.last_enroll_sample_status == 0x00 && data.remaining_samples == 0 {
-        true
-    }else{
-        false
-    };
+    let finish = data.last_enroll_sample_status == 0x00 && data.remaining_samples == 0;
     let result = EnrollStatus2 {
-        status : data.last_enroll_sample_status as u8,
-        message : ctapdef::get_ctap_last_enroll_sample_status_message(data.last_enroll_sample_status as u8),
-        remaining_samples : data.remaining_samples,
-        is_finish : finish,
+        status: data.last_enroll_sample_status as u8,
+        message: ctapdef::get_ctap_last_enroll_sample_status_message(
+            data.last_enroll_sample_status as u8,
+        ),
+        remaining_samples: data.remaining_samples,
+        is_finish: finish,
     };
     Ok(result)
 }
 
 /// BioEnrollment - Cancel current enrollment
-pub fn bio_enrollment_cancel(
-    enroll_status: &EnrollStatus1,
-) -> Result<()> {
+pub fn bio_enrollment_cancel(enroll_status: &EnrollStatus1) -> Result<()> {
     let data = bio_enrollment::bio_enrollment(
         &enroll_status.device,
         &enroll_status.cid,
         enroll_status.pin_token.as_ref(),
-        Some(bio_enrollment_command::SubCommand::CancelCurrentEnrollment),
+        Some(BioCmd::CancelCurrentEnrollment),
         None,
         None,
-    ).map_err(Error::msg)?;
+    )
+    .map_err(Error::msg)?;
     if util::is_debug() {
         println!("{}", data);
     }
@@ -442,17 +501,18 @@ pub fn bio_enrollment_enumerate_enrollments(
     hid_params: &[HidParam],
     pin: Option<&str>,
 ) -> Result<Vec<TemplateInfo>> {
-    let init = bio_enrollment::bio_enrollment_init(hid_params,pin).map_err(Error::msg)?;
+    let init = bio_enrollment::bio_enrollment_init(hid_params, pin).map_err(Error::msg)?;
     let pin_token = init.2.unwrap();
 
     let data = bio_enrollment::bio_enrollment(
         &init.0,
         &init.1,
         Some(&pin_token),
-        Some(bio_enrollment_command::SubCommand::EnumerateEnrollments),
+        Some(BioCmd::EnumerateEnrollments),
         None,
         None,
-    ).map_err(Error::msg)?;
+    )
+    .map_err(Error::msg)?;
     if util::is_debug() {
         println!("{}", data);
     }
@@ -467,17 +527,18 @@ pub fn bio_enrollment_set_friendly_name(
     pin: Option<&str>,
     template_info: TemplateInfo,
 ) -> Result<()> {
-    let init = bio_enrollment::bio_enrollment_init(hid_params,pin).map_err(Error::msg)?;
+    let init = bio_enrollment::bio_enrollment_init(hid_params, pin).map_err(Error::msg)?;
     let pin_token = init.2.unwrap();
 
     let data = bio_enrollment::bio_enrollment(
         &init.0,
         &init.1,
         Some(&pin_token),
-        Some(bio_enrollment_command::SubCommand::SetFriendlyName),
+        Some(BioCmd::SetFriendlyName),
         Some(template_info),
         None,
-    ).map_err(Error::msg)?;
+    )
+    .map_err(Error::msg)?;
     if util::is_debug() {
         println!("{}", data);
     }
@@ -490,7 +551,7 @@ pub fn bio_enrollment_remove(
     pin: Option<&str>,
     template_id: Vec<u8>,
 ) -> Result<()> {
-    let init = bio_enrollment::bio_enrollment_init(hid_params,pin).map_err(Error::msg)?;
+    let init = bio_enrollment::bio_enrollment_init(hid_params, pin).map_err(Error::msg)?;
     let pin_token = init.2.unwrap();
 
     let template_info = TemplateInfo::new(template_id, None);
@@ -498,10 +559,11 @@ pub fn bio_enrollment_remove(
         &init.0,
         &init.1,
         Some(&pin_token),
-        Some(bio_enrollment_command::SubCommand::RemoveEnrollment),
+        Some(BioCmd::RemoveEnrollment),
         Some(template_info),
         None,
-    ).map_err(Error::msg)?;
+    )
+    .map_err(Error::msg)?;
     if util::is_debug() {
         println!("{}", data);
     }
@@ -520,7 +582,8 @@ pub fn credential_management_get_creds_metadata(
         None,
         None,
         None,
-    ).map_err(Error::msg)?;
+    )
+    .map_err(Error::msg)?;
     Ok(credential_management_params::CredentialsCount::new(&meta))
 }
 
@@ -537,7 +600,8 @@ pub fn credential_management_enumerate_rps(
         None,
         None,
         None,
-    ).map_err(Error::msg)?;
+    )
+    .map_err(Error::msg)?;
     datas.push(credential_management_params::Rp::new(&data));
     if data.total_rps > 0 {
         let roop_n = data.total_rps - 1;
@@ -545,11 +609,12 @@ pub fn credential_management_enumerate_rps(
             let data = credential_management::credential_management(
                 hid_params,
                 pin,
-                credential_management_command::SubCommand::EnumerateRPsGetNextRP,
+                credential_management_command::SubCommand::EnumerateRPsGetNextRp,
                 None,
                 None,
                 None,
-            ).map_err(Error::msg)?;
+            )
+            .map_err(Error::msg)?;
             datas.push(credential_management_params::Rp::new(&data));
         }
     }
@@ -571,7 +636,8 @@ pub fn credential_management_enumerate_credentials(
         Some(rpid_hash.to_vec()),
         None,
         None,
-    ).map_err(Error::msg)?;
+    )
+    .map_err(Error::msg)?;
     datas.push(credential_management_params::Credential::new(&data));
     if data.total_credentials > 0 {
         let roop_n = data.total_credentials - 1;
@@ -583,7 +649,8 @@ pub fn credential_management_enumerate_credentials(
                 Some(rpid_hash.to_vec()),
                 None,
                 None,
-            ).map_err(Error::msg)?;
+            )
+            .map_err(Error::msg)?;
             datas.push(credential_management_params::Credential::new(&data));
         }
     }
@@ -603,7 +670,8 @@ pub fn credential_management_delete_credential(
         None,
         pkcd,
         None,
-    ).map_err(Error::msg)?;
+    )
+    .map_err(Error::msg)?;
     Ok(())
 }
 
@@ -621,7 +689,8 @@ pub fn credential_management_update_user_information(
         None,
         pkcd,
         pkcue,
-    ).map_err(Error::msg)?;
+    )
+    .map_err(Error::msg)?;
     Ok(())
 }
 
@@ -657,9 +726,6 @@ pub fn config(hid_params: &[HidParam]) -> Result<String> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    //use serde_cbor::Value;
-    //use num::NumCast;
-    use ring::{digest, hmac};
 
     #[test]
     fn test_client_pin_get_keyagreement() {
@@ -667,15 +733,13 @@ mod tests {
         let device = FidoKeyHid::new(&hid_params).unwrap();
         let cid = ctaphid::ctaphid_init(&device).unwrap();
 
-        let send_payload =
-            client_pin_command::create_payload(client_pin_command::SubCommand::GetKeyAgreement)
-                .unwrap();
+        let send_payload = client_pin_command::create_payload(PinCmd::GetKeyAgreement).unwrap();
         let response_cbor = ctaphid::ctaphid_cbor(&device, &cid, &send_payload).unwrap();
-        //println!("{}",util::to_hex_str(&send_payload));
 
         let key_agreement =
             client_pin_response::parse_cbor_client_pin_get_keyagreement(&response_cbor).unwrap();
-        key_agreement.print("authenticatorClientPIN (0x06) - getKeyAgreement");
+        println!("authenticatorClientPIN (0x06) - getKeyAgreement");
+        println!("{}", key_agreement);
 
         assert!(true);
     }
@@ -703,7 +767,7 @@ mod tests {
 
             params.pin_auth = pin_auth.to_vec();
 
-            make_credential_command::create_payload(params)
+            make_credential_command::create_payload(params, None)
         };
 
         if util::is_debug() == true {
@@ -724,15 +788,9 @@ mod tests {
         let client_data_hash =
             hex::decode("E61E2BD6C4612662960B159CD54CF8EFF1A998C89B3742519D11F85E0F5E7876")
                 .unwrap();
-        //println!("- out_bytes({:?})       = {:?}", out_bytes.len(), util::to_hex_str(&out_bytes));
         let check = "F0AC99D6AAD2E199AF9CF25F6568A6F5".to_string();
-
-        let pin_token_dec = pintoken::PinToken {
-            signing_key: hmac::SigningKey::new(&digest::SHA256, &out_bytes),
-            key: out_bytes.to_vec(),
-        };
-        let pin_auth = pin_token_dec.authenticate_v1(&client_data_hash);
-
+        let sig = enc_hmac_sha_256::authenticate(&out_bytes, &client_data_hash);
+        let pin_auth = sig[0..16].to_vec();
         assert_eq!(check, hex::encode(pin_auth).to_uppercase());
     }
 }

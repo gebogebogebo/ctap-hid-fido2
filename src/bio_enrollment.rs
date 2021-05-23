@@ -1,24 +1,29 @@
 use crate::bio_enrollment_command;
-use crate::bio_enrollment_params::{BioEnrollmentData,TemplateInfo};
+use crate::bio_enrollment_params::{BioEnrollmentData, TemplateInfo};
 use crate::bio_enrollment_response;
 use crate::client_pin;
 use crate::ctaphid;
+use crate::pintoken::PinToken;
 use crate::FidoKeyHid;
 use crate::HidParam;
-use crate::pintoken::PinToken;
 
 #[allow(unused_imports)]
 use crate::util;
 
 pub(crate) fn bio_enrollment(
     device: &FidoKeyHid,
-    cid: &[u8;4],
+    cid: &[u8; 4],
     pin_token: Option<&PinToken>,
     sub_command: Option<bio_enrollment_command::SubCommand>,
     template_info: Option<TemplateInfo>,
     timeout_milliseconds: Option<u16>,
 ) -> Result<BioEnrollmentData, String> {
-    let send_payload = bio_enrollment_command::create_payload(pin_token, sub_command, template_info, timeout_milliseconds);
+    let send_payload = bio_enrollment_command::create_payload(
+        pin_token,
+        sub_command,
+        template_info,
+        timeout_milliseconds,
+    );
 
     if util::is_debug() {
         println!("send(cbor) = {}", util::to_hex_str(&send_payload));
@@ -37,7 +42,7 @@ pub(crate) fn bio_enrollment(
 pub fn bio_enrollment_init(
     hid_params: &[HidParam],
     pin: Option<&str>,
-) -> Result<(FidoKeyHid,[u8;4],Option<PinToken>),String>{
+) -> Result<(FidoKeyHid, [u8; 4], Option<PinToken>), String> {
     // init
     let device = FidoKeyHid::new(hid_params)?;
     let cid = ctaphid::ctaphid_init(&device)?;
@@ -50,5 +55,5 @@ pub fn bio_enrollment_init(
             None
         }
     };
-    Ok((device,cid,pin_token))
+    Ok((device, cid, pin_token))
 }

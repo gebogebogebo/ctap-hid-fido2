@@ -1,6 +1,6 @@
 [package]
 name = "ctap-hid-fido2"
-version = "2.1.1"
+version = "2.1.2"
 authors = ["gebo <35388172+gebogebogebo@users.noreply.github.com>"]
 edition = "2018"
 
@@ -27,4 +27,7 @@ x509-parser = "0.8.0"
 base64 = "0.13.0"
 hmac = "0.10.1"
 anyhow = "1.0"
-
+serde = "1.0.126"
+strum = "0.20"
+strum_macros = "0.20"
+pad = "0.1.6"

@@ -1,4 +1,6 @@
+use crate::credential_management_params::CredentialProtectionPolicy;
 use crate::make_credential_params::Attestation;
+use crate::make_credential_params::Extension;
 use crate::util;
 
 use byteorder::{BigEndian, ReadBytesExt};
@@ -37,12 +39,11 @@ fn parse_cbor_authdata(authdata: &[u8], attestation: &mut Attestation) -> Result
 
     // flags(1)
     let byte = authdata[index];
-    attestation.flags_user_present_result = if let 0x01 = byte & 0x01 { true } else { false };
-    attestation.flags_user_verified_result = if let 0x04 = byte & 0x04 { true } else { false };
-    attestation.flags_attested_credential_data_included =
-        if let 0x40 = byte & 0x40 { true } else { false };
-    attestation.flags_extension_data_included = if let 0x80 = byte & 0x80 { true } else { false };
-    index = index + 1;
+    attestation.flags_user_present_result = matches!(byte & 0x01, 0x01);
+    attestation.flags_user_verified_result = matches!(byte & 0x04, 0x04);
+    attestation.flags_attested_credential_data_included = matches!(byte & 0x40, 0x40);
+    attestation.flags_extension_data_included = matches!(byte & 0x80, 0x80);
+    index += 1;
 
     // signCount(4)
     let clo = |idx: usize, x: usize| {
@@ -72,11 +73,37 @@ fn parse_cbor_authdata(authdata: &[u8], attestation: &mut Attestation) -> Result
     attestation.credential_descriptor.id = ret.0;
     index = ret.1;
 
-    if attestation.flags_attested_credential_data_included {
-        let slice = authdata[index..authdata.len()].to_vec();
-        let cbor = serde_cbor::from_slice(&slice).unwrap();
-        attestation.credential_publickey = attestation.credential_publickey.get(&cbor);
-    }
+    // rest is cbor objects
+    // - [0] credentialPublicKey
+    // - [1] extensions
+    let slice = if attestation.flags_attested_credential_data_included {
+        let slice = &authdata[index..authdata.len()];
+        let mut deserializer = serde_cbor::Deserializer::from_slice(&slice);
+        let value: Value = serde::de::Deserialize::deserialize(&mut deserializer).unwrap();
+        attestation.credential_publickey = attestation.credential_publickey.get(&value);
+        slice[deserializer.byte_offset()..].to_vec()
+    } else {
+        authdata[index..authdata.len()].to_vec()
+    };
+
+    if attestation.flags_extension_data_included {
+        //println!("{:02} - {:?}", slice.len(), util::to_hex_str(&slice));
+        let maps = util::cbor_bytes_to_map(&slice)?;
+        for (key, val) in &maps {
+            if let Value::Text(member) = key {
+                if *member == Extension::HmacSecret(None).to_string() {
+                    let v = util::cbor_value_to_bool(val)?;
+                    attestation.extensions.push(Extension::HmacSecret(Some(v)));
+                } else if *member == Extension::CredProtect(None).to_string() {
+                    let v: u32 = util::cbor_value_to_num(val)?;
+                    attestation.extensions.push(Extension::CredProtect(Some(
+                        CredentialProtectionPolicy::from(v),
+                    )));
+                }
+            }
+        }
+    };
+
     Ok(())
 }
 
@@ -86,19 +113,9 @@ pub fn parse_cbor(bytes: &[u8]) -> Result<Attestation, String> {
     for (key, val) in &maps {
         if let Value::Integer(member) = key {
             match member {
-                0x01 => {
-                    if let Value::Text(s) = val {
-                        attestation.fmt = s.to_string();
-                    }
-                }
-                0x02 => {
-                    if let Value::Bytes(xs) = val {
-                        parse_cbor_authdata(xs, &mut attestation)?;
-                    }
-                }
-                0x03 => {
-                    parse_cbor_att_stmt(val, &mut attestation)?;
-                }
+                0x01 => attestation.fmt = util::cbor_value_to_str(val)?,
+                0x02 => parse_cbor_authdata(&util::cbor_value_to_vec_u8(val)?, &mut attestation)?,
+                0x03 => parse_cbor_att_stmt(val, &mut attestation)?,
                 _ => println!("- anything error"),
             }
         }

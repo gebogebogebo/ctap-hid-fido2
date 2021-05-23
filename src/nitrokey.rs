@@ -2,7 +2,7 @@
 ## Nitrokey Custom Commands
 for Nitrokey FIDO2 only.
 */
-use anyhow::{Result,Error};
+use anyhow::{Error, Result};
 
 #[allow(unused_imports)]
 use crate::util;
@@ -116,7 +116,8 @@ pub fn get_version(hid_params: &[crate::HidParam]) -> Result<String> {
 pub fn get_rng(hid_params: &[crate::HidParam], rng_byte: u8) -> Result<String> {
     let device = FidoKeyHid::new(hid_params).map_err(Error::msg)?;
     let cid = ctaphid::ctaphid_init(&device).map_err(Error::msg)?;
-    let status = ctapihd_nitro::ctaphid_nitro_get_rng(&device, &cid, rng_byte).map_err(Error::msg)?;
+    let status =
+        ctapihd_nitro::ctaphid_nitro_get_rng(&device, &cid, rng_byte).map_err(Error::msg)?;
     Ok(status)
 }
 
@@ -162,35 +163,41 @@ pub fn get_status(hid_params: &[crate::HidParam]) -> Result<NitrokeyStatus> {
 pub fn enter_boot(hid_params: &[crate::HidParam]) -> Result<()> {
     let device = FidoKeyHid::new(hid_params).map_err(Error::msg)?;
     let cid = ctaphid::ctaphid_init(&device).map_err(Error::msg)?;
-    let result = ctapihd_nitro::ctaphid_nitro_enter_boot(&device, &cid).map_err(Error::msg)?;
-    Ok(result)
+    ctapihd_nitro::ctaphid_nitro_enter_boot(&device, &cid).map_err(Error::msg)?;
+    Ok(())
 }
 
 /// firmware update API.
-pub fn write_flash(hid_params: &[crate::HidParam],addr: u64,data: &[u8]) -> Result<()> {
+pub fn write_flash(hid_params: &[crate::HidParam], addr: u64, data: &[u8]) -> Result<()> {
     let device = FidoKeyHid::new(hid_params).map_err(Error::msg)?;
     let cid = ctaphid::ctaphid_init(&device).map_err(Error::msg)?;
 
     let solo_bootloader_write = 0x40;
-    let packet = create_request_packet(solo_bootloader_write,addr,data,false).map_err(Error::msg)?;
+    let packet =
+        create_request_packet(solo_bootloader_write, addr, data, false).map_err(Error::msg)?;
 
     ctapihd_nitro::ctaphid_nitro_boot(&device, &cid, &packet).map_err(Error::msg)?;
     Ok(())
 }
 
 /// firmware update API.
-pub fn verify_flash(hid_params: &[crate::HidParam],sig: &[u8]) -> Result<()> {
+pub fn verify_flash(hid_params: &[crate::HidParam], sig: &[u8]) -> Result<()> {
     let device = FidoKeyHid::new(hid_params).map_err(Error::msg)?;
     let cid = ctaphid::ctaphid_init(&device).map_err(Error::msg)?;
 
     let solo_bootloader_done = 0x41;
-    let data = create_request_packet(solo_bootloader_done,0,sig,false).map_err(Error::msg)?;
-    
+    let data = create_request_packet(solo_bootloader_done, 0, sig, false).map_err(Error::msg)?;
+
     ctapihd_nitro::ctaphid_nitro_boot(&device, &cid, &data).map_err(Error::msg)?;
     Ok(())
 }
 
-fn create_request_packet(nitro_command:u8,addr: u64,request_data:&[u8],is_u2f:bool) -> Result<Vec<u8>,String>{
+fn create_request_packet(
+    nitro_command: u8,
+    addr: u64,
+    request_data: &[u8],
+    is_u2f: bool,
+) -> Result<Vec<u8>, String> {
     // request
     // - nitro_command(4byte) + TAG(4byte) + length(2byte) + A*16
     let mut request: Vec<u8> = vec![0; 10];
@@ -204,7 +211,7 @@ fn create_request_packet(nitro_command:u8,addr: u64,request_data:&[u8],is_u2f:bo
     request[1] = addr_bytes[0];
     request[2] = addr_bytes[1];
     request[3] = addr_bytes[2];
-    
+
     // TAG
     request[4] = 0x8c;
     request[5] = 0x27;
@@ -212,9 +219,9 @@ fn create_request_packet(nitro_command:u8,addr: u64,request_data:&[u8],is_u2f:bo
     request[7] = 0xf6;
 
     // High part of payload length
-    request[8] = (((request_data.len() as u16) >> 8) as u8) & 0xff;
+    request[8] = ((request_data.len() as u16) >> 8) as u8;
     // Low part of payload length
-    request[9] = (request_data.len() as u8) & 0xff;
+    request[9] = request_data.len() as u8;
 
     // request-data(A * 16)
     request.append(&mut request_data.into());
@@ -257,15 +264,16 @@ pub fn is_bootloader_mode(hid_params: &[crate::HidParam]) -> Result<bool> {
     let solo_bootloader_version = 0x44;
     // request-data = A*16
     let request_data = vec![0x41; 16];
-    let data = create_request_packet(solo_bootloader_version,0,&request_data,true).map_err(Error::msg)?;
+    let data = create_request_packet(solo_bootloader_version, 0, &request_data, true)
+        .map_err(Error::msg)?;
 
     // CTAP1.INS.AUTHENTICATE = 2
-    let mut response = match ctaphid::send_apdu(&device, &cid, 0, 2, 0, 0, &data){
+    let mut response = match ctaphid::send_apdu(&device, &cid, 0, 2, 0, 0, &data) {
         Ok(r) => r,
         Err(_) => return Ok(false),
     };
 
-    if util::is_debug() == true {
+    if util::is_debug() {
         println!(
             "- response({:02})    = {:?}",
             response.len(),
@@ -274,7 +282,7 @@ pub fn is_bootloader_mode(hid_params: &[crate::HidParam]) -> Result<bool> {
     }
 
     // remove headder
-    let mut response = response.split_off(3+2);
+    let mut response = response.split_off(3 + 2);
 
     // status
     if response[0] != 0 {
@@ -288,14 +296,16 @@ pub fn is_bootloader_mode(hid_params: &[crate::HidParam]) -> Result<bool> {
     // parse
     for (i, val) in datas.iter().enumerate() {
         //println!("{}: {}", i, val);
-        if val.len() == 0 {continue;}
+        if val.is_empty() {
+            continue;
+        }
 
-        if i == 0{
-            println!("{}{}{}",val[0],val[1],val[2]);
-        }else{
+        if i == 0 {
+            println!("{}{}{}", val[0], val[1], val[2]);
+        } else {
             // string data
             let tmp = String::from_utf8(val.to_vec());
-            println!("{}",tmp.unwrap());
+            println!("{}", tmp.unwrap());
         }
     }
 

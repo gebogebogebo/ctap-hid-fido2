@@ -2,6 +2,7 @@
 use crate::util;
 
 use crate::ctapdef;
+use crate::enc_hmac_sha_256;
 use crate::pintoken;
 use crate::public_key_credential_descriptor::PublicKeyCredentialDescriptor;
 use crate::public_key_credential_user_entity::PublicKeyCredentialUserEntity;
@@ -14,7 +15,7 @@ use std::collections::BTreeMap;
 pub enum SubCommand {
     GetCredsMetadata = 0x01,
     EnumerateRPsBegin = 0x02,
-    EnumerateRPsGetNextRP = 0x03,
+    EnumerateRPsGetNextRp = 0x03,
     EnumerateCredentialsBegin = 0x04,
     EnumerateCredentialsGetNextCredential = 0x05,
     DeleteCredential = 0x06,
@@ -112,7 +113,9 @@ pub fn create_payload(
         // -- First 16 bytes of HMAC-SHA-256 of contents using pinUvAuthToken.
         let mut message = vec![sub_command as u8];
         message.append(&mut sub_command_params_cbor.to_vec());
-        let pin_uv_auth_param = pin_token.authenticate_v2(&message, 16);
+
+        let sig = enc_hmac_sha_256::authenticate(&pin_token.key, &message);
+        let pin_uv_auth_param = sig[0..16].to_vec();
 
         map.insert(Value::Integer(0x04), Value::Bytes(pin_uv_auth_param));
     }
@@ -166,13 +169,10 @@ fn create_public_key_credential_descriptor_pend(
     {
         let mut user = BTreeMap::new();
         user.insert(Value::Text("id".to_string()), Value::Bytes(pkcuee.id));
-        user.insert(
-            Value::Text("name".to_string()),
-            Value::Text(pkcuee.name.to_string()),
-        );
+        user.insert(Value::Text("name".to_string()), Value::Text(pkcuee.name));
         user.insert(
             Value::Text("displayName".to_string()),
-            Value::Text(pkcuee.display_name.to_string()),
+            Value::Text(pkcuee.display_name),
         );
         param.insert(Value::Integer(0x03), Value::Map(user));
     }

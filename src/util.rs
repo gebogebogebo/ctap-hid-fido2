@@ -2,6 +2,7 @@
 Utility API
 */
 
+use crate::str_buf::StrBuf;
 use num::NumCast;
 use serde_cbor::Value;
 use sha2::{Digest, Sha256};
@@ -30,6 +31,13 @@ pub fn print_typename<T>(_: T) {
 #[allow(dead_code)]
 pub(crate) fn is_debug() -> bool {
     false
+}
+
+#[allow(dead_code)]
+pub(crate) fn debugp(title: &str, bytes: &[u8]) {
+    if is_debug() {
+        println!("{}", StrBuf::bufh(title, bytes));
+    }
 }
 
 // for cbor
@@ -103,6 +111,15 @@ pub(crate) fn cbor_value_to_str(value: &Value) -> Result<String, String> {
 }
 
 #[allow(dead_code)]
+pub(crate) fn cbor_value_to_bool(value: &Value) -> Result<bool, String> {
+    if let Value::Bool(v) = value {
+        Ok(*v)
+    } else {
+        Err("Cast Error : Value is not a Bool.".to_string())
+    }
+}
+
+#[allow(dead_code)]
 pub(crate) fn cbor_value_to_vec_string(value: &Value) -> Result<Vec<String>, String> {
     if let Value::Array(x) = value {
         let mut strings = [].to_vec();
@@ -133,9 +150,9 @@ pub(crate) fn cbor_value_to_vec_bytes(value: &Value) -> Result<Vec<Vec<u8>>, Str
 }
 
 pub(crate) fn cbor_bytes_to_map(bytes: &[u8]) -> Result<BTreeMap<Value, Value>, String> {
-    if bytes.len() == 0 {
+    if bytes.is_empty() {
         return Ok(BTreeMap::new());
-    }    
+    }
     match serde_cbor::from_slice(bytes) {
         Ok(cbor) => {
             if let Value::Map(n) = cbor {
@@ -192,22 +209,12 @@ pub(crate) fn convert_to_publickey_pem(public_key_der: &[u8]) -> String {
                 pem_base = pem_base + &"\n".to_string();
                 counter = 0;
             } else {
-                counter = counter + 1;
+                counter += 1;
             }
         }
         pem_base + &"\n".to_string()
     };
 
     // 3. Header and footer
-    let pem_data = "-----BEGIN PUBLIC KEY-----\n".to_string()
-        + &pem_base
-        + &"-----END PUBLIC KEY-----".to_string();
-
-    /*
-    println!(
-        "- public_key_pem  = {:?}",pem_data
-    );
-    */
-
-    pem_data
+    "-----BEGIN PUBLIC KEY-----\n".to_string() + &pem_base + &"-----END PUBLIC KEY-----".to_string()
 }

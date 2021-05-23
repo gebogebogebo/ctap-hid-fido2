@@ -1,11 +1,18 @@
-![license](https://img.shields.io/github/license/gebogebogebo/ctap-hid-fido2)
+#### ![license](https://img.shields.io/github/license/gebogebogebo/ctap-hid-fido2)
 
 # ctap-hid-fido2
 Rust FIDO2 CTAP library
 
-**Some features of CTAP2.1PRE have been implemented.**
-
 for Mac & Win & raspberry Pi
+
+Some features of CTAP2.1PRE have been implemented.
+
+- authenticatorCredentialManagement
+- authenticatorBioEnrollment
+
+**HMAC Secret Extension implemented.**
+
+
 
 ## Description
 - Implements FIDO2 CTAP 2.0 & 2.1PRE (HID)
@@ -56,7 +63,7 @@ $ ./test_for_pi.sh
 
 ## Examples
 
-#### get_info()
+### get_info()
 
 [6.4. authenticatorGetInfo (0x04)](https://fidoalliance.org/specs/fido-v2.1-rd-20210309/fido-client-to-authenticator-protocol-v2.1-rd-20210309.html#authenticatorGetInfo)
 
@@ -95,7 +102,7 @@ get_info()
 
 
 
-#### get_info_u2f()
+### get_info_u2f()
 
 Created to test [CTAPHID_MSG](https://fidoalliance.org/specs/fido-v2.1-rd-20210309/fido-client-to-authenticator-protocol-v2.1-rd-20210309.html#usb-hid-msg).
 
@@ -121,7 +128,7 @@ get_info_u2f()
 
 
 
-#### get_pin_retries()
+### get_pin_retries()
 
 [6.5.2.2. PIN-Entry and User Verification Retries Counters](https://fidoalliance.org/specs/fido-v2.1-rd-20210309/fido-client-to-authenticator-protocol-v2.1-rd-20210309.html#authnrClientPin-globalState-retries)
 
@@ -149,7 +156,7 @@ get_pin_retries()
 
 
 
-#### enable_info_param()
+### enable_info_param()
 
 Same as get_info(), but checks if it has a specific feature/version.<br>It is specified by the enum of InfoParam.
 
@@ -162,7 +169,7 @@ match ctap_hid_fido2::enable_info_param(&HidParam::get_default_params(),InfoPara
 
 
 
-#### enable_info_option()
+### enable_info_option()
 
 Same as get_info(), but checks if it has a specific option.<br>It is specified by the enum of InfoOption.
 
@@ -180,7 +187,7 @@ match ctap_hid_fido2::enable_info_option(&HidParam::get_default_params(),InfoOpt
 
 
 
-#### wink()
+### wink()
 
 Just blink the LED on the FIDO key.
 
@@ -198,7 +205,7 @@ fn main() {
 
 
 
-#### Register and Authenticate ( non-discoverable credentials/non-resident-key)
+### Register and Authenticate ( non-discoverable credentials/non-resident-key)
 
 - make_credential()
 - get_assertion()
@@ -342,7 +349,61 @@ Verify
 
 
 
-#### Register and Authenticate ( discoverable credentials/resident-key)
+#### HMAC Secret Extension - Register
+
+```Rust
+use ctap_hid_fido2::verifier;
+use ctap_hid_fido2::make_credential_params::Extension as Mext;
+use ctap_hid_fido2::HidParam;
+
+fn main() -> Result<()> {
+
+  let rpid = "test.com";
+  let pin = "1234";
+  let challenge = verifier::create_challenge();
+
+  let ext = Mext::HmacSecret(Some(true));
+  let att = ctap_hid_fido2::make_credential_with_extensions(
+      &HidParam::get_default_params(),
+      rpid,
+      &challenge,
+      Some(pin),
+      Some(&vec![ext]),
+  )?;
+}
+```
+
+
+
+#### HMAC Secret Extension - Authenticate
+
+```Rust
+use ctap_hid_fido2::verifier;
+use ctap_hid_fido2::get_assertion_params::Extension as Gext;
+use ctap_hid_fido2::HidParam;
+
+fn main() -> Result<()> {
+
+  let rpid = "test.com";
+  let pin = "1234";
+  let challenge = verifier::create_challenge();
+  let credential_id = ???;
+  
+  let ext = Gext::create_hmac_secret_from_string("this is salt");
+  let ass = ctap_hid_fido2::get_assertion_with_extensios(
+      &HidParam::get_default_params(),
+      rpid,
+      &challenge,
+      &credential_id,
+      Some(pin),
+      Some(&vec![ext]),
+  )?;
+}
+```
+
+
+
+### Register and Authenticate ( discoverable credentials/resident-key)
 - make_credential_rk()
 - get_assertions_rk()
 
@@ -431,15 +492,15 @@ fn main() -> Result<()> {
 
 
 
-### CTAP 2.1 PRE
+## CTAP 2.1 PRE
 
-#### authenticatorCredentialManagement
+### authenticatorCredentialManagement
 
 This command manages discoverable credentials(resident key) in the authenticator.<br>[6.8. authenticatorCredentialManagement (0x0A)](https://fidoalliance.org/specs/fido-v2.1-rd-20210309/fido-client-to-authenticator-protocol-v2.1-rd-20210309.html#authenticatorCredentialManagement)
 
 
 
-##### credential_management_get_creds_metadata()
+#### credential_management_get_creds_metadata()
 
 Get discoverable credentials metadata.
 
@@ -455,7 +516,7 @@ match ctap_hid_fido2::credential_management_get_creds_metadata(
 
 
 
-##### credential_management_enumerate_rps()
+#### credential_management_enumerate_rps()
 
 Enumerate RPs present on the authenticator.
 
@@ -473,7 +534,7 @@ match ctap_hid_fido2::credential_management_enumerate_rps(&HidParam::get_default
 
 
 
-##### credential_management_enumerate_credentials()
+#### credential_management_enumerate_credentials()
 
 Enumerate the credentials for a RP.
 
@@ -494,7 +555,7 @@ match ctap_hid_fido2::credential_management_enumerate_credentials(
 
 
 
-##### credential_management_delete_credential()
+#### credential_management_delete_credential()
 
 Delete a credential.
 
@@ -515,13 +576,13 @@ match ctap_hid_fido2::credential_management_delete_credential(
 
 
 
-#### authenticatorBioEnrollment
+### authenticatorBioEnrollment
 
 This command manages the fingerprints in the authenticator.<br>[6.7. authenticatorBioEnrollment (0x09)](https://fidoalliance.org/specs/fido-v2.1-rd-20210309/fido-client-to-authenticator-protocol-v2.1-rd-20210309.html#authenticatorBioEnrollment)
 
 
 
-##### bio_enrollment_get_fingerprint_sensor_info()
+#### bio_enrollment_get_fingerprint_sensor_info()
 
 Get fingerprint sensor information.
 
@@ -536,7 +597,7 @@ match ctap_hid_fido2::bio_enrollment_get_fingerprint_sensor_info(
 
 
 
-##### bio_enrollment_enumerate_enrollments()
+#### bio_enrollment_enumerate_enrollments()
 
 Enumurate a list of registered fingerprints.
 
@@ -552,7 +613,7 @@ match ctap_hid_fido2::bio_enrollment_enumerate_enrollments(
 
 
 
-##### bio_enrollment_begin(),bio_enrollment_next()
+#### bio_enrollment_begin(),bio_enrollment_next()
 
 Enroll one fingerprint.<br>run `bio_enrollment_begin` first and then `bio_enrollment_next` several times.<br>`is_finish` detects the completion of registration.
 
@@ -586,7 +647,7 @@ fn bio_enrollment_next(enroll_status: &EnrollStatus1) -> Result<bool, String> {
 
 
 
-##### bio_enrollment_set_friendly_name()
+#### bio_enrollment_set_friendly_name()
 
 Update the registered name of the fingerprint.
 
@@ -603,7 +664,7 @@ match ctap_hid_fido2::bio_enrollment_set_friendly_name(
 
 
 
-##### bio_enrollment_remove()
+#### bio_enrollment_remove()
 
 Delete a fingerprint.
 
@@ -627,7 +688,7 @@ for Nitrokey FIDO2 only.
 
 
 
-#### nitrokey::get_version()
+### nitrokey::get_version()
 Query the firmware version of Nitrokey.
 
 ```rust
@@ -652,7 +713,7 @@ version = 2.2.0.1
 
 
 
-#### nitrokey::get_status()
+### nitrokey::get_status()
 Query the Status of Nitrokey.
 
 ```rust
@@ -685,7 +746,7 @@ status
 
 
 
-#### nitrokey::get_rng()
+### nitrokey::get_rng()
 
 Generate a random number.
 
@@ -711,7 +772,7 @@ rng = D93C4D39DAA8FEF8
 
 
 
-### Nitrokey Firmware Update Tool
+## Nitrokey Firmware Update Tool
 
 see [nitro-update](https://github.com/gebogebogebo/ctap-hid-fido2/tree/master/examples/nitro-update)
 

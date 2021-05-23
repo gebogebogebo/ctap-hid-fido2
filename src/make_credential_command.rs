@@ -1,4 +1,5 @@
 use crate::ctapdef;
+use crate::make_credential_params::Extension;
 use crate::util;
 use serde_cbor::to_vec;
 use serde_cbor::Value;
@@ -20,15 +21,16 @@ pub struct Params {
 
 impl Params {
     pub fn new(rp_id: &str, challenge: Vec<u8>, user_id: Vec<u8>) -> Params {
-        let mut params = Params::default();
-        params.rp_id = rp_id.to_string();
-        params.user_id = user_id.to_vec();
-        params.client_data_hash = util::create_clientdata_hash(challenge);
-        params
+        Params {
+            rp_id: rp_id.to_string(),
+            user_id: user_id.to_vec(),
+            client_data_hash: util::create_clientdata_hash(challenge),
+            ..Default::default()
+        }
     }
 }
 
-pub fn create_payload(params: Params) -> Vec<u8> {
+pub fn create_payload(params: Params, extensions: Option<&Vec<Extension>>) -> Vec<u8> {
     // 0x01 : clientDataHash
     let cdh = Value::Bytes(params.client_data_hash);
 
@@ -49,7 +51,7 @@ pub fn create_payload(params: Params) -> Vec<u8> {
     // user id
     {
         let user_id = {
-            if params.user_id.len() > 0 {
+            if !params.user_id.is_empty() {
                 params.user_id.to_vec()
             } else {
                 vec![0x00]
@@ -60,7 +62,7 @@ pub fn create_payload(params: Params) -> Vec<u8> {
     // user name
     {
         let user_name = {
-            if params.user_name.len() > 0 {
+            if !params.user_name.is_empty() {
                 params.user_name.to_string()
             } else {
                 " ".to_string()
@@ -71,7 +73,7 @@ pub fn create_payload(params: Params) -> Vec<u8> {
     // displayName
     {
         let display_name = {
-            if params.user_display_name.len() > 0 {
+            if !params.user_display_name.is_empty() {
                 params.user_display_name.to_string()
             } else {
                 " ".to_string()
@@ -94,6 +96,39 @@ pub fn create_payload(params: Params) -> Vec<u8> {
     let tmp = Value::Map(pub_key_cred_params_val);
     let pub_key_cred_params = Value::Array(vec![tmp]);
 
+    // 0x06 : extensions
+    let extensions = if let Some(extensions) = extensions {
+        let mut map = BTreeMap::new();
+        for ext in extensions {
+            match *ext {
+                Extension::CredProtect(n) => {
+                    map.insert(
+                        Value::Text(ext.to_string()),
+                        Value::Integer(n.unwrap() as i128),
+                    );
+                }
+                Extension::CredBlob(_) => (),
+                Extension::MinPinLength(_) => (),
+                Extension::HmacSecret(n) => {
+                    map.insert(Value::Text(ext.to_string()), Value::Bool(n.unwrap()));
+                }
+            };
+        }
+        Some(Value::Map(map))
+    } else {
+        None
+    };
+
+    /*
+    let user_id = {
+        if let Some(rkp) = rkparam {
+            rkp.id.to_vec()
+        } else {
+            [].to_vec()
+        }
+    };
+    */
+
     // 0x07 : options
     let options = {
         let mut options_val = BTreeMap::new();
@@ -109,7 +144,7 @@ pub fn create_payload(params: Params) -> Vec<u8> {
 
     // pinAuth(0x08)
     let pin_auth = {
-        if params.pin_auth.len() > 0 {
+        if !params.pin_auth.is_empty() {
             Some(Value::Bytes(params.pin_auth))
         } else {
             None
@@ -125,6 +160,9 @@ pub fn create_payload(params: Params) -> Vec<u8> {
     make_credential.insert(Value::Integer(0x02), rp);
     make_credential.insert(Value::Integer(0x03), user);
     make_credential.insert(Value::Integer(0x04), pub_key_cred_params);
+    if let Some(x) = extensions {
+        make_credential.insert(Value::Integer(0x06), x);
+    }
     make_credential.insert(Value::Integer(0x07), options);
     if let Some(x) = pin_auth {
         make_credential.insert(Value::Integer(0x08), x);

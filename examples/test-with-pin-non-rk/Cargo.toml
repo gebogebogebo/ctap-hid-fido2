@@ -9,3 +9,4 @@ edition = "2018"
 [dependencies]
 ctap-hid-fido2 = { path = "../.." }
 anyhow = "1.0"
+rust-crypto = "0.2"

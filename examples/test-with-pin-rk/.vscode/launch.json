@@ -7,29 +7,10 @@
         {
             "type": "lldb",
             "request": "launch",
-            "name": "Debug executable 'test-with-pin-rk'",
+            "name": "with-pin-rk",
             "cargo": {
                 "args": [
                     "build",
-                    "--bin=test-with-pin-rk",
-                    "--package=test-with-pin-rk"
-                ],
-                "filter": {
-                    "name": "test-with-pin-rk",
-                    "kind": "bin"
-                }
-            },
-            "args": [],
-            "cwd": "${workspaceFolder}"
-        },
-        {
-            "type": "lldb",
-            "request": "launch",
-            "name": "Debug unit tests in executable 'test-with-pin-rk'",
-            "cargo": {
-                "args": [
-                    "test",
-                    "--no-run",
                     "--bin=test-with-pin-rk",
                     "--package=test-with-pin-rk"
                 ],
