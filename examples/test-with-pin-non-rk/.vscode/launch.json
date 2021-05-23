@@ -7,7 +7,7 @@
         {
             "type": "lldb",
             "request": "launch",
-            "name": "Debug executable 'test-with-pin-non-rk'",
+            "name": "Debug executable 'with-pin-non-rk'",
             "cargo": {
                 "args": [
                     "build",

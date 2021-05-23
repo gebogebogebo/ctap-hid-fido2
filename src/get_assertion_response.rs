@@ -53,11 +53,9 @@ fn parse_cbor_authdata(authdata: Vec<u8>, ass: &mut get_assertion_params::Assert
             if let Value::Text(member) = key {
                 if *member == Extension::HmacSecret(None).to_string() {
                     let v = util::cbor_value_to_vec_u8(val)?;
-                    let mut v2:[u8;32] = Default::default();
-                    for index in 0..32{
-                        v2[index] = v[index];
-                    }
-                    ass.extensions.push(Extension::HmacSecret(Some(v2)));
+                    let mut hmac_secret_0 = [0u8; 32];
+                    hmac_secret_0.copy_from_slice(&v[0..32]);
+                    ass.extensions.push(Extension::HmacSecret(Some(hmac_secret_0)));
                 }
             }
         }

@@ -1,7 +1,7 @@
 use crate::client_pin;
 use crate::ctaphid;
 use crate::get_assertion_command;
-use crate::get_assertion_params;
+use crate::get_assertion_params::Assertion;
 use crate::get_assertion_params::Extension as Gext;
 use crate::get_assertion_response;
 use crate::get_next_assertion_command;
@@ -21,7 +21,7 @@ pub fn get_assertion(
     up: bool,
     uv: Option<bool>,
     extensions: Option<&Vec<Gext>>,
-) -> Result<Vec<get_assertion_params::Assertion>> {
+) -> Result<Vec<Assertion>> {
     // init
     let device = FidoKeyHid::new(hid_params).map_err(Error::msg)?;
     let cid = ctaphid::ctaphid_init(&device).map_err(Error::msg)?;
@@ -37,6 +37,20 @@ pub fn get_assertion(
     */
 
     let hmac_ext = create_hmacext(&device, &cid, extensions)?;
+
+    // TODO memo 相手側の verify と salt の復号手順
+    //  - 1) 送られてきた　keyAgreement を 使って Shared Secret を生成する(同じものができる)
+    //  - 2) Shared Secret と salt_enc を使って salt_authを生成してみる
+    //  - 3) 送られてきた salt_auth と自分が生成した salt_auth が同じであれば verify OK
+    //  - 4) salt_enc を復号して salt を導き出す
+
+    // TODO memo こちら側でできること
+    //  - 1) 送られてきたデータはAES256-CBCなので自分の持っている Shared Secret で復号できる
+    //  - 2) 復号して output1 を得ることができる
+    //  - 3) output1 とは 何なのか?
+    //      - output1 とは HMAC-SHA-256(CredRandom,salt1)
+    //      - Credrandomとは何なのか?
+    //          - CredentialID?
 
     // pin token
     let pin_token = {
@@ -77,14 +91,14 @@ pub fn get_assertion(
         let ass = get_next_assertion(&device, &cid).map_err(Error::msg)?;
         asss.push(ass);
     }
-
+    
     Ok(asss)
 }
 
 fn get_next_assertion(
     device: &FidoKeyHid,
     cid: &[u8],
-) -> Result<get_assertion_params::Assertion, String> {
+) -> Result<Assertion, String> {
     let send_payload = get_next_assertion_command::create_payload();
     let response_cbor = ctaphid::ctaphid_cbor(&device, &cid, &send_payload)?;
     get_assertion_response::parse_cbor(&response_cbor)

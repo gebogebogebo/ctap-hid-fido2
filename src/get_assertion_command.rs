@@ -61,7 +61,7 @@ pub fn create_payload(params: Params, hmac_ext: Option<HmacExt>) -> Vec<u8> {
             let mut param = BTreeMap::new();
 
             // keyAgreement(0x01)
-            let val = hmac_ext.key_agreement.to_value().unwrap();
+            let val = hmac_ext.shared_secret.public_key.to_value().unwrap();
             param.insert(Value::Integer(0x01), val);
 
             // saltEnc(0x02)
