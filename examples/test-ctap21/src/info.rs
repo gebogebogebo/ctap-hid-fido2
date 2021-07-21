@@ -1,5 +1,6 @@
 use ctap_hid_fido2;
 use anyhow::{anyhow,Result};
+use crate::str_buf::StrBuf;
 
 #[allow(unused_imports)]
 use ctap_hid_fido2::util;
@@ -33,12 +34,26 @@ pub fn info(matches: &clap::ArgMatches) -> Result<()> {
             "bio" => InfoOption::BioEnroll,
             _ => return Err(anyhow!("Invalid option")),
         };
+
+        // RK
+        // Resident Key
+        // true
+        // this authenticator can create discoverable credentials
+        // false
+        // this authenticator can not create discoverable credentials
+        //
+        // Discoverable credentials
+        // https://fidoalliance.org/specs/fido-v2.1-rd-20210309/fido-client-to-authenticator-protocol-v2.1-rd-20210309.html#sctn-discoverable
     
         match ctap_hid_fido2::enable_info_option(
             &HidParam::get_default_params(),
-            info_option,
+            info_option.clone(),
         ) {
-            Ok(result) => println!("option {} = {:?}",typ, result),
+            Ok(result) => {
+                let a = option_message(typ,&info_option,result)?;
+                println!("{}",a);
+                //println!("option {} = {:?}",typ, result);
+            },
             Err(err) => return Err(err),
         }
     
@@ -68,4 +83,41 @@ pub fn info(matches: &clap::ArgMatches) -> Result<()> {
     }
 
     Ok(())
+}
+
+fn option_message(typ: &str, info_option: &InfoOption, val: Option<bool>) -> Result<String> {
+    let value_str = match val {
+        Some(v) => format!("{}", v),
+        None => format!("Not Supported"),
+    };
+    let message1 = format!("option {} = {}",typ, value_str);
+
+    let message2 = match info_option {
+        InfoOption::Rk => {
+            let mut strbuf = StrBuf::new(0);
+            strbuf.add("- rk(Resident Key)\n");
+            if true {
+                strbuf.add("- this authenticator can create discoverable credentials");
+            }else{
+                strbuf.add("- this authenticator can not create discoverable credentials");
+            }
+            strbuf
+                .add("- Discoverable credentials")
+                .add("https://fidoalliance.org/specs/fido-v2.1-rd-20210309/fido-client-to-authenticator-protocol-v2.1-rd-20210309.html#sctn-discoverable");
+            strbuf.build().to_string()
+        },
+
+        /*
+        InfoOption::Up => "up",
+        InfoOption::Uv => "uv",
+        InfoOption::Plat => "plat",
+        InfoOption::ClinetPin => "clientPin",
+        InfoOption::CredentialMgmtPreview => "credentialMgmtPreview",
+        InfoOption::CredMgmt => "credMgmt",
+        InfoOption::UserVerificationMgmtPreview => "userVerificationMgmtPreview",
+        InfoOption::BioEnroll => "bioEnroll",
+        */
+        _ => "a".to_string()
+    };
+    Ok(format!("{}\n\n{}",message1,message2))
 }
