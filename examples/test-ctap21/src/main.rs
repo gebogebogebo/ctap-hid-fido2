@@ -18,7 +18,7 @@ fn main() -> Result<()> {
         .about("CTAP 2.1 command test app")
         .arg(
             Arg::with_name("pin")
-                .help("Get PIN retry count.")
+                .help("Get PIN retry counter.")
                 .short("p")
                 .long("pin")
         )
@@ -101,9 +101,32 @@ fn main() -> Result<()> {
     //ctap_hid_fido2::hello();
 
     if matches.is_present("pin") {
-        println!("Get PIN retry count.");
+        println!("Get PIN retry counter.");
         match ctap_hid_fido2::get_pin_retries(&HidParam::get_default_params()) {
-            Ok(v) => println!("- PIN retry count = {}", v),
+            Ok(mut v) => {
+                println!("PIN retry counter = {}", v);
+                
+                let mark = if v > 4 {
+                    ":) "
+                } else if v > 1{
+                    ":( "
+                } else {
+                    v = 1;
+                    ":0 "
+                };
+
+                println!("");
+                for _ in 0..v {
+                    print!("{}", mark);
+                }
+                println!("");
+
+                println!("");
+                println!("- PIN Retry counter represents the number of attempts left before PIN is disabled.");
+                println!("- Each correct PIN entry resets the PIN retry counters back to their maximum values.");
+                println!("- Each incorrect PIN entry decrements the counter by 1.");
+                println!("- Once the PIN retry counter reaches 0, built-in user verification are disabled and can only be enabled if authenticator is reset.");
+            }
             Err(err) => return Err(err),
         };
     }
@@ -111,7 +134,7 @@ fn main() -> Result<()> {
     if matches.is_present("wink") {
         println!("Blink the LED on the FIDO key.");
         match ctap_hid_fido2::wink(&HidParam::get_default_params()) {
-            Ok(()) => println!("- Blinked..."),
+            Ok(()) => println!("wink ;-)"),
             Err(err) => return Err(err),
         };
     }
