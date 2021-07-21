@@ -364,7 +364,7 @@ pub fn enable_info_option(
         InfoOption::Up => "up",
         InfoOption::Uv => "uv",
         InfoOption::Plat => "plat",
-        InfoOption::ClinetPin => "plat",
+        InfoOption::ClinetPin => "clientPin",
         InfoOption::CredentialMgmtPreview => "credentialMgmtPreview",
         InfoOption::CredMgmt => "credMgmt",
         InfoOption::UserVerificationMgmtPreview => "userVerificationMgmtPreview",
