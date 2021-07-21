@@ -1,12 +1,12 @@
-use ctap_hid_fido2;
 use anyhow::{Result};
-
-#[allow(unused_imports)]
-use ctap_hid_fido2::util;
-use ctap_hid_fido2::HidParam;
 
 extern crate clap;
 use clap::{App, Arg, SubCommand};
+
+use ctap_hid_fido2;
+#[allow(unused_imports)]
+use ctap_hid_fido2::util;
+use ctap_hid_fido2::{HidParam,str_buf};
 
 mod info;
 mod bio;

@@ -15,14 +15,22 @@ impl StrBuf {
         }
     }
 
-    pub fn bufh(title: &str, bytes: &[u8]) -> String {
-        let mut strbuf = StrBuf::new(0);
-        strbuf.appenh(title, bytes).build().to_string()
-    }
-
+    // add str and return StrBuf
     pub fn add(&mut self, val: &str) -> &mut Self {
         self.buf = self.buf.to_string() + val;
         self
+    }
+
+    // add str + ¥n and return StrBuf
+    pub fn addln(&mut self, val: &str) -> &mut Self {
+        self.buf = format!("{}{}\n",self.buf.to_string(),val);
+        self
+    }
+
+    // create String from title and bytes
+    pub fn bufh(title: &str, bytes: &[u8]) -> String {
+        let mut strbuf = StrBuf::new(0);
+        strbuf.appenh(title, bytes).build().to_string()
     }
 
     pub fn appent(&mut self, title: &str) -> &mut Self {
