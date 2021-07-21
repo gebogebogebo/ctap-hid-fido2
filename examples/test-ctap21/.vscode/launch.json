@@ -19,7 +19,9 @@
                     "kind": "bin"
                 }
             },
-            "args": ["bio_enrollment","-e"],
+            //"args": ["bio_enrollment","-e"],
+            //"args": ["info","-p","fido2"],
+            "args": ["-p"],
             "cwd": "${workspaceFolder}"
         }
     ]
