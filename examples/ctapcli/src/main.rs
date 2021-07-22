@@ -156,10 +156,10 @@ fn main() -> Result<()> {
                 println!("");
 
                 println!("");
-                println!("- PIN retry counter represents the number of attempts left before PIN is disabled.");
-                println!("- Each correct PIN entry resets the PIN retry counters back to their maximum values.");
-                println!("- Each incorrect PIN entry decrements the counter by 1.");
-                println!("- Once the PIN retry counter reaches 0, built-in user verification are disabled and can only be enabled if authenticator is reset.");
+                println!("PIN retry counter represents the number of attempts left before PIN is disabled.");
+                println!("Each correct PIN entry resets the PIN retry counters back to their maximum values.");
+                println!("Each incorrect PIN entry decrements the counter by 1.");
+                println!("Once the PIN retry counter reaches 0, built-in user verification are disabled and can only be enabled if authenticator is reset.");
             }
             Err(err) => return Err(err),
         };
