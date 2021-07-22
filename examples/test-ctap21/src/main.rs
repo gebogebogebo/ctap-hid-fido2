@@ -1,14 +1,15 @@
-use ctap_hid_fido2;
-use anyhow::{Result};
-
-use ctap_hid_fido2::bio_enrollment_params::TemplateInfo;
-#[allow(unused_imports)]
-use ctap_hid_fido2::util;
-use ctap_hid_fido2::{HidParam, InfoOption, InfoParam};
+use anyhow::Result;
 
 extern crate clap;
 use clap::{App, Arg, SubCommand};
-use ctap_hid_fido2::bio_enrollment_params::EnrollStatus1;
+
+use ctap_hid_fido2;
+#[allow(unused_imports)]
+use ctap_hid_fido2::util;
+use ctap_hid_fido2::{str_buf, HidParam};
+
+mod bio;
+mod info;
 
 fn main() -> Result<()> {
     let app = App::new("test-ctap21")
@@ -16,18 +17,54 @@ fn main() -> Result<()> {
         .author("gebo")
         .about("CTAP 2.1 command test app")
         .arg(
-            Arg::with_name("pin")
-                .help("pin")
-                .short("p")
-                .long("pin")
-                .takes_value(true)
-                .default_value("1234"),
+            Arg::with_name("device")
+                .help("Enumerate HID devices")
+                .short("d")
+                .long("device"),
         )
         .arg(
-            Arg::with_name("info")
-                .help("authenticatorGetInfo")
-                .short("i")
-                .long("info"),
+            Arg::with_name("fidokey")
+                .help("Enumerate FIDO key")
+                .short("f")
+                .long("fidokey"),
+        )
+        .arg(
+            Arg::with_name("pin")
+                .help("Get PIN retry counter")
+                .short("p")
+                .long("pin"),
+        )
+        .arg(
+            Arg::with_name("wink")
+                .help("Blink the LED on the FIDO key")
+                .short("w")
+                .long("wink"),
+        )
+        .subcommand(
+            SubCommand::with_name("info")
+                .about("Get Authenticator infomation")
+                .arg(
+                    Arg::with_name("list")
+                        .help("list the Authenticator infomation")
+                        .short("l")
+                        .long("list"),
+                )
+                .arg(
+                    Arg::with_name("option")
+                        .help("get a option(rk/up/uv/plat/pin/mgmtp/mgmt/biop/bio)")
+                        .short("o")
+                        .long("option")
+                        .takes_value(true)
+                        .value_name("option type"),
+                )
+                .arg(
+                    Arg::with_name("param")
+                        .help("get a parameter(u2f_v2/fido2/fido21p/fido21/hmac)")
+                        .short("p")
+                        .long("param")
+                        .takes_value(true)
+                        .value_name("param type"),
+                ),
         )
         .subcommand(
             SubCommand::with_name("bio_enrollment")
@@ -73,132 +110,76 @@ fn main() -> Result<()> {
     let matches = app.get_matches();
 
     // Start
-    ctap_hid_fido2::hello();
+    //ctap_hid_fido2::hello();
 
-    match ctap_hid_fido2::enable_info_param(
-        &HidParam::get_default_params(),
-        InfoParam::VersionsFido21Pre,
-    ) {
-        Ok(result) => println!("FIDO 2.1 PRE = {:?}", result),
-        Err(error) => println!("- error: {:?}", error),
-    };
-
-    match ctap_hid_fido2::enable_info_option(&HidParam::get_default_params(), InfoOption::CredMgmt)
-    {
-        Ok(result) => println!("CredMgmt = {:?}", result),
-        Err(error) => println!("- error: {:?}", error),
-    };
-
-    match ctap_hid_fido2::enable_info_option(
-        &HidParam::get_default_params(),
-        InfoOption::CredentialMgmtPreview,
-    ) {
-        Ok(result) => println!("CredentialMgmtPreview = {:?}", result),
-        Err(error) => println!("- error: {:?}", error),
-    };
-
-    match ctap_hid_fido2::enable_info_option(
-        &HidParam::get_default_params(),
-        InfoOption::UserVerificationMgmtPreview,
-    ) {
-        Ok(result) => println!("UserVerificationMgmtPreview = {:?}", result),
-        Err(error) => println!("- error: {:?}", error),
+    if matches.is_present("device") {
+        println!("Enumerate HID devices");
+        let devs = ctap_hid_fido2::get_hid_devices();
+        for (info, dev) in devs {
+            println!(
+                "- vid=0x{:04x} , pid=0x{:04x} , {:?}",
+                dev.vid, dev.pid, info
+            );
+        }
     }
 
-    match ctap_hid_fido2::enable_info_option(&HidParam::get_default_params(), InfoOption::BioEnroll)
-    {
-        Ok(result) => println!("BioEnroll = {:?}", result),
-        Err(error) => println!("- error: {:?}", error),
-    };
+    if matches.is_present("fidokey") {
+        println!("Enumerate FIDO key");
+        let devs = ctap_hid_fido2::get_fidokey_devices();
+        for (info, dev) in devs {
+            println!(
+                "- vid=0x{:04x} , pid=0x{:04x} , {:?}",
+                dev.vid, dev.pid, info
+            );
+        }
+    }
 
-    if matches.is_present("info") {
-        println!("get_info()");
-        match ctap_hid_fido2::get_info(&HidParam::get_default_params()) {
-            Ok(info) => println!("{}", info),
-            Err(error) => println!("error: {:?}", error),
+    if matches.is_present("pin") {
+        println!("Get PIN retry counter.\n");
+        match ctap_hid_fido2::get_pin_retries(&HidParam::get_default_params()) {
+            Ok(mut v) => {
+                println!("PIN retry counter = {}", v);
+
+                let mark = if v > 4 {
+                    ":) "
+                } else if v > 1 {
+                    ":( "
+                } else {
+                    v = 1;
+                    ":0 "
+                };
+
+                println!("");
+                for _ in 0..v {
+                    print!("{}", mark);
+                }
+                println!("");
+
+                println!("");
+                println!("- PIN retry counter represents the number of attempts left before PIN is disabled.");
+                println!("- Each correct PIN entry resets the PIN retry counters back to their maximum values.");
+                println!("- Each incorrect PIN entry decrements the counter by 1.");
+                println!("- Once the PIN retry counter reaches 0, built-in user verification are disabled and can only be enabled if authenticator is reset.");
+            }
+            Err(err) => return Err(err),
         };
     }
 
-    let pin = matches.value_of("pin");
-    println!("Value for pin: {:?}", pin);
-    println!("");
-    println!("");
+    if matches.is_present("wink") {
+        println!("Blink the LED on the FIDO key.\n");
+        match ctap_hid_fido2::wink(&HidParam::get_default_params()) {
+            Ok(()) => println!("Do you see that wink? ;-)"),
+            Err(err) => return Err(err),
+        };
+    }
 
-    // bio_enrollment
+    if let Some(ref matches) = matches.subcommand_matches("info") {
+        println!("Get the Authenticator infomation.\n");
+        info::info(&matches)?;
+    }
+
     if let Some(ref matches) = matches.subcommand_matches("bio_enrollment") {
-        println!("used authenticatorBioEnrollment");
-        println!("");
-
-        if matches.is_present("info") {
-            println!("Get fingerprint sensor info");
-            match ctap_hid_fido2::bio_enrollment_get_fingerprint_sensor_info(
-                &HidParam::get_default_params(),
-            ) {
-                Ok(result) => println!("- {:?}", result),
-                Err(e) => println!("- error: {:?}", e),
-            }
-            println!("");
-        }
-
-        if matches.is_present("enumerate") {
-            println!("Enumerate enrollments");
-            match ctap_hid_fido2::bio_enrollment_enumerate_enrollments(
-                &HidParam::get_default_params(),
-                pin,
-            ) {
-                Ok(infos) => {
-                    for i in infos {
-                        println!("- {}", i)
-                    }
-                }
-                Err(e) => println!("- error: {:?}", e),
-            }
-            println!("");
-        }
-
-        if matches.is_present("rename") {
-            let mut values = matches.values_of("rename").unwrap();
-            let template_id = values.next().unwrap();
-            let name = values.next();
-            println!("Rename/Set FriendlyName");
-            println!("- value for templateId: {:?}", template_id);
-            println!("- value for templateFriendlyName: {:?}", name);
-            println!("");
-
-            match ctap_hid_fido2::bio_enrollment_set_friendly_name(
-                &HidParam::get_default_params(),
-                pin,
-                TemplateInfo::new(util::to_str_hex(template_id), name),
-            ) {
-                Ok(_) => println!("- Success"),
-                Err(e) => println!("- error: {:?}", e),
-            }
-            println!("");
-        }
-
-        if matches.is_present("delete") {
-            let template_id = matches.value_of("delete").unwrap();
-            println!("Delete enrollment");
-            println!("- value for templateId: {:?}", template_id);
-            println!("");
-
-            match ctap_hid_fido2::bio_enrollment_remove(
-                &HidParam::get_default_params(),
-                pin,
-                util::to_str_hex(template_id),
-            ) {
-                Ok(_) => println!("- Success"),
-                Err(e) => println!("- error: {:?}", e),
-            }
-            println!("");
-        }
-
-        if matches.is_present("enroll") {
-            match bio_enrollment(pin.unwrap()) {
-                Ok(_) => println!("- Success"),
-                Err(e) => println!("- error: {:?}", e),
-            }
-        }
+        bio::bio_main(&matches, Some("1234"))?;
     }
 
     /*
@@ -215,30 +196,4 @@ fn main() -> Result<()> {
     };
     */
     Ok(())
-}
-
-fn bio_enrollment(pin: &str) -> Result<()> {
-    println!("bio_enrollment_begin");
-    let result = ctap_hid_fido2::bio_enrollment_begin(
-        &HidParam::get_default_params(),
-        Some(pin),
-        Some(10000),
-    )?;
-    println!("{}", result.1);
-    println!("");
-
-    for _counter in 0..10 {
-        if bio_enrollment_next(&result.0)? {
-            break;
-        }
-    }
-    Ok(())
-}
-
-fn bio_enrollment_next(enroll_status: &EnrollStatus1) -> Result<bool> {
-    println!("bio_enrollment_next");
-    let result = ctap_hid_fido2::bio_enrollment_next(enroll_status, Some(10000))?;
-    println!("{}", result);
-    println!("");
-    Ok(result.is_finish)
 }

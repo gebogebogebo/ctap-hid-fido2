@@ -26,6 +26,9 @@
 		},
 		{
 			"path": "examples/test-ctap21"
+		},
+		{
+			"path": "examples/ctapcli"
 		}
 	],
 	"settings": {}

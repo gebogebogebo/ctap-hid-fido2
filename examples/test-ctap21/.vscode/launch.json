@@ -19,7 +19,9 @@
                     "kind": "bin"
                 }
             },
-            "args": ["bio_enrollment","-e"],
+            //"args": ["bio_enrollment","-e"],
+            //"args": ["info","-l"],
+            "args": ["-f"],
             "cwd": "${workspaceFolder}"
         }
     ]
