@@ -1,4 +1,5 @@
 use hidapi::HidApi;
+use crate::str_buf::StrBuf;
 
 pub struct FidoKeyHid {
     pub device: hidapi::HidDevice,
@@ -42,13 +43,25 @@ impl FidoKeyHid {
         let devices = api.device_list();
         for dev in devices {
             if usage_page == None || dev.usage_page() == usage_page.unwrap() {
-                let mut memo = "".to_string();
+                let mut memo = StrBuf::new(0);
+
                 if let Some(n) = dev.product_string() {
-                    memo = n.to_string();
+                    memo.add("product=");
+                    memo.add(n);
+                }
+                memo.add(" usage_page=");
+                memo.add(&dev.usage_page().to_string());
+
+                memo.add(" usage=");
+                memo.add(&dev.usage().to_string());
+
+                if let Some(n) = dev.serial_number() {
+                    memo.add(" serial_number=");
+                    memo.add(n);
                 }
 
                 res.push((
-                    memo,
+                    memo.build().to_string(),
                     crate::HidParam {
                         vid: dev.vendor_id(),
                         pid: dev.product_id(),
