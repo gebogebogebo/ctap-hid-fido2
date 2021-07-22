@@ -1,12 +1,11 @@
-
+use anyhow::Result;
 use ctap_hid_fido2;
-use anyhow::{Result};
 
+use ctap_hid_fido2::bio_enrollment_params::EnrollStatus1;
 use ctap_hid_fido2::bio_enrollment_params::TemplateInfo;
 #[allow(unused_imports)]
 use ctap_hid_fido2::util;
 use ctap_hid_fido2::HidParam;
-use ctap_hid_fido2::bio_enrollment_params::EnrollStatus1;
 
 extern crate clap;
 
