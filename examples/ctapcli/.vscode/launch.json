@@ -7,22 +7,23 @@
         {
             "type": "lldb",
             "request": "launch",
-            "name": "test-ctap21",
+            "name": "ctapcli",
             "cargo": {
                 "args": [
                     "build",
-                    "--bin=test-ctap21",
-                    "--package=test-ctap21"
+                    "--bin=ctapcli",
+                    "--package=ctapcli"
                 ],
                 "filter": {
-                    "name": "test-ctap21",
+                    "name": "ctapcli",
                     "kind": "bin"
                 }
             },
             //"args": ["bio_enrollment","-e"],
-            //"args": ["info","-l"],
-            "args": ["-f"],
+            "args": ["info","-l"],
+            //"args": ["-f"],
             "cwd": "${workspaceFolder}"
         }
+
     ]
 }

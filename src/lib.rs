@@ -318,7 +318,7 @@ pub enum InfoParam {
     ExtensionsHmacSecret,
 }
 
-pub fn enable_info_param(hid_params: &[HidParam], info_param: InfoParam) -> Result<bool> {
+pub fn enable_info_param(hid_params: &[HidParam], info_param: &InfoParam) -> Result<bool> {
     let info = get_info::get_info(hid_params).map_err(Error::msg)?;
     let find = match info_param {
         InfoParam::VersionsU2Fv2 => "U2F_V2",
@@ -356,7 +356,7 @@ pub enum InfoOption {
 }
 pub fn enable_info_option(
     hid_params: &[HidParam],
-    info_option: InfoOption,
+    info_option: &InfoOption,
 ) -> Result<Option<bool>> {
     let info = get_info::get_info(hid_params).map_err(Error::msg)?;
     let find = match info_option {
@@ -364,7 +364,7 @@ pub fn enable_info_option(
         InfoOption::Up => "up",
         InfoOption::Uv => "uv",
         InfoOption::Plat => "plat",
-        InfoOption::ClinetPin => "plat",
+        InfoOption::ClinetPin => "clientPin",
         InfoOption::CredentialMgmtPreview => "credentialMgmtPreview",
         InfoOption::CredMgmt => "credMgmt",
         InfoOption::UserVerificationMgmtPreview => "userVerificationMgmtPreview",

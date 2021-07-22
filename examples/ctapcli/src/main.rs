@@ -12,10 +12,10 @@ mod bio;
 mod info;
 
 fn main() -> Result<()> {
-    let app = App::new("test-ctap21")
-        .version("0.1.0")
+    let app = App::new("ctapcli")
+        .version("0.0.1")
         .author("gebo")
-        .about("CTAP 2.1 command test app")
+        .about("This tool implements CTAP HID and can communicate with FIDO Authenticator.\n\nabout CTAP(Client to Authenticator Protocol)\nhttps://fidoalliance.org/specs/fido-v2.1-rd-20210309/fido-client-to-authenticator-protocol-v2.1-rd-20210309.html")
         .arg(
             Arg::with_name("device")
                 .help("Enumerate HID devices")
@@ -156,10 +156,10 @@ fn main() -> Result<()> {
                 println!("");
 
                 println!("");
-                println!("- PIN retry counter represents the number of attempts left before PIN is disabled.");
-                println!("- Each correct PIN entry resets the PIN retry counters back to their maximum values.");
-                println!("- Each incorrect PIN entry decrements the counter by 1.");
-                println!("- Once the PIN retry counter reaches 0, built-in user verification are disabled and can only be enabled if authenticator is reset.");
+                println!("PIN retry counter represents the number of attempts left before PIN is disabled.");
+                println!("Each correct PIN entry resets the PIN retry counters back to their maximum values.");
+                println!("Each incorrect PIN entry decrements the counter by 1.");
+                println!("Once the PIN retry counter reaches 0, built-in user verification are disabled and can only be enabled if authenticator is reset.");
             }
             Err(err) => return Err(err),
         };
