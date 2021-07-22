@@ -165,7 +165,7 @@ fn main() {
 
     match ctap_hid_fido2::enable_info_param(
         &HidParam::get_default_params(),
-        InfoParam::VersionsFido21Pre,
+        &InfoParam::VersionsFido21Pre,
     ) {
         Ok(result) => println!("Enable CTAP 2.1 PRE = {:?}", result),
         Err(error) => println!("- error: {:?}", error),

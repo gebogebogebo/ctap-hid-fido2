@@ -1,0 +1,11 @@
+/Users/suzuki/Documents/GitHub/ctap-hid-fido2/examples/ctapcli/target/debug/deps/rusticata_macros-53c8d66f207cf027.rmeta: /Users/suzuki/.cargo/registry/src/github.com-1ecc6299db9ec823/rusticata-macros-2.1.0/src/lib.rs /Users/suzuki/.cargo/registry/src/github.com-1ecc6299db9ec823/rusticata-macros-2.1.0/src/combinator.rs /Users/suzuki/.cargo/registry/src/github.com-1ecc6299db9ec823/rusticata-macros-2.1.0/src/macros.rs /Users/suzuki/.cargo/registry/src/github.com-1ecc6299db9ec823/rusticata-macros-2.1.0/src/debug.rs /Users/suzuki/.cargo/registry/src/github.com-1ecc6299db9ec823/rusticata-macros-2.1.0/src/traits.rs
+
+/Users/suzuki/Documents/GitHub/ctap-hid-fido2/examples/ctapcli/target/debug/deps/librusticata_macros-53c8d66f207cf027.rlib: /Users/suzuki/.cargo/registry/src/github.com-1ecc6299db9ec823/rusticata-macros-2.1.0/src/lib.rs /Users/suzuki/.cargo/registry/src/github.com-1ecc6299db9ec823/rusticata-macros-2.1.0/src/combinator.rs /Users/suzuki/.cargo/registry/src/github.com-1ecc6299db9ec823/rusticata-macros-2.1.0/src/macros.rs /Users/suzuki/.cargo/registry/src/github.com-1ecc6299db9ec823/rusticata-macros-2.1.0/src/debug.rs /Users/suzuki/.cargo/registry/src/github.com-1ecc6299db9ec823/rusticata-macros-2.1.0/src/traits.rs
+
+/Users/suzuki/Documents/GitHub/ctap-hid-fido2/examples/ctapcli/target/debug/deps/rusticata_macros-53c8d66f207cf027.d: /Users/suzuki/.cargo/registry/src/github.com-1ecc6299db9ec823/rusticata-macros-2.1.0/src/lib.rs /Users/suzuki/.cargo/registry/src/github.com-1ecc6299db9ec823/rusticata-macros-2.1.0/src/combinator.rs /Users/suzuki/.cargo/registry/src/github.com-1ecc6299db9ec823/rusticata-macros-2.1.0/src/macros.rs /Users/suzuki/.cargo/registry/src/github.com-1ecc6299db9ec823/rusticata-macros-2.1.0/src/debug.rs /Users/suzuki/.cargo/registry/src/github.com-1ecc6299db9ec823/rusticata-macros-2.1.0/src/traits.rs
+
+/Users/suzuki/.cargo/registry/src/github.com-1ecc6299db9ec823/rusticata-macros-2.1.0/src/lib.rs:
+/Users/suzuki/.cargo/registry/src/github.com-1ecc6299db9ec823/rusticata-macros-2.1.0/src/combinator.rs:
+/Users/suzuki/.cargo/registry/src/github.com-1ecc6299db9ec823/rusticata-macros-2.1.0/src/macros.rs:
+/Users/suzuki/.cargo/registry/src/github.com-1ecc6299db9ec823/rusticata-macros-2.1.0/src/debug.rs:
+/Users/suzuki/.cargo/registry/src/github.com-1ecc6299db9ec823/rusticata-macros-2.1.0/src/traits.rs:
