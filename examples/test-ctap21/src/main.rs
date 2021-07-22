@@ -1,4 +1,4 @@
-use anyhow::{Result};
+use anyhow::Result;
 
 extern crate clap;
 use clap::{App, Arg, SubCommand};
@@ -6,10 +6,10 @@ use clap::{App, Arg, SubCommand};
 use ctap_hid_fido2;
 #[allow(unused_imports)]
 use ctap_hid_fido2::util;
-use ctap_hid_fido2::{HidParam,str_buf};
+use ctap_hid_fido2::{str_buf, HidParam};
 
-mod info;
 mod bio;
+mod info;
 
 fn main() -> Result<()> {
     let app = App::new("test-ctap21")
@@ -18,41 +18,41 @@ fn main() -> Result<()> {
         .about("CTAP 2.1 command test app")
         .arg(
             Arg::with_name("pin")
-                .help("Get PIN retry counter.")
+                .help("Get PIN retry counter")
                 .short("p")
-                .long("pin")
+                .long("pin"),
         )
         .arg(
             Arg::with_name("wink")
-                .help("Blink the LED on the FIDO key.")
+                .help("Blink the LED on the FIDO key")
                 .short("w")
-                .long("wink")
+                .long("wink"),
         )
         .subcommand(
             SubCommand::with_name("info")
-            .about("Get Authenticator infomation.")
-            .arg(
-                Arg::with_name("list")
-                    .help("list the Authenticator infomation.")
-                    .short("l")
-                    .long("list")
-            )
-            .arg(
-                Arg::with_name("option")
-                    .help("get a option(rk/up/uv/plat/pin/mgmtp/mgmt/biop/bio)d")
-                    .short("o")
-                    .long("option")
-                    .takes_value(true)
-                    .value_name("option type")
-            )
-            .arg(
-                Arg::with_name("param")
-                    .help("get a parameter(u2f_v2/fido2/fido21p/fido21/hmac)")
-                    .short("p")
-                    .long("param")
-                    .takes_value(true)
-                    .value_name("param type")
-            )
+                .about("Get Authenticator infomation")
+                .arg(
+                    Arg::with_name("list")
+                        .help("list the Authenticator infomation")
+                        .short("l")
+                        .long("list"),
+                )
+                .arg(
+                    Arg::with_name("option")
+                        .help("get a option(rk/up/uv/plat/pin/mgmtp/mgmt/biop/bio)")
+                        .short("o")
+                        .long("option")
+                        .takes_value(true)
+                        .value_name("option type"),
+                )
+                .arg(
+                    Arg::with_name("param")
+                        .help("get a parameter(u2f_v2/fido2/fido21p/fido21/hmac)")
+                        .short("p")
+                        .long("param")
+                        .takes_value(true)
+                        .value_name("param type"),
+                ),
         )
         .subcommand(
             SubCommand::with_name("bio_enrollment")
@@ -101,14 +101,14 @@ fn main() -> Result<()> {
     //ctap_hid_fido2::hello();
 
     if matches.is_present("pin") {
-        println!("Get PIN retry counter.");
+        println!("Get PIN retry counter.\n");
         match ctap_hid_fido2::get_pin_retries(&HidParam::get_default_params()) {
             Ok(mut v) => {
                 println!("PIN retry counter = {}", v);
-                
+
                 let mark = if v > 4 {
                     ":) "
-                } else if v > 1{
+                } else if v > 1 {
                     ":( "
                 } else {
                     v = 1;
@@ -122,7 +122,7 @@ fn main() -> Result<()> {
                 println!("");
 
                 println!("");
-                println!("- PIN Retry counter represents the number of attempts left before PIN is disabled.");
+                println!("- PIN retry counter represents the number of attempts left before PIN is disabled.");
                 println!("- Each correct PIN entry resets the PIN retry counters back to their maximum values.");
                 println!("- Each incorrect PIN entry decrements the counter by 1.");
                 println!("- Once the PIN retry counter reaches 0, built-in user verification are disabled and can only be enabled if authenticator is reset.");
@@ -132,20 +132,20 @@ fn main() -> Result<()> {
     }
 
     if matches.is_present("wink") {
-        println!("Blink the LED on the FIDO key.");
+        println!("Blink the LED on the FIDO key.\n");
         match ctap_hid_fido2::wink(&HidParam::get_default_params()) {
-            Ok(()) => println!("wink ;-)"),
+            Ok(()) => println!("Do you see that wink? ;-)"),
             Err(err) => return Err(err),
         };
     }
 
     if let Some(ref matches) = matches.subcommand_matches("info") {
-        println!("Get the Authenticator infomation.");
+        println!("Get the Authenticator infomation.\n");
         info::info(&matches)?;
     }
 
     if let Some(ref matches) = matches.subcommand_matches("bio_enrollment") {
-        bio::bio_main(&matches,Some("1234"))?;
+        bio::bio_main(&matches, Some("1234"))?;
     }
 
     /*

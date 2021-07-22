@@ -20,8 +20,8 @@
                 }
             },
             //"args": ["bio_enrollment","-e"],
-            "args": ["info","-o","rk"],
-            //"args": ["-p"],
+            //"args": ["info","-l"],
+            "args": ["-w"],
             "cwd": "${workspaceFolder}"
         }
     ]
