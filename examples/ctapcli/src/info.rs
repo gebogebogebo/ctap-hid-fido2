@@ -17,51 +17,53 @@ pub fn info(matches: &clap::ArgMatches) -> Result<()> {
         };
     }
 
-    if matches.is_present("option") {
-        let mut values = matches.values_of("option").unwrap();
-        let typ = values.next().unwrap();
+    if matches.is_present("get") {
+        let mut values = matches.values_of("get").unwrap();
+        let item = values.next().unwrap();
 
-        let info_option = match typ {
-            "rk" => InfoOption::Rk,
-            "up" => InfoOption::Up,
-            "uv" => InfoOption::Uv,
-            "plat" => InfoOption::Plat,
-            "pin" => InfoOption::ClinetPin,
-            "mgmtp" => InfoOption::CredentialMgmtPreview,
-            "mgmt" => InfoOption::CredMgmt,
-            "biop" => InfoOption::UserVerificationMgmtPreview,
-            "bio" => InfoOption::BioEnroll,
-            _ => return Err(anyhow!("Invalid option")),
+        let info_option = match item {
+            "rk" => Some(InfoOption::Rk),
+            "up" => Some(InfoOption::Up),
+            "uv" => Some(InfoOption::Uv),
+            "plat" => Some(InfoOption::Plat),
+            "pin" => Some(InfoOption::ClinetPin),
+            "mgmtp" => Some(InfoOption::CredentialMgmtPreview),
+            "mgmt" => Some(InfoOption::CredMgmt),
+            "biop" => Some(InfoOption::UserVerificationMgmtPreview),
+            "bio" => Some(InfoOption::BioEnroll),
+            _ => None,
         };
 
-        match ctap_hid_fido2::enable_info_option(
-            &HidParam::get_default_params(),
-            &info_option
-        ) {
-            Ok(result) => println!("{}", option_message(typ, &info_option, result)?),
-            Err(err) => return Err(err),
-        }
-    }
+        if let Some(option) = info_option {
+            match ctap_hid_fido2::enable_info_option(
+                &HidParam::get_default_params(),
+                &option
+            ) {
+                Ok(result) => println!("{}", option_message(item, &option, result)?),
+                Err(err) => return Err(err),
+            }
+        } else {
+            let info_param = match item {
+                "u2f_v2" => Some(InfoParam::VersionsU2Fv2),
+                "fido2" => Some(InfoParam::VersionsFido20),
+                "fido21p" => Some(InfoParam::VersionsFido21Pre),
+                "fido21" => Some(InfoParam::VersionsFido21),
+                "hmac" => Some(InfoParam::ExtensionsHmacSecret),
+                _ => None,
+            };
 
-    if matches.is_present("param") {
-        let mut values = matches.values_of("param").unwrap();
-        let typ = values.next().unwrap();
-
-        let info_param = match typ {
-            "u2f_v2" => InfoParam::VersionsU2Fv2,
-            "fido2" => InfoParam::VersionsFido20,
-            "fido21p" => InfoParam::VersionsFido21Pre,
-            "fido21" => InfoParam::VersionsFido21,
-            "hmac" => InfoParam::ExtensionsHmacSecret,
-            _ => return Err(anyhow!("Invalid param")),
-        };
-
-        match ctap_hid_fido2::enable_info_param(
-            &HidParam::get_default_params(),
-            &info_param
-        ) {
-            Ok(result) => println!("{}", param_message(typ, &info_param, result)?),
-            Err(err) => return Err(err),
+            if let Some(param) = info_param {
+                match ctap_hid_fido2::enable_info_param(
+                    &HidParam::get_default_params(),
+                    &param
+                ) {
+                    Ok(result) => println!("{}", param_message(item, &param, result)?),
+                    Err(err) => return Err(err),
+                }
+        
+            } else {
+                return Err(anyhow!("Invalid item"));
+            }
         }
     }
 

@@ -50,21 +50,13 @@ fn main() -> Result<()> {
                         .long("list"),
                 )
                 .arg(
-                    Arg::with_name("option")
-                        .help("get a option(rk/up/uv/plat/pin/mgmtp/mgmt/biop/bio)")
-                        .short("o")
-                        .long("option")
+                    Arg::with_name("get")
+                        .help("get a item(rk/up/uv/plat/pin/mgmtp/mgmt/biop/bio/u2f_v2/fido2/fido21p/fido21/hmac)")
+                        .short("g")
+                        .long("get")
                         .takes_value(true)
-                        .value_name("option type"),
+                        .value_name("item"),
                 )
-                .arg(
-                    Arg::with_name("param")
-                        .help("get a parameter(u2f_v2/fido2/fido21p/fido21/hmac)")
-                        .short("p")
-                        .long("param")
-                        .takes_value(true)
-                        .value_name("param type"),
-                ),
         )
         .subcommand(
             SubCommand::with_name("bio_enrollment")
