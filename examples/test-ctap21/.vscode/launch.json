@@ -21,7 +21,7 @@
             },
             //"args": ["bio_enrollment","-e"],
             //"args": ["info","-l"],
-            "args": ["-w"],
+            "args": ["-f"],
             "cwd": "${workspaceFolder}"
         }
     ]

@@ -17,6 +17,18 @@ fn main() -> Result<()> {
         .author("gebo")
         .about("CTAP 2.1 command test app")
         .arg(
+            Arg::with_name("device")
+                .help("Enumerate HID devices")
+                .short("d")
+                .long("device"),
+        )
+        .arg(
+            Arg::with_name("fidokey")
+                .help("Enumerate FIDO key")
+                .short("f")
+                .long("fidokey"),
+        )
+        .arg(
             Arg::with_name("pin")
                 .help("Get PIN retry counter")
                 .short("p")
@@ -99,6 +111,28 @@ fn main() -> Result<()> {
 
     // Start
     //ctap_hid_fido2::hello();
+
+    if matches.is_present("device") {
+        println!("Enumerate HID devices");
+        let devs = ctap_hid_fido2::get_hid_devices();
+        for (info, dev) in devs {
+            println!(
+                "- vid=0x{:04x} , pid=0x{:04x} , {:?}",
+                dev.vid, dev.pid, info
+            );
+        }
+    }
+
+    if matches.is_present("fidokey") {
+        println!("Enumerate FIDO key");
+        let devs = ctap_hid_fido2::get_fidokey_devices();
+        for (info, dev) in devs {
+            println!(
+                "- vid=0x{:04x} , pid=0x{:04x} , {:?}",
+                dev.vid, dev.pid, info
+            );
+        }
+    }
 
     if matches.is_present("pin") {
         println!("Get PIN retry counter.\n");
