@@ -1,39 +1,33 @@
-use anyhow::Result;
+use anyhow::{anyhow, Result};
 use ctap_hid_fido2;
 
-use ctap_hid_fido2::bio_enrollment_params::EnrollStatus1;
-use ctap_hid_fido2::bio_enrollment_params::TemplateInfo;
 #[allow(unused_imports)]
 use ctap_hid_fido2::util;
-use ctap_hid_fido2::HidParam;
+use ctap_hid_fido2::{HidParam, InfoOption};
+use ctap_hid_fido2::bio_enrollment_params::EnrollStatus1;
+use ctap_hid_fido2::bio_enrollment_params::TemplateInfo;
 
 extern crate clap;
 
 pub fn bio(matches: &clap::ArgMatches) -> Result<()> {
     let pin = matches.value_of("pin");
 
-    println!("Fingerprint sensor info.");
-    match ctap_hid_fido2::bio_enrollment_get_fingerprint_sensor_info(
+    // check
+    if let None = ctap_hid_fido2::enable_info_option(
         &HidParam::get_default_params(),
-    ) {
-        Ok(result) => println!("- {:?}", result),
-        Err(e) => return Err(e),
-    }
-    println!("");
-
-    println!("Enumerate enrollments.");
-    match ctap_hid_fido2::bio_enrollment_enumerate_enrollments(
-        &HidParam::get_default_params(),
-        pin,
-    ) {
-        Ok(infos) => {
-            for i in infos {
-                println!("{}", i)
-            }
+        &InfoOption::BioEnroll,
+    )? {
+        if let None = ctap_hid_fido2::enable_info_option(
+            &HidParam::get_default_params(),
+            &InfoOption::UserVerificationMgmtPreview,
+        )? {
+            return Err(anyhow!("This authenticator is not Supported Bio management."));
         }
-        Err(e) => return Err(e),
-    }
-    println!("");
+    };
+
+    println!("Fingerprint sensor info.");
+    let result = ctap_hid_fido2::bio_enrollment_get_fingerprint_sensor_info(&HidParam::get_default_params())?;
+    println!("- {:?}\n", result);
 
     if matches.is_present("rename") {
         let mut values = matches.values_of("rename").unwrap();
@@ -44,39 +38,34 @@ pub fn bio(matches: &clap::ArgMatches) -> Result<()> {
         println!("- value for templateFriendlyName: {:?}", name);
         println!("");
 
-        match ctap_hid_fido2::bio_enrollment_set_friendly_name(
+        ctap_hid_fido2::bio_enrollment_set_friendly_name(
             &HidParam::get_default_params(),
             pin,
             TemplateInfo::new(util::to_str_hex(template_id), name),
-        ) {
-            Ok(_) => println!("- Success"),
-            Err(e) => return Err(e),
-        }
-        println!("");
-    }
-
-    if matches.is_present("delete") {
+        )?;
+        println!("- Success\n");
+    } else if matches.is_present("delete") {
         let template_id = matches.value_of("delete").unwrap();
         println!("Delete enrollment");
         println!("- value for templateId: {:?}", template_id);
         println!("");
 
-        match ctap_hid_fido2::bio_enrollment_remove(
+        ctap_hid_fido2::bio_enrollment_remove(
             &HidParam::get_default_params(),
             pin,
             util::to_str_hex(template_id),
-        ) {
-            Ok(_) => println!("- Success"),
-            Err(e) => return Err(e),
+        )?;
+        println!("- Success\n");
+    } else if matches.is_present("enroll") {
+        bio_enrollment(pin.unwrap())?;
+        println!("- Success\n");
+    } else {
+        println!("Enumerate enrollments.");
+        let bios = ctap_hid_fido2::bio_enrollment_enumerate_enrollments(&HidParam::get_default_params(), pin)?;
+        for i in bios {
+            println!("{}", i)
         }
         println!("");
-    }
-
-    if matches.is_present("enroll") {
-        match bio_enrollment(pin.unwrap()) {
-            Ok(_) => println!("- Success"),
-            Err(e) => return Err(e),
-        }
     }
 
     Ok(())
