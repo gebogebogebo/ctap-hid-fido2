@@ -138,29 +138,35 @@ fn main() -> Result<()> {
     if matches.is_present("pin") {
         println!("Get PIN retry counter.\n");
         match ctap_hid_fido2::get_pin_retries(&HidParam::get_default_params()) {
-            Ok(mut v) => {
+            Ok(v) => {
                 println!("PIN retry counter = {}", v);
 
-                let mark = if v > 4 {
-                    ":) "
-                } else if v > 1 {
-                    ":( "
+                if v > 0 {
+                    let mark = if v > 4 {
+                        ":) "
+                    } else if v > 1 {
+                        ":( "
+                    } else {
+                        ":0 "
+                    };
+
+                    println!("");
+                    for _ in 0..v {
+                        print!("{}", mark);
+                    }
+                    println!("");
+
+                    println!("");
+                    println!("PIN retry counter represents the number of attempts left before PIN is disabled.");
+                    println!("Each correct PIN entry resets the PIN retry counters back to their maximum values.");
+                    println!("Each incorrect PIN entry decrements the counter by 1.");
+                    println!("Once the PIN retry counter reaches 0, built-in user verification are disabled and can only be enabled if authenticator is reset.");
                 } else {
-                    v = 1;
-                    ":0 "
-                };
-
-                println!("");
-                for _ in 0..v {
-                    print!("{}", mark);
+                    println!("\nThe authenticator has been blocked. \nThe only way to make it available again is factory reset.");
+                    println!("");
+                    println!(":_( ");
+                    println!("");
                 }
-                println!("");
-
-                println!("");
-                println!("PIN retry counter represents the number of attempts left before PIN is disabled.");
-                println!("Each correct PIN entry resets the PIN retry counters back to their maximum values.");
-                println!("Each incorrect PIN entry decrements the counter by 1.");
-                println!("Once the PIN retry counter reaches 0, built-in user verification are disabled and can only be enabled if authenticator is reset.");
             }
             Err(err) => return Err(err),
         };

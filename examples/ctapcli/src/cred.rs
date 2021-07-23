@@ -1,23 +1,32 @@
+use anyhow::{anyhow, Result};
 use crate::str_buf::StrBuf;
-use anyhow::Result;
-use ctap_hid_fido2;
 
 #[allow(unused_imports)]
 use ctap_hid_fido2::util;
-use ctap_hid_fido2::HidParam;
+use ctap_hid_fido2::{HidParam, InfoOption};
 
 pub fn cred(matches: &clap::ArgMatches) -> Result<()> {
     let pin = matches.value_of("pin");
 
+    // check
+    if let None = ctap_hid_fido2::enable_info_option(
+        &HidParam::get_default_params(),
+        &InfoOption::CredMgmt,
+    )? {
+        if let None = ctap_hid_fido2::enable_info_option(
+            &HidParam::get_default_params(),
+            &InfoOption::CredentialMgmtPreview,
+        )? {
+            return Err(anyhow!("This authenticator is not Supported Credential management."));
+        }
+    };
+
     println!("Enumerate discoverable credentials.");
 
-    let credentials_count = match ctap_hid_fido2::credential_management_get_creds_metadata(
+    let credentials_count = ctap_hid_fido2::credential_management_get_creds_metadata(
         &HidParam::get_default_params(),
         pin,
-    ) {
-        Ok(result) => result,
-        Err(e) => return Err(e),
-    };
+    )?;
 
     let mut strbuf = StrBuf::new(0);
     strbuf.addln(&format!(
@@ -38,28 +47,21 @@ pub fn cred(matches: &clap::ArgMatches) -> Result<()> {
     }
 
     // Vec<credential_management_params::Rp>
-    let rps = match ctap_hid_fido2::credential_management_enumerate_rps(&HidParam::get_default_params(), pin)
-    {
-        Ok(results) => results,
-        Err(e) => return Err(e),
-    };
+    let rps =
+        ctap_hid_fido2::credential_management_enumerate_rps(&HidParam::get_default_params(), pin)?;
 
     for r in rps {
         println!("## rps\n{}", r);
 
-        let creds = match ctap_hid_fido2::credential_management_enumerate_credentials(
+        let creds = ctap_hid_fido2::credential_management_enumerate_credentials(
             &HidParam::get_default_params(),
             pin,
-            r.rpid_hash
-        ) {
-            Ok(results) => results,
-            Err(e) => return Err(e),
-        };
+            r.rpid_hash,
+        )?;
 
         for c in creds {
             println!("### credentials\n{}", c);
         }
-
     }
 
     Ok(())
