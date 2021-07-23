@@ -9,36 +9,31 @@ use ctap_hid_fido2::HidParam;
 
 extern crate clap;
 
-pub fn bio_main(matches: &clap::ArgMatches, pin: Option<&str>) -> Result<()> {
-    println!("used authenticatorBioEnrollment");
+pub fn bio(matches: &clap::ArgMatches) -> Result<()> {
+    let pin = matches.value_of("pin");
+
+    println!("Fingerprint sensor info.");
+    match ctap_hid_fido2::bio_enrollment_get_fingerprint_sensor_info(
+        &HidParam::get_default_params(),
+    ) {
+        Ok(result) => println!("- {:?}", result),
+        Err(e) => return Err(e),
+    }
     println!("");
 
-    if matches.is_present("info") {
-        println!("Get fingerprint sensor info");
-        match ctap_hid_fido2::bio_enrollment_get_fingerprint_sensor_info(
-            &HidParam::get_default_params(),
-        ) {
-            Ok(result) => println!("- {:?}", result),
-            Err(e) => println!("- error: {:?}", e),
-        }
-        println!("");
-    }
-
-    if matches.is_present("enumerate") {
-        println!("Enumerate enrollments");
-        match ctap_hid_fido2::bio_enrollment_enumerate_enrollments(
-            &HidParam::get_default_params(),
-            pin,
-        ) {
-            Ok(infos) => {
-                for i in infos {
-                    println!("- {}", i)
-                }
+    println!("Enumerate enrollments.");
+    match ctap_hid_fido2::bio_enrollment_enumerate_enrollments(
+        &HidParam::get_default_params(),
+        pin,
+    ) {
+        Ok(infos) => {
+            for i in infos {
+                println!("{}", i)
             }
-            Err(e) => println!("- error: {:?}", e),
         }
-        println!("");
+        Err(e) => return Err(e),
     }
+    println!("");
 
     if matches.is_present("rename") {
         let mut values = matches.values_of("rename").unwrap();
@@ -55,7 +50,7 @@ pub fn bio_main(matches: &clap::ArgMatches, pin: Option<&str>) -> Result<()> {
             TemplateInfo::new(util::to_str_hex(template_id), name),
         ) {
             Ok(_) => println!("- Success"),
-            Err(e) => println!("- error: {:?}", e),
+            Err(e) => return Err(e),
         }
         println!("");
     }
@@ -72,7 +67,7 @@ pub fn bio_main(matches: &clap::ArgMatches, pin: Option<&str>) -> Result<()> {
             util::to_str_hex(template_id),
         ) {
             Ok(_) => println!("- Success"),
-            Err(e) => println!("- error: {:?}", e),
+            Err(e) => return Err(e),
         }
         println!("");
     }
@@ -80,7 +75,7 @@ pub fn bio_main(matches: &clap::ArgMatches, pin: Option<&str>) -> Result<()> {
     if matches.is_present("enroll") {
         match bio_enrollment(pin.unwrap()) {
             Ok(_) => println!("- Success"),
-            Err(e) => println!("- error: {:?}", e),
+            Err(e) => return Err(e),
         }
     }
 

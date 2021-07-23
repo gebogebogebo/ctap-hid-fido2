@@ -9,6 +9,7 @@ use ctap_hid_fido2::util;
 use ctap_hid_fido2::{str_buf, HidParam};
 
 mod bio;
+mod cred;
 mod info;
 
 fn main() -> Result<()> {
@@ -20,25 +21,25 @@ fn main() -> Result<()> {
             Arg::with_name("device")
                 .help("Enumerate HID devices")
                 .short("d")
-                .long("device"),
+                .long("device")
         )
         .arg(
             Arg::with_name("fidokey")
                 .help("Enumerate FIDO key")
                 .short("f")
-                .long("fidokey"),
+                .long("fidokey")
         )
         .arg(
             Arg::with_name("pin")
                 .help("Get PIN retry counter")
                 .short("p")
-                .long("pin"),
+                .long("pin")
         )
         .arg(
             Arg::with_name("wink")
                 .help("Blink the LED on the FIDO key")
                 .short("w")
-                .long("wink"),
+                .long("wink")
         )
         .subcommand(
             SubCommand::with_name("info")
@@ -47,7 +48,7 @@ fn main() -> Result<()> {
                     Arg::with_name("list")
                         .help("list the Authenticator infomation")
                         .short("l")
-                        .long("list"),
+                        .long("list")
                 )
                 .arg(
                     Arg::with_name("get")
@@ -55,23 +56,31 @@ fn main() -> Result<()> {
                         .short("g")
                         .long("get")
                         .takes_value(true)
-                        .value_name("item"),
+                        .value_name("item")
                 )
         )
         .subcommand(
-            SubCommand::with_name("bio_enrollment")
-                .about("authenticatorBioEnrollment (0x09)")
+            SubCommand::with_name("cred")
+                .about("Credential management")
                 .arg(
-                    Arg::with_name("info")
-                        .help("Get fingerprint sensor info")
-                        .short("i")
-                        .long("info"),
+                    Arg::with_name("pin")
+                        .help("pin")
+                        .required(true)
+                        .short("p")
+                        .long("pin")
+                        .takes_value(true)
                 )
+        )
+        .subcommand(
+            SubCommand::with_name("bio")
+                .about("Bio management")
                 .arg(
-                    Arg::with_name("enumerate")
-                        .help("Enumerate enrollments")
-                        .short("e")
-                        .long("enumerate"),
+                    Arg::with_name("pin")
+                        .help("pin")
+                        .required(true)
+                        .short("p")
+                        .long("pin")
+                        .takes_value(true)
                 )
                 .arg(
                     Arg::with_name("enroll")
@@ -86,7 +95,7 @@ fn main() -> Result<()> {
                         .long("rename")
                         .takes_value(true)
                         .value_name("templateId")
-                        .value_name("templateFriendlyName"),
+                        .value_name("templateFriendlyName")
                 )
                 .arg(
                     Arg::with_name("delete")
@@ -94,7 +103,7 @@ fn main() -> Result<()> {
                         .short("d")
                         .long("delete")
                         .takes_value(true)
-                        .value_name("templateId"),
+                        .value_name("templateId")
                 ),
         );
 
@@ -170,8 +179,14 @@ fn main() -> Result<()> {
         info::info(&matches)?;
     }
 
-    if let Some(ref matches) = matches.subcommand_matches("bio_enrollment") {
-        bio::bio_main(&matches, Some("1234"))?;
+    if let Some(ref matches) = matches.subcommand_matches("cred") {
+        println!("Credential Management.\n");
+        cred::cred(&matches)?;
+    }
+
+    if let Some(ref matches) = matches.subcommand_matches("bio") {
+        println!("Bio Management.\n");
+        bio::bio(&matches)?;
     }
 
     /*
