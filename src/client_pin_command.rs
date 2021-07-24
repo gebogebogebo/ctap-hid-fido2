@@ -99,6 +99,60 @@ pub fn create_payload_get_pin_token(
     payload
 }
 
+pub fn create_payload_set_pin(
+    key_agreement: &cose::CoseKey,
+    pin_auth: &[u8],
+    new_pin_enc: &[u8],
+) -> Vec<u8> {
+    // 0x01 : pinProtocol
+    let pin_prot = Value::Integer(1);
+
+    // 0x02 : subCommand
+    let sub_cmd = Value::Integer(SubCommand::SetPin as i128);
+
+    // 0x03:keyAgreement : COSE_Key
+    let mut ka_val = BTreeMap::new();
+    ka_val.insert(
+        Value::Integer(1),
+        Value::Integer(key_agreement.key_type.into()),
+    );
+    ka_val.insert(
+        Value::Integer(3),
+        Value::Integer(key_agreement.algorithm.into()),
+    );
+    if let Value::Integer(ival) = key_agreement.parameters.get(&-1).unwrap() {
+        ka_val.insert(Value::Integer(-1), Value::Integer(*ival));
+    }
+    if let Value::Bytes(bval) = key_agreement.parameters.get(&-2).unwrap() {
+        ka_val.insert(Value::Integer(-2), Value::Bytes(bval.to_vec()));
+    }
+    if let Value::Bytes(bval) = key_agreement.parameters.get(&-3).unwrap() {
+        ka_val.insert(Value::Integer(-3), Value::Bytes(bval.to_vec()));
+    }
+    let ka = Value::Map(ka_val);
+
+    // 0x04:pin_auth
+    let pin_auth_val = Value::Bytes(pin_auth.to_vec());
+
+    // 0x05:new_pin_enc
+    let new_pin_enc_val = Value::Bytes(new_pin_enc.to_vec());
+
+    // create cbor
+    let mut map = BTreeMap::new();
+    map.insert(Value::Integer(0x01), pin_prot);
+    map.insert(Value::Integer(0x02), sub_cmd);
+    map.insert(Value::Integer(0x03), ka);
+    map.insert(Value::Integer(0x04), pin_auth_val);
+    map.insert(Value::Integer(0x05), new_pin_enc_val);
+    let cbor = Value::Map(map);
+
+    // Command - authenticatorClientPIN (0x06)
+    let mut payload = [0x06].to_vec();
+    payload.append(&mut to_vec(&cbor).unwrap());
+    payload
+}
+
+
 pub fn create_payload(sub_command: SubCommand) -> Result<Vec<u8>, String> {
     match sub_command {
         SubCommand::GetRetries => Ok(create_payload_get_retries()),

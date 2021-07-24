@@ -11,6 +11,7 @@ use ctap_hid_fido2::{str_buf, HidParam};
 mod bio;
 mod cred;
 mod info;
+mod pin;
 
 fn main() -> Result<()> {
     let app = App::new("ctapcli")
@@ -30,26 +31,26 @@ fn main() -> Result<()> {
                 .long("fidokey")
         )
         .arg(
-            Arg::with_name("pin")
-                .help("Get PIN retry counter")
-                .short("p")
-                .long("pin")
-        )
-        .arg(
             Arg::with_name("wink")
                 .help("Blink the LED on the FIDO key")
                 .short("w")
                 .long("wink")
         )
         .subcommand(
+            SubCommand::with_name("pin")
+                .about("PIN management\n- Get PIN retry counter without any FLAGS and OPTIONS.")
+                .arg(
+                    Arg::with_name("new")
+                        .help("set new pin")
+                        .short("n")
+                        .long("new")
+                        .takes_value(true)
+                        .value_name("pin")
+                )
+        )
+        .subcommand(
             SubCommand::with_name("info")
                 .about("Get Authenticator infomation")
-                .arg(
-                    Arg::with_name("list")
-                        .help("list the Authenticator infomation")
-                        .short("l")
-                        .long("list")
-                )
                 .arg(
                     Arg::with_name("get")
                         .help("get a item(rk/up/uv/plat/pin/mgmtp/mgmt/biop/bio/u2f_v2/fido2/fido21p/fido21/hmac)")
@@ -135,43 +136,6 @@ fn main() -> Result<()> {
         }
     }
 
-    if matches.is_present("pin") {
-        println!("Get PIN retry counter.\n");
-        match ctap_hid_fido2::get_pin_retries(&HidParam::get_default_params()) {
-            Ok(v) => {
-                println!("PIN retry counter = {}", v);
-
-                if v > 0 {
-                    let mark = if v > 4 {
-                        ":) "
-                    } else if v > 1 {
-                        ":( "
-                    } else {
-                        ":0 "
-                    };
-
-                    println!("");
-                    for _ in 0..v {
-                        print!("{}", mark);
-                    }
-                    println!("");
-
-                    println!("");
-                    println!("PIN retry counter represents the number of attempts left before PIN is disabled.");
-                    println!("Each correct PIN entry resets the PIN retry counters back to their maximum values.");
-                    println!("Each incorrect PIN entry decrements the counter by 1.");
-                    println!("Once the PIN retry counter reaches 0, built-in user verification are disabled and can only be enabled if authenticator is reset.");
-                } else {
-                    println!("\nThe authenticator has been blocked. \nThe only way to make it available again is factory reset.");
-                    println!("");
-                    println!(":_( ");
-                    println!("");
-                }
-            }
-            Err(err) => return Err(err),
-        };
-    }
-
     if matches.is_present("wink") {
         println!("Blink the LED on the FIDO key.\n");
         match ctap_hid_fido2::wink(&HidParam::get_default_params()) {
@@ -183,6 +147,11 @@ fn main() -> Result<()> {
     if let Some(ref matches) = matches.subcommand_matches("info") {
         println!("Get the Authenticator infomation.\n");
         info::info(&matches)?;
+    }
+
+    if let Some(ref matches) = matches.subcommand_matches("pin") {
+        println!("PIN Management.\n");
+        pin::pin(&matches)?;
     }
 
     if let Some(ref matches) = matches.subcommand_matches("cred") {

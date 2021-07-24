@@ -1,5 +1,5 @@
-use anyhow::{anyhow, Result};
 use crate::str_buf::StrBuf;
+use anyhow::{anyhow, Result};
 
 #[allow(unused_imports)]
 use ctap_hid_fido2::util;
@@ -9,15 +9,16 @@ pub fn cred(matches: &clap::ArgMatches) -> Result<()> {
     let pin = matches.value_of("pin");
 
     // check
-    if let None = ctap_hid_fido2::enable_info_option(
-        &HidParam::get_default_params(),
-        &InfoOption::CredMgmt,
-    )? {
+    if let None =
+        ctap_hid_fido2::enable_info_option(&HidParam::get_default_params(), &InfoOption::CredMgmt)?
+    {
         if let None = ctap_hid_fido2::enable_info_option(
             &HidParam::get_default_params(),
             &InfoOption::CredentialMgmtPreview,
         )? {
-            return Err(anyhow!("This authenticator is not Supported Credential management."));
+            return Err(anyhow!(
+                "This authenticator is not Supported Credential management."
+            ));
         }
     };
 
