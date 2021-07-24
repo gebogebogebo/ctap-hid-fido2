@@ -32,7 +32,7 @@ fn test_get_info() {
 fn test_get_info_u2f() {
     match ctap_hid_fido2::enable_info_param(
         &HidParam::get_default_params(),
-        InfoParam::VersionsU2Fv2,
+        &InfoParam::VersionsU2Fv2,
     ) {
         Ok(result) => {
             if !result {
@@ -87,7 +87,7 @@ fn test_make_credential_with_pin_non_rk() {
 fn test_credential_management_get_creds_metadata() {
     match ctap_hid_fido2::enable_info_param(
         &HidParam::get_default_params(),
-        InfoParam::VersionsFido21Pre,
+        &InfoParam::VersionsFido21Pre,
     ) {
         Ok(result) => {
             if !result {
@@ -112,7 +112,7 @@ fn test_credential_management_get_creds_metadata() {
 fn test_credential_management_enumerate_rps() {
     match ctap_hid_fido2::enable_info_param(
         &HidParam::get_default_params(),
-        InfoParam::VersionsFido21Pre,
+        &InfoParam::VersionsFido21Pre,
     ) {
         Ok(result) => {
             if !result {
@@ -138,7 +138,7 @@ fn test_bio_enrollment_get_fingerprint_sensor_info() {
     let mut skip = true;
     match ctap_hid_fido2::enable_info_option(
         &HidParam::get_default_params(),
-        InfoOption::UserVerificationMgmtPreview,
+        &InfoOption::UserVerificationMgmtPreview,
     ) {
         Ok(result) => {
             //println!("result = {:?}", result);
@@ -169,7 +169,7 @@ fn test_bio_enrollment_enumerate_enrollments() {
     let mut skip = true;
     match ctap_hid_fido2::enable_info_option(
         &HidParam::get_default_params(),
-        InfoOption::UserVerificationMgmtPreview,
+        &InfoOption::UserVerificationMgmtPreview,
     ) {
         Ok(result) => {
             if let Some(v) = result {

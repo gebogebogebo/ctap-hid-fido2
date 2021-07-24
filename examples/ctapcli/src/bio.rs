@@ -1,11 +1,11 @@
 use anyhow::{anyhow, Result};
 use ctap_hid_fido2;
 
+use ctap_hid_fido2::bio_enrollment_params::EnrollStatus1;
+use ctap_hid_fido2::bio_enrollment_params::TemplateInfo;
 #[allow(unused_imports)]
 use ctap_hid_fido2::util;
 use ctap_hid_fido2::{HidParam, InfoOption};
-use ctap_hid_fido2::bio_enrollment_params::EnrollStatus1;
-use ctap_hid_fido2::bio_enrollment_params::TemplateInfo;
 
 extern crate clap;
 
@@ -13,20 +13,23 @@ pub fn bio(matches: &clap::ArgMatches) -> Result<()> {
     let pin = matches.value_of("pin");
 
     // check
-    if let None = ctap_hid_fido2::enable_info_option(
-        &HidParam::get_default_params(),
-        &InfoOption::BioEnroll,
-    )? {
+    if let None =
+        ctap_hid_fido2::enable_info_option(&HidParam::get_default_params(), &InfoOption::BioEnroll)?
+    {
         if let None = ctap_hid_fido2::enable_info_option(
             &HidParam::get_default_params(),
             &InfoOption::UserVerificationMgmtPreview,
         )? {
-            return Err(anyhow!("This authenticator is not Supported Bio management."));
+            return Err(anyhow!(
+                "This authenticator is not Supported Bio management."
+            ));
         }
     };
 
     println!("Fingerprint sensor info.");
-    let result = ctap_hid_fido2::bio_enrollment_get_fingerprint_sensor_info(&HidParam::get_default_params())?;
+    let result = ctap_hid_fido2::bio_enrollment_get_fingerprint_sensor_info(
+        &HidParam::get_default_params(),
+    )?;
     println!("- {:?}\n", result);
 
     if matches.is_present("rename") {
@@ -61,7 +64,10 @@ pub fn bio(matches: &clap::ArgMatches) -> Result<()> {
         println!("- Success\n");
     } else {
         println!("Enumerate enrollments.");
-        let bios = ctap_hid_fido2::bio_enrollment_enumerate_enrollments(&HidParam::get_default_params(), pin)?;
+        let bios = ctap_hid_fido2::bio_enrollment_enumerate_enrollments(
+            &HidParam::get_default_params(),
+            pin,
+        )?;
         for i in bios {
             println!("{}", i)
         }
