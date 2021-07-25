@@ -196,10 +196,19 @@ pub fn get_pin_retries(hid_params: &[HidParam]) -> Result<i32> {
     Ok(pin.retries)
 }
 
+/// Set New PIN
 pub fn set_new_pin(hid_params: &[HidParam],pin: &str) -> Result<()> {
     let device = FidoKeyHid::new(hid_params).map_err(Error::msg)?;
     let cid = ctaphid::ctaphid_init(&device).map_err(Error::msg)?;
     client_pin::set_pin(&device, &cid, pin)?;
+    Ok(())
+}
+
+/// Change PIN
+pub fn change_pin(hid_params: &[HidParam],current_pin: &str,new_pin: &str) -> Result<()> {
+    let device = FidoKeyHid::new(hid_params).map_err(Error::msg)?;
+    let cid = ctaphid::ctaphid_init(&device).map_err(Error::msg)?;
+    client_pin::change_pin(&device, &cid, current_pin, new_pin)?;
     Ok(())
 }
 
