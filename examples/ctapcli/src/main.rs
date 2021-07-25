@@ -15,7 +15,7 @@ mod pin;
 
 fn main() -> Result<()> {
     let app = App::new("ctapcli")
-        .version("0.0.1")
+        .version("0.0.2")
         .author("gebo")
         .about("This tool implements CTAP HID and can communicate with FIDO Authenticator.\n\nabout CTAP(Client to Authenticator Protocol)\nhttps://fidoalliance.org/specs/fido-v2.1-rd-20210309/fido-client-to-authenticator-protocol-v2.1-rd-20210309.html")
         .arg(
@@ -59,7 +59,7 @@ fn main() -> Result<()> {
         )
         .subcommand(
             SubCommand::with_name("info")
-                .about("Get Authenticator infomation")
+                .about("Get Authenticator infomation\n- List All Infomation without any FLAGS and OPTIONS.")
                 .arg(
                     Arg::with_name("get")
                         .help("get a item(rk/up/uv/plat/pin/mgmtp/mgmt/biop/bio/u2f_v2/fido2/fido21p/fido21/hmac)")
@@ -72,6 +72,7 @@ fn main() -> Result<()> {
         .subcommand(
             SubCommand::with_name("cred")
                 .about("Credential management")
+                // - Enumerate discoverable credentials without any FLAGS and OPTIONS.
                 .arg(
                     Arg::with_name("pin")
                         .help("pin")
