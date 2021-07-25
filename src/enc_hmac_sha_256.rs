@@ -8,7 +8,7 @@ pub fn authenticate(key: &[u8], message: &[u8]) -> Vec<u8> {
     type HmacSha256 = Hmac<Sha256>;
 
     // Create HMAC-SHA256 instance which implements `Mac` trait
-    let mut mac = HmacSha256::new_varkey(key).unwrap();
+    let mut mac = HmacSha256::new_from_slice(key).unwrap();
     mac.update(&message);
 
     let result = mac.finalize();
@@ -22,7 +22,7 @@ pub fn verify(key: &[u8], message: &[u8], signature: &[u8]) -> bool {
     type HmacSha256 = Hmac<Sha256>;
 
     // Create HMAC-SHA256 instance which implements `Mac` trait
-    let mut mac = HmacSha256::new_varkey(key).unwrap();
+    let mut mac = HmacSha256::new_from_slice(key).unwrap();
     mac.update(&message);
 
     // `verify` will return `Ok(())` if code is correct, `Err(MacError)` otherwise
