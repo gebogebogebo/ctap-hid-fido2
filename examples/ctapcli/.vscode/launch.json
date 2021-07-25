@@ -20,7 +20,7 @@
                 }
             },
             //"args": ["bio","-p","1234"],
-            "args": ["pin","-n","1234"],
+            "args": ["pin","-c","8888","1234"],
             "cwd": "${workspaceFolder}"
         }
 

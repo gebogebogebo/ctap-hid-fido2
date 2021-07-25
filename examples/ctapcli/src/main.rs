@@ -47,6 +47,15 @@ fn main() -> Result<()> {
                         .takes_value(true)
                         .value_name("pin")
                 )
+                .arg(
+                    Arg::with_name("change")
+                        .help("change pin")
+                        .short("c")
+                        .long("change")
+                        .takes_value(true)
+                        .value_name("current pin")
+                        .value_name("new pin")
+                )
         )
         .subcommand(
             SubCommand::with_name("info")

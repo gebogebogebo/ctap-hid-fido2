@@ -82,6 +82,26 @@ fn create_pin_auth_for_set_pin(
     Ok(pin_auth)
 }
 
+fn create_pin_auth_for_change_pin(
+    shared_secret: &SharedSecret,
+    new_pin_enc: &[u8],
+    current_pin_hash_enc: &[u8]
+)-> Result<Vec<u8>>{
+
+    // source data
+    let mut message = vec![];
+    message.append(&mut new_pin_enc.to_vec());
+    message.append(&mut current_pin_hash_enc.to_vec());
+
+    // HMAC-SHA-256(sharedSecret, message)
+    let sig = enc_hmac_sha_256::authenticate(&shared_secret.secret, &message);
+
+    // left 16
+    let pin_auth = sig[0..16].to_vec();
+
+    Ok(pin_auth)
+}
+
 fn padding_pin_64(pin: &str) -> Result<Vec<u8>>{
     // 5.5.5. Setting a New PIN
     // 5.5.6. Changing existing PIN
@@ -110,4 +130,40 @@ fn create_new_pin_enc(
     let new_pin_enc = enc_aes256_cbc::encrypt_message(&shared_secret.secret, &new_pin_64);
 
     Ok(new_pin_enc)
+}
+
+pub fn change_pin(
+    device: &FidoKeyHid,
+    cid: &[u8],
+    current_pin: &str,
+    new_pin: &str
+    ) -> Result<()> {
+
+    if current_pin.is_empty() {
+        return Err(anyhow!("current pin not set"));
+    }
+    if new_pin.is_empty() {
+        return Err(anyhow!("new pin not set"));
+    }
+
+    let send_payload = client_pin_command::create_payload(PinCmd::GetKeyAgreement).map_err(Error::msg)?;
+    let response_cbor = ctaphid::ctaphid_cbor(device, cid, &send_payload).map_err(Error::msg)?;
+
+    let key_agreement =
+        client_pin_response::parse_cbor_client_pin_get_keyagreement(&response_cbor).map_err(Error::msg)?;
+
+    let shared_secret = SharedSecret::new(&key_agreement).map_err(Error::msg)?;
+
+    let new_pin_enc = create_new_pin_enc(&shared_secret,new_pin)?;
+
+    let current_pin_hash_enc = shared_secret.encrypt_pin(current_pin).map_err(Error::msg)?;
+
+    let pin_auth = create_pin_auth_for_change_pin(&shared_secret,&new_pin_enc,&current_pin_hash_enc)?;
+
+    let send_payload = client_pin_command::create_payload_change_pin(
+        &shared_secret.public_key,&pin_auth,&new_pin_enc,&current_pin_hash_enc);
+
+    ctaphid::ctaphid_cbor(device, cid, &send_payload).map_err(Error::msg)?;
+
+    Ok(())
 }
