@@ -23,7 +23,7 @@ pub fn get_pin_token(device: &FidoKeyHid, cid: &[u8], pin: &str) -> Result<PinTo
 
         let send_payload = client_pin_command::create_payload_get_pin_token(
             &shared_secret.public_key,
-            pin_hash_enc.to_vec(),
+            &pin_hash_enc,
         );
 
         let response_cbor = ctaphid::ctaphid_cbor(&device, &cid, &send_payload)?;
