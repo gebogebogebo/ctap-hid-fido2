@@ -1,7 +1,5 @@
 use crate::cose;
 use crate::ctapdef;
-//use ring::signature::key_pair_from_pkcs8;
-use serde_cbor::to_vec;
 use serde_cbor::Value;
 use std::collections::BTreeMap;
 
@@ -14,90 +12,30 @@ pub enum SubCommand {
     GetPinToken = 0x05,
 }
 
-fn create_payload_get_keyagreement() -> Vec<u8> {
-    // 0x01 : pinProtocol
-    let pin_prot = Value::Integer(1);
-
-    // 0x02 : subCommand
-    let sub_cmd = Value::Integer(SubCommand::GetKeyAgreement as i128);
-
-    // create cbor
+fn create_payload_get_retries() -> Vec<u8> {
     let mut map = BTreeMap::new();
-    map.insert(Value::Integer(0x01), pin_prot);
-    map.insert(Value::Integer(0x02), sub_cmd);
-    let cbor = Value::Map(map);
-
-    // Command - authenticatorClientPIN (0x06)
-    let mut payload = [ctapdef::AUTHENTICATOR_CLIENT_PIN].to_vec();
-    payload.append(&mut to_vec(&cbor).unwrap());
-    payload
+    insert_pin_protocol(&mut map);
+    insert_sub_command(&mut map,SubCommand::GetRetries);
+    to_payload(map)
 }
 
-fn create_payload_get_retries() -> Vec<u8> {
-    // 0x01 : pinProtocol
-    let pin_prot = Value::Integer(1);
-
-    // 0x02 : subCommand
-    let sub_cmd = Value::Integer(SubCommand::GetRetries as i128);
-
-    // create cbor
+fn create_payload_get_keyagreement() -> Vec<u8> {
     let mut map = BTreeMap::new();
-    map.insert(Value::Integer(0x01), pin_prot);
-    map.insert(Value::Integer(0x02), sub_cmd);
-    let cbor = Value::Map(map);
-
-    // Command - authenticatorClientPIN (0x06)
-    let mut payload = [ctapdef::AUTHENTICATOR_CLIENT_PIN].to_vec();
-    payload.append(&mut to_vec(&cbor).unwrap());
-    payload
+    insert_pin_protocol(&mut map);
+    insert_sub_command(&mut map,SubCommand::GetKeyAgreement);
+    to_payload(map)
 }
 
 pub fn create_payload_get_pin_token(
     key_agreement: &cose::CoseKey,
-    pin_hash_enc: Vec<u8>,
+    pin_hash_enc: &[u8]
 ) -> Vec<u8> {
-    // 0x01 : pinProtocol
-    let pin_prot = Value::Integer(1);
-
-    // 0x02 : subCommand
-    let sub_cmd = Value::Integer(SubCommand::GetPinToken as i128);
-
-    // 0x03:keyAgreement : COSE_Key
-    let mut ka_val = BTreeMap::new();
-    ka_val.insert(
-        Value::Integer(1),
-        Value::Integer(key_agreement.key_type.into()),
-    );
-    ka_val.insert(
-        Value::Integer(3),
-        Value::Integer(key_agreement.algorithm.into()),
-    );
-    if let Value::Integer(ival) = key_agreement.parameters.get(&-1).unwrap() {
-        ka_val.insert(Value::Integer(-1), Value::Integer(*ival));
-    }
-    if let Value::Bytes(bval) = key_agreement.parameters.get(&-2).unwrap() {
-        ka_val.insert(Value::Integer(-2), Value::Bytes(bval.to_vec()));
-    }
-    if let Value::Bytes(bval) = key_agreement.parameters.get(&-3).unwrap() {
-        ka_val.insert(Value::Integer(-3), Value::Bytes(bval.to_vec()));
-    }
-    let ka = Value::Map(ka_val);
-
-    // 0x06:pinHashEnc
-    let pin_hash_enc_val = Value::Bytes(pin_hash_enc);
-
-    // create cbor
     let mut map = BTreeMap::new();
-    map.insert(Value::Integer(0x01), pin_prot);
-    map.insert(Value::Integer(0x02), sub_cmd);
-    map.insert(Value::Integer(0x03), ka);
-    map.insert(Value::Integer(0x06), pin_hash_enc_val);
-    let cbor = Value::Map(map);
-
-    // Command - authenticatorClientPIN (0x06)
-    let mut payload = [0x06].to_vec();
-    payload.append(&mut to_vec(&cbor).unwrap());
-    payload
+    insert_pin_protocol(&mut map);
+    insert_sub_command(&mut map,SubCommand::GetPinToken);
+    insert_key_agreement(&mut map, key_agreement);
+    insert_pin_hash_enc(&mut map, pin_hash_enc);
+    to_payload(map)
 }
 
 pub fn create_payload_set_pin(
@@ -105,52 +43,13 @@ pub fn create_payload_set_pin(
     pin_auth: &[u8],
     new_pin_enc: &[u8],
 ) -> Vec<u8> {
-    // 0x01 : pinProtocol
-    let pin_prot = Value::Integer(1);
-
-    // 0x02 : subCommand
-    let sub_cmd = Value::Integer(SubCommand::SetPin as i128);
-
-    // 0x03:keyAgreement : COSE_Key
-    let mut ka_val = BTreeMap::new();
-    ka_val.insert(
-        Value::Integer(1),
-        Value::Integer(key_agreement.key_type.into()),
-    );
-    ka_val.insert(
-        Value::Integer(3),
-        Value::Integer(key_agreement.algorithm.into()),
-    );
-    if let Value::Integer(ival) = key_agreement.parameters.get(&-1).unwrap() {
-        ka_val.insert(Value::Integer(-1), Value::Integer(*ival));
-    }
-    if let Value::Bytes(bval) = key_agreement.parameters.get(&-2).unwrap() {
-        ka_val.insert(Value::Integer(-2), Value::Bytes(bval.to_vec()));
-    }
-    if let Value::Bytes(bval) = key_agreement.parameters.get(&-3).unwrap() {
-        ka_val.insert(Value::Integer(-3), Value::Bytes(bval.to_vec()));
-    }
-    let ka = Value::Map(ka_val);
-
-    // 0x04:pin_auth
-    let pin_auth_val = Value::Bytes(pin_auth.to_vec());
-
-    // 0x05:new_pin_enc
-    let new_pin_enc_val = Value::Bytes(new_pin_enc.to_vec());
-
-    // create cbor
     let mut map = BTreeMap::new();
-    map.insert(Value::Integer(0x01), pin_prot);
-    map.insert(Value::Integer(0x02), sub_cmd);
-    map.insert(Value::Integer(0x03), ka);
-    map.insert(Value::Integer(0x04), pin_auth_val);
-    map.insert(Value::Integer(0x05), new_pin_enc_val);
-    let cbor = Value::Map(map);
-
-    // Command - authenticatorClientPIN (0x06)
-    let mut payload = [0x06].to_vec();
-    payload.append(&mut to_vec(&cbor).unwrap());
-    payload
+    insert_pin_protocol(&mut map);
+    insert_sub_command(&mut map,SubCommand::SetPin);
+    insert_key_agreement(&mut map, key_agreement);
+    insert_pin_auth(&mut map, pin_auth);
+    insert_new_pin_enc(&mut map, new_pin_enc);
+    to_payload(map)
 }
 
 pub fn create_payload_change_pin(
@@ -166,18 +65,14 @@ pub fn create_payload_change_pin(
     insert_pin_auth(&mut map, pin_auth);
     insert_new_pin_enc(&mut map, new_pin_enc);
     insert_pin_hash_enc(&mut map, pin_hash_enc);
-
     to_payload(map)
 }
 
 // create payload
 fn to_payload(map: BTreeMap<Value,Value>)->Vec<u8> {
-    // create cbor
     let cbor = Value::Map(map);
-
-    // Command - authenticatorClientPIN (0x06)
-    let mut payload = [0x06].to_vec();
-    payload.append(&mut to_vec(&cbor).unwrap());
+    let mut payload = [ctapdef::AUTHENTICATOR_CLIENT_PIN].to_vec();
+    payload.append(&mut serde_cbor::to_vec(&cbor).unwrap());
     payload.to_vec()
 }
 
