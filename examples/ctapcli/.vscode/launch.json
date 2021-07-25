@@ -19,9 +19,8 @@
                     "kind": "bin"
                 }
             },
-            //"args": ["bio_enrollment","-e"],
-            //"args": ["info","-l"],
-            "args": ["info","-g","rk"],
+            "args": ["cred","-p","1234"],
+            //"args": ["pin"],
             "cwd": "${workspaceFolder}"
         }
 
