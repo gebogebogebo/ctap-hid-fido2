@@ -7,12 +7,10 @@ use ctap_hid_fido2::util;
 use ctap_hid_fido2::{HidParam, InfoOption, InfoParam};
 
 pub fn info(matches: &clap::ArgMatches) -> Result<()> {
-    if matches.is_present("list") {
-        println!("list");
+    if matches.args.is_empty() {
+        println!("Get all data.");
         match ctap_hid_fido2::get_info(&HidParam::get_default_params()) {
-            Ok(info) => {
-                println!("{}", info);
-            }
+            Ok(info) => println!("{}", info),
             Err(err) => return Err(err),
         };
     }
@@ -35,10 +33,7 @@ pub fn info(matches: &clap::ArgMatches) -> Result<()> {
         };
 
         if let Some(option) = info_option {
-            match ctap_hid_fido2::enable_info_option(
-                &HidParam::get_default_params(),
-                &option
-            ) {
+            match ctap_hid_fido2::enable_info_option(&HidParam::get_default_params(), &option) {
                 Ok(result) => println!("{}", option_message(item, &option, result)?),
                 Err(err) => return Err(err),
             }
@@ -53,14 +48,10 @@ pub fn info(matches: &clap::ArgMatches) -> Result<()> {
             };
 
             if let Some(param) = info_param {
-                match ctap_hid_fido2::enable_info_param(
-                    &HidParam::get_default_params(),
-                    &param
-                ) {
+                match ctap_hid_fido2::enable_info_param(&HidParam::get_default_params(), &param) {
                     Ok(result) => println!("{}", param_message(item, &param, result)?),
                     Err(err) => return Err(err),
                 }
-        
             } else {
                 return Err(anyhow!("Invalid item"));
             }
@@ -93,7 +84,7 @@ fn option_message(typ: &str, info_option: &InfoOption, val: Option<bool>) -> Res
                 .addln("Discoverable credentials")
                 .addln("https://fidoalliance.org/specs/fido-v2.1-rd-20210309/fido-client-to-authenticator-protocol-v2.1-rd-20210309.html#sctn-discoverable");
             strbuf.build().to_string()
-        },
+        }
         InfoOption::Up => {
             let mut strbuf = StrBuf::new(0);
             strbuf.addln("up(user presence)");
@@ -105,7 +96,7 @@ fn option_message(typ: &str, info_option: &InfoOption, val: Option<bool>) -> Res
             }
             strbuf.addln("User presence is confirmed by a button or touch sensor.");
             strbuf.build().to_string()
-        },
+        }
         InfoOption::Uv => {
             let mut strbuf = StrBuf::new(0);
             strbuf.addln("uv(user verification)");
@@ -115,11 +106,12 @@ fn option_message(typ: &str, info_option: &InfoOption, val: Option<bool>) -> Res
             } else if val.is_some() && val.unwrap() == false {
                 strbuf.addln("This authenticator supports a built-in user verification method but its user verification feature is not presently configured.");
             } else {
-                strbuf.addln("This authenticator not supports a built-in user verification method.");
+                strbuf
+                    .addln("This authenticator not supports a built-in user verification method.");
             }
             strbuf.addln("For example, devices with UI, biometrics fall into this category.");
             strbuf.build().to_string()
-        },
+        }
         InfoOption::ClinetPin => {
             let mut strbuf = StrBuf::new(0);
 
@@ -128,10 +120,11 @@ fn option_message(typ: &str, info_option: &InfoOption, val: Option<bool>) -> Res
             } else if val.is_some() && val.unwrap() == false {
                 strbuf.addln("This authenticator is capable of accepting a PIN from the client and PIN has not been set yet.");
             } else {
-                strbuf.addln("This authenticator is not capable of accepting a PIN from the client.");
+                strbuf
+                    .addln("This authenticator is not capable of accepting a PIN from the client.");
             }
             strbuf.build().to_string()
-        },
+        }
         InfoOption::Plat => {
             let mut strbuf = StrBuf::new(0);
             strbuf.addln("plat(platform device)");
@@ -142,7 +135,7 @@ fn option_message(typ: &str, info_option: &InfoOption, val: Option<bool>) -> Res
                 strbuf.addln("This authenticator can be removed and used on another client.");
             }
             strbuf.build().to_string()
-        },
+        }
         _ => "".to_string(),
     };
     Ok(format!("{}\n\n{}", message1, message2))
@@ -160,7 +153,7 @@ fn param_message(typ: &str, info_param: &InfoParam, val: bool) -> Result<String>
                 strbuf.addln("This authenticator is not supported CTAP1/U2F.");
             }
             strbuf.build().to_string()
-        },
+        }
         InfoParam::VersionsFido20 => {
             let mut strbuf = StrBuf::new(0);
             if val {
@@ -169,7 +162,7 @@ fn param_message(typ: &str, info_param: &InfoParam, val: bool) -> Result<String>
                 strbuf.addln("This is not CTAP2.0 / FIDO2 / Web Authentication authenticators.");
             }
             strbuf.build().to_string()
-        },
+        }
         InfoParam::VersionsFido21Pre => {
             let mut strbuf = StrBuf::new(0);
             if val {
@@ -178,16 +171,18 @@ fn param_message(typ: &str, info_param: &InfoParam, val: bool) -> Result<String>
                 strbuf.addln("This authenticator is not supported CTAP2.1 Preview features.");
             }
             strbuf.build().to_string()
-        },
+        }
         InfoParam::VersionsFido21 => {
             let mut strbuf = StrBuf::new(0);
             if val {
-                strbuf.addln("This is CTAP2.1 / FIDO2(lelvel2) / Web Authentication(level2) authenticators.");
+                strbuf.addln(
+                    "This is CTAP2.1 / FIDO2(lelvel2) / Web Authentication(level2) authenticators.",
+                );
             } else {
                 strbuf.addln("This is not CTAP2.1 / FIDO2(lelvel2) / Web Authentication(level2) authenticators.");
             }
             strbuf.build().to_string()
-        },
+        }
         InfoParam::ExtensionsHmacSecret => {
             let mut strbuf = StrBuf::new(0);
             strbuf.addln("hmac(HMAC Secret Extension)");
@@ -202,11 +197,10 @@ fn param_message(typ: &str, info_param: &InfoParam, val: bool) -> Result<String>
                 .addln("")
                 .addln("HMAC Secret Extension")
                 .addln("https://fidoalliance.org/specs/fido-v2.1-rd-20210309/fido-client-to-authenticator-protocol-v2.1-rd-20210309.html#sctn-hmac-secret-extension");
-            
-            strbuf.build().to_string()
-        },
-        _ => "".to_string(),
 
+            strbuf.build().to_string()
+        }
+        _ => "".to_string(),
     };
 
     Ok(format!("{}\n\n{}", message1, message2))

@@ -9,7 +9,9 @@ use ctap_hid_fido2::util;
 use ctap_hid_fido2::{str_buf, HidParam};
 
 mod bio;
+mod cred;
 mod info;
+mod pin;
 
 fn main() -> Result<()> {
     let app = App::new("ctapcli")
@@ -20,58 +22,75 @@ fn main() -> Result<()> {
             Arg::with_name("device")
                 .help("Enumerate HID devices")
                 .short("d")
-                .long("device"),
+                .long("device")
         )
         .arg(
             Arg::with_name("fidokey")
                 .help("Enumerate FIDO key")
                 .short("f")
-                .long("fidokey"),
-        )
-        .arg(
-            Arg::with_name("pin")
-                .help("Get PIN retry counter")
-                .short("p")
-                .long("pin"),
+                .long("fidokey")
         )
         .arg(
             Arg::with_name("wink")
                 .help("Blink the LED on the FIDO key")
                 .short("w")
-                .long("wink"),
+                .long("wink")
+        )
+        .subcommand(
+            SubCommand::with_name("pin")
+                .about("PIN management\n- Get PIN retry counter without any FLAGS and OPTIONS.")
+                .arg(
+                    Arg::with_name("new")
+                        .help("set new pin")
+                        .short("n")
+                        .long("new")
+                        .takes_value(true)
+                        .value_name("pin")
+                )
+                .arg(
+                    Arg::with_name("change")
+                        .help("change pin")
+                        .short("c")
+                        .long("change")
+                        .takes_value(true)
+                        .value_name("current pin")
+                        .value_name("new pin")
+                )
         )
         .subcommand(
             SubCommand::with_name("info")
                 .about("Get Authenticator infomation")
-                .arg(
-                    Arg::with_name("list")
-                        .help("list the Authenticator infomation")
-                        .short("l")
-                        .long("list"),
-                )
                 .arg(
                     Arg::with_name("get")
                         .help("get a item(rk/up/uv/plat/pin/mgmtp/mgmt/biop/bio/u2f_v2/fido2/fido21p/fido21/hmac)")
                         .short("g")
                         .long("get")
                         .takes_value(true)
-                        .value_name("item"),
+                        .value_name("item")
                 )
         )
         .subcommand(
-            SubCommand::with_name("bio_enrollment")
-                .about("authenticatorBioEnrollment (0x09)")
+            SubCommand::with_name("cred")
+                .about("Credential management")
                 .arg(
-                    Arg::with_name("info")
-                        .help("Get fingerprint sensor info")
-                        .short("i")
-                        .long("info"),
+                    Arg::with_name("pin")
+                        .help("pin")
+                        .required(true)
+                        .short("p")
+                        .long("pin")
+                        .takes_value(true)
                 )
+        )
+        .subcommand(
+            SubCommand::with_name("bio")
+                .about("Bio management")
                 .arg(
-                    Arg::with_name("enumerate")
-                        .help("Enumerate enrollments")
-                        .short("e")
-                        .long("enumerate"),
+                    Arg::with_name("pin")
+                        .help("pin")
+                        .required(true)
+                        .short("p")
+                        .long("pin")
+                        .takes_value(true)
                 )
                 .arg(
                     Arg::with_name("enroll")
@@ -86,7 +105,7 @@ fn main() -> Result<()> {
                         .long("rename")
                         .takes_value(true)
                         .value_name("templateId")
-                        .value_name("templateFriendlyName"),
+                        .value_name("templateFriendlyName")
                 )
                 .arg(
                     Arg::with_name("delete")
@@ -94,7 +113,7 @@ fn main() -> Result<()> {
                         .short("d")
                         .long("delete")
                         .takes_value(true)
-                        .value_name("templateId"),
+                        .value_name("templateId")
                 ),
         );
 
@@ -126,37 +145,6 @@ fn main() -> Result<()> {
         }
     }
 
-    if matches.is_present("pin") {
-        println!("Get PIN retry counter.\n");
-        match ctap_hid_fido2::get_pin_retries(&HidParam::get_default_params()) {
-            Ok(mut v) => {
-                println!("PIN retry counter = {}", v);
-
-                let mark = if v > 4 {
-                    ":) "
-                } else if v > 1 {
-                    ":( "
-                } else {
-                    v = 1;
-                    ":0 "
-                };
-
-                println!("");
-                for _ in 0..v {
-                    print!("{}", mark);
-                }
-                println!("");
-
-                println!("");
-                println!("PIN retry counter represents the number of attempts left before PIN is disabled.");
-                println!("Each correct PIN entry resets the PIN retry counters back to their maximum values.");
-                println!("Each incorrect PIN entry decrements the counter by 1.");
-                println!("Once the PIN retry counter reaches 0, built-in user verification are disabled and can only be enabled if authenticator is reset.");
-            }
-            Err(err) => return Err(err),
-        };
-    }
-
     if matches.is_present("wink") {
         println!("Blink the LED on the FIDO key.\n");
         match ctap_hid_fido2::wink(&HidParam::get_default_params()) {
@@ -170,8 +158,19 @@ fn main() -> Result<()> {
         info::info(&matches)?;
     }
 
-    if let Some(ref matches) = matches.subcommand_matches("bio_enrollment") {
-        bio::bio_main(&matches, Some("1234"))?;
+    if let Some(ref matches) = matches.subcommand_matches("pin") {
+        println!("PIN Management.\n");
+        pin::pin(&matches)?;
+    }
+
+    if let Some(ref matches) = matches.subcommand_matches("cred") {
+        println!("Credential Management.\n");
+        cred::cred(&matches)?;
+    }
+
+    if let Some(ref matches) = matches.subcommand_matches("bio") {
+        println!("Bio Management.\n");
+        bio::bio(&matches)?;
     }
 
     /*
