@@ -59,7 +59,7 @@ fn main() -> Result<()> {
         )
         .subcommand(
             SubCommand::with_name("info")
-                .about("Get Authenticator infomation")
+                .about("Get Authenticator infomation\n- List All Infomation without any FLAGS and OPTIONS.")
                 .arg(
                     Arg::with_name("get")
                         .help("get a item(rk/up/uv/plat/pin/mgmtp/mgmt/biop/bio/u2f_v2/fido2/fido21p/fido21/hmac)")
@@ -72,6 +72,7 @@ fn main() -> Result<()> {
         .subcommand(
             SubCommand::with_name("cred")
                 .about("Credential management")
+                // - Enumerate discoverable credentials without any FLAGS and OPTIONS.
                 .arg(
                     Arg::with_name("pin")
                         .help("pin")
