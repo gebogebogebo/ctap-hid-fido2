@@ -8,7 +8,8 @@ use crate::util;
 use ring::digest;
 use ring::rand::SecureRandom;
 use ring::signature;
-use x509_parser::parse_x509_der;
+//use x509_parser::parse_x509_der;
+use x509_parser::prelude::*;
 
 // Create Random Data
 pub fn create_challenge() -> [u8; 32] {
@@ -38,13 +39,13 @@ pub fn verify_attestation(
     }
 
     let public_key = {
-        let res = parse_x509_der(&attestation.attstmt_x5c[0]);
+        let res = X509Certificate::from_der(&attestation.attstmt_x5c[0]);
         let cert = {
             match res {
                 Ok((rem, cert)) => {
                     assert!(rem.is_empty());
                     //
-                    assert_eq!(cert.tbs_certificate.version, 2);
+                    assert_eq!(cert.tbs_certificate.version, X509Version::V3);
                     cert
                 }
                 _ => panic!("x509 parsing failed: {:?}", res),
