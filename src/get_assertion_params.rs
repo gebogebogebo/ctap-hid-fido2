@@ -37,17 +37,17 @@ impl fmt::Display for Assertion {
             .append("- user", &self.user)
             .appenh("- credential_id", &self.credential_id);
 
-            for e in &self.extensions {
-                match e {
-                    Extension::HmacSecret(d) => {
-                        if let Some(output1_enc) = d {
-                            let tmp = format!("- {}",Extension::HmacSecret(None).to_string());
-                            strbuf.appenh(&tmp, &output1_enc.to_vec());
-                        }
+        for e in &self.extensions {
+            match e {
+                Extension::HmacSecret(d) => {
+                    if let Some(output1_enc) = d {
+                        let tmp = format!("- {}", Extension::HmacSecret(None).to_string());
+                        strbuf.appenh(&tmp, &output1_enc.to_vec());
                     }
                 }
             }
-                    
+        }
+
         write!(f, "{}", strbuf.build())
     }
 }

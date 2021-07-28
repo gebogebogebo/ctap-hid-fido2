@@ -91,9 +91,6 @@ pub fn verify_assertion(
 }
 
 fn verify_sig(public_key_der: &[u8], challenge: &[u8], auth_data: &[u8], sig: &[u8]) -> bool {
-    // public key
-    let public_key_der = untrusted::Input::from(public_key_der);
-
     // message = authData + SHA256(challenge)
     let message = {
         let mut base: Vec<u8> = vec![];
@@ -103,26 +100,13 @@ fn verify_sig(public_key_der: &[u8], challenge: &[u8], auth_data: &[u8], sig: &[
         base.append(&mut cdh.as_ref().to_vec());
         base
     };
-    let message = untrusted::Input::from(&message);
+    let peer_public_key =
+        signature::UnparsedPublicKey::new(&signature::ECDSA_P256_SHA256_ASN1, public_key_der);
 
-    // sig
-    let sig = untrusted::Input::from(&sig);
-
-    // verify
-    let result = signature::verify(
-        &signature::ECDSA_P256_SHA256_ASN1,
-        public_key_der,
-        message,
-        sig,
-    );
+    let result = peer_public_key.verify(&message, sig);
 
     // log
-    print_verify_info(
-        public_key_der.as_slice_less_safe(),
-        message.as_slice_less_safe(),
-        sig.as_slice_less_safe(),
-        &result,
-    );
+    print_verify_info(public_key_der, &message, sig, &result);
 
     match result {
         Ok(()) => true,
