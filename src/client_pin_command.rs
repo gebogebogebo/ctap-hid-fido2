@@ -15,24 +15,21 @@ pub enum SubCommand {
 fn create_payload_get_retries() -> Vec<u8> {
     let mut map = BTreeMap::new();
     insert_pin_protocol(&mut map);
-    insert_sub_command(&mut map,SubCommand::GetRetries);
+    insert_sub_command(&mut map, SubCommand::GetRetries);
     to_payload(map)
 }
 
 fn create_payload_get_keyagreement() -> Vec<u8> {
     let mut map = BTreeMap::new();
     insert_pin_protocol(&mut map);
-    insert_sub_command(&mut map,SubCommand::GetKeyAgreement);
+    insert_sub_command(&mut map, SubCommand::GetKeyAgreement);
     to_payload(map)
 }
 
-pub fn create_payload_get_pin_token(
-    key_agreement: &cose::CoseKey,
-    pin_hash_enc: &[u8]
-) -> Vec<u8> {
+pub fn create_payload_get_pin_token(key_agreement: &cose::CoseKey, pin_hash_enc: &[u8]) -> Vec<u8> {
     let mut map = BTreeMap::new();
     insert_pin_protocol(&mut map);
-    insert_sub_command(&mut map,SubCommand::GetPinToken);
+    insert_sub_command(&mut map, SubCommand::GetPinToken);
     insert_key_agreement(&mut map, key_agreement);
     insert_pin_hash_enc(&mut map, pin_hash_enc);
     to_payload(map)
@@ -45,7 +42,7 @@ pub fn create_payload_set_pin(
 ) -> Vec<u8> {
     let mut map = BTreeMap::new();
     insert_pin_protocol(&mut map);
-    insert_sub_command(&mut map,SubCommand::SetPin);
+    insert_sub_command(&mut map, SubCommand::SetPin);
     insert_key_agreement(&mut map, key_agreement);
     insert_pin_auth(&mut map, pin_auth);
     insert_new_pin_enc(&mut map, new_pin_enc);
@@ -56,11 +53,11 @@ pub fn create_payload_change_pin(
     key_agreement: &cose::CoseKey,
     pin_auth: &[u8],
     new_pin_enc: &[u8],
-    pin_hash_enc: &[u8]
+    pin_hash_enc: &[u8],
 ) -> Vec<u8> {
     let mut map = BTreeMap::new();
     insert_pin_protocol(&mut map);
-    insert_sub_command(&mut map,SubCommand::ChangePin);
+    insert_sub_command(&mut map, SubCommand::ChangePin);
     insert_key_agreement(&mut map, key_agreement);
     insert_pin_auth(&mut map, pin_auth);
     insert_new_pin_enc(&mut map, new_pin_enc);
@@ -69,7 +66,7 @@ pub fn create_payload_change_pin(
 }
 
 // create payload
-fn to_payload(map: BTreeMap<Value,Value>)->Vec<u8> {
+fn to_payload(map: BTreeMap<Value, Value>) -> Vec<u8> {
     let cbor = Value::Map(map);
     let mut payload = [ctapdef::AUTHENTICATOR_CLIENT_PIN].to_vec();
     payload.append(&mut serde_cbor::to_vec(&cbor).unwrap());
@@ -77,19 +74,19 @@ fn to_payload(map: BTreeMap<Value,Value>)->Vec<u8> {
 }
 
 // 0x01 : pin_protocol
-fn insert_pin_protocol(map: &mut BTreeMap<Value,Value>) {
+fn insert_pin_protocol(map: &mut BTreeMap<Value, Value>) {
     let pin_prot = Value::Integer(1);
     map.insert(Value::Integer(0x01), pin_prot);
 }
 
 // 0x02 : sub_command
-fn insert_sub_command(map: &mut BTreeMap<Value,Value>,cmd: SubCommand) {
+fn insert_sub_command(map: &mut BTreeMap<Value, Value>, cmd: SubCommand) {
     let sub_cmd = Value::Integer(cmd as i128);
     map.insert(Value::Integer(0x02), sub_cmd);
 }
-    
+
 // 0x03 : key_agreement : COSE_Key
-fn insert_key_agreement(map: &mut BTreeMap<Value,Value>, key_agreement: &cose::CoseKey) {
+fn insert_key_agreement(map: &mut BTreeMap<Value, Value>, key_agreement: &cose::CoseKey) {
     let mut ka_val = BTreeMap::new();
     ka_val.insert(
         Value::Integer(1),
@@ -109,28 +106,27 @@ fn insert_key_agreement(map: &mut BTreeMap<Value,Value>, key_agreement: &cose::C
         ka_val.insert(Value::Integer(-3), Value::Bytes(bval.to_vec()));
     }
     let ka = Value::Map(ka_val);
-    
+
     map.insert(Value::Integer(0x03), ka);
 }
 
 // 0x04 : pin_auth
-fn insert_pin_auth(map: &mut BTreeMap<Value,Value>,pin_auth: &[u8]) {
+fn insert_pin_auth(map: &mut BTreeMap<Value, Value>, pin_auth: &[u8]) {
     let pin_auth_val = Value::Bytes(pin_auth.to_vec());
     map.insert(Value::Integer(0x04), pin_auth_val);
 }
 
 // 0x05 : new_pin_enc
-fn insert_new_pin_enc(map: &mut BTreeMap<Value,Value>,new_pin_enc: &[u8]) {
+fn insert_new_pin_enc(map: &mut BTreeMap<Value, Value>, new_pin_enc: &[u8]) {
     let new_pin_enc_val = Value::Bytes(new_pin_enc.to_vec());
     map.insert(Value::Integer(0x05), new_pin_enc_val);
 }
-    
+
 // 0x06 : pin_hash_enc
-fn insert_pin_hash_enc(map: &mut BTreeMap<Value,Value>,pin_hash_enc: &[u8]) {
+fn insert_pin_hash_enc(map: &mut BTreeMap<Value, Value>, pin_hash_enc: &[u8]) {
     let pin_hash_enc_val = Value::Bytes(pin_hash_enc.to_vec());
     map.insert(Value::Integer(0x06), pin_hash_enc_val);
 }
-    
 
 pub fn create_payload(sub_command: SubCommand) -> Result<Vec<u8>, String> {
     match sub_command {

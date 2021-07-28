@@ -1,12 +1,11 @@
 use cose::CoseKey;
 use ring::error::Unspecified;
 use ring::{agreement, digest, rand};
-use untrusted::Input;
 
 use crate::cose;
+use crate::enc_aes256_cbc;
 use crate::p256;
 use crate::pintoken::PinToken;
-use crate::enc_aes256_cbc;
 
 #[derive(Debug, Default, Clone)]
 pub struct SharedSecret {
@@ -17,29 +16,30 @@ pub struct SharedSecret {
 impl SharedSecret {
     pub fn new(peer_key: &CoseKey) -> Result<Self, String> {
         let rng = rand::SystemRandom::new();
-        let private =
+        let my_private_key =
             agreement::EphemeralPrivateKey::generate(&agreement::ECDH_P256, &rng).unwrap();
 
-        let public = &mut [0u8; agreement::PUBLIC_KEY_MAX_LEN][..private.public_key_len()];
-        private.compute_public_key(public).unwrap();
+        let my_public_key = my_private_key.compute_public_key().unwrap();
 
-        let peer = p256::P256Key::from_cose(peer_key).unwrap().bytes();
+        let peer_public_key = {
+            let peer_public_key = p256::P256Key::from_cose(peer_key).unwrap().bytes();
+            agreement::UnparsedPublicKey::new(&agreement::ECDH_P256, peer_public_key)
+        };
 
-        let peer = Input::from(&peer);
-        let shared_secret = agreement::agree_ephemeral(
-            private,
-            &agreement::ECDH_P256,
-            peer,
-            Unspecified,
-            |material| Ok(digest::digest(&digest::SHA256, material)),
-        )
-        .unwrap();
+        let shared_secret =
+            agreement::agree_ephemeral(my_private_key, &peer_public_key, Unspecified, |material| {
+                Ok(digest::digest(&digest::SHA256, material))
+            })
+            .unwrap();
 
         let mut res = SharedSecret {
-            public_key: p256::P256Key::from_bytes(&public).unwrap().to_cose(),
+            public_key: p256::P256Key::from_bytes(my_public_key.as_ref())
+                .unwrap()
+                .to_cose(),
             secret: [0; 32],
         };
         res.secret.copy_from_slice(shared_secret.as_ref());
+
         Ok(res)
     }
 
