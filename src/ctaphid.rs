@@ -241,6 +241,13 @@ fn ctaphid_cbormsg(
     command: u8,
     payload: &[u8],
 ) -> Result<Vec<u8>, String> {
+
+    if util::is_debug() {
+        println!("");
+        println!("-- send cbor = {}", util::to_hex_str(payload));
+        println!("--");
+    }
+
     // initialization_packet
     let res = create_initialization_packet(cid, command, payload);
     //println!("CTAPHID_CBOR(0) = {}", util::to_hex_str(&res.0));
@@ -339,12 +346,12 @@ fn ctaphid_cbormsg(
         // get data
         let data = get_data(st, payload);
 
-        /*
-        println!("");
-        println!("## Cbor Data");
-        println!("{}", util::to_hex_str(&cbor_data));
-        println!("##");
-        */
+        if util::is_debug() {
+            println!("");
+            println!("## response cbor");
+            println!("{}", util::to_hex_str(&data));
+            println!("##");
+        }
 
         Ok(data)
     }
