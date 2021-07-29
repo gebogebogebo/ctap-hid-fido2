@@ -3,21 +3,23 @@
 # ctap-hid-fido2
 Rust FIDO2 CTAP library
 
-for Mac & Win & raspberry Pi
+- Idem Key added.
+- set_new_pin() , change_pin() added.
 
-Some features of CTAP2.1PRE have been implemented.
+- for Mac & Win & raspberry Pi
 
-- authenticatorCredentialManagement
-- authenticatorBioEnrollment
+- Some features of CTAP2.1PRE have been implemented.
+  - authenticatorCredentialManagement
+  - authenticatorBioEnrollment
 
-**HMAC Secret Extension implemented.**
+- HMAC Secret Extension implemented.
 
 
 
 ## Description
 - Implements FIDO2 CTAP 2.0 & 2.1PRE (HID)
 - [Client to Authenticator Protocol (CTAP)](https://fidoalliance.org/specs/fido-v2.1-rd-20210309/fido-client-to-authenticator-protocol-v2.1-rd-20210309.html)
-- Confirmed operation FIDO key
+- Supported FIDO key
   - Yubikey Blue (Security Key Series)
   - Yubikey Black (YubiKey 5)
   - FEITIAN ePass FIDO(A4B)
@@ -26,14 +28,15 @@ Some features of CTAP2.1PRE have been implemented.
   - [SoloKey](https://github.com/solokeys/solo)
   - Nitrokey FIDO2
   - [OpenSK](https://github.com/google/OpenSK)
+  - Idem Key
 - Rust Version
   - cargo 1.51.0 , rustc 1.51.0 , rustup 1.23.1
 - for Mac
   - macOS Catalina / Big Sur
-  - Visual Studio Code
 - for Windows
   - Windows10
-  - Visual Studio Code
+
+
 
 ## Author
 gebo
