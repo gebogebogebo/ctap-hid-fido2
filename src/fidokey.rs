@@ -1,5 +1,5 @@
-use hidapi::HidApi;
 use crate::str_buf::StrBuf;
+use hidapi::HidApi;
 
 pub struct FidoKeyHid {
     pub device: hidapi::HidDevice,

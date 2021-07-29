@@ -42,7 +42,7 @@ impl P256Key {
     pub fn to_cose(&self) -> cose::CoseKey {
         cose::CoseKey {
             key_type: 2,
-            algorithm: -7,
+            algorithm: -25,
             parameters: [
                 (-1, Value::Integer(1)),
                 (-2, Value::Bytes(self.x.to_vec())),

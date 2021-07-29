@@ -133,6 +133,10 @@ impl HidParam {
                 vid: 0x20a0,
                 pid: 0x42b1,
             }, // Nitrokey FIDO2 2.0.0
+            HidParam {
+                vid: 0x32a3,
+                pid: 0x3201,
+            }, // Idem Key
         ]
     }
 }
@@ -177,7 +181,7 @@ pub fn get_info(hid_params: &[HidParam]) -> Result<get_info_params::Info> {
 
 /// Get FIDO key information (CTAP 1.0)
 pub fn get_info_u2f(hid_params: &[HidParam]) -> Result<String> {
-    get_info::get_info_u2f(hid_params).map_err(Error::msg)
+    get_info::get_info_u2f(hid_params)
 }
 
 /// Get PIN retry count
@@ -197,7 +201,7 @@ pub fn get_pin_retries(hid_params: &[HidParam]) -> Result<i32> {
 }
 
 /// Set New PIN
-pub fn set_new_pin(hid_params: &[HidParam],pin: &str) -> Result<()> {
+pub fn set_new_pin(hid_params: &[HidParam], pin: &str) -> Result<()> {
     let device = FidoKeyHid::new(hid_params).map_err(Error::msg)?;
     let cid = ctaphid::ctaphid_init(&device).map_err(Error::msg)?;
     client_pin::set_pin(&device, &cid, pin)?;
@@ -205,7 +209,7 @@ pub fn set_new_pin(hid_params: &[HidParam],pin: &str) -> Result<()> {
 }
 
 /// Change PIN
-pub fn change_pin(hid_params: &[HidParam],current_pin: &str,new_pin: &str) -> Result<()> {
+pub fn change_pin(hid_params: &[HidParam], current_pin: &str, new_pin: &str) -> Result<()> {
     let device = FidoKeyHid::new(hid_params).map_err(Error::msg)?;
     let cid = ctaphid::ctaphid_init(&device).map_err(Error::msg)?;
     client_pin::change_pin(&device, &cid, current_pin, new_pin)?;

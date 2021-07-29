@@ -2,11 +2,11 @@
 // cargo test -- --test-threads=1
 //
 
-use ctap_hid_fido2::*;
 use crypto::digest::Digest;
 use crypto::sha2::Sha256;
 use ctap_hid_fido2::str_buf::StrBuf;
 use ctap_hid_fido2::util;
+use ctap_hid_fido2::*;
 
 #[test]
 fn test_get_hid_devices() {

@@ -1,3 +1,4 @@
+use anyhow::{anyhow, Error, Result};
 use crate::ctaphid;
 use crate::get_info_command;
 use crate::get_info_params;
@@ -32,9 +33,9 @@ pub fn get_info(hid_params: &[HidParam]) -> Result<get_info_params::Info, String
     Ok(info)
 }
 
-pub fn get_info_u2f(hid_params: &[HidParam]) -> Result<String, String> {
-    let device = FidoKeyHid::new(hid_params)?;
-    let cid = ctaphid::ctaphid_init(&device)?;
+pub fn get_info_u2f(hid_params: &[HidParam]) -> Result<String> {
+    let device = FidoKeyHid::new(hid_params).map_err(Error::msg)?;
+    let cid = ctaphid::ctaphid_init(&device).map_err(Error::msg)?;
 
     let _data: Vec<u8> = Vec::new();
 
@@ -44,6 +45,6 @@ pub fn get_info_u2f(hid_params: &[HidParam]) -> Result<String, String> {
             let version: String = String::from_utf8(result).unwrap();
             Ok(version)
         }
-        Err(error) => Err(error),
+        Err(error) => Err(anyhow!(error)),
     }
 }
