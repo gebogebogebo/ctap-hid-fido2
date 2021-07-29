@@ -181,7 +181,7 @@ pub fn get_info(hid_params: &[HidParam]) -> Result<get_info_params::Info> {
 
 /// Get FIDO key information (CTAP 1.0)
 pub fn get_info_u2f(hid_params: &[HidParam]) -> Result<String> {
-    get_info::get_info_u2f(hid_params).map_err(Error::msg)
+    get_info::get_info_u2f(hid_params)
 }
 
 /// Get PIN retry count
