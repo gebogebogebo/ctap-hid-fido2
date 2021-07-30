@@ -11,6 +11,7 @@ use ctap_hid_fido2::{str_buf, HidParam};
 mod bio;
 mod cred;
 mod info;
+mod memo;
 mod pin;
 
 fn main() -> Result<()> {
@@ -67,6 +68,35 @@ fn main() -> Result<()> {
                         .long("get")
                         .takes_value(true)
                         .value_name("item")
+                )
+        )
+        .subcommand(
+            SubCommand::with_name("memo")
+                .about("Record some short texts in Authenticator\n- List All Memos without any FLAGS and OPTIONS.")
+                .arg(
+                    Arg::with_name("pin")
+                        .help("pin")
+                        .required(true)
+                        .short("p")
+                        .long("pin")
+                        .takes_value(true)
+                )
+                .arg(
+                    Arg::with_name("add")
+                        .help("add a memo")
+                        .short("a")
+                        .long("add")
+                        .takes_value(true)
+                        .value_name("tag")
+                        .value_name("memo")
+                )
+                .arg(
+                    Arg::with_name("del")
+                        .help("delete a memo")
+                        .short("d")
+                        .long("del")
+                        .takes_value(true)
+                        .value_name("tag")
                 )
         )
         .subcommand(
@@ -162,6 +192,11 @@ fn main() -> Result<()> {
     if let Some(ref matches) = matches.subcommand_matches("pin") {
         println!("PIN Management.\n");
         pin::pin(&matches)?;
+    }
+
+    if let Some(ref matches) = matches.subcommand_matches("memo") {
+        println!("Record some short texts in Authenticator.\n");
+        memo::memo(&matches)?;
     }
 
     if let Some(ref matches) = matches.subcommand_matches("cred") {

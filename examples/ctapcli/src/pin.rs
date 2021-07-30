@@ -73,10 +73,7 @@ pub fn pin(matches: &clap::ArgMatches) -> Result<()> {
         let current_pin = values.next().unwrap();
         let new_pin = values.next().unwrap();
 
-        ctap_hid_fido2::change_pin(
-            &HidParam::get_default_params(),
-            current_pin,
-            new_pin)?;
+        ctap_hid_fido2::change_pin(&HidParam::get_default_params(), current_pin, new_pin)?;
 
         println!("Success! :)\n");
     }
