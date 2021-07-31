@@ -100,15 +100,12 @@ fn search_cred(
         .filter(|it|it.public_key_credential_rp_entity.id == rpid);
 
     if let Some(r) = rps.next() {
-        let creds = ctap_hid_fido2::credential_management_enumerate_credentials(
-            &HidParam::get_default_params(),
-            Some(pin),
-            &r.rpid_hash,
-        )?;
+        let creds = get_cred(Some(pin), r)?;
 
         let mut creds = creds
             .iter()
             .filter(|it| it.public_key_credential_user_entity.id.eq(user_entity_id));
+            
         if let Some(c) = creds.next() {
             return Ok(c.public_key_credential_descriptor.clone());
         }
