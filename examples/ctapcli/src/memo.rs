@@ -8,6 +8,8 @@ use ctap_hid_fido2::{HidParam, InfoOption};
 use ctap_hid_fido2::public_key_credential_descriptor::PublicKeyCredentialDescriptor;
 use ctap_hid_fido2::public_key_credential_user_entity::PublicKeyCredentialUserEntity;
 use ctap_hid_fido2::verifier;
+use ctap_hid_fido2::credential_management_params::Rp;
+use ctap_hid_fido2::credential_management_params::Credential;
 
 pub fn memo(matches: &clap::ArgMatches) -> Result<()> {
     let pin = matches.value_of("pin");
@@ -54,37 +56,16 @@ pub fn memo(matches: &clap::ArgMatches) -> Result<()> {
     } else {
         println!("List All Memos.");
 
-        let rps = ctap_hid_fido2::credential_management_enumerate_rps(
-            &HidParam::get_default_params(),
-            pin,
-        )?;
-
+        let rps = get_rps(pin)?;
         let rps = rps
             .iter()
-            .filter(|&x| x.public_key_credential_rp_entity.id == rpid);
+            .filter(|it|it.public_key_credential_rp_entity.id == rpid);
 
         for r in rps {
-            //println!("## rps\n{}", r);
-
-            let creds = ctap_hid_fido2::credential_management_enumerate_credentials(
-                &HidParam::get_default_params(),
-                pin,
-                &r.rpid_hash,
-            )?;
-
-            for c in creds {
-                // tag
-                let tag =
-                    String::from_utf8(c.public_key_credential_user_entity.id.to_vec()).unwrap();
+            let creds = get_cred(pin, r)?;
+            for id in creds.iter().map(|it|it.public_key_credential_user_entity.id.to_vec()) {
+                let tag = String::from_utf8(id)?;
                 println!("- tag = {}", tag);
-
-                // data
-                let data = c.public_key_credential_user_entity.name;
-                println!("- data = {}", data);
-
-                println!("")
-
-                //println!("### credentials\n{}", c);
             }
         }
     }
@@ -92,19 +73,31 @@ pub fn memo(matches: &clap::ArgMatches) -> Result<()> {
     Ok(())
 }
 
-pub fn search_cred(
+fn get_rps(pin: Option<&str>) -> Result<Vec<Rp>> {
+    ctap_hid_fido2::credential_management_enumerate_rps(
+        &HidParam::get_default_params(),
+        pin,
+    )
+}
+
+fn get_cred(pin: Option<&str>, rp: &Rp) -> Result<Vec<Credential>> {
+    ctap_hid_fido2::credential_management_enumerate_credentials(
+        &HidParam::get_default_params(),
+        pin,
+        &rp.rpid_hash,
+    )
+}
+
+fn search_cred(
     pin: &str,
     rpid: &str,
     user_entity_id: &[u8],
 ) -> Result<PublicKeyCredentialDescriptor> {
-    let rps = ctap_hid_fido2::credential_management_enumerate_rps(
-        &HidParam::get_default_params(),
-        Some(pin),
-    )?;
+    let rps = get_rps(Some(pin))?;
 
     let mut rps = rps
         .iter()
-        .filter(|&x| x.public_key_credential_rp_entity.id == rpid);
+        .filter(|it|it.public_key_credential_rp_entity.id == rpid);
 
     if let Some(r) = rps.next() {
         let creds = ctap_hid_fido2::credential_management_enumerate_credentials(

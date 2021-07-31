@@ -22,7 +22,7 @@
             //"args": ["cred","-p","1234"],
             //"args": ["pin","-n","1234"],
             //"args": ["memo","-p","1234","-a","gebotag","hogehoge"],
-            "args": ["memo","-p","1234","-d","gebotag"],
+            "args": ["memo","-p","1234"],
             "cwd": "${workspaceFolder}"
         }
 
