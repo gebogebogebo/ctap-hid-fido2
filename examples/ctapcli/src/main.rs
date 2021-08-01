@@ -77,7 +77,6 @@ fn main() -> Result<()> {
                 .arg(
                     Arg::with_name("pin")
                         .help("pin")
-                        .required(true)
                         .short("p")
                         .long("pin")
                         .takes_value(true)
@@ -106,6 +105,12 @@ fn main() -> Result<()> {
                         .long("del")
                         .takes_value(true)
                         .value_name("tag")
+                )
+                .arg(
+                    Arg::with_name("list")
+                        .help("list all memos")
+                        .short("l")
+                        .long("list")
                 )
         )
         .subcommand(
