@@ -64,7 +64,7 @@ pub fn info(matches: &clap::ArgMatches) -> Result<()> {
 fn option_message(typ: &str, info_option: &InfoOption, val: Option<bool>) -> Result<String> {
     let value_str = match val {
         Some(v) => format!("{}", v),
-        None => format!("Not Supported"),
+        None => "Not Supported".to_string(),
     };
     let message1 = format!("option {} = {}", typ, value_str);
 
