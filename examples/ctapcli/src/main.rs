@@ -91,6 +91,14 @@ fn main() -> Result<()> {
                         .value_name("memo")
                 )
                 .arg(
+                    Arg::with_name("get")
+                        .help("get a memo")
+                        .short("g")
+                        .long("get")
+                        .takes_value(true)
+                        .value_name("tag")
+                )
+                .arg(
                     Arg::with_name("del")
                         .help("delete a memo")
                         .short("d")
