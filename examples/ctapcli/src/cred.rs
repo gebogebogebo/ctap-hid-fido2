@@ -57,7 +57,7 @@ pub fn cred(matches: &clap::ArgMatches) -> Result<()> {
         let creds = ctap_hid_fido2::credential_management_enumerate_credentials(
             &HidParam::get_default_params(),
             pin,
-            r.rpid_hash,
+            &r.rpid_hash,
         )?;
 
         for c in creds {

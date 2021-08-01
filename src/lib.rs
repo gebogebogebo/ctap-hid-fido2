@@ -645,7 +645,7 @@ pub fn credential_management_enumerate_rps(
 pub fn credential_management_enumerate_credentials(
     hid_params: &[HidParam],
     pin: Option<&str>,
-    rpid_hash: Vec<u8>,
+    rpid_hash: &[u8],
 ) -> Result<Vec<credential_management_params::Credential>> {
     let mut datas: Vec<credential_management_params::Credential> = Vec::new();
 
