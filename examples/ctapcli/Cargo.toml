@@ -1,6 +1,6 @@
 [package]
 name = "ctapcli"
-version = "0.0.3"
+version = "0.0.4"
 authors = ["gebo <gebogebogeboge@gmail.com>"]
 edition = "2018"
 
@@ -10,3 +10,4 @@ edition = "2018"
 ctap-hid-fido2 = { path = "../.." }
 clap = "2.33.3"
 anyhow = "1.0"
+clipboard = "0.5.0"

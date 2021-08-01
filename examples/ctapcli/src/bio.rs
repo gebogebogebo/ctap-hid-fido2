@@ -1,5 +1,4 @@
 use anyhow::{anyhow, Result};
-use ctap_hid_fido2;
 
 use ctap_hid_fido2::bio_enrollment_params::EnrollStatus1;
 use ctap_hid_fido2::bio_enrollment_params::TemplateInfo;

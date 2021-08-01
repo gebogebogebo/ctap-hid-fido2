@@ -1,5 +1,4 @@
 use anyhow::{anyhow, Result};
-use ctap_hid_fido2;
 
 #[allow(unused_imports)]
 use ctap_hid_fido2::util;
@@ -21,22 +20,22 @@ pub fn pin(matches: &clap::ArgMatches) -> Result<()> {
                         ":0 "
                     };
 
-                    println!("");
+                    println!();
                     for _ in 0..v {
                         print!("{}", mark);
                     }
-                    println!("");
+                    println!();
 
-                    println!("");
+                    println!();
                     println!("PIN retry counter represents the number of attempts left before PIN is disabled.");
                     println!("Each correct PIN entry resets the PIN retry counters back to their maximum values.");
                     println!("Each incorrect PIN entry decrements the counter by 1.");
                     println!("Once the PIN retry counter reaches 0, built-in user verification are disabled and can only be enabled if authenticator is reset.");
                 } else {
                     println!("\nThe authenticator has been blocked. \nThe only way to make it available again is factory reset.");
-                    println!("");
+                    println!();
                     println!(":_( ");
-                    println!("");
+                    println!();
                 }
             }
             Err(err) => return Err(err),
@@ -73,10 +72,7 @@ pub fn pin(matches: &clap::ArgMatches) -> Result<()> {
         let current_pin = values.next().unwrap();
         let new_pin = values.next().unwrap();
 
-        ctap_hid_fido2::change_pin(
-            &HidParam::get_default_params(),
-            current_pin,
-            new_pin)?;
+        ctap_hid_fido2::change_pin(&HidParam::get_default_params(), current_pin, new_pin)?;
 
         println!("Success! :)\n");
     }

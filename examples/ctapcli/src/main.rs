@@ -3,7 +3,8 @@ use anyhow::Result;
 extern crate clap;
 use clap::{App, Arg, SubCommand};
 
-use ctap_hid_fido2;
+extern crate clipboard;
+
 #[allow(unused_imports)]
 use ctap_hid_fido2::util;
 use ctap_hid_fido2::{str_buf, HidParam};
@@ -11,11 +12,12 @@ use ctap_hid_fido2::{str_buf, HidParam};
 mod bio;
 mod cred;
 mod info;
+mod memo;
 mod pin;
 
 fn main() -> Result<()> {
     let app = App::new("ctapcli")
-        .version("0.0.3")
+        .version("0.0.4")
         .author("gebo")
         .about("This tool implements CTAP HID and can communicate with FIDO Authenticator.\n\nabout CTAP(Client to Authenticator Protocol)\nhttps://fidoalliance.org/specs/fido-v2.1-rd-20210309/fido-client-to-authenticator-protocol-v2.1-rd-20210309.html")
         .arg(
@@ -67,6 +69,43 @@ fn main() -> Result<()> {
                         .long("get")
                         .takes_value(true)
                         .value_name("item")
+                )
+        )
+        .subcommand(
+            SubCommand::with_name("memo")
+                .about("Record some short texts in Authenticator\n- List All Memos without any FLAGS and OPTIONS.")
+                .arg(
+                    Arg::with_name("pin")
+                        .help("pin")
+                        .required(true)
+                        .short("p")
+                        .long("pin")
+                        .takes_value(true)
+                )
+                .arg(
+                    Arg::with_name("add")
+                        .help("add a memo")
+                        .short("a")
+                        .long("add")
+                        .takes_value(true)
+                        .value_name("tag")
+                        .value_name("memo")
+                )
+                .arg(
+                    Arg::with_name("get")
+                        .help("get a memo to Clipboard")
+                        .short("g")
+                        .long("get")
+                        .takes_value(true)
+                        .value_name("tag")
+                )
+                .arg(
+                    Arg::with_name("del")
+                        .help("delete a memo")
+                        .short("d")
+                        .long("del")
+                        .takes_value(true)
+                        .value_name("tag")
                 )
         )
         .subcommand(
@@ -162,6 +201,11 @@ fn main() -> Result<()> {
     if let Some(ref matches) = matches.subcommand_matches("pin") {
         println!("PIN Management.\n");
         pin::pin(&matches)?;
+    }
+
+    if let Some(ref matches) = matches.subcommand_matches("memo") {
+        println!("Record some short texts in Authenticator.\n");
+        memo::memo(&matches)?;
     }
 
     if let Some(ref matches) = matches.subcommand_matches("cred") {

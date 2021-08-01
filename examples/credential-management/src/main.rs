@@ -41,7 +41,7 @@ fn credentials(pin: Option<&str>, rpid_hash: Option<&str>) {
     match ctap_hid_fido2::credential_management_enumerate_credentials(
         &HidParam::get_default_params(),
         pin,
-        rpid_hash_bytes,
+        &rpid_hash_bytes,
     ) {
         Ok(results) => {
             for c in results {
