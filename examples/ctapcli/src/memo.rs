@@ -11,7 +11,12 @@ use ctap_hid_fido2::verifier;
 use ctap_hid_fido2::credential_management_params::Rp;
 use ctap_hid_fido2::credential_management_params::Credential;
 
+fn type_of<T>(_: &T) -> &'static str {
+    std::any::type_name::<T>()
+}
+
 pub fn memo(matches: &clap::ArgMatches) -> Result<()> {
+    
     let pin = matches.value_of("pin");
     let rpid = "ctapcli";
 
@@ -105,7 +110,7 @@ fn search_cred(
         let mut creds = creds
             .iter()
             .filter(|it| it.public_key_credential_user_entity.id.eq(user_entity_id));
-            
+
         if let Some(c) = creds.next() {
             return Ok(c.public_key_credential_descriptor.clone());
         }
