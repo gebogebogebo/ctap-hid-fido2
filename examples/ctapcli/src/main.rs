@@ -3,6 +3,8 @@ use anyhow::Result;
 extern crate clap;
 use clap::{App, Arg, SubCommand};
 
+extern crate clipboard;
+
 use ctap_hid_fido2;
 #[allow(unused_imports)]
 use ctap_hid_fido2::util;
@@ -92,7 +94,7 @@ fn main() -> Result<()> {
                 )
                 .arg(
                     Arg::with_name("get")
-                        .help("get a memo")
+                        .help("get a memo to Clipboard")
                         .short("g")
                         .long("get")
                         .takes_value(true)

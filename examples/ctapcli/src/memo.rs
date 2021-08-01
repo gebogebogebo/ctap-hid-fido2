@@ -1,17 +1,20 @@
 use anyhow::{anyhow, Context, Result};
+
+use clipboard::ClipboardContext;
+use clipboard::ClipboardProvider;
+
 use ctap_hid_fido2;
 
 #[allow(unused_imports)]
 use ctap_hid_fido2::util;
 use ctap_hid_fido2::{HidParam, InfoOption};
 
+use ctap_hid_fido2::credential_management_params::Credential;
+use ctap_hid_fido2::credential_management_params::Rp;
 use ctap_hid_fido2::public_key_credential_user_entity::PublicKeyCredentialUserEntity;
 use ctap_hid_fido2::verifier;
-use ctap_hid_fido2::credential_management_params::Rp;
-use ctap_hid_fido2::credential_management_params::Credential;
 
 pub fn memo(matches: &clap::ArgMatches) -> Result<()> {
-
     let pin = matches.value_of("pin");
     let rpid = "ctapcli";
 
@@ -28,7 +31,8 @@ pub fn memo(matches: &clap::ArgMatches) -> Result<()> {
 
         if let None = search_cred(pin.unwrap(), rpid, tag.as_bytes())? {
             let challenge = verifier::create_challenge();
-            let rkparam = PublicKeyCredentialUserEntity::new(Some(tag.as_bytes()), Some(memo), None);
+            let rkparam =
+                PublicKeyCredentialUserEntity::new(Some(tag.as_bytes()), Some(memo), None);
 
             let _att = ctap_hid_fido2::make_credential_rk(
                 &HidParam::get_default_params(),
@@ -42,7 +46,6 @@ pub fn memo(matches: &clap::ArgMatches) -> Result<()> {
         } else {
             println!("This tag already exists...");
         }
-
     } else if matches.is_present("del") {
         let mut values = matches.values_of("del").unwrap();
         let tag = values.next().unwrap();
@@ -56,49 +59,55 @@ pub fn memo(matches: &clap::ArgMatches) -> Result<()> {
             )?;
 
             println!("Delete Success!.");
-        }else {
+        } else {
             println!("tag not found...");
         }
-
     } else if matches.is_present("get") {
         let mut values = matches.values_of("get").unwrap();
         let tag = values.next().unwrap();
         println!("Get a memo => {}.", tag);
 
         if let Some(cred) = search_cred(pin.unwrap(), rpid, tag.as_bytes())? {
-            //println!("Get Success!.");
             //let tag = String::from_utf8(cred.public_key_credential_user_entity.id)?;
             //println!("- tag = {}", tag);
 
             let data = cred.public_key_credential_user_entity.name;
-            println!("- {}", data);
+            //println!("- {}", data);
 
-        }else {
+            let mut ctx: ClipboardContext = ClipboardProvider::new().unwrap();
+            ctx.set_contents(data.to_owned()).unwrap();
+
+            println!("Copied it to the clipboard :) :) :) !");
+        } else {
             println!("tag not found...");
         }
     } else {
         println!("List All Memos.");
 
         let rps = get_rps(pin)?;
-        let mut rps = rps.iter().filter(|it|it.public_key_credential_rp_entity.id == rpid);
+        let mut rps = rps
+            .iter()
+            .filter(|it| it.public_key_credential_rp_entity.id == rpid);
 
         if let Some(r) = rps.next() {
-            let creds = get_cred(pin, r)?;
+            let creds = get_creds(pin, r)?;
 
-            println!("- {}/10", creds.len());
+            println!("({}/10)", creds.len());
 
-            for id in creds.iter().map(|it|it.public_key_credential_user_entity.id.to_vec()) {
+            for id in creds
+                .iter()
+                .map(|it| it.public_key_credential_user_entity.id.to_vec())
+            {
                 let tag = String::from_utf8(id)?;
                 println!("- {}", tag);
             }
         }
-
     }
 
     Ok(())
 }
 
-fn is_supported() -> Result<bool>{
+fn is_supported() -> Result<bool> {
     if let None = ctap_hid_fido2::enable_info_option(
         &HidParam::get_default_params(),
         &InfoOption::CredentialMgmtPreview,
@@ -115,13 +124,10 @@ fn is_supported() -> Result<bool>{
 }
 
 fn get_rps(pin: Option<&str>) -> Result<Vec<Rp>> {
-    ctap_hid_fido2::credential_management_enumerate_rps(
-        &HidParam::get_default_params(),
-        pin,
-    )
+    ctap_hid_fido2::credential_management_enumerate_rps(&HidParam::get_default_params(), pin)
 }
 
-fn get_cred(pin: Option<&str>, rp: &Rp) -> Result<Vec<Credential>> {
+fn get_creds(pin: Option<&str>, rp: &Rp) -> Result<Vec<Credential>> {
     ctap_hid_fido2::credential_management_enumerate_credentials(
         &HidParam::get_default_params(),
         pin,
@@ -129,19 +135,15 @@ fn get_cred(pin: Option<&str>, rp: &Rp) -> Result<Vec<Credential>> {
     )
 }
 
-fn search_cred(
-    pin: &str,
-    rpid: &str,
-    user_entity_id: &[u8],
-) -> Result<Option<Credential>> {
+fn search_cred(pin: &str, rpid: &str, user_entity_id: &[u8]) -> Result<Option<Credential>> {
     let rps = get_rps(Some(pin))?;
 
     let mut rps = rps
         .iter()
-        .filter(|it|it.public_key_credential_rp_entity.id == rpid);
+        .filter(|it| it.public_key_credential_rp_entity.id == rpid);
 
     if let Some(r) = rps.next() {
-        let creds = get_cred(Some(pin), r)?;
+        let creds = get_creds(Some(pin), r)?;
 
         let mut creds = creds
             .iter()
