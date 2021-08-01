@@ -17,7 +17,7 @@ mod pin;
 
 fn main() -> Result<()> {
     let app = App::new("ctapcli")
-        .version("0.0.4")
+        .version("0.0.5")
         .author("gebo")
         .about("This tool implements CTAP HID and can communicate with FIDO Authenticator.\n\nabout CTAP(Client to Authenticator Protocol)\nhttps://fidoalliance.org/specs/fido-v2.1-rd-20210309/fido-client-to-authenticator-protocol-v2.1-rd-20210309.html")
         .arg(
@@ -77,7 +77,6 @@ fn main() -> Result<()> {
                 .arg(
                     Arg::with_name("pin")
                         .help("pin")
-                        .required(true)
                         .short("p")
                         .long("pin")
                         .takes_value(true)
@@ -106,6 +105,12 @@ fn main() -> Result<()> {
                         .long("del")
                         .takes_value(true)
                         .value_name("tag")
+                )
+                .arg(
+                    Arg::with_name("list")
+                        .help("list all memos")
+                        .short("l")
+                        .long("list")
                 )
         )
         .subcommand(
