@@ -3,8 +3,6 @@ use anyhow::{anyhow, Context, Result};
 use clipboard::ClipboardContext;
 use clipboard::ClipboardProvider;
 
-use ctap_hid_fido2;
-
 #[allow(unused_imports)]
 use ctap_hid_fido2::util;
 use ctap_hid_fido2::{HidParam, InfoOption};

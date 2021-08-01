@@ -5,7 +5,6 @@ use clap::{App, Arg, SubCommand};
 
 extern crate clipboard;
 
-use ctap_hid_fido2;
 #[allow(unused_imports)]
 use ctap_hid_fido2::util;
 use ctap_hid_fido2::{str_buf, HidParam};
