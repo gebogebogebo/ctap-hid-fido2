@@ -54,9 +54,6 @@ fn main() -> Result<()> {
                         .help("change pin")
                         .short("c")
                         .long("change")
-                        .takes_value(true)
-                        .value_name("current pin")
-                        .value_name("new pin")
                 )
         )
         .subcommand(

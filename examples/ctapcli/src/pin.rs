@@ -54,7 +54,9 @@ pub fn pin(matches: &clap::ArgMatches) -> Result<()> {
             }
         };
 
-        let pin = common::get_pin();
+        println!("new PIN:");
+        let pin = common::get_input();
+        println!();
 
         ctap_hid_fido2::set_new_pin(&HidParam::get_default_params(), &pin)?;
 
@@ -69,11 +71,14 @@ pub fn pin(matches: &clap::ArgMatches) -> Result<()> {
             return Err(anyhow!("PIN not yet set."));
         };
 
-        let mut values = matches.values_of("change").unwrap();
-        let current_pin = values.next().unwrap();
-        let new_pin = values.next().unwrap();
+        println!("current PIN:");
+        let current_pin = common::get_input();
+        println!();
+        println!("new PIN:");
+        let new_pin = common::get_input();
+        println!();
 
-        ctap_hid_fido2::change_pin(&HidParam::get_default_params(), current_pin, new_pin)?;
+        ctap_hid_fido2::change_pin(&HidParam::get_default_params(), &current_pin, &new_pin)?;
 
         println!("Success! :)\n");
     }
