@@ -1,5 +1,7 @@
 use anyhow::{anyhow, Result};
 
+use crate::common;
+
 #[allow(unused_imports)]
 use ctap_hid_fido2::util;
 use ctap_hid_fido2::{HidParam, InfoOption};
@@ -52,10 +54,9 @@ pub fn pin(matches: &clap::ArgMatches) -> Result<()> {
             }
         };
 
-        let mut values = matches.values_of("new").unwrap();
-        let pin = values.next().unwrap();
+        let pin = common::get_pin();
 
-        ctap_hid_fido2::set_new_pin(&HidParam::get_default_params(), pin)?;
+        ctap_hid_fido2::set_new_pin(&HidParam::get_default_params(), &pin)?;
 
         println!("Success! :)\n");
     } else if matches.is_present("change") {

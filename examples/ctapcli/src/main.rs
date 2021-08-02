@@ -10,6 +10,7 @@ extern crate rpassword;
 use ctap_hid_fido2::util;
 use ctap_hid_fido2::{str_buf, HidParam};
 
+mod common;
 mod bio;
 mod cred;
 mod info;
@@ -47,8 +48,6 @@ fn main() -> Result<()> {
                         .help("set new pin")
                         .short("n")
                         .long("new")
-                        .takes_value(true)
-                        .value_name("pin")
                 )
                 .arg(
                     Arg::with_name("change")
