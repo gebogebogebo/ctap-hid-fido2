@@ -11,3 +11,4 @@ ctap-hid-fido2 = { path = "../.." }
 clap = "2.33.3"
 anyhow = "1.0"
 clipboard = "0.5.0"
+rpassword = "5.0"

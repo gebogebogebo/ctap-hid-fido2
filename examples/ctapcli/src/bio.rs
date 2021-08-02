@@ -8,6 +8,7 @@ use ctap_hid_fido2::{HidParam, InfoOption};
 
 extern crate clap;
 
+#[allow(dead_code)]
 pub fn bio(matches: &clap::ArgMatches) -> Result<()> {
     let pin = matches.value_of("pin");
 
@@ -76,6 +77,7 @@ pub fn bio(matches: &clap::ArgMatches) -> Result<()> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn bio_enrollment(pin: &str) -> Result<()> {
     println!("bio_enrollment_begin");
     let result = ctap_hid_fido2::bio_enrollment_begin(
@@ -94,6 +96,7 @@ fn bio_enrollment(pin: &str) -> Result<()> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn bio_enrollment_next(enroll_status: &EnrollStatus1) -> Result<bool> {
     println!("bio_enrollment_next");
     let result = ctap_hid_fido2::bio_enrollment_next(enroll_status, Some(10000))?;
