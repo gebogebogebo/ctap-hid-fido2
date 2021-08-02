@@ -4,6 +4,7 @@ extern crate clap;
 use clap::{App, Arg, SubCommand};
 
 extern crate clipboard;
+extern crate rpassword;
 
 #[allow(unused_imports)]
 use ctap_hid_fido2::util;
@@ -73,14 +74,7 @@ fn main() -> Result<()> {
         )
         .subcommand(
             SubCommand::with_name("memo")
-                .about("Record some short texts in Authenticator\n- List All Memos without any FLAGS and OPTIONS.")
-                .arg(
-                    Arg::with_name("pin")
-                        .help("pin")
-                        .short("p")
-                        .long("pin")
-                        .takes_value(true)
-                )
+                .about("Record some short texts in Authenticator\n- Get a Memo without any FLAGS and OPTIONS.")
                 .arg(
                     Arg::with_name("add")
                         .help("add a memo")
@@ -112,7 +106,8 @@ fn main() -> Result<()> {
                         .short("l")
                         .long("list")
                 )
-        )
+        );
+        /*
         .subcommand(
             SubCommand::with_name("cred")
                 .about("Credential management")
@@ -161,6 +156,7 @@ fn main() -> Result<()> {
                         .value_name("templateId")
                 ),
         );
+         */
 
     // Parse arguments
     let matches = app.get_matches();
@@ -213,6 +209,7 @@ fn main() -> Result<()> {
         memo::memo(&matches)?;
     }
 
+    /*
     if let Some(ref matches) = matches.subcommand_matches("cred") {
         println!("Credential Management.\n");
         cred::cred(&matches)?;
@@ -222,6 +219,7 @@ fn main() -> Result<()> {
         println!("Bio Management.\n");
         bio::bio(&matches)?;
     }
+    */
 
     /*
     println!("config()");
