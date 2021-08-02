@@ -2,7 +2,8 @@ use anyhow::{anyhow, Context, Result};
 
 use clipboard::ClipboardContext;
 use clipboard::ClipboardProvider;
-use rpassword;
+
+use crate::common;
 
 #[allow(unused_imports)]
 use ctap_hid_fido2::util;
@@ -21,7 +22,7 @@ pub fn memo(matches: &clap::ArgMatches) -> Result<()> {
         ));
     }
 
-    let pin = get_pin();
+    let pin = common::get_pin();
     let rpid = "ctapcli";
 
     if matches.is_present("add") {
@@ -73,7 +74,7 @@ pub fn memo(matches: &clap::ArgMatches) -> Result<()> {
         list(&pin,rpid)?;
 
         println!("tag:");
-        let tag = get_input();
+        let tag = common::get_input();
 
         get(&tag, &pin, rpid)?;
     }
@@ -173,16 +174,4 @@ fn list(pin: &str, rpid: &str) -> Result<()> {
     println!();
 
     Ok(())
-}
-
-fn get_input() -> String {
-    let mut word = String::new();
-    std::io::stdin().read_line(&mut word).ok();
-    return word.trim().to_string();
-}
-
-fn get_pin() -> String {
-    let pin = rpassword::prompt_password_stdout("PIN: ").unwrap();
-    pin
-    //println!("Your password is {}", pass);
 }
