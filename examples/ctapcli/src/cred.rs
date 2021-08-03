@@ -5,6 +5,7 @@ use anyhow::{anyhow, Result};
 use ctap_hid_fido2::util;
 use ctap_hid_fido2::{HidParam, InfoOption};
 
+#[allow(dead_code)]
 pub fn cred(matches: &clap::ArgMatches) -> Result<()> {
     let pin = matches.value_of("pin");
 

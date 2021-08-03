@@ -3,6 +3,8 @@ use anyhow::{anyhow, Context, Result};
 use clipboard::ClipboardContext;
 use clipboard::ClipboardProvider;
 
+use crate::common;
+
 #[allow(unused_imports)]
 use ctap_hid_fido2::util;
 use ctap_hid_fido2::{HidParam, InfoOption};
@@ -20,16 +22,7 @@ pub fn memo(matches: &clap::ArgMatches) -> Result<()> {
         ));
     }
 
-    let pin = if matches.is_present("pin") {
-        matches.value_of("pin").unwrap().to_string()
-    } else {
-        println!("pin:");
-
-        let input = get_input();
-        println!();
-        input
-    };
-
+    let pin = common::get_pin();
     let rpid = "ctapcli";
 
     if matches.is_present("add") {
@@ -80,9 +73,8 @@ pub fn memo(matches: &clap::ArgMatches) -> Result<()> {
     } else {
         list(&pin,rpid)?;
 
-        println!();
         println!("tag:");
-        let tag = get_input();
+        let tag = common::get_input();
 
         get(&tag, &pin, rpid)?;
     }
@@ -165,6 +157,7 @@ fn list(pin: &str, rpid: &str) -> Result<()> {
         .iter()
         .filter(|it| it.public_key_credential_rp_entity.id == rpid);
 
+    println!();
     if let Some(r) = rps.next() {
         let creds = get_creds(Some(&pin), r)?;
 
@@ -178,11 +171,7 @@ fn list(pin: &str, rpid: &str) -> Result<()> {
 
         println!("({}/10)", creds.len());
     }
-    Ok(())
-}
+    println!();
 
-fn get_input() -> String {
-    let mut word = String::new();
-    std::io::stdin().read_line(&mut word).ok();
-    return word.trim().to_string();
+    Ok(())
 }
