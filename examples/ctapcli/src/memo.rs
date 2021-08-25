@@ -1,4 +1,4 @@
-use anyhow::{anyhow, Context, Result};
+use anyhow::{anyhow, Result};
 
 use clipboard::ClipboardContext;
 use clipboard::ClipboardProvider;
@@ -26,27 +26,8 @@ pub fn memo(matches: &clap::ArgMatches) -> Result<()> {
     let rpid = "ctapcli";
 
     if matches.is_present("add") {
-        let mut values = matches.values_of("add").context("arg")?;
-        let tag = values.next().context("arg")?;
-        let memo = values.next().context("arg")?;
-
-        if let None = search_cred(&pin, rpid, tag.as_bytes())? {
-            let challenge = verifier::create_challenge();
-            let rkparam =
-                PublicKeyCredentialUserEntity::new(Some(tag.as_bytes()), Some(memo), None);
-
-            let _att = ctap_hid_fido2::make_credential_rk(
-                &HidParam::get_default_params(),
-                rpid,
-                &challenge,
-                Some(&pin),
-                &rkparam,
-            )?;
-
-            println!("Add Success!.");
-        } else {
-            println!("This tag already exists...");
-        }
+        println!("Add a memo");
+        add(&pin,rpid)?;
     } else if matches.is_present("del") {
         let mut values = matches.values_of("del").unwrap();
         let tag = values.next().unwrap();
@@ -77,6 +58,36 @@ pub fn memo(matches: &clap::ArgMatches) -> Result<()> {
         let tag = common::get_input();
 
         get(&tag, &pin, rpid)?;
+    }
+
+    Ok(())
+}
+
+fn add(pin: &str, rpid: &str) -> Result<()> {
+    println!("");
+    println!("tag:");
+    let tag = common::get_input();
+    println!("");
+
+    if let None = search_cred(&pin, rpid, tag.as_bytes())? {
+        println!("memo:");
+        let memo = common::get_input();
+
+        let challenge = verifier::create_challenge();
+        let rkparam =
+            PublicKeyCredentialUserEntity::new(Some(tag.as_bytes()), Some(&memo), None);
+
+        let _att = ctap_hid_fido2::make_credential_rk(
+            &HidParam::get_default_params(),
+            rpid,
+            &challenge,
+            Some(&pin),
+            &rkparam,
+        )?;
+
+        println!("Add Success! :)");
+    } else {
+        println!("This tag already exists :(");
     }
 
     Ok(())
@@ -175,3 +186,4 @@ fn list(pin: &str, rpid: &str) -> Result<()> {
 
     Ok(())
 }
+
