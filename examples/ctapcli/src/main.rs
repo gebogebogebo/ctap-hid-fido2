@@ -76,9 +76,6 @@ fn main() -> Result<()> {
                         .help("add a memo")
                         .short("a")
                         .long("add")
-                        .takes_value(true)
-                        .value_name("tag")
-                        .value_name("memo")
                 )
                 .arg(
                     Arg::with_name("get")
