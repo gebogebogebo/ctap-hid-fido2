@@ -19,7 +19,7 @@ mod pin;
 
 fn main() -> Result<()> {
     let app = App::new("ctapcli")
-        .version("0.0.6")
+        .version("0.0.7")
         .author("gebo")
         .about("This tool implements CTAP HID and can communicate with FIDO Authenticator.\n\nabout CTAP(Client to Authenticator Protocol)\nhttps://fidoalliance.org/specs/fido-v2.1-rd-20210309/fido-client-to-authenticator-protocol-v2.1-rd-20210309.html")
         .arg(
