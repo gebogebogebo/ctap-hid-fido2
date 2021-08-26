@@ -36,7 +36,6 @@ pub fn memo(matches: &clap::ArgMatches) -> Result<()> {
         println!("Get a memo.");
     }
 
-    // PIN
     let pin = common::get_pin();
     let rpid = "ctapcli";
 
