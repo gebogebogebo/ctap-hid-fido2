@@ -813,4 +813,15 @@ mod tests {
         let pin_auth = sig[0..16].to_vec();
         assert_eq!(check, hex::encode(pin_auth).to_uppercase());
     }
+
+    #[test]
+    fn test_hmac(){
+        let key = b"this is key".to_vec();
+        let message = b"this is message".to_vec();
+
+        let sig = enc_hmac_sha_256::authenticate(&key, &message);
+
+        let verify = enc_hmac_sha_256::verify(&key, &message, &sig);
+        assert_eq!(verify, true);
+    }
 }
