@@ -211,10 +211,6 @@ fn test_enc_hmac_sha_256() {
         sig,
         util::to_str_hex("BF3D3FCFC4462CDCBEBBBC8AF82EA38B7B5ED4259B2061322C57B5CA696D6080")
     );
-
-    let result = enc_hmac_sha_256::verify(&key, message.as_bytes(), &sig);
-    println!("- hmac verify = {}", result);
-    assert!(result)
 }
 
 #[test]

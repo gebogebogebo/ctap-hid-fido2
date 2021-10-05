@@ -821,7 +821,7 @@ mod tests {
 
         let sig = enc_hmac_sha_256::authenticate(&key, &message);
 
-        let verify = enc_hmac_sha_256::verify(&key, &message, &sig);
-        assert_eq!(verify, true);
+        let check = "1BCF27BDA4891AFA5F53CC027B8835564E35A8E3B631AA0F0563299296AD5909".to_string();
+        assert_eq!(check, hex::encode(sig).to_uppercase());
     }
 }
