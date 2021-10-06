@@ -8,7 +8,6 @@ use crate::util;
 use ring::digest;
 use ring::rand::SecureRandom;
 use ring::signature;
-//use x509_parser::parse_x509_der;
 use x509_parser::prelude::*;
 
 // Create Random Data
