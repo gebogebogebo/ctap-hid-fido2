@@ -30,7 +30,7 @@ fn main() -> Result<()> {
         // with extensions
         let ext = Mext::HmacSecret(Some(true));
         ctap_hid_fido2::make_credential_with_extensions(
-            &HidParam::get_default_params(),
+            Some(&HidParam::get_default_params()),
             rpid,
             &challenge,
             Some(pin),
@@ -38,7 +38,7 @@ fn main() -> Result<()> {
         )?
     }else{
         ctap_hid_fido2::make_credential(
-            &HidParam::get_default_params(),
+            Some(&HidParam::get_default_params()),
             rpid,
             &challenge,
             Some(pin),

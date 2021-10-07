@@ -7,13 +7,12 @@ use crate::make_credential_params::Extension;
 use crate::make_credential_response;
 use crate::public_key_credential_user_entity::PublicKeyCredentialUserEntity;
 use crate::FidoKeyHid;
-use crate::HidParam;
 
 #[allow(unused_imports)]
 use crate::util;
 
 pub fn make_credential(
-    hid_params: &[HidParam],
+    device: &FidoKeyHid,
     rpid: &str,
     challenge: &[u8],
     pin: Option<&str>,
@@ -23,8 +22,7 @@ pub fn make_credential(
     extensions: Option<&Vec<Extension>>,
 ) -> Result<make_credential_params::Attestation, String> {
     // init
-    let device = FidoKeyHid::new(hid_params)?;
-    let cid = ctaphid::ctaphid_init(&device)?;
+    let cid = ctaphid::ctaphid_init(device)?;
 
     /*
     // uv
@@ -58,7 +56,7 @@ pub fn make_credential(
         // get pintoken & create pin auth
         if let Some(pin) = pin {
             if !pin.is_empty() {
-                let pin_token = client_pin::get_pin_token(&device, &cid, pin)?;
+                let pin_token = client_pin::get_pin_token(device, &cid, pin)?;
                 let sig = enc_hmac_sha_256::authenticate(&pin_token.key, &params.client_data_hash);
                 params.pin_auth = sig[0..16].to_vec();
             }
@@ -69,7 +67,7 @@ pub fn make_credential(
     util::debugp("- make_credential", &send_payload);
 
     // send & response
-    let response_cbor = ctaphid::ctaphid_cbor(&device, &cid, &send_payload)?;
+    let response_cbor = ctaphid::ctaphid_cbor(device, &cid, &send_payload)?;
     util::debugp("- response_cbor", &response_cbor);
 
     let att = make_credential_response::parse_cbor(&response_cbor)?;

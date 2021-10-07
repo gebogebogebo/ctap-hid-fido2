@@ -205,8 +205,8 @@ pub fn get_info_u2f(hid_params: Option<&[HidParam]>) -> Result<String> {
 }
 
 /// Get PIN retry count
-pub fn get_pin_retries(hid_params: &[HidParam]) -> Result<i32> {
-    let device = FidoKeyHid::new(hid_params).map_err(Error::msg)?;
+pub fn get_pin_retries(hid_params: Option<&[HidParam]>) -> Result<i32> {
+    let device = get_device(hid_params)?;
     let cid = ctaphid::ctaphid_init(&device).map_err(Error::msg)?;
 
     let send_payload =
@@ -238,38 +238,41 @@ pub fn change_pin(hid_params: &[HidParam], current_pin: &str, new_pin: &str) -> 
 
 /// Registration command.Generate credentials(with PIN,non Resident Key)
 pub fn make_credential(
-    hid_params: &[HidParam],
+    hid_params: Option<&[HidParam]>,
     rpid: &str,
     challenge: &[u8],
     pin: Option<&str>,
 ) -> Result<make_credential_params::Attestation> {
-    make_credential::make_credential(hid_params, rpid, challenge, pin, false, None, None, None)
+    let device = get_device(hid_params)?;
+    make_credential::make_credential(&device, rpid, challenge, pin, false, None, None, None)
         .map_err(Error::msg)
 }
 
 pub fn make_credential_with_extensions(
-    hid_params: &[HidParam],
+    hid_params: Option<&[HidParam]>,
     rpid: &str,
     challenge: &[u8],
     pin: Option<&str>,
     extensions: Option<&Vec<Mext>>,
 ) -> Result<make_credential_params::Attestation> {
+    let device = get_device(hid_params)?;
     make_credential::make_credential(
-        hid_params, rpid, challenge, pin, false, None, None, extensions,
+        &device, rpid, challenge, pin, false, None, None, extensions,
     )
     .map_err(Error::msg)
 }
 
 /// Registration command.Generate credentials(with PIN ,Resident Key)
 pub fn make_credential_rk(
-    hid_params: &[HidParam],
+    hid_params: Option<&[HidParam]>,
     rpid: &str,
     challenge: &[u8],
     pin: Option<&str>,
     rkparam: &PublicKeyCredentialUserEntity,
 ) -> Result<make_credential_params::Attestation> {
+    let device = get_device(hid_params)?;
     make_credential::make_credential(
-        hid_params,
+        &device,
         rpid,
         challenge,
         pin,
@@ -283,11 +286,12 @@ pub fn make_credential_rk(
 
 /// Registration command.Generate credentials(without PIN ,non Resident Key)
 pub fn make_credential_without_pin(
-    hid_params: &[HidParam],
+    hid_params: Option<&[HidParam]>,
     rpid: &str,
     challenge: &[u8],
 ) -> Result<make_credential_params::Attestation> {
-    make_credential::make_credential(hid_params, rpid, challenge, None, false, None, None, None)
+    let device = get_device(hid_params)?;
+    make_credential::make_credential(&device, rpid, challenge, None, false, None, None, None)
         .map_err(Error::msg)
 }
 

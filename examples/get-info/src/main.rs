@@ -8,6 +8,15 @@ fn main() {
         "----- get-info start : use_hid_param = {:?} -----",
         use_hid_param
     );
+    /*
+    let param = if use_hid_param {
+        Some(&HidParam::get_default_params())
+    } else {
+        None
+    };
+    */
+    let param = None;
+
 
     println!("get_hid_devices()");
     let devs = ctap_hid_fido2::get_hid_devices();
@@ -26,22 +35,22 @@ fn main() {
             dev.vid, dev.pid, info
         );
     }
-
+    
     println!("get_info()");
-    let result = if use_hid_param {
-        ctap_hid_fido2::get_info(Some(&HidParam::get_default_params()))
-    } else {
-        ctap_hid_fido2::get_info(None)
-    };
+    let result = ctap_hid_fido2::get_info(param);
     match result {
         Ok(info) => println!("{}", info),
         Err(e) => println!("error: {:?}", e),
     }
 
-
     println!("get_pin_retries()");
-    match ctap_hid_fido2::get_pin_retries(&HidParam::get_default_params()) {
-        Ok(retry) => println!("{}", retry),
+    let result = if use_hid_param {
+        ctap_hid_fido2::get_pin_retries(Some(&HidParam::get_default_params()))
+    } else {
+        ctap_hid_fido2::get_pin_retries(None)
+    };
+    match result {
+        Ok(info) => println!("{}", info),
         Err(e) => println!("error: {:?}", e),
     }
 
