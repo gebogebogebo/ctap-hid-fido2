@@ -3,7 +3,11 @@ use ctap_hid_fido2::HidParam;
 fn main() {
     ctap_hid_fido2::hello();
 
-    println!("----- get-info start -----");
+    let use_hid_param = true;
+    println!(
+        "----- get-info start : use_hid_param = {:?} -----",
+        use_hid_param
+    );
 
     println!("get_hid_devices()");
     let devs = ctap_hid_fido2::get_hid_devices();

@@ -84,7 +84,7 @@ pub fn get_assertion(
 
 fn get_next_assertion(device: &FidoKeyHid, cid: &[u8]) -> Result<Assertion, String> {
     let send_payload = get_next_assertion_command::create_payload();
-    let response_cbor = ctaphid::ctaphid_cbor(&device, &cid, &send_payload)?;
+    let response_cbor = ctaphid::ctaphid_cbor(device, cid, &send_payload)?;
     get_assertion_response::parse_cbor(&response_cbor)
 }
 

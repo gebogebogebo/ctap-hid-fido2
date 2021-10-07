@@ -241,9 +241,8 @@ fn ctaphid_cbormsg(
     command: u8,
     payload: &[u8],
 ) -> Result<Vec<u8>, String> {
-
     if util::is_debug() {
-        println!("");
+        println!();
         println!("-- send cbor = {}", util::to_hex_str(payload));
         println!("--");
     }
@@ -347,7 +346,7 @@ fn ctaphid_cbormsg(
         let data = get_data(st, payload);
 
         if util::is_debug() {
-            println!("");
+            println!();
             println!("## response cbor");
             println!("{}", util::to_hex_str(&data));
             println!("##");

@@ -62,7 +62,7 @@ impl Extension {
     pub fn create_hmac_secret_from_string(message: &str) -> Extension {
         let mut salt = [0u8; 32];
         let mut digest = Sha256::new();
-        digest.input(&message.as_bytes());
+        digest.input(message.as_bytes());
         digest.result(&mut salt);
         //print!("{}", StrBuf::bufh("- salt", &salt));
         Extension::HmacSecret(Some(salt))

@@ -1,4 +1,3 @@
-use anyhow::{anyhow, Error, Result};
 use crate::ctaphid;
 use crate::get_info_command;
 use crate::get_info_params;
@@ -6,6 +5,7 @@ use crate::get_info_response;
 use crate::util;
 use crate::FidoKeyHid;
 use crate::HidParam;
+use anyhow::{anyhow, Error, Result};
 
 pub fn get_info(hid_params: &[HidParam]) -> Result<get_info_params::Info, String> {
     let device = FidoKeyHid::new(hid_params)?;

@@ -48,7 +48,7 @@ impl SharedSecret {
     }
 
     pub fn encrypt(&self, data: &[u8]) -> Result<[u8; 16], String> {
-        let hash = digest::digest(&digest::SHA256, &data);
+        let hash = digest::digest(&digest::SHA256, data);
         let message = &hash.as_ref()[0..16];
         let enc = enc_aes256_cbc::encrypt_message(&self.secret, message);
         let mut out_bytes = [0; 16];

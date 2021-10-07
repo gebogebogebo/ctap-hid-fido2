@@ -31,8 +31,7 @@ pub fn encrypt_message(key: &[u8; 32], message: &[u8]) -> Vec<u8> {
         output
             .take_read_buffer()
             .take_remaining()
-            .iter()
-            .map(|&i| i),
+            .iter().copied(),
     );
 
     result
@@ -66,8 +65,7 @@ pub fn decrypt_message(key: &[u8; 32], message: &[u8]) -> Vec<u8> {
         output
             .take_read_buffer()
             .take_remaining()
-            .iter()
-            .map(|&i| i),
+            .iter().copied(),
     );
 
     result

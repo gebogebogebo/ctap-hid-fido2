@@ -61,7 +61,7 @@ use crate::get_assertion_params::Extension as Gext;
 use crate::make_credential_params::Extension as Mext;
 use crate::public_key_credential_descriptor::PublicKeyCredentialDescriptor;
 use crate::public_key_credential_user_entity::PublicKeyCredentialUserEntity;
-use anyhow::{Error, Result};
+use anyhow::{anyhow, Error, Result};
 
 #[cfg(not(target_os = "linux"))]
 mod fidokey;
@@ -167,9 +167,27 @@ pub fn get_fidokey_devices() -> Vec<(String, HidParam)> {
     FidoKeyHid::get_hid_devices(Some(0xf1d0))
 }
 
+fn get_device(hid_params: Option<&[HidParam]>) -> Result<FidoKeyHid> {
+    let device = if let Some(hid_params) = hid_params {
+        FidoKeyHid::new(hid_params).map_err(Error::msg)?
+    } else {
+        let devs = get_fidokey_devices();
+        if devs.is_empty() {
+            return Err(anyhow!("Error"));
+        }
+
+        let params = vec![HidParam {
+            vid: devs[0].1.vid,
+            pid: devs[0].1.pid,
+        }];
+        FidoKeyHid::new(&params).map_err(Error::msg)?
+    };
+    Ok(device)
+}
+
 /// Lights the LED on the FIDO key
-pub fn wink(hid_params: &[HidParam]) -> Result<()> {
-    let device = FidoKeyHid::new(hid_params).map_err(Error::msg)?;
+pub fn wink(hid_params: Option<&[HidParam]>) -> Result<()> {
+    let device = get_device(hid_params)?;
     let cid = ctaphid::ctaphid_init(&device).map_err(Error::msg)?;
     ctaphid::ctaphid_wink(&device, &cid).map_err(Error::msg)
 }
@@ -815,7 +833,7 @@ mod tests {
     }
 
     #[test]
-    fn test_hmac(){
+    fn test_hmac() {
         let key = b"this is key".to_vec();
         let message = b"this is message".to_vec();
 

@@ -42,7 +42,7 @@ fn parse_cbor_authdata(
     // - [1] extensions
     let slice = if ass.flags.attested_credential_data_included {
         let slice = &authdata[index..authdata.len()];
-        let deserializer = serde_cbor::Deserializer::from_slice(&slice);
+        let deserializer = serde_cbor::Deserializer::from_slice(slice);
         //
         slice[deserializer.byte_offset()..].to_vec()
     } else {

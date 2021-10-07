@@ -26,7 +26,7 @@ pub fn get_pin_token(device: &FidoKeyHid, cid: &[u8], pin: &str) -> Result<PinTo
             &pin_hash_enc,
         );
 
-        let response_cbor = ctaphid::ctaphid_cbor(&device, &cid, &send_payload)?;
+        let response_cbor = ctaphid::ctaphid_cbor(device, cid, &send_payload)?;
 
         // get pin_token (enc)
         let mut pin_token_enc =
@@ -76,7 +76,7 @@ fn create_pin_auth_for_set_pin(
     new_pin_enc: &[u8],
 ) -> Result<Vec<u8>> {
     // HMAC-SHA-256(sharedSecret, newPinEnc)
-    let sig = enc_hmac_sha_256::authenticate(&shared_secret.secret, &new_pin_enc);
+    let sig = enc_hmac_sha_256::authenticate(&shared_secret.secret, new_pin_enc);
 
     // left 16
     let pin_auth = sig[0..16].to_vec();

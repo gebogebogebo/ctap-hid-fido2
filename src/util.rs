@@ -3,10 +3,10 @@ Utility API
 */
 
 use crate::str_buf::StrBuf;
+use crypto::digest::Digest;
+use crypto::sha2::Sha256;
 use num::NumCast;
 use serde_cbor::Value;
-use crypto::sha2::Sha256;
-use crypto::digest::Digest;
 use std::collections::BTreeMap;
 
 pub fn to_hex_str(bytes: &[u8]) -> String {
