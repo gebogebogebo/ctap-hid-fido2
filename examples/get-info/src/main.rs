@@ -3,7 +3,7 @@ use ctap_hid_fido2::HidParam;
 fn main() {
     ctap_hid_fido2::hello();
 
-    let use_hid_param = true;
+    let use_hid_param = false;
     println!(
         "----- get-info start : use_hid_param = {:?} -----",
         use_hid_param
@@ -28,10 +28,16 @@ fn main() {
     }
 
     println!("get_info()");
-    match ctap_hid_fido2::get_info(&HidParam::get_default_params()) {
+    let result = if use_hid_param {
+        ctap_hid_fido2::get_info(Some(&HidParam::get_default_params()))
+    } else {
+        ctap_hid_fido2::get_info(None)
+    };
+    match result {
         Ok(info) => println!("{}", info),
         Err(e) => println!("error: {:?}", e),
     }
+
 
     println!("get_pin_retries()");
     match ctap_hid_fido2::get_pin_retries(&HidParam::get_default_params()) {
@@ -40,8 +46,13 @@ fn main() {
     }
 
     println!("get_info_u2f()");
-    match ctap_hid_fido2::get_info_u2f(&HidParam::get_default_params()) {
-        Ok(result) => println!("{:?}", result),
+    let result = if use_hid_param {
+        ctap_hid_fido2::get_info_u2f(Some(&HidParam::get_default_params()))
+    } else {
+        ctap_hid_fido2::get_info_u2f(None)
+    };
+    match result {
+        Ok(info) => println!("{}", info),
         Err(e) => println!("error: {:?}", e),
     }
 

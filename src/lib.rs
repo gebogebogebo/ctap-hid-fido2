@@ -193,13 +193,15 @@ pub fn wink(hid_params: Option<&[HidParam]>) -> Result<()> {
 }
 
 /// Get FIDO key information
-pub fn get_info(hid_params: &[HidParam]) -> Result<get_info_params::Info> {
-    get_info::get_info(hid_params).map_err(Error::msg)
+pub fn get_info(hid_params: Option<&[HidParam]>) -> Result<get_info_params::Info> {
+    let device = get_device(hid_params)?;
+    get_info::get_info(&device).map_err(Error::msg)
 }
 
 /// Get FIDO key information (CTAP 1.0)
-pub fn get_info_u2f(hid_params: &[HidParam]) -> Result<String> {
-    get_info::get_info_u2f(hid_params)
+pub fn get_info_u2f(hid_params: Option<&[HidParam]>) -> Result<String> {
+    let device = get_device(hid_params)?;
+    get_info::get_info_u2f(&device)
 }
 
 /// Get PIN retry count
@@ -357,7 +359,8 @@ pub enum InfoParam {
 }
 
 pub fn enable_info_param(hid_params: &[HidParam], info_param: &InfoParam) -> Result<bool> {
-    let info = get_info::get_info(hid_params).map_err(Error::msg)?;
+    let device = get_device(Some(hid_params))?;
+    let info = get_info::get_info(&device).map_err(Error::msg)?;
     let find = match info_param {
         InfoParam::VersionsU2Fv2 => "U2F_V2",
         InfoParam::VersionsFido20 => "FIDO_2_0",
@@ -396,7 +399,8 @@ pub fn enable_info_option(
     hid_params: &[HidParam],
     info_option: &InfoOption,
 ) -> Result<Option<bool>> {
-    let info = get_info::get_info(hid_params).map_err(Error::msg)?;
+    let device = get_device(Some(hid_params))?;
+    let info = get_info::get_info(&device).map_err(Error::msg)?;
     let find = match info_option {
         InfoOption::Rk => "rk",
         InfoOption::Up => "up",
