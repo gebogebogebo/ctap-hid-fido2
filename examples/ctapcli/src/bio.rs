@@ -2,9 +2,11 @@ use anyhow::{anyhow, Result};
 
 use ctap_hid_fido2::bio_enrollment_params::EnrollStatus1;
 use ctap_hid_fido2::bio_enrollment_params::TemplateInfo;
+use ctap_hid_fido2::bio_enrollment_params::FingerprintKind;
 #[allow(unused_imports)]
 use ctap_hid_fido2::util;
 use ctap_hid_fido2::{Key, InfoOption};
+use crate::str_buf::StrBuf;
 
 extern crate clap;
 
@@ -131,8 +133,31 @@ fn spec(_pin: &str) -> Result<()> {
     let result = ctap_hid_fido2::bio_enrollment_get_fingerprint_sensor_info(
         &Key::auto(),
     )?;
-    println!("- Bio Modality = {:?}", result.0);
-    println!("- Fingerprint Kind = {:?}", result.1);
+
+    let mut strbuf = StrBuf::new(0);
+    strbuf.addln("- Bio Modality");
+    strbuf.addln(&format!("  - {:?}",result.0));
+
+    strbuf.addln("- Fingerprint kind");
+    match result.1 {
+        FingerprintKind::TouchType => {
+            strbuf.addln("  - touch type fingerprints");
+        },
+        FingerprintKind::SwipeType => {
+            strbuf.addln("  - swipe type fingerprints");
+        },
+        _ => {
+            strbuf.addln("  - unknown");
+        }
+    }
+
+    strbuf.addln("- Maximum good samples required for enrollment");
+    strbuf.addln(&format!("  - {:?}",result.2));
+
+    strbuf.addln("- Maximum number of bytes the authenticator will accept as a templateFriendlyName");
+    strbuf.addln(&format!("  - {:?}",result.3));
+
+    println!("{}",strbuf.build().to_string());
 
     Ok(())
 }

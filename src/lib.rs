@@ -436,7 +436,7 @@ pub fn enable_info_option(
 /// BioEnrollment - getFingerprintSensorInfo (CTAP 2.1-PRE)
 pub fn bio_enrollment_get_fingerprint_sensor_info(
     hid_params: &[HidParam],
-) -> Result<(Modality, FingerprintKind)> {
+) -> Result<(Modality, FingerprintKind, u32, u32)> {
     let device = get_device(hid_params)?;
     let init = bio_enrollment::bio_enrollment_init(&device, None).map_err(Error::msg)?;
 
@@ -460,7 +460,12 @@ pub fn bio_enrollment_get_fingerprint_sensor_info(
     if util::is_debug() {
         println!("{}", data2);
     }
-    Ok((data1.modality.into(), data2.fingerprint_kind.into()))
+    Ok((
+        data1.modality.into(),
+        data2.fingerprint_kind.into(),
+        data2.max_capture_samples_required_for_enroll,
+        data2.max_template_friendly_name
+    ))
 }
 
 /// BioEnrollment - EnrollBegin
