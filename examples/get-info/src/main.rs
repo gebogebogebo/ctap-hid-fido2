@@ -1,22 +1,14 @@
-use ctap_hid_fido2::HidParam;
+use ctap_hid_fido2::Key;
 
 fn main() {
     ctap_hid_fido2::hello();
 
-    let use_hid_param = false;
+    let key_auto = true;
     println!(
-        "----- get-info start : use_hid_param = {:?} -----",
-        use_hid_param
+        "----- get-info start : key_auto = {:?} -----",
+        key_auto
     );
-    /*
-    let param = if use_hid_param {
-        Some(&HidParam::get_default_params())
-    } else {
-        None
-    };
-    */
-    let param = None;
-
+    let key = if key_auto { Key::auto() } else { Key::get() };
 
     println!("get_hid_devices()");
     let devs = ctap_hid_fido2::get_hid_devices();
@@ -37,30 +29,19 @@ fn main() {
     }
     
     println!("get_info()");
-    let result = ctap_hid_fido2::get_info(param);
-    match result {
+    match ctap_hid_fido2::get_info(&key) {
         Ok(info) => println!("{}", info),
         Err(e) => println!("error: {:?}", e),
     }
 
     println!("get_pin_retries()");
-    let result = if use_hid_param {
-        ctap_hid_fido2::get_pin_retries(Some(&HidParam::get_default_params()))
-    } else {
-        ctap_hid_fido2::get_pin_retries(None)
-    };
-    match result {
+    match ctap_hid_fido2::get_pin_retries(&key) {
         Ok(info) => println!("{}", info),
         Err(e) => println!("error: {:?}", e),
     }
 
     println!("get_info_u2f()");
-    let result = if use_hid_param {
-        ctap_hid_fido2::get_info_u2f(Some(&HidParam::get_default_params()))
-    } else {
-        ctap_hid_fido2::get_info_u2f(None)
-    };
-    match result {
+    match ctap_hid_fido2::get_info_u2f(&key) {
         Ok(info) => println!("{}", info),
         Err(e) => println!("error: {:?}", e),
     }

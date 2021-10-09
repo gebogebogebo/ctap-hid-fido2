@@ -1,19 +1,19 @@
 use anyhow::{anyhow, Result};
 use base64_url;
 #[allow(unused_imports)]
-use ctap_hid_fido2::{nitrokey, util, HidParam};
+use ctap_hid_fido2::{nitrokey, util, Key};
 use ihex::Record;
 use serde_json::Value;
 extern crate clap;
 use clap::{App, Arg};
 
 fn set_bootloader_mode() -> Result<()> {
-    let result = nitrokey::is_bootloader_mode(&HidParam::get_default_params())?;
+    let result = nitrokey::is_bootloader_mode(&Key::get())?;
     if result {
         println!("Already in bootloader mode.");
     } else {
         println!("Touch until the purple LED flashes fast...");
-        nitrokey::enter_boot(&HidParam::get_default_params())?;
+        nitrokey::enter_boot(&Key::get())?;
         println!("Enter bootloader mode.");
     }
     Ok(())
@@ -110,7 +110,7 @@ fn write_firmware(json: &String) -> Result<()> {
         let data = tobinarray(&mut reader, i, chunk)?;
 
         println!("write flash...");
-        nitrokey::write_flash(&HidParam::get_default_params(), i, &data)?;
+        nitrokey::write_flash(&Key::get(), i, &data)?;
     }
 
     Ok(())
@@ -200,7 +200,7 @@ fn main() -> Result<()> {
 
     if matches.is_present("info") {
         println!("Get Firmware Information.");
-        let info = nitrokey::get_version(&HidParam::get_default_params())?;
+        let info = nitrokey::get_version(&Key::get())?;
         println!("version = {}", info);
         println!("");
     }
@@ -238,7 +238,7 @@ fn main() -> Result<()> {
         write_firmware(&json)?;
 
         println!("Verify_flash.");
-        nitrokey::verify_flash(&HidParam::get_default_params(), &signature)?;
+        nitrokey::verify_flash(&Key::get(), &signature)?;
         println!("");
     }
 

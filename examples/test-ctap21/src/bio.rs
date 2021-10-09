@@ -5,7 +5,7 @@ use ctap_hid_fido2::bio_enrollment_params::EnrollStatus1;
 use ctap_hid_fido2::bio_enrollment_params::TemplateInfo;
 #[allow(unused_imports)]
 use ctap_hid_fido2::util;
-use ctap_hid_fido2::HidParam;
+use ctap_hid_fido2::Key;
 
 extern crate clap;
 
@@ -16,7 +16,7 @@ pub fn bio_main(matches: &clap::ArgMatches, pin: Option<&str>) -> Result<()> {
     if matches.is_present("info") {
         println!("Get fingerprint sensor info");
         match ctap_hid_fido2::bio_enrollment_get_fingerprint_sensor_info(
-            &HidParam::get_default_params(),
+            &Key::auto(),
         ) {
             Ok(result) => println!("- {:?}", result),
             Err(e) => println!("- error: {:?}", e),
@@ -27,7 +27,7 @@ pub fn bio_main(matches: &clap::ArgMatches, pin: Option<&str>) -> Result<()> {
     if matches.is_present("enumerate") {
         println!("Enumerate enrollments");
         match ctap_hid_fido2::bio_enrollment_enumerate_enrollments(
-            &HidParam::get_default_params(),
+            &Key::auto(),
             pin,
         ) {
             Ok(infos) => {
@@ -50,7 +50,7 @@ pub fn bio_main(matches: &clap::ArgMatches, pin: Option<&str>) -> Result<()> {
         println!("");
 
         match ctap_hid_fido2::bio_enrollment_set_friendly_name(
-            &HidParam::get_default_params(),
+            &Key::auto(),
             pin,
             TemplateInfo::new(util::to_str_hex(template_id), name),
         ) {
@@ -67,7 +67,7 @@ pub fn bio_main(matches: &clap::ArgMatches, pin: Option<&str>) -> Result<()> {
         println!("");
 
         match ctap_hid_fido2::bio_enrollment_remove(
-            &HidParam::get_default_params(),
+            &Key::auto(),
             pin,
             util::to_str_hex(template_id),
         ) {
@@ -90,7 +90,7 @@ pub fn bio_main(matches: &clap::ArgMatches, pin: Option<&str>) -> Result<()> {
 fn bio_enrollment(pin: &str) -> Result<()> {
     println!("bio_enrollment_begin");
     let result = ctap_hid_fido2::bio_enrollment_begin(
-        &HidParam::get_default_params(),
+        &Key::auto(),
         Some(pin),
         Some(10000),
     )?;

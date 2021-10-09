@@ -3,7 +3,7 @@ use anyhow::{anyhow, Result};
 
 #[allow(unused_imports)]
 use ctap_hid_fido2::util;
-use ctap_hid_fido2::{HidParam, InfoOption};
+use ctap_hid_fido2::{Key, InfoOption};
 
 #[allow(dead_code)]
 pub fn cred(matches: &clap::ArgMatches) -> Result<()> {
@@ -11,10 +11,10 @@ pub fn cred(matches: &clap::ArgMatches) -> Result<()> {
 
     // check
     if let None =
-        ctap_hid_fido2::enable_info_option(&HidParam::get_default_params(), &InfoOption::CredMgmt)?
+        ctap_hid_fido2::enable_info_option(&Key::auto(), &InfoOption::CredMgmt)?
     {
         if let None = ctap_hid_fido2::enable_info_option(
-            &HidParam::get_default_params(),
+            &Key::auto(),
             &InfoOption::CredentialMgmtPreview,
         )? {
             return Err(anyhow!(
@@ -26,7 +26,7 @@ pub fn cred(matches: &clap::ArgMatches) -> Result<()> {
     println!("Enumerate discoverable credentials.");
 
     let credentials_count = ctap_hid_fido2::credential_management_get_creds_metadata(
-        &HidParam::get_default_params(),
+        &Key::auto(),
         pin,
     )?;
 
@@ -50,13 +50,13 @@ pub fn cred(matches: &clap::ArgMatches) -> Result<()> {
 
     // Vec<credential_management_params::Rp>
     let rps =
-        ctap_hid_fido2::credential_management_enumerate_rps(&HidParam::get_default_params(), pin)?;
+        ctap_hid_fido2::credential_management_enumerate_rps(&Key::auto(), pin)?;
 
     for r in rps {
         println!("## rps\n{}", r);
 
         let creds = ctap_hid_fido2::credential_management_enumerate_credentials(
-            &HidParam::get_default_params(),
+            &Key::auto(),
             pin,
             &r.rpid_hash,
         )?;

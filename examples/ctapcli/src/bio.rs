@@ -4,7 +4,7 @@ use ctap_hid_fido2::bio_enrollment_params::EnrollStatus1;
 use ctap_hid_fido2::bio_enrollment_params::TemplateInfo;
 #[allow(unused_imports)]
 use ctap_hid_fido2::util;
-use ctap_hid_fido2::{HidParam, InfoOption};
+use ctap_hid_fido2::{Key, InfoOption};
 
 extern crate clap;
 
@@ -14,10 +14,10 @@ pub fn bio(matches: &clap::ArgMatches) -> Result<()> {
 
     // check
     if let None =
-        ctap_hid_fido2::enable_info_option(&HidParam::get_default_params(), &InfoOption::BioEnroll)?
+        ctap_hid_fido2::enable_info_option(&Key::auto(), &InfoOption::BioEnroll)?
     {
         if let None = ctap_hid_fido2::enable_info_option(
-            &HidParam::get_default_params(),
+            &Key::auto(),
             &InfoOption::UserVerificationMgmtPreview,
         )? {
             return Err(anyhow!(
@@ -28,7 +28,7 @@ pub fn bio(matches: &clap::ArgMatches) -> Result<()> {
 
     println!("Fingerprint sensor info.");
     let result = ctap_hid_fido2::bio_enrollment_get_fingerprint_sensor_info(
-        &HidParam::get_default_params(),
+        &Key::auto(),
     )?;
     println!("- {:?}\n", result);
 
@@ -42,7 +42,7 @@ pub fn bio(matches: &clap::ArgMatches) -> Result<()> {
         println!("");
 
         ctap_hid_fido2::bio_enrollment_set_friendly_name(
-            &HidParam::get_default_params(),
+            &Key::auto(),
             pin,
             TemplateInfo::new(util::to_str_hex(template_id), name),
         )?;
@@ -54,7 +54,7 @@ pub fn bio(matches: &clap::ArgMatches) -> Result<()> {
         println!("");
 
         ctap_hid_fido2::bio_enrollment_remove(
-            &HidParam::get_default_params(),
+            &Key::auto(),
             pin,
             util::to_str_hex(template_id),
         )?;
@@ -65,7 +65,7 @@ pub fn bio(matches: &clap::ArgMatches) -> Result<()> {
     } else {
         println!("Enumerate enrollments.");
         let bios = ctap_hid_fido2::bio_enrollment_enumerate_enrollments(
-            &HidParam::get_default_params(),
+            &Key::auto(),
             pin,
         )?;
         for i in bios {
@@ -81,7 +81,7 @@ pub fn bio(matches: &clap::ArgMatches) -> Result<()> {
 fn bio_enrollment(pin: &str) -> Result<()> {
     println!("bio_enrollment_begin");
     let result = ctap_hid_fido2::bio_enrollment_begin(
-        &HidParam::get_default_params(),
+        &Key::auto(),
         Some(pin),
         Some(10000),
     )?;

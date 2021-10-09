@@ -10,11 +10,10 @@ use crate::hmac::HmacExt;
 #[allow(unused_imports)]
 use crate::util;
 use crate::FidoKeyHid;
-use crate::HidParam;
 use anyhow::{Error, Result};
 
 pub fn get_assertion(
-    hid_params: &[HidParam],
+    device: &FidoKeyHid,
     rpid: &str,
     challenge: &[u8],
     credential_id: &[u8],
@@ -24,7 +23,6 @@ pub fn get_assertion(
     extensions: Option<&Vec<Gext>>,
 ) -> Result<Vec<Assertion>> {
     // init
-    let device = FidoKeyHid::new(hid_params).map_err(Error::msg)?;
     let cid = ctaphid::ctaphid_init(&device).map_err(Error::msg)?;
 
     /*

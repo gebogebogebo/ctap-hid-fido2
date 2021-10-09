@@ -4,12 +4,12 @@ use ctap_hid_fido2;
 
 #[allow(unused_imports)]
 use ctap_hid_fido2::util;
-use ctap_hid_fido2::{HidParam, InfoOption, InfoParam};
+use ctap_hid_fido2::{Key, InfoOption, InfoParam};
 
 pub fn info(matches: &clap::ArgMatches) -> Result<()> {
     if matches.args.is_empty() {
         println!("Get all data.");
-        match ctap_hid_fido2::get_info(&HidParam::get_default_params()) {
+        match ctap_hid_fido2::get_info(&Key::auto()) {
             Ok(info) => println!("{}", info),
             Err(err) => return Err(err),
         };
@@ -33,7 +33,7 @@ pub fn info(matches: &clap::ArgMatches) -> Result<()> {
         };
 
         if let Some(option) = info_option {
-            match ctap_hid_fido2::enable_info_option(&HidParam::get_default_params(), &option) {
+            match ctap_hid_fido2::enable_info_option(&Key::auto(), &option) {
                 Ok(result) => println!("{}", option_message(item, &option, result)?),
                 Err(err) => return Err(err),
             }
@@ -48,7 +48,7 @@ pub fn info(matches: &clap::ArgMatches) -> Result<()> {
             };
 
             if let Some(param) = info_param {
-                match ctap_hid_fido2::enable_info_param(&HidParam::get_default_params(), &param) {
+                match ctap_hid_fido2::enable_info_param(&Key::auto(), &param) {
                     Ok(result) => println!("{}", param_message(item, &param, result)?),
                     Err(err) => return Err(err),
                 }

@@ -8,7 +8,7 @@ extern crate rpassword;
 
 #[allow(unused_imports)]
 use ctap_hid_fido2::util;
-use ctap_hid_fido2::{str_buf, HidParam};
+use ctap_hid_fido2::{str_buf, Key};
 
 mod common;
 mod bio;
@@ -181,7 +181,7 @@ fn main() -> Result<()> {
 
     if matches.is_present("wink") {
         println!("Blink the LED on the FIDO key.\n");
-        match ctap_hid_fido2::wink(&HidParam::get_default_params()) {
+        match ctap_hid_fido2::wink(&Key::auto()) {
             Ok(()) => println!("Do you see that wink? ;-)"),
             Err(err) => return Err(err),
         };

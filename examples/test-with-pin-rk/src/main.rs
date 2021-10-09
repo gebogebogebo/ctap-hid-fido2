@@ -2,11 +2,16 @@ use anyhow::Result;
 use ctap_hid_fido2;
 use ctap_hid_fido2::public_key_credential_user_entity::PublicKeyCredentialUserEntity;
 use ctap_hid_fido2::verifier;
-use ctap_hid_fido2::HidParam;
+use ctap_hid_fido2::Key;
 use ctap_hid_fido2::str_buf::StrBuf;
 
 fn main() -> Result<()> {
-    println!("----- test-with-pin-rk start -----");
+    let key_auto = true;
+    println!(
+        "----- test-with-pin-rk start : key_auto = {:?} -----",
+        key_auto
+    );
+    let key = if key_auto { Key::auto() } else { Key::get() };
 
     // parameter
     let rpid = "ge.com";
@@ -28,7 +33,7 @@ fn main() -> Result<()> {
     );
 
     let att = ctap_hid_fido2::make_credential_rk(
-        &HidParam::get_default_params(),
+        &key,
         rpid,
         &challenge,
         Some(pin),
@@ -55,7 +60,7 @@ fn main() -> Result<()> {
     println!("Authenticate - get_assertions_rk()");
     let challenge = verifier::create_challenge();
     let asss = ctap_hid_fido2::get_assertions_rk(
-        &HidParam::get_default_params(),
+        &key,
         rpid,
         &challenge,
         Some(pin),
@@ -63,7 +68,7 @@ fn main() -> Result<()> {
     println!("Authenticate Success!!");
 
     println!("- Assertion Num = {:?}", asss.len());
-    println!("");
+    println!();
     for ass in asss {
         println!("assertion");
         println!("{}", ass);

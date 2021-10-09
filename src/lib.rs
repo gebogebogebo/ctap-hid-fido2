@@ -82,6 +82,8 @@ use crate::fidokey::*;
 #[cfg(target_os = "linux")]
 use crate::fidokey_pi::*;
 
+pub type Key = HidParam;
+
 /// HID device vendor ID , product ID
 pub struct HidParam {
     /// vendor ID
@@ -99,7 +101,7 @@ impl HidParam {
     /// - all in pass = vid:0x096E , pid:0x0866
     /// - solokey = vid:0x0483 , pid:0xa2ca
     /// - Nitrokey = vid:0x20a0 , pid:0x42b1
-    pub fn get_default_params() -> Vec<HidParam> {
+    pub fn get() -> Vec<HidParam> {
         vec![
             HidParam {
                 vid: 0x1050,
@@ -139,6 +141,7 @@ impl HidParam {
             }, // Idem Key
         ]
     }
+    pub fn auto() -> Vec<HidParam> {vec![]}
 }
 
 /// check Platform
@@ -167,8 +170,8 @@ pub fn get_fidokey_devices() -> Vec<(String, HidParam)> {
     FidoKeyHid::get_hid_devices(Some(0xf1d0))
 }
 
-fn get_device(hid_params: Option<&[HidParam]>) -> Result<FidoKeyHid> {
-    let device = if let Some(hid_params) = hid_params {
+pub fn get_device(hid_params: &[HidParam]) -> Result<FidoKeyHid> {
+    let device = if hid_params.len() > 0 {
         FidoKeyHid::new(hid_params).map_err(Error::msg)?
     } else {
         let devs = get_fidokey_devices();
@@ -186,26 +189,26 @@ fn get_device(hid_params: Option<&[HidParam]>) -> Result<FidoKeyHid> {
 }
 
 /// Lights the LED on the FIDO key
-pub fn wink(hid_params: Option<&[HidParam]>) -> Result<()> {
+pub fn wink(hid_params: &[HidParam]) -> Result<()> {
     let device = get_device(hid_params)?;
     let cid = ctaphid::ctaphid_init(&device).map_err(Error::msg)?;
     ctaphid::ctaphid_wink(&device, &cid).map_err(Error::msg)
 }
 
 /// Get FIDO key information
-pub fn get_info(hid_params: Option<&[HidParam]>) -> Result<get_info_params::Info> {
+pub fn get_info(hid_params: &[HidParam]) -> Result<get_info_params::Info> {
     let device = get_device(hid_params)?;
     get_info::get_info(&device).map_err(Error::msg)
 }
 
 /// Get FIDO key information (CTAP 1.0)
-pub fn get_info_u2f(hid_params: Option<&[HidParam]>) -> Result<String> {
+pub fn get_info_u2f(hid_params: &[HidParam]) -> Result<String> {
     let device = get_device(hid_params)?;
     get_info::get_info_u2f(&device)
 }
 
 /// Get PIN retry count
-pub fn get_pin_retries(hid_params: Option<&[HidParam]>) -> Result<i32> {
+pub fn get_pin_retries(hid_params: &[HidParam]) -> Result<i32> {
     let device = get_device(hid_params)?;
     let cid = ctaphid::ctaphid_init(&device).map_err(Error::msg)?;
 
@@ -222,7 +225,7 @@ pub fn get_pin_retries(hid_params: Option<&[HidParam]>) -> Result<i32> {
 
 /// Set New PIN
 pub fn set_new_pin(hid_params: &[HidParam], pin: &str) -> Result<()> {
-    let device = FidoKeyHid::new(hid_params).map_err(Error::msg)?;
+    let device = get_device(hid_params)?;
     let cid = ctaphid::ctaphid_init(&device).map_err(Error::msg)?;
     client_pin::set_pin(&device, &cid, pin)?;
     Ok(())
@@ -230,7 +233,7 @@ pub fn set_new_pin(hid_params: &[HidParam], pin: &str) -> Result<()> {
 
 /// Change PIN
 pub fn change_pin(hid_params: &[HidParam], current_pin: &str, new_pin: &str) -> Result<()> {
-    let device = FidoKeyHid::new(hid_params).map_err(Error::msg)?;
+    let device = get_device(hid_params)?;
     let cid = ctaphid::ctaphid_init(&device).map_err(Error::msg)?;
     client_pin::change_pin(&device, &cid, current_pin, new_pin)?;
     Ok(())
@@ -238,7 +241,7 @@ pub fn change_pin(hid_params: &[HidParam], current_pin: &str, new_pin: &str) -> 
 
 /// Registration command.Generate credentials(with PIN,non Resident Key)
 pub fn make_credential(
-    hid_params: Option<&[HidParam]>,
+    hid_params: &[HidParam],
     rpid: &str,
     challenge: &[u8],
     pin: Option<&str>,
@@ -249,7 +252,7 @@ pub fn make_credential(
 }
 
 pub fn make_credential_with_extensions(
-    hid_params: Option<&[HidParam]>,
+    hid_params: &[HidParam],
     rpid: &str,
     challenge: &[u8],
     pin: Option<&str>,
@@ -264,7 +267,7 @@ pub fn make_credential_with_extensions(
 
 /// Registration command.Generate credentials(with PIN ,Resident Key)
 pub fn make_credential_rk(
-    hid_params: Option<&[HidParam]>,
+    hid_params: &[HidParam],
     rpid: &str,
     challenge: &[u8],
     pin: Option<&str>,
@@ -286,7 +289,7 @@ pub fn make_credential_rk(
 
 /// Registration command.Generate credentials(without PIN ,non Resident Key)
 pub fn make_credential_without_pin(
-    hid_params: Option<&[HidParam]>,
+    hid_params: &[HidParam],
     rpid: &str,
     challenge: &[u8],
 ) -> Result<make_credential_params::Attestation> {
@@ -303,8 +306,9 @@ pub fn get_assertion(
     credential_id: &[u8],
     pin: Option<&str>,
 ) -> Result<get_assertion_params::Assertion> {
+    let device = get_device(hid_params)?;
     let asss = get_assertion::get_assertion(
-        hid_params,
+        &device,
         rpid,
         challenge,
         credential_id,
@@ -325,8 +329,9 @@ pub fn get_assertion_with_extensios(
     pin: Option<&str>,
     extensions: Option<&Vec<Gext>>,
 ) -> Result<get_assertion_params::Assertion> {
+    let device = get_device(hid_params)?;
     let asss = get_assertion::get_assertion(
-        hid_params,
+        &device,
         rpid,
         challenge,
         credential_id,
@@ -345,8 +350,9 @@ pub fn get_assertions_rk(
     challenge: &[u8],
     pin: Option<&str>,
 ) -> Result<Vec<get_assertion_params::Assertion>> {
+    let device = get_device(hid_params)?;
     let dmy: [u8; 0] = [];
-    get_assertion::get_assertion(hid_params, rpid, challenge, &dmy, pin, true, None, None)
+    get_assertion::get_assertion(&device, rpid, challenge, &dmy, pin, true, None, None)
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -363,7 +369,7 @@ pub enum InfoParam {
 }
 
 pub fn enable_info_param(hid_params: &[HidParam], info_param: &InfoParam) -> Result<bool> {
-    let device = get_device(Some(hid_params))?;
+    let device = FidoKeyHid::new(hid_params).map_err(Error::msg)?;
     let info = get_info::get_info(&device).map_err(Error::msg)?;
     let find = match info_param {
         InfoParam::VersionsU2Fv2 => "U2F_V2",
@@ -403,7 +409,7 @@ pub fn enable_info_option(
     hid_params: &[HidParam],
     info_option: &InfoOption,
 ) -> Result<Option<bool>> {
-    let device = get_device(Some(hid_params))?;
+    let device = get_device(hid_params)?;
     let info = get_info::get_info(&device).map_err(Error::msg)?;
     let find = match info_option {
         InfoOption::Rk => "rk",
@@ -742,7 +748,7 @@ pub fn credential_management_update_user_information(
 
 /// Selection (CTAP 2.1-PRE)
 pub fn selection(hid_params: &[HidParam]) -> Result<String> {
-    let device = FidoKeyHid::new(hid_params).map_err(Error::msg)?;
+    let device = get_device(hid_params)?;
     let cid = ctaphid::ctaphid_init(&device).map_err(Error::msg)?;
 
     let send_payload = selection_command::create_payload();
@@ -755,7 +761,7 @@ pub fn selection(hid_params: &[HidParam]) -> Result<String> {
 
 /// Get Config (CTAP 2.1-PRE)
 pub fn config(hid_params: &[HidParam]) -> Result<String> {
-    let device = FidoKeyHid::new(hid_params).map_err(Error::msg)?;
+    let device = get_device(hid_params)?;
     let cid = ctaphid::ctaphid_init(&device).map_err(Error::msg)?;
 
     let send_payload = config_command::create_payload_enable_enterprise_attestation();
@@ -775,7 +781,7 @@ mod tests {
 
     #[test]
     fn test_client_pin_get_keyagreement() {
-        let hid_params = HidParam::get_default_params();
+        let hid_params = HidParam::get();
         let device = FidoKeyHid::new(&hid_params).unwrap();
         let cid = ctaphid::ctaphid_init(&device).unwrap();
 

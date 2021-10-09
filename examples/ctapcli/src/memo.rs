@@ -7,7 +7,7 @@ use crate::common;
 
 #[allow(unused_imports)]
 use ctap_hid_fido2::util;
-use ctap_hid_fido2::{HidParam, InfoOption};
+use ctap_hid_fido2::{Key, InfoOption};
 
 use ctap_hid_fido2::credential_management_params::Credential;
 use ctap_hid_fido2::credential_management_params::Rp;
@@ -73,7 +73,7 @@ fn add(tag: &str, pin: &str, rpid: &str) -> Result<()> {
             PublicKeyCredentialUserEntity::new(Some(tag.as_bytes()), Some(&memo), None);
 
         let _att = ctap_hid_fido2::make_credential_rk(
-            &HidParam::get_default_params(),
+            &Key::auto(),
             rpid,
             &challenge,
             Some(&pin),
@@ -91,7 +91,7 @@ fn add(tag: &str, pin: &str, rpid: &str) -> Result<()> {
 fn del(tag: &str, pin: &str, rpid: &str) -> Result<()> {
     if let Some(cred) = search_cred(&pin, rpid, tag.as_bytes())? {
         ctap_hid_fido2::credential_management_delete_credential(
-            &HidParam::get_default_params(),
+            &Key::auto(),
             Some(&pin),
             Some(cred.public_key_credential_descriptor),
         )?;
@@ -129,11 +129,11 @@ fn list(pin: &str, rpid: &str) -> Result<()> {
 
 fn is_supported() -> Result<bool> {
     if let None = ctap_hid_fido2::enable_info_option(
-        &HidParam::get_default_params(),
+        &Key::auto(),
         &InfoOption::CredentialMgmtPreview,
     )? {
         if let None = ctap_hid_fido2::enable_info_option(
-            &HidParam::get_default_params(),
+            &Key::auto(),
             &InfoOption::CredMgmt,
         )? {
             return Ok(false);
@@ -144,12 +144,12 @@ fn is_supported() -> Result<bool> {
 }
 
 fn get_rps(pin: Option<&str>) -> Result<Vec<Rp>> {
-    ctap_hid_fido2::credential_management_enumerate_rps(&HidParam::get_default_params(), pin)
+    ctap_hid_fido2::credential_management_enumerate_rps(&Key::auto(), pin)
 }
 
 fn get_creds(pin: Option<&str>, rp: &Rp) -> Result<Vec<Credential>> {
     ctap_hid_fido2::credential_management_enumerate_credentials(
-        &HidParam::get_default_params(),
+        &Key::auto(),
         pin,
         &rp.rpid_hash,
     )

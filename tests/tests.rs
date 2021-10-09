@@ -16,14 +16,14 @@ fn test_get_hid_devices() {
 
 #[test]
 fn test_wink() {
-    let hid_params = HidParam::get_default_params();
+    let hid_params = HidParam::get();
     wink(&hid_params).unwrap();
     assert!(true);
 }
 
 #[test]
 fn test_get_info() {
-    let hid_params = HidParam::get_default_params();
+    let hid_params = HidParam::get();
     get_info(&hid_params).unwrap();
     assert!(true);
 }
@@ -31,7 +31,7 @@ fn test_get_info() {
 #[test]
 fn test_get_info_u2f() {
     match ctap_hid_fido2::enable_info_param(
-        &HidParam::get_default_params(),
+        &HidParam::get(),
         &InfoParam::VersionsU2Fv2,
     ) {
         Ok(result) => {
@@ -43,14 +43,14 @@ fn test_get_info_u2f() {
         Err(_) => assert!(false),
     };
 
-    let hid_params = HidParam::get_default_params();
+    let hid_params = HidParam::get();
     get_info_u2f(&hid_params).unwrap();
     assert!(true);
 }
 
 #[test]
 fn test_client_pin_get_retries() {
-    let hid_params = HidParam::get_default_params();
+    let hid_params = HidParam::get();
     let retry = get_pin_retries(&hid_params);
     println!("- retries = {:?}", retry);
     assert!(true);
@@ -63,7 +63,7 @@ fn test_make_credential_with_pin_non_rk() {
     let challenge = b"this is challenge".to_vec();
     let pin = "1234";
 
-    let params = HidParam::get_default_params();
+    let params = HidParam::get();
 
     let att = make_credential(&params, rpid, &challenge, Some(pin)).unwrap();
     println!("Attestation");
@@ -86,7 +86,7 @@ fn test_make_credential_with_pin_non_rk() {
 #[test]
 fn test_credential_management_get_creds_metadata() {
     match ctap_hid_fido2::enable_info_param(
-        &HidParam::get_default_params(),
+        &HidParam::get(),
         &InfoParam::VersionsFido21Pre,
     ) {
         Ok(result) => {
@@ -100,7 +100,7 @@ fn test_credential_management_get_creds_metadata() {
 
     let pin = "1234";
     match ctap_hid_fido2::credential_management_get_creds_metadata(
-        &ctap_hid_fido2::HidParam::get_default_params(),
+        &ctap_hid_fido2::HidParam::get(),
         Some(pin),
     ) {
         Ok(_) => assert!(true),
@@ -111,7 +111,7 @@ fn test_credential_management_get_creds_metadata() {
 #[test]
 fn test_credential_management_enumerate_rps() {
     match ctap_hid_fido2::enable_info_param(
-        &HidParam::get_default_params(),
+        &HidParam::get(),
         &InfoParam::VersionsFido21Pre,
     ) {
         Ok(result) => {
@@ -125,7 +125,7 @@ fn test_credential_management_enumerate_rps() {
 
     let pin = "1234";
     match ctap_hid_fido2::credential_management_enumerate_rps(
-        &ctap_hid_fido2::HidParam::get_default_params(),
+        &ctap_hid_fido2::HidParam::get(),
         Some(pin),
     ) {
         Ok(_) => assert!(true),
@@ -137,7 +137,7 @@ fn test_credential_management_enumerate_rps() {
 fn test_bio_enrollment_get_fingerprint_sensor_info() {
     let mut skip = true;
     match ctap_hid_fido2::enable_info_option(
-        &HidParam::get_default_params(),
+        &HidParam::get(),
         &InfoOption::UserVerificationMgmtPreview,
     ) {
         Ok(result) => {
@@ -157,7 +157,7 @@ fn test_bio_enrollment_get_fingerprint_sensor_info() {
         return;
     };
 
-    match ctap_hid_fido2::bio_enrollment_get_fingerprint_sensor_info(&HidParam::get_default_params())
+    match ctap_hid_fido2::bio_enrollment_get_fingerprint_sensor_info(&HidParam::get())
     {
         Ok(_) => assert!(true),
         Err(_) => assert!(false),
@@ -168,7 +168,7 @@ fn test_bio_enrollment_get_fingerprint_sensor_info() {
 fn test_bio_enrollment_enumerate_enrollments() {
     let mut skip = true;
     match ctap_hid_fido2::enable_info_option(
-        &HidParam::get_default_params(),
+        &HidParam::get(),
         &InfoOption::UserVerificationMgmtPreview,
     ) {
         Ok(result) => {
@@ -188,7 +188,7 @@ fn test_bio_enrollment_enumerate_enrollments() {
 
     let pin = "1234";
     match ctap_hid_fido2::bio_enrollment_enumerate_enrollments(
-        &ctap_hid_fido2::HidParam::get_default_params(),
+        &ctap_hid_fido2::HidParam::get(),
         Some(pin),
     ) {
         Ok(_) => assert!(true),
