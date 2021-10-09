@@ -10,27 +10,26 @@ extern crate clap;
 
 #[allow(dead_code)]
 pub fn bio(matches: &clap::ArgMatches) -> Result<()> {
-    let pin = matches.value_of("pin");
 
-    // check
-    if let None =
-        ctap_hid_fido2::enable_info_option(&Key::auto(), &InfoOption::BioEnroll)?
-    {
-        if let None = ctap_hid_fido2::enable_info_option(
-            &Key::auto(),
-            &InfoOption::UserVerificationMgmtPreview,
-        )? {
-            return Err(anyhow!(
-                "This authenticator is not Supported Bio management."
-            ));
-        }
-    };
+    if is_supported()? == false {
+        return Err(anyhow!(
+            "Sorry , This authenticator is not supported for this functions."
+        ));
+    }
 
-    println!("Fingerprint sensor info.");
-    let result = ctap_hid_fido2::bio_enrollment_get_fingerprint_sensor_info(
-        &Key::auto(),
-    )?;
-    println!("- {:?}\n", result);
+    // Title
+    if matches.is_present("enroll") {
+        //println!("List registered biometric authenticate data.");
+    } else if matches.is_present("delete") {
+        // 
+    } else if matches.is_present("spec") {
+        println!("Display sensor info.");
+    } else {
+        println!("List registered biometric authenticate data.");
+    }
+
+    //let pin = common::get_pin();
+    let pin = "1234";
 
     if matches.is_present("rename") {
         let mut values = matches.values_of("rename").unwrap();
@@ -43,7 +42,7 @@ pub fn bio(matches: &clap::ArgMatches) -> Result<()> {
 
         ctap_hid_fido2::bio_enrollment_set_friendly_name(
             &Key::auto(),
-            pin,
+            Some(pin),
             TemplateInfo::new(util::to_str_hex(template_id), name),
         )?;
         println!("- Success\n");
@@ -55,23 +54,17 @@ pub fn bio(matches: &clap::ArgMatches) -> Result<()> {
 
         ctap_hid_fido2::bio_enrollment_remove(
             &Key::auto(),
-            pin,
+            Some(pin),
             util::to_str_hex(template_id),
         )?;
         println!("- Success\n");
     } else if matches.is_present("enroll") {
-        bio_enrollment(pin.unwrap())?;
+        bio_enrollment(pin)?;
         println!("- Success\n");
+    } else if matches.is_present("spec") {
+        spec(&pin)?;
     } else {
-        println!("Enumerate enrollments.");
-        let bios = ctap_hid_fido2::bio_enrollment_enumerate_enrollments(
-            &Key::auto(),
-            pin,
-        )?;
-        for i in bios {
-            println!("{}", i)
-        }
-        println!("");
+        list(&pin)?;
     }
 
     Ok(())
@@ -101,6 +94,45 @@ fn bio_enrollment_next(enroll_status: &EnrollStatus1) -> Result<bool> {
     println!("bio_enrollment_next");
     let result = ctap_hid_fido2::bio_enrollment_next(enroll_status, Some(10000))?;
     println!("{}", result);
-    println!("");
+    println!();
     Ok(result.is_finish)
+}
+
+fn is_supported() -> Result<bool> {
+    if let None = ctap_hid_fido2::enable_info_option(
+        &Key::auto(),
+        &InfoOption::BioEnroll,
+    )? {
+        if let None = ctap_hid_fido2::enable_info_option(
+            &Key::auto(),
+            &InfoOption::UserVerificationMgmtPreview,
+        )? {
+            return Ok(false);
+        }
+    }
+
+    Ok(true)
+}
+
+fn list(pin: &str) -> Result<()> {
+    let bios = ctap_hid_fido2::bio_enrollment_enumerate_enrollments(
+        &Key::auto(),
+        Some(pin),
+    )?;
+    for i in bios {
+        println!("{}", i)
+    }
+    println!();
+
+    Ok(())
+}
+
+fn spec(_pin: &str) -> Result<()> {
+    let result = ctap_hid_fido2::bio_enrollment_get_fingerprint_sensor_info(
+        &Key::auto(),
+    )?;
+    println!("- Bio Modality = {:?}", result.0);
+    println!("- Fingerprint Kind = {:?}", result.1);
+
+    Ok(())
 }

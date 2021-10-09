@@ -16,7 +16,6 @@ use ctap_hid_fido2::verifier;
 
 pub fn memo(matches: &clap::ArgMatches) -> Result<()> {
 
-    // check
     if is_supported()? == false {
         return Err(anyhow!(
             "Sorry , This authenticator is not supported for this functions."

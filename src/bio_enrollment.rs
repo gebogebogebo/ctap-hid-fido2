@@ -5,7 +5,6 @@ use crate::client_pin;
 use crate::ctaphid;
 use crate::pintoken::PinToken;
 use crate::FidoKeyHid;
-use crate::HidParam;
 
 #[allow(unused_imports)]
 use crate::util;
@@ -40,20 +39,19 @@ pub(crate) fn bio_enrollment(
 }
 
 pub fn bio_enrollment_init(
-    hid_params: &[HidParam],
+    device: &FidoKeyHid,
     pin: Option<&str>,
-) -> Result<(FidoKeyHid, [u8; 4], Option<PinToken>), String> {
+) -> Result<([u8; 4], Option<PinToken>), String> {
     // init
-    let device = FidoKeyHid::new(hid_params)?;
     let cid = ctaphid::ctaphid_init(&device)?;
 
     // pin token
     let pin_token = {
         if let Some(pin) = pin {
-            Some(client_pin::get_pin_token(&device, &cid, pin)?)
+            Some(client_pin::get_pin_token(device, &cid, pin)?)
         } else {
             None
         }
     };
-    Ok((device, cid, pin_token))
+    Ok((cid, pin_token))
 }

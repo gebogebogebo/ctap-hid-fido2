@@ -99,6 +99,22 @@ fn main() -> Result<()> {
                         .short("l")
                         .long("list")
                 )
+        )
+        .subcommand(
+            SubCommand::with_name("bio")
+                .about("Bio management\n- List registered biometric authenticate data. without any FLAGS and OPTIONS.")
+                .arg(
+                    Arg::with_name("list")
+                        .help("list bio")
+                        .short("l")
+                        .long("list")
+                )
+                .arg(
+                    Arg::with_name("spec")
+                        .help("display sensor info")
+                        .short("s")
+                        .long("spec")
+                )
         );
         /*
         .subcommand(
@@ -202,16 +218,17 @@ fn main() -> Result<()> {
         memo::memo(&matches)?;
     }
 
+    if let Some(ref matches) = matches.subcommand_matches("bio") {
+        println!("Bio Management.\n");
+        bio::bio(&matches)?;
+    }
+
     /*
     if let Some(ref matches) = matches.subcommand_matches("cred") {
         println!("Credential Management.\n");
         cred::cred(&matches)?;
     }
 
-    if let Some(ref matches) = matches.subcommand_matches("bio") {
-        println!("Bio Management.\n");
-        bio::bio(&matches)?;
-    }
     */
 
     /*
