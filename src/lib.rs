@@ -637,8 +637,9 @@ pub fn credential_management_get_creds_metadata(
     hid_params: &[HidParam],
     pin: Option<&str>,
 ) -> Result<credential_management_params::CredentialsCount> {
+    let device = get_device(hid_params)?;
     let meta = credential_management::credential_management(
-        hid_params,
+        &device,
         pin,
         credential_management_command::SubCommand::GetCredsMetadata,
         None,
@@ -654,9 +655,10 @@ pub fn credential_management_enumerate_rps(
     hid_params: &[HidParam],
     pin: Option<&str>,
 ) -> Result<Vec<credential_management_params::Rp>> {
+    let device = get_device(hid_params)?;
     let mut datas: Vec<credential_management_params::Rp> = Vec::new();
     let data = credential_management::credential_management(
-        hid_params,
+        &device,
         pin,
         credential_management_command::SubCommand::EnumerateRPsBegin,
         None,
@@ -669,7 +671,7 @@ pub fn credential_management_enumerate_rps(
         let roop_n = data.total_rps - 1;
         for _ in 0..roop_n {
             let data = credential_management::credential_management(
-                hid_params,
+                &device,
                 pin,
                 credential_management_command::SubCommand::EnumerateRPsGetNextRp,
                 None,
@@ -689,10 +691,11 @@ pub fn credential_management_enumerate_credentials(
     pin: Option<&str>,
     rpid_hash: &[u8],
 ) -> Result<Vec<credential_management_params::Credential>> {
+    let device = get_device(hid_params)?;
     let mut datas: Vec<credential_management_params::Credential> = Vec::new();
 
     let data = credential_management::credential_management(
-        hid_params,
+        &device,
         pin,
         credential_management_command::SubCommand::EnumerateCredentialsBegin,
         Some(rpid_hash.to_vec()),
@@ -705,7 +708,7 @@ pub fn credential_management_enumerate_credentials(
         let roop_n = data.total_credentials - 1;
         for _ in 0..roop_n {
             let data = credential_management::credential_management(
-                hid_params,
+                &device,
                 pin,
                 credential_management_command::SubCommand::EnumerateCredentialsGetNextCredential,
                 Some(rpid_hash.to_vec()),
@@ -725,8 +728,9 @@ pub fn credential_management_delete_credential(
     pin: Option<&str>,
     pkcd: Option<PublicKeyCredentialDescriptor>,
 ) -> Result<()> {
+    let device = get_device(hid_params)?;
     credential_management::credential_management(
-        hid_params,
+        &device,
         pin,
         credential_management_command::SubCommand::DeleteCredential,
         None,
@@ -744,8 +748,9 @@ pub fn credential_management_update_user_information(
     pkcd: Option<PublicKeyCredentialDescriptor>,
     pkcue: Option<public_key_credential_user_entity::PublicKeyCredentialUserEntity>,
 ) -> Result<()> {
+    let device = get_device(hid_params)?;
     credential_management::credential_management(
-        hid_params,
+        &device,
         pin,
         credential_management_command::SubCommand::UpdateUserInformation,
         None,
