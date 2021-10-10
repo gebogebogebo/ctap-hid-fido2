@@ -115,6 +115,20 @@ fn main() -> Result<()> {
                         .short("s")
                         .long("spec")
                 )
+                .arg(
+                    Arg::with_name("enroll")
+                        .help("enrolling fingerprint")
+                        .short("e")
+                        .long("enroll"),
+                )
+                .arg(
+                    Arg::with_name("delete")
+                        .help("delete fingerprint")
+                        .short("d")
+                        .long("delete")
+                        .takes_value(true)
+                        .value_name("templateId")
+                )
         );
         /*
         .subcommand(
@@ -134,14 +148,6 @@ fn main() -> Result<()> {
             SubCommand::with_name("bio")
                 .about("Bio management")
                 .arg(
-                    Arg::with_name("pin")
-                        .help("pin")
-                        .required(true)
-                        .short("p")
-                        .long("pin")
-                        .takes_value(true)
-                )
-                .arg(
                     Arg::with_name("enroll")
                         .help("Enrolling fingerprint")
                         .short("n")
@@ -156,14 +162,6 @@ fn main() -> Result<()> {
                         .value_name("templateId")
                         .value_name("templateFriendlyName")
                 )
-                .arg(
-                    Arg::with_name("delete")
-                        .help("Delete enrollment")
-                        .short("d")
-                        .long("delete")
-                        .takes_value(true)
-                        .value_name("templateId")
-                ),
         );
          */
 

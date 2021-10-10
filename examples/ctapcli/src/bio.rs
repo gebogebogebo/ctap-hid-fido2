@@ -21,7 +21,7 @@ pub fn bio(matches: &clap::ArgMatches) -> Result<()> {
 
     // Title
     if matches.is_present("enroll") {
-        //println!("List registered biometric authenticate data.");
+        println!("Enrolling fingerprint.");
     } else if matches.is_present("delete") {
         // 
     } else if matches.is_present("spec") {
@@ -49,20 +49,9 @@ pub fn bio(matches: &clap::ArgMatches) -> Result<()> {
         )?;
         println!("- Success\n");
     } else if matches.is_present("delete") {
-        let template_id = matches.value_of("delete").unwrap();
-        println!("Delete enrollment");
-        println!("- value for templateId: {:?}", template_id);
-        println!("");
-
-        ctap_hid_fido2::bio_enrollment_remove(
-            &Key::auto(),
-            Some(pin),
-            util::to_str_hex(template_id),
-        )?;
-        println!("- Success\n");
+        delete(matches,pin)?;
     } else if matches.is_present("enroll") {
         bio_enrollment(pin)?;
-        println!("- Success\n");
     } else if matches.is_present("spec") {
         spec(&pin)?;
     } else {
@@ -88,6 +77,7 @@ fn bio_enrollment(pin: &str) -> Result<()> {
             break;
         }
     }
+    println!("- Success\n");
     Ok(())
 }
 
@@ -162,5 +152,20 @@ fn spec(_pin: &str) -> Result<()> {
 
     println!("{}",strbuf.build().to_string());
 
+    Ok(())
+}
+
+fn delete(matches: &clap::ArgMatches, pin: &str) -> Result<()> {
+    let template_id = matches.value_of("delete").unwrap();
+    println!("Delete enrollment");
+    println!("value for templateId: {:?}", template_id);
+    println!();
+
+    ctap_hid_fido2::bio_enrollment_remove(
+        &Key::auto(),
+        Some(pin),
+        util::to_str_hex(template_id),
+    )?;
+    println!("- Success\n");
     Ok(())
 }
