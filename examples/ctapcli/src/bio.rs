@@ -121,10 +121,13 @@ fn list(pin: &str) -> Result<()> {
         &Key::auto(),
         Some(pin),
     )?;
+    let mut strbuf = StrBuf::new(0);
+    strbuf.addln("");
+    strbuf.append("Number of registrations", &bios.len());
     for i in bios {
-        println!("{}", i)
+        strbuf.addln(&format!("{}", i));
     }
-    println!();
+    println!("{}",strbuf.build().to_string());
 
     Ok(())
 }

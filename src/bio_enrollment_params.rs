@@ -2,6 +2,7 @@ use crate::pintoken::PinToken;
 use crate::str_buf::StrBuf;
 use crate::FidoKeyHid;
 use std::fmt;
+use crate::util;
 
 #[allow(dead_code)]
 #[derive(Debug, Copy, Clone)]
@@ -110,23 +111,16 @@ impl fmt::Display for TemplateInfo {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let name = self.template_friendly_name.clone().unwrap();
         let mut strbuf = StrBuf::new(19);
+        /*
         strbuf
             .appenh("- template_id", &self.template_id)
             .append("- template_friendly_name", &name);
         write!(f, "{}", strbuf.build())
-
-        /*
-        let tmp1 = format!("({:02}byte)0x", self.template_id.len());
-        let tmp2 = format!("");
-        write!(
-            f,
-            "({}{},{}{:?})",
-            tmp1,
-            util::to_hex_str(&self.template_id),
-            tmp2,
-            self.template_friendly_name,
-        )
         */
+
+        strbuf.add(&format!("{:02} : ", util::to_hex_str(&self.template_id)));
+        strbuf.add(&name);
+        write!(f, "{}", strbuf.build())
     }
 }
 
