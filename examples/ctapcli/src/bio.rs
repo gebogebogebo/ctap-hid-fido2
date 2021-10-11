@@ -7,6 +7,7 @@ use ctap_hid_fido2::bio_enrollment_params::FingerprintKind;
 use ctap_hid_fido2::util;
 use ctap_hid_fido2::{Key, InfoOption};
 use crate::str_buf::StrBuf;
+use crate::common;
 
 extern crate clap;
 
@@ -40,7 +41,7 @@ pub fn bio(matches: &clap::ArgMatches) -> Result<()> {
         println!("Rename/Set FriendlyName");
         println!("- value for templateId: {:?}", template_id);
         println!("- value for templateFriendlyName: {:?}", name);
-        println!("");
+        println!();
 
         ctap_hid_fido2::bio_enrollment_set_friendly_name(
             &Key::auto(),
@@ -51,7 +52,8 @@ pub fn bio(matches: &clap::ArgMatches) -> Result<()> {
     } else if matches.is_present("delete") {
         delete(matches,pin)?;
     } else if matches.is_present("enroll") {
-        bio_enrollment(pin)?;
+        let template_id = bio_enrollment(pin)?;
+        rename(pin,&template_id)?;
     } else if matches.is_present("spec") {
         spec(&pin)?;
     } else {
@@ -61,32 +63,43 @@ pub fn bio(matches: &clap::ArgMatches) -> Result<()> {
     Ok(())
 }
 
-#[allow(dead_code)]
-fn bio_enrollment(pin: &str) -> Result<()> {
-    println!("bio_enrollment_begin");
-    let result = ctap_hid_fido2::bio_enrollment_begin(
+fn rename(pin: &str, template_id: &Vec<u8>) -> Result<()> {
+    println!("templateId: {:?}", util::to_hex_str(template_id));
+    println!();
+
+    println!("input Name:");
+    let template_name = common::get_input();
+    println!();
+
+    ctap_hid_fido2::bio_enrollment_set_friendly_name(
         &Key::auto(),
         Some(pin),
-        Some(10000),
+        TemplateInfo::new(template_id.to_vec(), Some(&template_name)),
     )?;
-    println!("{}", result.1);
-    println!("");
+    println!("- Success\n");
+    Ok(())
+}
+
+fn bio_enrollment(pin: &str) -> Result<Vec<u8>> {
+    println!("bio enrollment begin");
+    let result = ctap_hid_fido2::bio_enrollment_begin(
+        &Key::auto(), Some(pin), Some(10000)
+    )?;
+    println!("{}\n", result.1);
 
     for _counter in 0..10 {
         if bio_enrollment_next(&result.0)? {
             break;
         }
     }
-    println!("- Success\n");
-    Ok(())
+    println!("- bio enrollment Success\n");
+    Ok(result.0.template_id)
 }
 
-#[allow(dead_code)]
 fn bio_enrollment_next(enroll_status: &EnrollStatus1) -> Result<bool> {
-    println!("bio_enrollment_next");
+    println!("bio enrollment next");
     let result = ctap_hid_fido2::bio_enrollment_next(enroll_status, Some(10000))?;
-    println!("{}", result);
-    println!();
+    println!("{}\n", result);
     Ok(result.is_finish)
 }
 
