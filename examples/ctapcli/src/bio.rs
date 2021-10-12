@@ -24,8 +24,8 @@ pub fn bio(matches: &clap::ArgMatches) -> Result<()> {
     if matches.is_present("enroll") {
         println!("Enrolling fingerprint.");
     } else if matches.is_present("delete") {
-        // 
-    } else if matches.is_present("spec") {
+        println!("Delete a fingerprint.");
+    } else if matches.is_present("info") {
         println!("Display sensor info.");
     } else {
         println!("List registered biometric authenticate data.");
@@ -34,27 +34,12 @@ pub fn bio(matches: &clap::ArgMatches) -> Result<()> {
     //let pin = common::get_pin();
     let pin = "1234";
 
-    if matches.is_present("rename") {
-        let mut values = matches.values_of("rename").unwrap();
-        let template_id = values.next().unwrap();
-        let name = values.next();
-        println!("Rename/Set FriendlyName");
-        println!("- value for templateId: {:?}", template_id);
-        println!("- value for templateFriendlyName: {:?}", name);
-        println!();
-
-        ctap_hid_fido2::bio_enrollment_set_friendly_name(
-            &Key::auto(),
-            Some(pin),
-            TemplateInfo::new(util::to_str_hex(template_id), name),
-        )?;
-        println!("- Success\n");
-    } else if matches.is_present("delete") {
+    if matches.is_present("delete") {
         delete(matches,pin)?;
     } else if matches.is_present("enroll") {
         let template_id = bio_enrollment(pin)?;
         rename(pin,&template_id)?;
-    } else if matches.is_present("spec") {
+    } else if matches.is_present("info") {
         spec(&pin)?;
     } else {
         list(&pin)?;

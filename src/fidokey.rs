@@ -16,7 +16,7 @@ impl FidoKeyHid {
                 }
             }
         }
-        Err("Failed to open device".into())
+        Err("Failed to open device.".into())
     }
 
     fn get_path(

@@ -110,10 +110,10 @@ fn main() -> Result<()> {
                         .long("list")
                 )
                 .arg(
-                    Arg::with_name("spec")
+                    Arg::with_name("info")
                         .help("display sensor info")
-                        .short("s")
-                        .long("spec")
+                        .short("i")
+                        .long("info")
                 )
                 .arg(
                     Arg::with_name("enroll")
@@ -144,25 +144,6 @@ fn main() -> Result<()> {
                         .takes_value(true)
                 )
         )
-        .subcommand(
-            SubCommand::with_name("bio")
-                .about("Bio management")
-                .arg(
-                    Arg::with_name("enroll")
-                        .help("Enrolling fingerprint")
-                        .short("n")
-                        .long("enroll"),
-                )
-                .arg(
-                    Arg::with_name("rename")
-                        .help("Rename/Set FriendlyName")
-                        .short("r")
-                        .long("rename")
-                        .takes_value(true)
-                        .value_name("templateId")
-                        .value_name("templateFriendlyName")
-                )
-        );
          */
 
     // Parse arguments
@@ -172,7 +153,7 @@ fn main() -> Result<()> {
     //ctap_hid_fido2::hello();
 
     if matches.is_present("device") {
-        println!("Enumerate HID devices");
+        println!("Enumerate HID devices.");
         let devs = ctap_hid_fido2::get_hid_devices();
         for (info, dev) in devs {
             println!(
@@ -183,7 +164,7 @@ fn main() -> Result<()> {
     }
 
     if matches.is_present("fidokey") {
-        println!("Enumerate FIDO key");
+        println!("Enumerate FIDO key.");
         let devs = ctap_hid_fido2::get_fidokey_devices();
         for (info, dev) in devs {
             println!(
@@ -194,11 +175,9 @@ fn main() -> Result<()> {
     }
 
     if matches.is_present("wink") {
-        println!("Blink the LED on the FIDO key.\n");
-        match ctap_hid_fido2::wink(&Key::auto()) {
-            Ok(()) => println!("Do you see that wink? ;-)"),
-            Err(err) => return Err(err),
-        };
+        println!("Blink LED on FIDO key.\n");
+        ctap_hid_fido2::wink(&Key::auto())?;
+        println!("Do you see that wink? ;-)\n");
     }
 
     if let Some(ref matches) = matches.subcommand_matches("info") {

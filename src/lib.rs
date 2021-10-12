@@ -176,7 +176,7 @@ pub fn get_device(hid_params: &[HidParam]) -> Result<FidoKeyHid> {
     } else {
         let devs = get_fidokey_devices();
         if devs.is_empty() {
-            return Err(anyhow!("Error"));
+            return Err(anyhow!("FIDO device not found."));
         }
 
         let params = vec![HidParam {
