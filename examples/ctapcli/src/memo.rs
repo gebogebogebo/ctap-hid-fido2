@@ -18,7 +18,7 @@ pub fn memo(matches: &clap::ArgMatches) -> Result<()> {
 
     if is_supported()? == false {
         return Err(anyhow!(
-            "Sorry , This authenticator is not supported for this functions."
+            "This authenticator is not supported for this functions."
         ));
     }
 

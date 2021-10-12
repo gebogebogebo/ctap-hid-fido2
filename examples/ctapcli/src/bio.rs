@@ -16,7 +16,7 @@ pub fn bio(matches: &clap::ArgMatches) -> Result<()> {
 
     if is_supported()? == false {
         return Err(anyhow!(
-            "Sorry , This authenticator is not supported for this functions."
+            "This authenticator is not supported for this functions."
         ));
     }
 
@@ -52,7 +52,7 @@ fn rename(pin: &str, template_id: &Vec<u8>) -> Result<()> {
     println!("templateId: {:?}", util::to_hex_str(template_id));
     println!();
 
-    println!("input Name:");
+    println!("input name:");
     let template_name = common::get_input();
     println!();
 
@@ -66,7 +66,18 @@ fn rename(pin: &str, template_id: &Vec<u8>) -> Result<()> {
 }
 
 fn bio_enrollment(pin: &str) -> Result<Vec<u8>> {
-    println!("bio enrollment begin");
+    let info = ctap_hid_fido2::bio_enrollment_get_fingerprint_sensor_info(
+        &Key::auto(),
+    )?;
+
+    println!("bio enrollment");
+    println!("{:?} sample collections are required to complete the registration.",info.2);
+    println!("Please follow the instructions to touch the sensor on the authenticator.");
+    println!();
+    println!("Press any key to start the registration.");
+    common::get_input();
+    println!();
+
     let result = ctap_hid_fido2::bio_enrollment_begin(
         &Key::auto(), Some(pin), Some(10000)
     )?;
@@ -82,7 +93,7 @@ fn bio_enrollment(pin: &str) -> Result<Vec<u8>> {
 }
 
 fn bio_enrollment_next(enroll_status: &EnrollStatus1) -> Result<bool> {
-    println!("bio enrollment next");
+    println!("bio enrollment Status");
     let result = ctap_hid_fido2::bio_enrollment_next(enroll_status, Some(10000))?;
     println!("{}\n", result);
     Ok(result.is_finish)
