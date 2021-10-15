@@ -10,8 +10,8 @@ extern crate rpassword;
 use ctap_hid_fido2::util;
 use ctap_hid_fido2::{str_buf, Key};
 
-mod common;
 mod bio;
+mod common;
 mod cred;
 mod info;
 mod memo;
@@ -130,21 +130,21 @@ fn main() -> Result<()> {
                         .value_name("templateId")
                 )
         );
-        /*
-        .subcommand(
-            SubCommand::with_name("cred")
-                .about("Credential management")
-                // - Enumerate discoverable credentials without any FLAGS and OPTIONS.
-                .arg(
-                    Arg::with_name("pin")
-                        .help("pin")
-                        .required(true)
-                        .short("p")
-                        .long("pin")
-                        .takes_value(true)
-                )
-        )
-         */
+    /*
+    .subcommand(
+        SubCommand::with_name("cred")
+            .about("Credential management")
+            // - Enumerate discoverable credentials without any FLAGS and OPTIONS.
+            .arg(
+                Arg::with_name("pin")
+                    .help("pin")
+                    .required(true)
+                    .short("p")
+                    .long("pin")
+                    .takes_value(true)
+            )
+    )
+     */
 
     // Parse arguments
     let matches = app.get_matches();
@@ -180,24 +180,24 @@ fn main() -> Result<()> {
         println!("Do you see that wink? ;-)\n");
     }
 
-    if let Some(ref matches) = matches.subcommand_matches("info") {
+    if let Some(matches) = matches.subcommand_matches("info") {
         println!("Get the Authenticator infomation.\n");
-        info::info(&matches)?;
+        info::info(matches)?;
     }
 
-    if let Some(ref matches) = matches.subcommand_matches("pin") {
+    if let Some(matches) = matches.subcommand_matches("pin") {
         println!("PIN Management.\n");
-        pin::pin(&matches)?;
+        pin::pin(matches)?;
     }
 
-    if let Some(ref matches) = matches.subcommand_matches("memo") {
+    if let Some(matches) = matches.subcommand_matches("memo") {
         println!("Record some short texts in Authenticator.\n");
-        memo::memo(&matches)?;
+        memo::memo(matches)?;
     }
 
-    if let Some(ref matches) = matches.subcommand_matches("bio") {
+    if let Some(matches) = matches.subcommand_matches("bio") {
         println!("Bio Management.\n");
-        bio::bio(&matches)?;
+        bio::bio(matches)?;
     }
 
     /*

@@ -3,32 +3,26 @@ use anyhow::{anyhow, Result};
 
 #[allow(unused_imports)]
 use ctap_hid_fido2::util;
-use ctap_hid_fido2::{Key, InfoOption};
+use ctap_hid_fido2::{InfoOption, Key};
 
 #[allow(dead_code)]
 pub fn cred(matches: &clap::ArgMatches) -> Result<()> {
     let pin = matches.value_of("pin");
 
     // check
-    if let None =
-        ctap_hid_fido2::enable_info_option(&Key::auto(), &InfoOption::CredMgmt)?
+    if ctap_hid_fido2::enable_info_option(&Key::auto(), &InfoOption::CredMgmt)?.is_none()
+        && ctap_hid_fido2::enable_info_option(&Key::auto(), &InfoOption::CredentialMgmtPreview)?
+            .is_none()
     {
-        if let None = ctap_hid_fido2::enable_info_option(
-            &Key::auto(),
-            &InfoOption::CredentialMgmtPreview,
-        )? {
-            return Err(anyhow!(
-                "This authenticator is not Supported Credential management."
-            ));
-        }
+        return Err(anyhow!(
+            "This authenticator is not Supported Credential management."
+        ));
     };
 
     println!("Enumerate discoverable credentials.");
 
-    let credentials_count = ctap_hid_fido2::credential_management_get_creds_metadata(
-        &Key::auto(),
-        pin,
-    )?;
+    let credentials_count =
+        ctap_hid_fido2::credential_management_get_creds_metadata(&Key::auto(), pin)?;
 
     let mut strbuf = StrBuf::new(0);
     strbuf.addln(&format!(
@@ -43,14 +37,13 @@ pub fn cred(matches: &clap::ArgMatches) -> Result<()> {
 
     println!("{}", strbuf.build().to_string());
 
-    if credentials_count.existing_resident_credentials_count <= 0 {
+    if credentials_count.existing_resident_credentials_count == 0 {
         println!("\nNo discoverable credentials.");
         return Ok(());
     }
 
     // Vec<credential_management_params::Rp>
-    let rps =
-        ctap_hid_fido2::credential_management_enumerate_rps(&Key::auto(), pin)?;
+    let rps = ctap_hid_fido2::credential_management_enumerate_rps(&Key::auto(), pin)?;
 
     for r in rps {
         println!("## rps\n{}", r);

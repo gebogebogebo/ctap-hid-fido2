@@ -1,10 +1,9 @@
 use crate::str_buf::StrBuf;
 use anyhow::{anyhow, Result};
-use ctap_hid_fido2;
 
 #[allow(unused_imports)]
 use ctap_hid_fido2::util;
-use ctap_hid_fido2::{Key, InfoOption, InfoParam};
+use ctap_hid_fido2::{InfoOption, InfoParam, Key};
 
 pub fn info(matches: &clap::ArgMatches) -> Result<()> {
     if matches.args.is_empty() {
@@ -73,7 +72,7 @@ fn option_message(typ: &str, info_option: &InfoOption, val: Option<bool>) -> Res
             let mut strbuf = StrBuf::new(0);
             strbuf.addln("rk(resident key)");
 
-            if val.is_some() && val.unwrap() == true {
+            if val.is_some() && val.unwrap() {
                 strbuf.addln("This authenticator can create discoverable credentials.");
             } else {
                 strbuf.addln("This authenticator can not create discoverable credentials.");
@@ -89,7 +88,7 @@ fn option_message(typ: &str, info_option: &InfoOption, val: Option<bool>) -> Res
             let mut strbuf = StrBuf::new(0);
             strbuf.addln("up(user presence)");
 
-            if val.is_some() && val.unwrap() == true {
+            if val.is_some() && val.unwrap() {
                 strbuf.addln("This authenticator is capable of testing user presence.");
             } else {
                 strbuf.addln("This authenticator is not capable of testing user presence.");
@@ -101,9 +100,9 @@ fn option_message(typ: &str, info_option: &InfoOption, val: Option<bool>) -> Res
             let mut strbuf = StrBuf::new(0);
             strbuf.addln("uv(user verification)");
 
-            if val.is_some() && val.unwrap() == true {
+            if val.is_some() && val.unwrap() {
                 strbuf.addln("This authenticator supports a built-in user verification method.");
-            } else if val.is_some() && val.unwrap() == false {
+            } else if val.is_some() && !val.unwrap() {
                 strbuf.addln("This authenticator supports a built-in user verification method but its user verification feature is not presently configured.");
             } else {
                 strbuf
@@ -115,9 +114,9 @@ fn option_message(typ: &str, info_option: &InfoOption, val: Option<bool>) -> Res
         InfoOption::ClinetPin => {
             let mut strbuf = StrBuf::new(0);
 
-            if val.is_some() && val.unwrap() == true {
+            if val.is_some() && val.unwrap() {
                 strbuf.addln("This authenticator is capable of accepting a PIN from the client and PIN has been set.");
-            } else if val.is_some() && val.unwrap() == false {
+            } else if val.is_some() && !val.unwrap() {
                 strbuf.addln("This authenticator is capable of accepting a PIN from the client and PIN has not been set yet.");
             } else {
                 strbuf
@@ -129,7 +128,7 @@ fn option_message(typ: &str, info_option: &InfoOption, val: Option<bool>) -> Res
             let mut strbuf = StrBuf::new(0);
             strbuf.addln("plat(platform device)");
 
-            if val.is_some() && val.unwrap() == true {
+            if val.is_some() && val.unwrap() {
                 strbuf.addln("This authenticator is attached to the client and therefore can’t be removed and used on another client.");
             } else {
                 strbuf.addln("This authenticator can be removed and used on another client.");

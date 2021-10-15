@@ -4,7 +4,7 @@ use crate::common;
 
 #[allow(unused_imports)]
 use ctap_hid_fido2::util;
-use ctap_hid_fido2::{Key, InfoOption};
+use ctap_hid_fido2::{InfoOption, Key};
 
 pub fn pin(matches: &clap::ArgMatches) -> Result<()> {
     if matches.args.is_empty() {
@@ -45,10 +45,9 @@ pub fn pin(matches: &clap::ArgMatches) -> Result<()> {
     } else if matches.is_present("new") {
         println!("Set new PIN.\n");
 
-        if let Some(client_pin) = ctap_hid_fido2::enable_info_option(
-            &Key::auto(),
-            &InfoOption::ClinetPin,
-        )? {
+        if let Some(client_pin) =
+            ctap_hid_fido2::enable_info_option(&Key::auto(), &InfoOption::ClinetPin)?
+        {
             if client_pin {
                 return Err(anyhow!("PIN is already set."));
             }
@@ -64,10 +63,7 @@ pub fn pin(matches: &clap::ArgMatches) -> Result<()> {
     } else if matches.is_present("change") {
         println!("Change PIN.\n");
 
-        if let None = ctap_hid_fido2::enable_info_option(
-            &Key::auto(),
-            &InfoOption::ClinetPin,
-        )? {
+        if ctap_hid_fido2::enable_info_option(&Key::auto(), &InfoOption::ClinetPin)?.is_none() {
             return Err(anyhow!("PIN not yet set."));
         };
 

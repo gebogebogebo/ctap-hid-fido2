@@ -54,7 +54,7 @@ pub mod verifier;
 //
 use crate::bio_enrollment_command::SubCommand as BioCmd;
 use crate::bio_enrollment_params::{
-    EnrollStatus1, EnrollStatus2, FingerprintKind, Modality, TemplateInfo,
+    EnrollStatus1, EnrollStatus2, TemplateInfo, BioSensorInfo
 };
 use crate::client_pin_command::SubCommand as PinCmd;
 use crate::get_assertion_params::Extension as Gext;
@@ -436,7 +436,7 @@ pub fn enable_info_option(
 /// BioEnrollment - getFingerprintSensorInfo (CTAP 2.1-PRE)
 pub fn bio_enrollment_get_fingerprint_sensor_info(
     hid_params: &[HidParam],
-) -> Result<(Modality, FingerprintKind, u32, u32)> {
+) -> Result<BioSensorInfo> {
     let device = get_device(hid_params)?;
     let init = bio_enrollment::bio_enrollment_init(&device, None).map_err(Error::msg)?;
 
@@ -457,15 +457,17 @@ pub fn bio_enrollment_get_fingerprint_sensor_info(
         None,
     )
     .map_err(Error::msg)?;
+
     if util::is_debug() {
         println!("{}", data2);
     }
-    Ok((
-        data1.modality.into(),
-        data2.fingerprint_kind.into(),
-        data2.max_capture_samples_required_for_enroll,
-        data2.max_template_friendly_name
-    ))
+
+    Ok( BioSensorInfo {
+        modality: data1.modality.into(),
+        fingerprint_kind: data2.fingerprint_kind.into(),
+        max_capture_samples_required_for_enroll: data2.max_capture_samples_required_for_enroll,
+        max_template_friendly_name: data2.max_template_friendly_name
+    })
 }
 
 /// BioEnrollment - EnrollBegin
