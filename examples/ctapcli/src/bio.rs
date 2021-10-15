@@ -29,18 +29,20 @@ pub fn bio(matches: &clap::ArgMatches) -> Result<()> {
         println!("List registered biometric authenticate data.");
     }
 
-    //let pin = common::get_pin();
-    let pin = "1234";
-
-    if matches.is_present("delete") {
-        delete(matches, pin)?;
-    } else if matches.is_present("enroll") {
-        let template_id = bio_enrollment(pin)?;
-        rename(pin, &template_id)?;
-    } else if matches.is_present("info") {
-        spec(pin)?;
+    if matches.is_present("info") {
+        spec()?;
     } else {
-        list(pin)?;
+        let pin = common::get_pin();
+        //let pin = "1234";
+
+        if matches.is_present("delete") {
+            delete(matches, &pin)?;
+        } else if matches.is_present("enroll") {
+            let template_id = bio_enrollment(&pin)?;
+            rename(&pin, &template_id)?;
+        } else {
+            list(&pin)?;
+        }
     }
 
     Ok(())
@@ -77,34 +79,31 @@ fn bio_enrollment(pin: &str) -> Result<Vec<u8>> {
     common::get_input();
     println!();
 
-    let result = ctap_hid_fido2::bio_enrollment_begin(&Key::auto(), Some(pin), Some(10000))?;
-    println!("{}\n", result.1);
+    let (enroll_status1,enroll_status2) = ctap_hid_fido2::bio_enrollment_begin(&Key::auto(), Some(pin), Some(10000))?;
+    println!("{}\n", enroll_status2);
 
     for _counter in 0..10 {
-        if bio_enrollment_next(&result.0)? {
+        if bio_enrollment_next(&enroll_status1)? {
             break;
         }
     }
     println!("- bio enrollment Success\n");
-    Ok(result.0.template_id)
+    Ok(enroll_status1.template_id)
 }
 
-fn bio_enrollment_next(enroll_status: &EnrollStatus1) -> Result<bool> {
+fn bio_enrollment_next(enroll_status1: &EnrollStatus1) -> Result<bool> {
     println!("bio enrollment Status");
-    let result = ctap_hid_fido2::bio_enrollment_next(enroll_status, Some(10000))?;
-    println!("{}\n", result);
-    Ok(result.is_finish)
+    let enroll_status2 = ctap_hid_fido2::bio_enrollment_next(enroll_status1, Some(10000))?;
+    println!("{}\n", enroll_status2);
+    Ok(enroll_status2.is_finish)
 }
 
 fn is_supported() -> Result<bool> {
-    let option = ctap_hid_fido2::enable_info_option(&Key::auto(), &InfoOption::BioEnroll)?;
-    if option != None && option.unwrap() {
+    if ctap_hid_fido2::enable_info_option(&Key::auto(), &InfoOption::BioEnroll)?.is_some(){
         return Ok(true);
     }
 
-    let option =
-        ctap_hid_fido2::enable_info_option(&Key::auto(), &InfoOption::UserVerificationMgmtPreview)?;
-    if option != None && option.unwrap() {
+    if ctap_hid_fido2::enable_info_option(&Key::auto(), &InfoOption::UserVerificationMgmtPreview)?.is_some(){
         Ok(true)
     } else {
         Ok(false)
@@ -124,10 +123,9 @@ fn list(pin: &str) -> Result<()> {
     Ok(())
 }
 
-fn spec(_pin: &str) -> Result<()> {
-    let result = ctap_hid_fido2::bio_enrollment_get_fingerprint_sensor_info(&Key::auto())?;
-    println!("{}", result);
-
+fn spec() -> Result<()> {
+    let sensor_info = ctap_hid_fido2::bio_enrollment_get_fingerprint_sensor_info(&Key::auto())?;
+    println!("{}", sensor_info);
     Ok(())
 }
 

@@ -14,7 +14,7 @@ pub struct BioSensorInfo {
 impl fmt::Display for BioSensorInfo {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let mut strbuf = StrBuf::new(0);
-        strbuf.addln("- Bio Modality");
+        strbuf.addln("- Modality");
         strbuf.addln(&format!("  - {:?}",self.modality));
 
         strbuf.addln("- Fingerprint kind");

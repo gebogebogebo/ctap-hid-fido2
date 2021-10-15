@@ -135,6 +135,19 @@ fn option_message(typ: &str, info_option: &InfoOption, val: Option<bool>) -> Res
             }
             strbuf.build().to_string()
         }
+        InfoOption::UserVerificationMgmtPreview|InfoOption::BioEnroll => {
+            let mut strbuf = StrBuf::new(0);
+            strbuf.addln("bioEnroll");
+
+            if val.is_some() && val.unwrap() {
+                strbuf.addln("This authenticator supports the authenticatorBioEnrollment commands, and has at least one bio enrollment presently provisioned.");
+            } else if val.is_some() && !val.unwrap() {
+                strbuf.addln("This authenticator supports the authenticatorBioEnrollment commands, and does not yet have any bio enrollments provisioned.");
+            } else {
+                strbuf.addln("The authenticatorBioEnrollment commands are NOT supported.");
+            }
+            strbuf.build().to_string()
+        }
         _ => "".to_string(),
     };
     Ok(format!("{}\n\n{}", message1, message2))

@@ -293,7 +293,7 @@ fn ctaphid_cbormsg(
             break;
         } else if st.0 == CTAPHID_KEEPALIVE {
             if !keep_alive_msg_flag {
-                println!("- touch fido key");
+                println!("- Touch the sensor on the authenticator");
                 keep_alive_msg_flag = true;
             }
             thread::sleep(time::Duration::from_millis(100));
