@@ -111,12 +111,12 @@ fn is_supported() -> Result<bool> {
 }
 
 fn list(pin: &str) -> Result<()> {
-    let bios = ctap_hid_fido2::bio_enrollment_enumerate_enrollments(&Key::auto(), Some(pin))?;
+    let template_infos = ctap_hid_fido2::bio_enrollment_enumerate_enrollments(&Key::auto(), Some(pin))?;
     let mut strbuf = StrBuf::new(0);
     strbuf.addln("");
-    strbuf.append("Number of registrations", &bios.len());
-    for i in bios {
-        strbuf.addln(&format!("{}", i));
+    strbuf.append("Number of registrations", &template_infos.len());
+    for template_info in template_infos {
+        strbuf.addln(&format!("{}", template_info));
     }
     println!("{}", strbuf.build().to_string());
 

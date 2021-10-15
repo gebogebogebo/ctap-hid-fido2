@@ -14,8 +14,8 @@ fn main() -> Result<()> {
     let key = if key_auto { Key::auto() } else { Key::get() };
 
     // parameter
-    let hmac_make=true;
-    let hmac_get=true;
+    let hmac_make=false;
+    let hmac_get=false;
     let rpid = "test.com";
     let pin = "1234";
     let challenge = verifier::create_challenge();
