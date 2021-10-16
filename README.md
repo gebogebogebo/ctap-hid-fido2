@@ -9,7 +9,7 @@ Rust FIDO2 CTAP library
 - Implements FIDO2 CTAP 2.0 & 2.1 (HID)
 - [Client to Authenticator Protocol (CTAP)](https://fidoalliance.org/specs/fido-v2.1-ps-20210615/fido-client-to-authenticator-protocol-v2.1-ps-20210615.html)
 - Supported FIDO key
-  - [**Yubikey Bio**](https://www.yubico.com/products/yubikey-bio-series/)
+  - [Yubikey Bio](https://www.yubico.com/products/yubikey-bio-series/)
   - Yubikey Blue (Security Key Series)
   - Yubikey Black (YubiKey 5)
   - FEITIAN ePass FIDO(A4B)
@@ -66,11 +66,7 @@ $ ./test_for_pi.sh
 
 ### get_info()
 
-[6.4. authenticatorGetInfo (0x04)](https://fidoalliance.org/specs/fido-v2.1-rd-20210309/fido-client-to-authenticator-protocol-v2.1-rd-20210309.html#authenticatorGetInfo)
-
-> Using this method, platforms can request that the authenticator report a list of its supported protocol versions and extensions, its AAGUID, and other aspects of its overall capabilities. Platforms should use this information to tailor their command parameters choices.
-
-
+[6.4. authenticatorGetInfo (0x04)](https://fidoalliance.org/specs/fido-v2.1-ps-20210615/fido-client-to-authenticator-protocol-v2.1-ps-20210615.html#authenticatorGetInfo)
 
 ```rust
 use ctap_hid_fido2;
@@ -105,7 +101,7 @@ get_info()
 
 ### get_info_u2f()
 
-Created to test [CTAPHID_MSG](https://fidoalliance.org/specs/fido-v2.1-rd-20210309/fido-client-to-authenticator-protocol-v2.1-rd-20210309.html#usb-hid-msg).
+Created to test [CTAPHID_MSG](https://fidoalliance.org/specs/fido-v2.1-ps-20210615/fido-client-to-authenticator-protocol-v2.1-ps-20210615.html#usb-hid-msg).
 
 ```rust
 use ctap_hid_fido2;
@@ -131,7 +127,7 @@ get_info_u2f()
 
 ### get_pin_retries()
 
-[6.5.2.2. PIN-Entry and User Verification Retries Counters](https://fidoalliance.org/specs/fido-v2.1-rd-20210309/fido-client-to-authenticator-protocol-v2.1-rd-20210309.html#authnrClientPin-globalState-retries)
+[6.5.5.2. Platform getting PIN retries from Authenticator](https://fidoalliance.org/specs/fido-v2.1-ps-20210615/fido-client-to-authenticator-protocol-v2.1-ps-20210615.html#gettingPINRetries)
 
 pinRetries counter represents the number of attempts left before PIN is disabled.
 
@@ -492,7 +488,7 @@ fn main() -> Result<()> {
 
 
 
-## CTAP 2.1 PRE
+## CTAP 2.1
 
 ### authenticatorCredentialManagement
 
@@ -578,7 +574,7 @@ match ctap_hid_fido2::credential_management_delete_credential(
 
 ### authenticatorBioEnrollment
 
-This command manages the fingerprints in the authenticator.<br>[6.7. authenticatorBioEnrollment (0x09)](https://fidoalliance.org/specs/fido-v2.1-rd-20210309/fido-client-to-authenticator-protocol-v2.1-rd-20210309.html#authenticatorBioEnrollment)
+This command manages the fingerprints in the authenticator.<br>[6.7. authenticatorBioEnrollment (0x09)](https://fidoalliance.org/specs/fido-v2.1-ps-20210615/fido-client-to-authenticator-protocol-v2.1-ps-20210615.html#authenticatorBioEnrollment)
 
 
 
@@ -655,7 +651,7 @@ Update the registered name of the fingerprint.
 match ctap_hid_fido2::bio_enrollment_set_friendly_name(
     &Key::auto(),
     pin,
-    TemplateInfo::new(util::to_str_hex(template_id), name),
+    template_id, "display-name"),
 ) {
     Ok(()) => println!("- Success"),
     Err(e) => println!("- error: {:?}", e),
