@@ -24,7 +24,7 @@ pub(crate) fn credential_management(
     // pin token
     let pin_token = {
         if let Some(pin) = pin {
-            Some(client_pin::get_pin_token(device, &cid, pin).map_err(Error::msg)?)
+            Some(client_pin::get_pin_token(device, &cid, pin)?)
         } else {
             None
         }

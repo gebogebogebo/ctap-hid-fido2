@@ -198,7 +198,7 @@ pub fn wink(hid_params: &[HidParam]) -> Result<()> {
 /// Get FIDO key information
 pub fn get_info(hid_params: &[HidParam]) -> Result<get_info_params::Info> {
     let device = get_device(hid_params)?;
-    get_info::get_info(&device).map_err(Error::msg)
+    get_info::get_info(&device)
 }
 
 /// Get FIDO key information (CTAP 1.0)
@@ -250,7 +250,6 @@ pub fn make_credential(
     make_credential::make_credential(
         &device, rpid, challenge, pin, false, None, /*None,*/ None,
     )
-    .map_err(Error::msg)
 }
 
 pub fn make_credential_with_extensions(
@@ -264,7 +263,6 @@ pub fn make_credential_with_extensions(
     make_credential::make_credential(
         &device, rpid, challenge, pin, false, None, /*None,*/ extensions,
     )
-    .map_err(Error::msg)
 }
 
 /// Registration command.Generate credentials(with PIN ,Resident Key)
@@ -286,7 +284,6 @@ pub fn make_credential_rk(
         //None,
         None,
     )
-    .map_err(Error::msg)
 }
 
 /// Registration command.Generate credentials(without PIN ,non Resident Key)
@@ -299,7 +296,6 @@ pub fn make_credential_without_pin(
     make_credential::make_credential(
         &device, rpid, challenge, None, false, None, /*None,*/ None,
     )
-    .map_err(Error::msg)
 }
 
 /// Authentication command(with PIN , non Resident Key)
@@ -377,7 +373,7 @@ pub enum InfoParam {
 
 pub fn enable_info_param(hid_params: &[HidParam], info_param: &InfoParam) -> Result<bool> {
     let device = get_device(hid_params)?;
-    let info = get_info::get_info(&device).map_err(Error::msg)?;
+    let info = get_info::get_info(&device)?;
     let find = match info_param {
         InfoParam::VersionsU2Fv2 => "U2F_V2",
         InfoParam::VersionsFido20 => "FIDO_2_0",
@@ -417,7 +413,7 @@ pub fn enable_info_option(
     info_option: &InfoOption,
 ) -> Result<Option<bool>> {
     let device = get_device(hid_params)?;
-    let info = get_info::get_info(&device).map_err(Error::msg)?;
+    let info = get_info::get_info(&device)?;
     let find = match info_option {
         InfoOption::Rk => "rk",
         InfoOption::Up => "up",

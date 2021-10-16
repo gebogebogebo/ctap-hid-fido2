@@ -11,6 +11,8 @@ use crate::FidoKeyHid;
 #[allow(unused_imports)]
 use crate::util;
 
+use anyhow::{Error, Result};
+
 pub fn make_credential(
     device: &FidoKeyHid,
     rpid: &str,
@@ -20,9 +22,9 @@ pub fn make_credential(
     rkparam: Option<&PublicKeyCredentialUserEntity>,
     //uv: Option<bool>,
     extensions: Option<&Vec<Extension>>,
-) -> Result<make_credential_params::Attestation, String> {
+) -> Result<make_credential_params::Attestation> {
     // init
-    let cid = ctaphid::ctaphid_init(device)?;
+    let cid = ctaphid::ctaphid_init(device).map_err(Error::msg)?;
 
     // uv
     let uv = {
@@ -65,9 +67,9 @@ pub fn make_credential(
     util::debugp("- make_credential", &send_payload);
 
     // send & response
-    let response_cbor = ctaphid::ctaphid_cbor(device, &cid, &send_payload)?;
+    let response_cbor = ctaphid::ctaphid_cbor(device, &cid, &send_payload).map_err(Error::msg)?;
     util::debugp("- response_cbor", &response_cbor);
 
-    let att = make_credential_response::parse_cbor(&response_cbor)?;
+    let att = make_credential_response::parse_cbor(&response_cbor).map_err(Error::msg)?;
     Ok(att)
 }

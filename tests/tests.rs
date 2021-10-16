@@ -171,7 +171,6 @@ fn test_bio_enrollment_enumerate_enrollments() {
         Err(_) => assert!(false),
     };
 
-    // skip
     if skip {
         return;
     };
@@ -179,7 +178,7 @@ fn test_bio_enrollment_enumerate_enrollments() {
     let pin = "1234";
     match ctap_hid_fido2::bio_enrollment_enumerate_enrollments(
         &ctap_hid_fido2::HidParam::get(),
-        Some(pin),
+        pin,
     ) {
         Ok(_) => assert!(true),
         Err(_) => assert!(false),

@@ -37,9 +37,7 @@ pub fn get_assertion(
     // pin token
     let pin_token = {
         if let Some(pin) = pin {
-            //let shared_secret = client_pin::get_shared_secret(&device, &cid, pin).map_err(Error::msg)?;
-            //Some(client_pin::get_pin_token2(&shared_secret, &device, &cid, pin).map_err(Error::msg)?)
-            Some(client_pin::get_pin_token(&device, &cid, pin).map_err(Error::msg)?)
+            Some(client_pin::get_pin_token(&device, &cid, pin)?)
         } else {
             None
         }
