@@ -586,8 +586,11 @@ pub fn bio_enrollment_enumerate_enrollments(
 pub fn bio_enrollment_set_friendly_name(
     hid_params: &[HidParam],
     pin: &str,
-    template_info: TemplateInfo,
+    template_id: &[u8],
+    template_name: &str,
 ) -> Result<()> {
+    let template_info = TemplateInfo::new(template_id, Some(template_name));
+
     let device = get_device(hid_params)?;
     let init = bio_enrollment::bio_enrollment_init(&device, Some(pin))?;
     let pin_token = init.1.unwrap();

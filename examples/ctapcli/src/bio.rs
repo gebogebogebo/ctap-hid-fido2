@@ -3,7 +3,6 @@ use anyhow::{anyhow, Result};
 use crate::common;
 use crate::str_buf::StrBuf;
 use ctap_hid_fido2::bio_enrollment_params::EnrollStatus1;
-use ctap_hid_fido2::bio_enrollment_params::TemplateInfo;
 #[allow(unused_imports)]
 use ctap_hid_fido2::util;
 use ctap_hid_fido2::verifier;
@@ -64,7 +63,8 @@ fn rename(pin: &str, template_id: &[u8]) -> Result<()> {
     ctap_hid_fido2::bio_enrollment_set_friendly_name(
         &Key::auto(),
         pin,
-        TemplateInfo::new(template_id, Some(&template_name)),
+        template_id,
+        &template_name,
     )?;
     println!("- Success\n");
     Ok(())
