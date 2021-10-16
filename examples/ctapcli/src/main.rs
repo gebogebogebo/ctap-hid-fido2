@@ -132,12 +132,13 @@ fn main() -> Result<()> {
                 .arg(
                     Arg::with_name("test")
                         .help("Test register and authenticate")
-                        .short("t")
                         .long("test")
-                        .takes_value(true)
-                        .value_name("log")
-                        .default_value("")
-                    )
+                )
+               .arg(
+                    Arg::with_name("test-with-log")
+                        .help("Test register and authenticate(with log)")
+                        .long("test-log")
+                )
         );
     /*
     .subcommand(

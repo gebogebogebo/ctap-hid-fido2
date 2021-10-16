@@ -26,7 +26,7 @@ pub fn bio(matches: &clap::ArgMatches) -> Result<()> {
         println!("Delete a fingerprint.");
     } else if matches.is_present("info") {
         println!("Display sensor info.");
-    } else if matches.is_present("test") {
+    } else if matches.is_present("test") || matches.is_present("test-with-log"){
         println!("Test register and authenticate.");
     } else {
         println!("List registered biometric authenticate data.");
@@ -34,7 +34,7 @@ pub fn bio(matches: &clap::ArgMatches) -> Result<()> {
 
     if matches.is_present("info") {
         spec()?;
-    } else if matches.is_present("test") {
+    } else if matches.is_present("test") || matches.is_present("test-with-log"){
         bio_test(matches)?;
     } else {
         let pin = common::get_pin();
@@ -146,7 +146,11 @@ fn delete(matches: &clap::ArgMatches, pin: &str) -> Result<()> {
 }
 
 fn bio_test(matches: &clap::ArgMatches) -> Result<()> {
-    let log = matches.value_of("test").unwrap();
+    let log = if matches.is_present("test-with-log"){
+        true
+    } else {
+        false
+    };
 
     let rpid = "ctapcli.test";
     let pin = None;
@@ -156,7 +160,7 @@ fn bio_test(matches: &clap::ArgMatches) -> Result<()> {
     // Register
     println!();
     println!("Register");
-    if !log.is_empty() {
+    if log {
         let mut strbuf = StrBuf::new(pad_to_width);
         println!(
             "{}",
@@ -174,7 +178,7 @@ fn bio_test(matches: &clap::ArgMatches) -> Result<()> {
             pin
     )?;
 
-    if !log.is_empty() {
+    if log {
         println!("Attestation");
         println!("{}", att);
     }
@@ -182,7 +186,7 @@ fn bio_test(matches: &clap::ArgMatches) -> Result<()> {
     println!("Verify");
     let verify_result = verifier::verify_attestation(rpid, &challenge, &att);
 
-    if !log.is_empty() {
+    if log {
         let mut strbuf = StrBuf::new(pad_to_width);
         println!(
             "{}",
@@ -203,7 +207,7 @@ fn bio_test(matches: &clap::ArgMatches) -> Result<()> {
     let challenge = verifier::create_challenge();
 
     println!("Authenticate");
-    if !log.is_empty() {
+    if log {
         let mut strbuf = StrBuf::new(pad_to_width);
         println!(
             "{}",
@@ -222,7 +226,7 @@ fn bio_test(matches: &clap::ArgMatches) -> Result<()> {
             pin,
     )?;
 
-    if !log.is_empty() {
+    if log {
         println!("Assertion");
         println!("{}", ass);
     }
