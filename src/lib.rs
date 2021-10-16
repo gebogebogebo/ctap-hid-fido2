@@ -644,8 +644,7 @@ pub fn credential_management_get_creds_metadata(
         None,
         None,
         None,
-    )
-    .map_err(Error::msg)?;
+    )?;
     Ok(credential_management_params::CredentialsCount::new(&meta))
 }
 
@@ -663,8 +662,7 @@ pub fn credential_management_enumerate_rps(
         None,
         None,
         None,
-    )
-    .map_err(Error::msg)?;
+    )?;
     datas.push(credential_management_params::Rp::new(&data));
     if data.total_rps > 0 {
         let roop_n = data.total_rps - 1;
@@ -676,8 +674,7 @@ pub fn credential_management_enumerate_rps(
                 None,
                 None,
                 None,
-            )
-            .map_err(Error::msg)?;
+            )?;
             datas.push(credential_management_params::Rp::new(&data));
         }
     }
@@ -700,8 +697,7 @@ pub fn credential_management_enumerate_credentials(
         Some(rpid_hash.to_vec()),
         None,
         None,
-    )
-    .map_err(Error::msg)?;
+    )?;
     datas.push(credential_management_params::Credential::new(&data));
     if data.total_credentials > 0 {
         let roop_n = data.total_credentials - 1;
@@ -713,8 +709,7 @@ pub fn credential_management_enumerate_credentials(
                 Some(rpid_hash.to_vec()),
                 None,
                 None,
-            )
-            .map_err(Error::msg)?;
+            )?;
             datas.push(credential_management_params::Credential::new(&data));
         }
     }
@@ -735,8 +730,7 @@ pub fn credential_management_delete_credential(
         None,
         pkcd,
         None,
-    )
-    .map_err(Error::msg)?;
+    )?;
     Ok(())
 }
 
@@ -755,8 +749,7 @@ pub fn credential_management_update_user_information(
         None,
         pkcd,
         pkcue,
-    )
-    .map_err(Error::msg)?;
+    )?;
     Ok(())
 }
 

@@ -9,6 +9,7 @@ use crate::FidoKeyHid;
 
 #[allow(unused_imports)]
 use crate::util;
+use anyhow::{Error, Result};
 
 pub(crate) fn credential_management(
     device: &FidoKeyHid,
@@ -17,13 +18,13 @@ pub(crate) fn credential_management(
     rpid_hash: Option<Vec<u8>>,
     pkcd: Option<PublicKeyCredentialDescriptor>,
     pkcue: Option<PublicKeyCredentialUserEntity>,
-) -> Result<credential_management_params::CredentialManagementData, String> {
-    let cid = ctaphid::ctaphid_init(device)?;
+) -> Result<credential_management_params::CredentialManagementData> {
+    let cid = ctaphid::ctaphid_init(device).map_err(Error::msg)?;
 
     // pin token
     let pin_token = {
         if let Some(pin) = pin {
-            Some(client_pin::get_pin_token(device, &cid, pin)?)
+            Some(client_pin::get_pin_token(device, &cid, pin).map_err(Error::msg)?)
         } else {
             None
         }
@@ -41,10 +42,10 @@ pub(crate) fn credential_management(
         println!("send(cbor) = {}", util::to_hex_str(&send_payload));
     }
 
-    let response_cbor = ctaphid::ctaphid_cbor(device, &cid, &send_payload)?;
+    let response_cbor = ctaphid::ctaphid_cbor(device, &cid, &send_payload).map_err(Error::msg)?;
     if util::is_debug() {
         println!("response(cbor) = {}", util::to_hex_str(&response_cbor));
     }
 
-    credential_management_response::parse_cbor(&response_cbor)
+    Ok(credential_management_response::parse_cbor(&response_cbor).map_err(Error::msg)?)
 }
