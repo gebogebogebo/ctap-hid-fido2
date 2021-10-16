@@ -63,8 +63,8 @@ fn rename(pin: &str, template_id: &[u8]) -> Result<()> {
 
     ctap_hid_fido2::bio_enrollment_set_friendly_name(
         &Key::auto(),
-        Some(pin),
-        TemplateInfo::new(template_id.to_vec(), Some(&template_name)),
+        pin,
+        TemplateInfo::new(template_id, Some(&template_name)),
     )?;
     println!("- Success\n");
     Ok(())
@@ -84,7 +84,7 @@ fn bio_enrollment(pin: &str) -> Result<Vec<u8>> {
     common::get_input();
     println!();
 
-    let (enroll_status1,enroll_status2) = ctap_hid_fido2::bio_enrollment_begin(&Key::auto(), Some(pin), Some(10000))?;
+    let (enroll_status1,enroll_status2) = ctap_hid_fido2::bio_enrollment_begin(&Key::auto(), pin, Some(10000))?;
     println!("{}\n", enroll_status2);
 
     for _counter in 0..10 {
@@ -116,7 +116,7 @@ fn is_supported() -> Result<bool> {
 }
 
 fn list(pin: &str) -> Result<()> {
-    let template_infos = ctap_hid_fido2::bio_enrollment_enumerate_enrollments(&Key::auto(), Some(pin))?;
+    let template_infos = ctap_hid_fido2::bio_enrollment_enumerate_enrollments(&Key::auto(), pin)?;
     let mut strbuf = StrBuf::new(0);
     strbuf.addln("");
     strbuf.append("Number of registrations", &template_infos.len());
@@ -140,7 +140,7 @@ fn delete(matches: &clap::ArgMatches, pin: &str) -> Result<()> {
     println!("value for templateId: {:?}", template_id);
     println!();
 
-    ctap_hid_fido2::bio_enrollment_remove(&Key::auto(), Some(pin), util::to_str_hex(template_id))?;
+    ctap_hid_fido2::bio_enrollment_remove(&Key::auto(), pin, &util::to_str_hex(template_id))?;
     println!("- Success\n");
     Ok(())
 }

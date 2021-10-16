@@ -3,23 +3,13 @@
 # ctap-hid-fido2
 Rust FIDO2 CTAP library
 
-- Idem Key added.
-- set_new_pin() , change_pin() added.
-
-- for Mac & Win & raspberry Pi
-
-- Some features of CTAP2.1PRE have been implemented.
-  - authenticatorCredentialManagement
-  - authenticatorBioEnrollment
-
-- HMAC Secret Extension implemented.
-
 
 
 ## Description
-- Implements FIDO2 CTAP 2.0 & 2.1PRE (HID)
-- [Client to Authenticator Protocol (CTAP)](https://fidoalliance.org/specs/fido-v2.1-rd-20210309/fido-client-to-authenticator-protocol-v2.1-rd-20210309.html)
+- Implements FIDO2 CTAP 2.0 & 2.1 (HID)
+- [Client to Authenticator Protocol (CTAP)](https://fidoalliance.org/specs/fido-v2.1-ps-20210615/fido-client-to-authenticator-protocol-v2.1-ps-20210615.html)
 - Supported FIDO key
+  - [**Yubikey Bio**](https://www.yubico.com/products/yubikey-bio-series/)
   - Yubikey Blue (Security Key Series)
   - Yubikey Black (YubiKey 5)
   - FEITIAN ePass FIDO(A4B)
@@ -235,7 +225,7 @@ fn main() -> Result<()> {
 
     // parameter
     let rpid = "test.com";
-    let pin = "1234";
+    let pin = Some("1234");
     let challenge = verifier::create_challenge();
 
     // Register
@@ -251,7 +241,7 @@ fn main() -> Result<()> {
         &Key::auto(),
         rpid,
         &challenge,
-        Some(pin),
+        pin,
     )?;
 
     println!("- Register Success!!");
@@ -290,7 +280,7 @@ fn main() -> Result<()> {
         rpid,
         &challenge,
         &verify_result.credential_id,
-        Some(pin),
+        pin,
     )?;
     println!("- Authenticate Success!!");
     println!("Assertion");
@@ -369,7 +359,7 @@ use ctap_hid_fido2::Key;
 fn main() -> Result<()> {
 
   let rpid = "test.com";
-  let pin = "1234";
+  let pin = Some("1234");
   let challenge = verifier::create_challenge();
 
   let ext = Mext::HmacSecret(Some(true));
@@ -377,7 +367,7 @@ fn main() -> Result<()> {
       &Key::auto(),
       rpid,
       &challenge,
-      Some(pin),
+      pin,
       Some(&vec![ext]),
   )?;
 }
@@ -395,7 +385,7 @@ use ctap_hid_fido2::Key;
 fn main() -> Result<()> {
 
   let rpid = "test.com";
-  let pin = "1234";
+  let pin = Some("1234");
   let challenge = verifier::create_challenge();
   let credential_id = ???;
   
@@ -405,7 +395,7 @@ fn main() -> Result<()> {
       rpid,
       &challenge,
       &credential_id,
-      Some(pin),
+      pin,
       Some(&vec![ext]),
   )?;
 }
@@ -430,7 +420,7 @@ fn main() -> Result<()> {
 
     // parameter
     let rpid = "ge.com";
-    let pin = "1234";
+    let pin = Some("1234");
 
     // Register
     println!("Register - make_credential()");
@@ -449,7 +439,7 @@ fn main() -> Result<()> {
         &Key::auto(),
         rpid,
         &challenge,
-        Some(pin),
+        pin,
         &rkparam,
     )?;
 
@@ -480,7 +470,7 @@ fn main() -> Result<()> {
         &Key::auto(),
         rpid,
         &challenge,
-        Some(pin),
+        pin,
     )?;
     println!("Authenticate Success!!");
 
@@ -517,7 +507,7 @@ Get discoverable credentials metadata.
 ``` rust
 match ctap_hid_fido2::credential_management_get_creds_metadata(
     &Key::auto(),
-    Some(pin),
+    pin,
 ) {
     Ok(result) => println!("{}", result),
     Err(e) => println!("- error: {:?}", e),
@@ -551,7 +541,7 @@ Enumerate the credentials for a RP.
 ```rust
 match ctap_hid_fido2::credential_management_enumerate_credentials(
     &Key::auto(),
-    Some(pin),
+    pin,
     rpid_hash_bytes,
 ) {
     Ok(results) => {
@@ -576,7 +566,7 @@ pkcd.ctype = "public_key".to_string();
 
 match ctap_hid_fido2::credential_management_delete_credential(
     &Key::auto(),
-    Some(pin),
+    pin,
     Some(pkcd),
 ) {
     Ok(_) => println!("- success"),
@@ -614,7 +604,7 @@ Enumurate a list of registered fingerprints.
 ```Rust
 match ctap_hid_fido2::bio_enrollment_enumerate_enrollments(
     &Key::auto(),
-    Some(pin),
+    pin,
 ) {
     Ok(infos) => for i in infos {println!("- {}", i)},
     Err(e) => println!("- error: {:?}", e)
@@ -632,7 +622,7 @@ fn bio_enrollment(pin: &str) -> Result<(), String> {
     println!("bio_enrollment_begin");
     let result = ctap_hid_fido2::bio_enrollment_begin(
         &Key::auto(),
-        Some(pin),
+        pin,
         Some(10000),
     )?;
     println!("{}", result.1);
@@ -664,7 +654,7 @@ Update the registered name of the fingerprint.
 ```rust
 match ctap_hid_fido2::bio_enrollment_set_friendly_name(
     &Key::auto(),
-    Some(pin),
+    pin,
     TemplateInfo::new(util::to_str_hex(template_id), name),
 ) {
     Ok(()) => println!("- Success"),
@@ -681,12 +671,11 @@ Delete a fingerprint.
 ```rust
 match ctap_hid_fido2::bio_enrollment_remove(
      &Key::auto(),
-     Some(pin),
-     util::to_str_hex(template_id),
+     pin,
+     template_id,
  ) {
      Ok(_) => println!("- Success"),
      Err(e) => println!("- error: {:?}", e),
  }
 ```
-
 

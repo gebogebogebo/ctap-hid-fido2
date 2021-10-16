@@ -128,9 +128,9 @@ pub struct TemplateInfo {
     pub template_friendly_name: Option<String>,
 }
 impl TemplateInfo {
-    pub fn new(template_id: Vec<u8>, template_friendly_name: Option<&str>) -> TemplateInfo {
+    pub fn new(template_id: &[u8], template_friendly_name: Option<&str>) -> TemplateInfo {
         let mut ret = TemplateInfo {
-            template_id,
+            template_id: template_id.to_vec(),
             ..Default::default()
         };
         if let Some(v) = template_friendly_name {

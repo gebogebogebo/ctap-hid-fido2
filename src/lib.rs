@@ -474,11 +474,11 @@ pub fn bio_enrollment_get_fingerprint_sensor_info(
 /// BioEnrollment - EnrollBegin
 pub fn bio_enrollment_begin(
     hid_params: &[HidParam],
-    pin: Option<&str>,
+    pin: &str,
     timeout_milliseconds: Option<u16>,
 ) -> Result<(EnrollStatus1, EnrollStatus2)> {
     let device = get_device(hid_params)?;
-    let init = bio_enrollment::bio_enrollment_init(&device, pin).map_err(Error::msg)?;
+    let init = bio_enrollment::bio_enrollment_init(&device, Some(pin)).map_err(Error::msg)?;
 
     let data = bio_enrollment::bio_enrollment(
         &device,
@@ -515,7 +515,7 @@ pub fn bio_enrollment_next(
     enroll_status: &EnrollStatus1,
     timeout_milliseconds: Option<u16>,
 ) -> Result<EnrollStatus2> {
-    let template_info = TemplateInfo::new(enroll_status.template_id.to_vec(), None);
+    let template_info = TemplateInfo::new(&enroll_status.template_id, None);
     let data = bio_enrollment::bio_enrollment(
         &enroll_status.device,
         &enroll_status.cid,
@@ -561,10 +561,10 @@ pub fn bio_enrollment_cancel(enroll_status: &EnrollStatus1) -> Result<()> {
 /// 6.7.6. Enumerate enrollments
 pub fn bio_enrollment_enumerate_enrollments(
     hid_params: &[HidParam],
-    pin: Option<&str>,
+    pin: &str,
 ) -> Result<Vec<TemplateInfo>> {
     let device = get_device(hid_params)?;
-    let init = bio_enrollment::bio_enrollment_init(&device, pin).map_err(Error::msg)?;
+    let init = bio_enrollment::bio_enrollment_init(&device, Some(pin)).map_err(Error::msg)?;
     let pin_token = init.1.unwrap();
 
     let data = bio_enrollment::bio_enrollment(
@@ -587,11 +587,11 @@ pub fn bio_enrollment_enumerate_enrollments(
 /// 6.7.7. Rename/Set FriendlyName
 pub fn bio_enrollment_set_friendly_name(
     hid_params: &[HidParam],
-    pin: Option<&str>,
+    pin: &str,
     template_info: TemplateInfo,
 ) -> Result<()> {
     let device = get_device(hid_params)?;
-    let init = bio_enrollment::bio_enrollment_init(&device, pin).map_err(Error::msg)?;
+    let init = bio_enrollment::bio_enrollment_init(&device, Some(pin)).map_err(Error::msg)?;
     let pin_token = init.1.unwrap();
 
     let data = bio_enrollment::bio_enrollment(
@@ -612,11 +612,11 @@ pub fn bio_enrollment_set_friendly_name(
 /// 6.7.8. Remove enrollment
 pub fn bio_enrollment_remove(
     hid_params: &[HidParam],
-    pin: Option<&str>,
-    template_id: Vec<u8>,
+    pin: &str,
+    template_id: &[u8],
 ) -> Result<()> {
     let device = get_device(hid_params)?;
-    let init = bio_enrollment::bio_enrollment_init(&device, pin).map_err(Error::msg)?;
+    let init = bio_enrollment::bio_enrollment_init(&device, Some(pin)).map_err(Error::msg)?;
     let pin_token = init.1.unwrap();
 
     let template_info = TemplateInfo::new(template_id, None);
