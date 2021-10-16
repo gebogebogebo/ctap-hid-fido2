@@ -193,8 +193,11 @@ fn bio_test(matches: &clap::ArgMatches) -> Result<()> {
         );
     }
 
-    println!("Register Success !!");
-    println!();
+    if verify_result.is_success {
+        println!("Register Success !!\n");
+    } else {
+        println!("Register Failure !!\n");
+    }
 
     // Authenticate
     let challenge = verifier::create_challenge();
@@ -231,13 +234,13 @@ fn bio_test(matches: &clap::ArgMatches) -> Result<()> {
         &challenge,
         &ass,
     );
-    if !log.is_empty() {
-        println!("- is_success = {:?}", is_success);
+    if is_success {
+        println!("Authenticate Success !!\n");
+    } else {
+        println!("Authenticate Failure !!\n");
     }
 
-    println!("Authenticate Success !!");
-
-    println!("\nRegister and Authenticate Success\n");
+    println!("Register and Authenticate End\n");
 
     Ok(())
 }
