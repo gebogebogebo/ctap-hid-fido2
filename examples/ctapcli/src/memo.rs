@@ -123,11 +123,13 @@ fn list(pin: &str, rpid: &str) -> Result<()> {
 }
 
 fn is_supported() -> Result<bool> {
-    if ctap_hid_fido2::enable_info_option(&Key::auto(), &InfoOption::CredentialMgmtPreview)?.is_some(){
+    if ctap_hid_fido2::enable_info_option(&Key::auto(), &InfoOption::CredentialMgmtPreview)?
+        .is_some()
+    {
         return Ok(true);
     }
 
-    if ctap_hid_fido2::enable_info_option(&Key::auto(), &InfoOption::CredMgmt)?.is_some(){
+    if ctap_hid_fido2::enable_info_option(&Key::auto(), &InfoOption::CredMgmt)?.is_some() {
         Ok(true)
     } else {
         Ok(false)

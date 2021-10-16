@@ -6,8 +6,8 @@ use ctap_hid_fido2::bio_enrollment_params::EnrollStatus1;
 use ctap_hid_fido2::bio_enrollment_params::TemplateInfo;
 #[allow(unused_imports)]
 use ctap_hid_fido2::util;
-use ctap_hid_fido2::{InfoOption, Key};
 use ctap_hid_fido2::verifier;
+use ctap_hid_fido2::{InfoOption, Key};
 
 extern crate clap;
 
@@ -26,7 +26,7 @@ pub fn bio(matches: &clap::ArgMatches) -> Result<()> {
         println!("Delete a fingerprint.");
     } else if matches.is_present("info") {
         println!("Display sensor info.");
-    } else if matches.is_present("test") || matches.is_present("test-with-log"){
+    } else if matches.is_present("test") || matches.is_present("test-with-log") {
         println!("Test register and authenticate.");
     } else {
         println!("List registered biometric authenticate data.");
@@ -34,7 +34,7 @@ pub fn bio(matches: &clap::ArgMatches) -> Result<()> {
 
     if matches.is_present("info") {
         spec()?;
-    } else if matches.is_present("test") || matches.is_present("test-with-log"){
+    } else if matches.is_present("test") || matches.is_present("test-with-log") {
         bio_test(matches)?;
     } else {
         let pin = common::get_pin();
@@ -84,7 +84,8 @@ fn bio_enrollment(pin: &str) -> Result<Vec<u8>> {
     common::get_input();
     println!();
 
-    let (enroll_status1,enroll_status2) = ctap_hid_fido2::bio_enrollment_begin(&Key::auto(), pin, Some(10000))?;
+    let (enroll_status1, enroll_status2) =
+        ctap_hid_fido2::bio_enrollment_begin(&Key::auto(), pin, Some(10000))?;
     println!("{}\n", enroll_status2);
 
     for _counter in 0..10 {
@@ -104,11 +105,13 @@ fn bio_enrollment_next(enroll_status1: &EnrollStatus1) -> Result<bool> {
 }
 
 fn is_supported() -> Result<bool> {
-    if ctap_hid_fido2::enable_info_option(&Key::auto(), &InfoOption::BioEnroll)?.is_some(){
+    if ctap_hid_fido2::enable_info_option(&Key::auto(), &InfoOption::BioEnroll)?.is_some() {
         return Ok(true);
     }
 
-    if ctap_hid_fido2::enable_info_option(&Key::auto(), &InfoOption::UserVerificationMgmtPreview)?.is_some(){
+    if ctap_hid_fido2::enable_info_option(&Key::auto(), &InfoOption::UserVerificationMgmtPreview)?
+        .is_some()
+    {
         Ok(true)
     } else {
         Ok(false)
@@ -146,7 +149,7 @@ fn delete(matches: &clap::ArgMatches, pin: &str) -> Result<()> {
 }
 
 fn bio_test(matches: &clap::ArgMatches) -> Result<()> {
-    let log = if matches.is_present("test-with-log"){
+    let log = if matches.is_present("test-with-log") {
         true
     } else {
         false
@@ -171,12 +174,7 @@ fn bio_test(matches: &clap::ArgMatches) -> Result<()> {
                 .build()
         );
     }
-    let att = ctap_hid_fido2::make_credential(
-            &Key::auto(),
-            rpid,
-            &challenge,
-            pin
-    )?;
+    let att = ctap_hid_fido2::make_credential(&Key::auto(), rpid, &challenge, pin)?;
 
     if log {
         println!("Attestation");
@@ -219,11 +217,11 @@ fn bio_test(matches: &clap::ArgMatches) -> Result<()> {
     }
 
     let ass = ctap_hid_fido2::get_assertion(
-            &Key::auto(),
-            rpid,
-            &challenge,
-            &verify_result.credential_id,
-            pin,
+        &Key::auto(),
+        rpid,
+        &challenge,
+        &verify_result.credential_id,
+        pin,
     )?;
 
     if log {

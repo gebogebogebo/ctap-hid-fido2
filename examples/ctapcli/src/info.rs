@@ -135,7 +135,7 @@ fn option_message(typ: &str, info_option: &InfoOption, val: Option<bool>) -> Res
             }
             strbuf.build().to_string()
         }
-        InfoOption::UserVerificationMgmtPreview|InfoOption::BioEnroll => {
+        InfoOption::UserVerificationMgmtPreview | InfoOption::BioEnroll => {
             let mut strbuf = StrBuf::new(0);
             strbuf.addln("bioEnroll");
 

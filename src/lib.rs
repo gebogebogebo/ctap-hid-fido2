@@ -53,9 +53,7 @@ pub mod verifier;
 
 //
 use crate::bio_enrollment_command::SubCommand as BioCmd;
-use crate::bio_enrollment_params::{
-    EnrollStatus1, EnrollStatus2, TemplateInfo, BioSensorInfo
-};
+use crate::bio_enrollment_params::{BioSensorInfo, EnrollStatus1, EnrollStatus2, TemplateInfo};
 use crate::client_pin_command::SubCommand as PinCmd;
 use crate::get_assertion_params::Extension as Gext;
 use crate::make_credential_params::Extension as Mext;
@@ -141,7 +139,9 @@ impl HidParam {
             }, // Idem Key
         ]
     }
-    pub fn auto() -> Vec<HidParam> {vec![]}
+    pub fn auto() -> Vec<HidParam> {
+        vec![]
+    }
 }
 
 /// check Platform
@@ -247,8 +247,10 @@ pub fn make_credential(
     pin: Option<&str>,
 ) -> Result<make_credential_params::Attestation> {
     let device = get_device(hid_params)?;
-    make_credential::make_credential(&device, rpid, challenge, pin, false, None, /*None,*/ None)
-        .map_err(Error::msg)
+    make_credential::make_credential(
+        &device, rpid, challenge, pin, false, None, /*None,*/ None,
+    )
+    .map_err(Error::msg)
 }
 
 pub fn make_credential_with_extensions(
@@ -294,8 +296,10 @@ pub fn make_credential_without_pin(
     challenge: &[u8],
 ) -> Result<make_credential_params::Attestation> {
     let device = get_device(hid_params)?;
-    make_credential::make_credential(&device, rpid, challenge, None, false, None, /*None,*/ None)
-        .map_err(Error::msg)
+    make_credential::make_credential(
+        &device, rpid, challenge, None, false, None, /*None,*/ None,
+    )
+    .map_err(Error::msg)
 }
 
 /// Authentication command(with PIN , non Resident Key)
@@ -353,7 +357,9 @@ pub fn get_assertions_rk(
 ) -> Result<Vec<get_assertion_params::Assertion>> {
     let device = get_device(hid_params)?;
     let dmy: [u8; 0] = [];
-    get_assertion::get_assertion(&device, rpid, challenge, &dmy, pin, true, /*None,*/ None)
+    get_assertion::get_assertion(
+        &device, rpid, challenge, &dmy, pin, true, /*None,*/ None,
+    )
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -463,11 +469,11 @@ pub fn bio_enrollment_get_fingerprint_sensor_info(
         println!("{}", data2);
     }
 
-    Ok( BioSensorInfo {
+    Ok(BioSensorInfo {
         modality: data1.modality.into(),
         fingerprint_kind: data2.fingerprint_kind.into(),
         max_capture_samples_required_for_enroll: data2.max_capture_samples_required_for_enroll,
-        max_template_friendly_name: data2.max_template_friendly_name
+        max_template_friendly_name: data2.max_template_friendly_name,
     })
 }
 
@@ -478,7 +484,7 @@ pub fn bio_enrollment_begin(
     timeout_milliseconds: Option<u16>,
 ) -> Result<(EnrollStatus1, EnrollStatus2)> {
     let device = get_device(hid_params)?;
-    let init = bio_enrollment::bio_enrollment_init(&device, Some(pin)).map_err(Error::msg)?;
+    let init = bio_enrollment::bio_enrollment_init(&device, Some(pin))?;
 
     let data = bio_enrollment::bio_enrollment(
         &device,
@@ -487,8 +493,7 @@ pub fn bio_enrollment_begin(
         Some(BioCmd::EnrollBegin),
         None,
         timeout_milliseconds,
-    )
-    .map_err(Error::msg)?;
+    )?;
     if util::is_debug() {
         println!("{}", data);
     }
@@ -523,8 +528,7 @@ pub fn bio_enrollment_next(
         Some(BioCmd::EnrollCaptureNextSample),
         Some(template_info),
         timeout_milliseconds,
-    )
-    .map_err(Error::msg)?;
+    )?;
     if util::is_debug() {
         println!("{}", data);
     }
@@ -549,8 +553,7 @@ pub fn bio_enrollment_cancel(enroll_status: &EnrollStatus1) -> Result<()> {
         Some(BioCmd::CancelCurrentEnrollment),
         None,
         None,
-    )
-    .map_err(Error::msg)?;
+    )?;
     if util::is_debug() {
         println!("{}", data);
     }
@@ -564,7 +567,7 @@ pub fn bio_enrollment_enumerate_enrollments(
     pin: &str,
 ) -> Result<Vec<TemplateInfo>> {
     let device = get_device(hid_params)?;
-    let init = bio_enrollment::bio_enrollment_init(&device, Some(pin)).map_err(Error::msg)?;
+    let init = bio_enrollment::bio_enrollment_init(&device, Some(pin))?;
     let pin_token = init.1.unwrap();
 
     let data = bio_enrollment::bio_enrollment(
@@ -574,8 +577,7 @@ pub fn bio_enrollment_enumerate_enrollments(
         Some(BioCmd::EnumerateEnrollments),
         None,
         None,
-    )
-    .map_err(Error::msg)?;
+    )?;
     if util::is_debug() {
         println!("{}", data);
     }
@@ -591,7 +593,7 @@ pub fn bio_enrollment_set_friendly_name(
     template_info: TemplateInfo,
 ) -> Result<()> {
     let device = get_device(hid_params)?;
-    let init = bio_enrollment::bio_enrollment_init(&device, Some(pin)).map_err(Error::msg)?;
+    let init = bio_enrollment::bio_enrollment_init(&device, Some(pin))?;
     let pin_token = init.1.unwrap();
 
     let data = bio_enrollment::bio_enrollment(
@@ -601,8 +603,7 @@ pub fn bio_enrollment_set_friendly_name(
         Some(BioCmd::SetFriendlyName),
         Some(template_info),
         None,
-    )
-    .map_err(Error::msg)?;
+    )?;
     if util::is_debug() {
         println!("{}", data);
     }
@@ -610,13 +611,9 @@ pub fn bio_enrollment_set_friendly_name(
 }
 
 /// 6.7.8. Remove enrollment
-pub fn bio_enrollment_remove(
-    hid_params: &[HidParam],
-    pin: &str,
-    template_id: &[u8],
-) -> Result<()> {
+pub fn bio_enrollment_remove(hid_params: &[HidParam], pin: &str, template_id: &[u8]) -> Result<()> {
     let device = get_device(hid_params)?;
-    let init = bio_enrollment::bio_enrollment_init(&device, Some(pin)).map_err(Error::msg)?;
+    let init = bio_enrollment::bio_enrollment_init(&device, Some(pin))?;
     let pin_token = init.1.unwrap();
 
     let template_info = TemplateInfo::new(template_id, None);
@@ -627,8 +624,7 @@ pub fn bio_enrollment_remove(
         Some(BioCmd::RemoveEnrollment),
         Some(template_info),
         None,
-    )
-    .map_err(Error::msg)?;
+    )?;
     if util::is_debug() {
         println!("{}", data);
     }

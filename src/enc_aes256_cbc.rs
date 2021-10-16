@@ -27,12 +27,7 @@ pub fn encrypt_message(key: &[u8; 32], message: &[u8]) -> Vec<u8> {
 
     // get result
     let mut result = Vec::<u8>::new();
-    result.extend(
-        output
-            .take_read_buffer()
-            .take_remaining()
-            .iter().copied(),
-    );
+    result.extend(output.take_read_buffer().take_remaining().iter().copied());
 
     result
 }
@@ -61,12 +56,7 @@ pub fn decrypt_message(key: &[u8; 32], message: &[u8]) -> Vec<u8> {
 
     // get result
     let mut result = Vec::<u8>::new();
-    result.extend(
-        output
-            .take_read_buffer()
-            .take_remaining()
-            .iter().copied(),
-    );
+    result.extend(output.take_read_buffer().take_remaining().iter().copied());
 
     result
 }

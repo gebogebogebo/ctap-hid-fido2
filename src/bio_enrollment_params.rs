@@ -1,8 +1,8 @@
 use crate::pintoken::PinToken;
 use crate::str_buf::StrBuf;
+use crate::util;
 use crate::FidoKeyHid;
 use std::fmt;
-use crate::util;
 
 #[derive(Debug, Default, Clone)]
 pub struct BioSensorInfo {
@@ -15,26 +15,31 @@ impl fmt::Display for BioSensorInfo {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let mut strbuf = StrBuf::new(0);
         strbuf.addln("- Modality");
-        strbuf.addln(&format!("  - {:?}",self.modality));
+        strbuf.addln(&format!("  - {:?}", self.modality));
 
         strbuf.addln("- Fingerprint kind");
         match self.fingerprint_kind {
             FingerprintKind::TouchType => {
                 strbuf.addln("  - touch type fingerprints");
-            },
+            }
             FingerprintKind::SwipeType => {
                 strbuf.addln("  - swipe type fingerprints");
-            },
+            }
             _ => {
                 strbuf.addln("  - unknown");
             }
         }
 
         strbuf.addln("- Maximum good samples required for enrollment");
-        strbuf.addln(&format!("  - {:?}",self.max_capture_samples_required_for_enroll));
+        strbuf.addln(&format!(
+            "  - {:?}",
+            self.max_capture_samples_required_for_enroll
+        ));
 
-        strbuf.addln("- Maximum number of bytes the authenticator will accept as a templateFriendlyName");
-        strbuf.addln(&format!("  - {:?}",self.max_template_friendly_name));
+        strbuf.addln(
+            "- Maximum number of bytes the authenticator will accept as a templateFriendlyName",
+        );
+        strbuf.addln(&format!("  - {:?}", self.max_template_friendly_name));
 
         write!(f, "{}", strbuf.build())
     }
