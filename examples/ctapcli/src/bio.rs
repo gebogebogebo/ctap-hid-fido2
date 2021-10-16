@@ -7,6 +7,7 @@ use ctap_hid_fido2::bio_enrollment_params::TemplateInfo;
 #[allow(unused_imports)]
 use ctap_hid_fido2::util;
 use ctap_hid_fido2::{InfoOption, Key};
+use ctap_hid_fido2::verifier;
 
 extern crate clap;
 
@@ -25,12 +26,16 @@ pub fn bio(matches: &clap::ArgMatches) -> Result<()> {
         println!("Delete a fingerprint.");
     } else if matches.is_present("info") {
         println!("Display sensor info.");
+    } else if matches.is_present("test") {
+        println!("Test register and authenticate.");
     } else {
         println!("List registered biometric authenticate data.");
     }
 
     if matches.is_present("info") {
         spec()?;
+    } else if matches.is_present("test") {
+        bio_test(matches)?;
     } else {
         let pin = common::get_pin();
         //let pin = "1234";
@@ -137,5 +142,102 @@ fn delete(matches: &clap::ArgMatches, pin: &str) -> Result<()> {
 
     ctap_hid_fido2::bio_enrollment_remove(&Key::auto(), Some(pin), util::to_str_hex(template_id))?;
     println!("- Success\n");
+    Ok(())
+}
+
+fn bio_test(matches: &clap::ArgMatches) -> Result<()> {
+    let log = matches.value_of("test").unwrap();
+
+    let rpid = "ctapcli.test";
+    let pin = None;
+    let challenge = verifier::create_challenge();
+    let pad_to_width = 42;
+
+    // Register
+    println!();
+    println!("Register");
+    if !log.is_empty() {
+        let mut strbuf = StrBuf::new(pad_to_width);
+        println!(
+            "{}",
+            strbuf
+                .appent("make_credential()")
+                .append("- rpid", &rpid)
+                .appenh("- challenge", &challenge)
+                .build()
+        );
+    }
+    let att = ctap_hid_fido2::make_credential(
+            &Key::auto(),
+            rpid,
+            &challenge,
+            pin
+    )?;
+
+    if !log.is_empty() {
+        println!("Attestation");
+        println!("{}", att);
+    }
+
+    println!("Verify");
+    let verify_result = verifier::verify_attestation(rpid, &challenge, &att);
+
+    if !log.is_empty() {
+        let mut strbuf = StrBuf::new(pad_to_width);
+        println!(
+            "{}",
+            strbuf
+                .append("- is_success", &verify_result.is_success)
+                .appenh("- credential_id", &verify_result.credential_id)
+                .build()
+        );
+    }
+
+    println!("Register Success !!");
+    println!();
+
+    // Authenticate
+    let challenge = verifier::create_challenge();
+
+    println!("Authenticate");
+    if !log.is_empty() {
+        let mut strbuf = StrBuf::new(pad_to_width);
+        println!(
+            "{}",
+            strbuf
+                .appent("get_assertion()")
+                .appenh("- challenge", &challenge)
+                .build()
+        );
+    }
+
+    let ass = ctap_hid_fido2::get_assertion(
+            &Key::auto(),
+            rpid,
+            &challenge,
+            &verify_result.credential_id,
+            pin,
+    )?;
+
+    if !log.is_empty() {
+        println!("Assertion");
+        println!("{}", ass);
+    }
+
+    println!("Verify");
+    let is_success = verifier::verify_assertion(
+        rpid,
+        &verify_result.credential_publickey_der,
+        &challenge,
+        &ass,
+    );
+    if !log.is_empty() {
+        println!("- is_success = {:?}", is_success);
+    }
+
+    println!("Authenticate Success !!");
+
+    println!("\nRegister and Authenticate Success\n");
+
     Ok(())
 }

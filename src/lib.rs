@@ -247,7 +247,7 @@ pub fn make_credential(
     pin: Option<&str>,
 ) -> Result<make_credential_params::Attestation> {
     let device = get_device(hid_params)?;
-    make_credential::make_credential(&device, rpid, challenge, pin, false, None, None, None)
+    make_credential::make_credential(&device, rpid, challenge, pin, false, None, /*None,*/ None)
         .map_err(Error::msg)
 }
 
@@ -260,7 +260,7 @@ pub fn make_credential_with_extensions(
 ) -> Result<make_credential_params::Attestation> {
     let device = get_device(hid_params)?;
     make_credential::make_credential(
-        &device, rpid, challenge, pin, false, None, None, extensions,
+        &device, rpid, challenge, pin, false, None, /*None,*/ extensions,
     )
     .map_err(Error::msg)
 }
@@ -281,7 +281,7 @@ pub fn make_credential_rk(
         pin,
         true,
         Some(rkparam),
-        None,
+        //None,
         None,
     )
     .map_err(Error::msg)
@@ -294,7 +294,7 @@ pub fn make_credential_without_pin(
     challenge: &[u8],
 ) -> Result<make_credential_params::Attestation> {
     let device = get_device(hid_params)?;
-    make_credential::make_credential(&device, rpid, challenge, None, false, None, None, None)
+    make_credential::make_credential(&device, rpid, challenge, None, false, None, /*None,*/ None)
         .map_err(Error::msg)
 }
 
@@ -307,6 +307,7 @@ pub fn get_assertion(
     pin: Option<&str>,
 ) -> Result<get_assertion_params::Assertion> {
     let device = get_device(hid_params)?;
+
     let asss = get_assertion::get_assertion(
         &device,
         rpid,
@@ -314,7 +315,7 @@ pub fn get_assertion(
         credential_id,
         pin,
         true,
-        None,
+        //None,
         None,
     )?;
     Ok(asss[0].clone())
@@ -337,7 +338,7 @@ pub fn get_assertion_with_extensios(
         credential_id,
         pin,
         true,
-        None,
+        //None,
         extensions,
     )?;
     Ok(asss[0].clone())
@@ -352,7 +353,7 @@ pub fn get_assertions_rk(
 ) -> Result<Vec<get_assertion_params::Assertion>> {
     let device = get_device(hid_params)?;
     let dmy: [u8; 0] = [];
-    get_assertion::get_assertion(&device, rpid, challenge, &dmy, pin, true, None, None)
+    get_assertion::get_assertion(&device, rpid, challenge, &dmy, pin, true, /*None,*/ None)
 }
 
 #[derive(Debug, Clone, PartialEq)]

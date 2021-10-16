@@ -14,10 +14,11 @@ fn main() -> Result<()> {
     let key = if key_auto { Key::auto() } else { Key::get() };
 
     // parameter
-    let hmac_make=false;
-    let hmac_get=false;
+    let hmac_make=true;
+    let hmac_get=true;
     let rpid = "test.com";
-    let pin = "1234";
+    let pin = Some("1234");
+    //let pin = None;
     let challenge = verifier::create_challenge();
 
     // Register
@@ -39,7 +40,7 @@ fn main() -> Result<()> {
             &key,
             rpid,
             &challenge,
-            Some(pin),
+            pin,
             Some(&vec![ext]),
         )?
     }else{
@@ -47,7 +48,7 @@ fn main() -> Result<()> {
             &key,
             rpid,
             &challenge,
-            Some(pin),
+            pin
         )?
     };
 
@@ -88,7 +89,7 @@ fn main() -> Result<()> {
             rpid,
             &challenge,
             &verify_result.credential_id,
-            Some(pin),
+            pin,
             Some(&vec![ext]),
         )?    
     }else{
@@ -97,7 +98,7 @@ fn main() -> Result<()> {
             rpid,
             &challenge,
             &verify_result.credential_id,
-            Some(pin),
+            pin,
         )?
     };
 

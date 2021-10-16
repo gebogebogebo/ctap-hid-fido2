@@ -45,13 +45,13 @@ fn main() -> Result<()> {
                 .about("PIN management\n- Get PIN retry counter without any FLAGS and OPTIONS.")
                 .arg(
                     Arg::with_name("new")
-                        .help("set new pin")
+                        .help("Set new pin")
                         .short("n")
                         .long("new")
                 )
                 .arg(
                     Arg::with_name("change")
-                        .help("change pin")
+                        .help("Change pin")
                         .short("c")
                         .long("change")
                 )
@@ -61,7 +61,7 @@ fn main() -> Result<()> {
                 .about("Get Authenticator infomation\n- List All Infomation without any FLAGS and OPTIONS.")
                 .arg(
                     Arg::with_name("get")
-                        .help("get a item(rk/up/uv/plat/pin/mgmtp/mgmt/biop/bio/u2f_v2/fido2/fido21p/fido21/hmac)")
+                        .help("Get a item(rk/up/uv/plat/pin/mgmtp/mgmt/biop/bio/u2f_v2/fido2/fido21p/fido21/hmac)")
                         .short("g")
                         .long("get")
                         .takes_value(true)
@@ -73,13 +73,13 @@ fn main() -> Result<()> {
                 .about("Record some short texts in Authenticator\n- Get a Memo without any FLAGS and OPTIONS.")
                 .arg(
                     Arg::with_name("add")
-                        .help("add a memo")
+                        .help("Add a memo")
                         .short("a")
                         .long("add")
                 )
                 .arg(
                     Arg::with_name("get")
-                        .help("get a memo to Clipboard")
+                        .help("Get a memo to Clipboard")
                         .short("g")
                         .long("get")
                         .takes_value(true)
@@ -87,7 +87,7 @@ fn main() -> Result<()> {
                 )
                 .arg(
                     Arg::with_name("del")
-                        .help("delete a memo")
+                        .help("Delete a memo")
                         .short("d")
                         .long("del")
                         .takes_value(true)
@@ -95,7 +95,7 @@ fn main() -> Result<()> {
                 )
                 .arg(
                     Arg::with_name("list")
-                        .help("list all memos")
+                        .help("List all memos")
                         .short("l")
                         .long("list")
                 )
@@ -105,30 +105,39 @@ fn main() -> Result<()> {
                 .about("Bio management\n- List registered biometric authenticate data. without any FLAGS and OPTIONS.")
                 .arg(
                     Arg::with_name("list")
-                        .help("list bio")
+                        .help("List bio")
                         .short("l")
                         .long("list")
                 )
                 .arg(
                     Arg::with_name("info")
-                        .help("display sensor info")
+                        .help("Display sensor info")
                         .short("i")
                         .long("info")
                 )
                 .arg(
                     Arg::with_name("enroll")
-                        .help("enrolling fingerprint")
+                        .help("Enrolling fingerprint")
                         .short("e")
                         .long("enroll"),
                 )
                 .arg(
                     Arg::with_name("delete")
-                        .help("delete fingerprint")
+                        .help("Delete fingerprint")
                         .short("d")
                         .long("delete")
                         .takes_value(true)
                         .value_name("templateId")
                 )
+                .arg(
+                    Arg::with_name("test")
+                        .help("Test register and authenticate")
+                        .short("t")
+                        .long("test")
+                        .takes_value(true)
+                        .value_name("log")
+                        .default_value("")
+                    )
         );
     /*
     .subcommand(

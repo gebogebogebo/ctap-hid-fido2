@@ -18,21 +18,19 @@ pub fn make_credential(
     pin: Option<&str>,
     rk: bool,
     rkparam: Option<&PublicKeyCredentialUserEntity>,
-    uv: Option<bool>,
+    //uv: Option<bool>,
     extensions: Option<&Vec<Extension>>,
 ) -> Result<make_credential_params::Attestation, String> {
     // init
     let cid = ctaphid::ctaphid_init(device)?;
 
-    /*
     // uv
     let uv = {
         match pin {
-            Some(_) => false,
-            None => true,
+            Some(_) => None,
+            None => Some(true),
         }
     };
-    */
 
     let user_id = {
         if let Some(rkp) = rkparam {
