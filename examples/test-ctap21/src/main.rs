@@ -8,7 +8,6 @@ use ctap_hid_fido2;
 use ctap_hid_fido2::util;
 use ctap_hid_fido2::{str_buf, Key};
 
-mod bio;
 mod info;
 
 fn main() -> Result<()> {
@@ -64,45 +63,6 @@ fn main() -> Result<()> {
                         .long("param")
                         .takes_value(true)
                         .value_name("param type"),
-                ),
-        )
-        .subcommand(
-            SubCommand::with_name("bio_enrollment")
-                .about("authenticatorBioEnrollment (0x09)")
-                .arg(
-                    Arg::with_name("info")
-                        .help("Get fingerprint sensor info")
-                        .short("i")
-                        .long("info"),
-                )
-                .arg(
-                    Arg::with_name("enumerate")
-                        .help("Enumerate enrollments")
-                        .short("e")
-                        .long("enumerate"),
-                )
-                .arg(
-                    Arg::with_name("enroll")
-                        .help("Enrolling fingerprint")
-                        .short("n")
-                        .long("enroll"),
-                )
-                .arg(
-                    Arg::with_name("rename")
-                        .help("Rename/Set FriendlyName")
-                        .short("r")
-                        .long("rename")
-                        .takes_value(true)
-                        .value_name("templateId")
-                        .value_name("templateFriendlyName"),
-                )
-                .arg(
-                    Arg::with_name("delete")
-                        .help("Delete enrollment")
-                        .short("d")
-                        .long("delete")
-                        .takes_value(true)
-                        .value_name("templateId"),
                 ),
         );
 
@@ -176,10 +136,6 @@ fn main() -> Result<()> {
     if let Some(ref matches) = matches.subcommand_matches("info") {
         println!("Get the Authenticator infomation.\n");
         info::info(&matches)?;
-    }
-
-    if let Some(ref matches) = matches.subcommand_matches("bio_enrollment") {
-        bio::bio_main(&matches, Some("1234"))?;
     }
 
     /*
