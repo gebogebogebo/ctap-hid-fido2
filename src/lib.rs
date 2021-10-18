@@ -847,13 +847,11 @@ mod tests {
             make_credential_command::create_payload(params, None)
         };
 
-        if util::is_debug() == true {
-            println!(
-                "- make_credential({:02})    = {:?}",
-                send_payload.len(),
-                util::to_hex_str(&send_payload)
-            );
-        }
+        //println!(
+        //    "- make_credential({:02})    = {:?}",
+        //    send_payload.len(),
+        //    util::to_hex_str(&send_payload)
+        //);
 
         let command = hex::encode(send_payload).to_uppercase();
         assert_eq!(command, check);

@@ -7,8 +7,6 @@ use crate::get_assertion_params::Extension as Gext;
 use crate::get_assertion_response;
 use crate::get_next_assertion_command;
 use crate::hmac::HmacExt;
-#[allow(unused_imports)]
-use crate::util;
 use crate::FidoKeyHid;
 use anyhow::{Error, Result};
 
@@ -58,15 +56,9 @@ pub fn get_assertion(
 
         get_assertion_command::create_payload(params, hmac_ext)
     };
-    if device.enable_log {
-        util::debugp("- get_assertion", &send_payload);
-    }
 
     // send & response
     let response_cbor = ctaphid::ctaphid_cbor(&device, &cid, &send_payload).map_err(Error::msg)?;
-    if device.enable_log {
-        util::debugp("- response_cbor", &response_cbor);
-    }
 
     let ass = get_assertion_response::parse_cbor(&response_cbor).map_err(Error::msg)?;
 

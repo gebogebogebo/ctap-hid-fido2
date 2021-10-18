@@ -258,7 +258,8 @@ fn ctaphid_cbormsg(
 ) -> Result<Vec<u8>, String> {
     if device.enable_log {
         println!();
-        println!("-- send cbor = {}", util::to_hex_str(payload));
+        println!("-- send cbor({:02})", payload.len());
+        println!("{}", util::to_hex_str(payload));
         println!("--");
     }
 
@@ -362,7 +363,7 @@ fn ctaphid_cbormsg(
 
         if device.enable_log {
             println!();
-            println!("## response cbor");
+            println!("## response cbor({:02})", data.len());
             println!("{}", util::to_hex_str(&data));
             println!("##");
         }

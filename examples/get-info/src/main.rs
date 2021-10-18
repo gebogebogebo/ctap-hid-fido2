@@ -1,14 +1,18 @@
+use ctap_hid_fido2::Cfg;
 use ctap_hid_fido2::Key;
 
 fn main() {
     ctap_hid_fido2::hello();
 
     let key_auto = true;
+
     println!(
         "----- get-info start : key_auto = {:?} -----",
         key_auto
     );
-    let key = if key_auto { Key::auto() } else { Key::get() };
+    let mut cfg = Cfg::init();
+    //cfg.enable_log = true;
+    cfg.hid_params = if key_auto { Key::auto() } else { Key::get() };
 
     println!("get_hid_devices()");
     let devs = ctap_hid_fido2::get_hid_devices();
@@ -29,19 +33,19 @@ fn main() {
     }
     
     println!("get_info()");
-    match ctap_hid_fido2::get_info(&key) {
+    match ctap_hid_fido2::get_info(&cfg) {
         Ok(info) => println!("{}", info),
         Err(e) => println!("error: {:?}", e),
     }
 
     println!("get_pin_retries()");
-    match ctap_hid_fido2::get_pin_retries(&key) {
+    match ctap_hid_fido2::get_pin_retries(&cfg) {
         Ok(info) => println!("{}", info),
         Err(e) => println!("error: {:?}", e),
     }
 
     println!("get_info_u2f()");
-    match ctap_hid_fido2::get_info_u2f(&key) {
+    match ctap_hid_fido2::get_info_u2f(&cfg) {
         Ok(info) => println!("{}", info),
         Err(e) => println!("error: {:?}", e),
     }

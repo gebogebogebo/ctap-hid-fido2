@@ -3,6 +3,7 @@ use ctap_hid_fido2::get_assertion_params::Extension as Gext;
 use ctap_hid_fido2::make_credential_params::Extension as Mext;
 use ctap_hid_fido2::str_buf::StrBuf;
 use ctap_hid_fido2::verifier;
+use ctap_hid_fido2::Cfg;
 use ctap_hid_fido2::Key;
 
 fn main() -> Result<()> {
@@ -11,7 +12,9 @@ fn main() -> Result<()> {
         "----- test-with-pin-non-rk start : key_auto = {:?} -----",
         key_auto
     );
-    let key = if key_auto { Key::auto() } else { Key::get() };
+    let mut cfg = Cfg::init();
+    //cfg.enable_log = true;
+    cfg.hid_params = if key_auto { Key::auto() } else { Key::get() };
 
     // parameter
     let hmac_make=true;
@@ -37,7 +40,7 @@ fn main() -> Result<()> {
         // with extensions
         let ext = Mext::HmacSecret(Some(true));
         ctap_hid_fido2::make_credential_with_extensions(
-            &key,
+            &cfg,
             rpid,
             &challenge,
             pin,
@@ -45,7 +48,7 @@ fn main() -> Result<()> {
         )?
     }else{
         ctap_hid_fido2::make_credential(
-            &key,
+            &cfg,
             rpid,
             &challenge,
             pin
@@ -85,7 +88,7 @@ fn main() -> Result<()> {
     let ass = if hmac_get{
         let ext = Gext::create_hmac_secret_from_string("this is test");
         ctap_hid_fido2::get_assertion_with_extensios(
-            &key,
+            &cfg,
             rpid,
             &challenge,
             &verify_result.credential_id,
@@ -94,7 +97,7 @@ fn main() -> Result<()> {
         )?    
     }else{
         ctap_hid_fido2::get_assertion(
-            &key,
+            &cfg,
             rpid,
             &challenge,
             &verify_result.credential_id,
