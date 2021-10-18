@@ -20,7 +20,9 @@ mod pin;
 use once_cell::sync::Lazy;
 static CFG: Lazy<Cfg> = Lazy::new(|| load_cfg());
 fn load_cfg() -> ctap_hid_fido2::Cfg {
-    Cfg::init()
+    let cfg = Cfg::init();
+    //cfg.enable_log = true;
+    cfg
 }
 
 fn main() -> Result<()> {
