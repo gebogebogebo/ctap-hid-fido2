@@ -1,3 +1,4 @@
+extern crate clap;
 use anyhow::{anyhow, Result};
 
 use crate::common;
@@ -6,13 +7,13 @@ use ctap_hid_fido2::bio_enrollment_params::EnrollStatus1;
 #[allow(unused_imports)]
 use ctap_hid_fido2::util;
 use ctap_hid_fido2::verifier;
-use ctap_hid_fido2::{InfoOption, Key, Cfg};
-
-extern crate clap;
+use ctap_hid_fido2::{InfoOption, Key};
+use crate::CFG;
 
 #[allow(dead_code)]
-pub fn bio(matches: &clap::ArgMatches, cfg: &Cfg) -> Result<()> {
-    if !(is_supported(cfg)?) {
+pub fn bio(matches: &clap::ArgMatches) -> Result<()> {
+
+    if !(is_supported()?) {
         return Err(anyhow!(
             "This authenticator is not supported for this functions."
         ));
@@ -32,27 +33,27 @@ pub fn bio(matches: &clap::ArgMatches, cfg: &Cfg) -> Result<()> {
     }
 
     if matches.is_present("info") {
-        spec(cfg)?;
+        spec()?;
     } else if matches.is_present("test") || matches.is_present("test-with-log") {
-        bio_test(matches, cfg)?;
+        bio_test(matches)?;
     } else {
         let pin = common::get_pin();
         //let pin = "1234";
 
         if matches.is_present("delete") {
-            delete(matches, cfg, &pin)?;
+            delete(matches, &pin)?;
         } else if matches.is_present("enroll") {
-            let template_id = bio_enrollment(cfg, &pin)?;
-            rename(cfg, &pin, &template_id)?;
+            let template_id = bio_enrollment(&pin)?;
+            rename(&pin, &template_id)?;
         } else {
-            list(cfg, &pin)?;
+            list(&pin)?;
         }
     }
 
     Ok(())
 }
 
-fn rename(cfg: &Cfg, pin: &str, template_id: &[u8]) -> Result<()> {
+fn rename(pin: &str, template_id: &[u8]) -> Result<()> {
     println!("templateId: {:?}", util::to_hex_str(template_id));
     println!();
 
@@ -61,7 +62,7 @@ fn rename(cfg: &Cfg, pin: &str, template_id: &[u8]) -> Result<()> {
     println!();
 
     ctap_hid_fido2::bio_enrollment_set_friendly_name(
-        cfg,
+        &CFG,
         pin,
         template_id,
         &template_name,
@@ -70,8 +71,8 @@ fn rename(cfg: &Cfg, pin: &str, template_id: &[u8]) -> Result<()> {
     Ok(())
 }
 
-fn bio_enrollment(cfg: &Cfg, pin: &str) -> Result<Vec<u8>> {
-    let info = ctap_hid_fido2::bio_enrollment_get_fingerprint_sensor_info(cfg)?;
+fn bio_enrollment(pin: &str) -> Result<Vec<u8>> {
+    let info = ctap_hid_fido2::bio_enrollment_get_fingerprint_sensor_info(&CFG)?;
 
     println!("bio enrollment");
     println!(
@@ -85,11 +86,11 @@ fn bio_enrollment(cfg: &Cfg, pin: &str) -> Result<Vec<u8>> {
     println!();
 
     let (enroll_status1, enroll_status2) =
-        ctap_hid_fido2::bio_enrollment_begin(cfg, pin, Some(10000))?;
+        ctap_hid_fido2::bio_enrollment_begin(&CFG, pin, Some(10000))?;
     println!("{}\n", enroll_status2);
 
     for _counter in 0..10 {
-        if bio_enrollment_next(cfg, &enroll_status1)? {
+        if bio_enrollment_next(&enroll_status1)? {
             break;
         }
     }
@@ -97,14 +98,14 @@ fn bio_enrollment(cfg: &Cfg, pin: &str) -> Result<Vec<u8>> {
     Ok(enroll_status1.template_id)
 }
 
-fn bio_enrollment_next(cfg: &Cfg, enroll_status1: &EnrollStatus1) -> Result<bool> {
+fn bio_enrollment_next(enroll_status1: &EnrollStatus1) -> Result<bool> {
     println!("bio enrollment Status");
-    let enroll_status2 = ctap_hid_fido2::bio_enrollment_next(cfg, enroll_status1, Some(10000))?;
+    let enroll_status2 = ctap_hid_fido2::bio_enrollment_next(&CFG, enroll_status1, Some(10000))?;
     println!("{}\n", enroll_status2);
     Ok(enroll_status2.is_finish)
 }
 
-fn is_supported(cfg: &Cfg) -> Result<bool> {
+fn is_supported() -> Result<bool> {
     if ctap_hid_fido2::enable_info_option(&Key::auto(), &InfoOption::BioEnroll)?.is_some() {
         return Ok(true);
     }
@@ -118,8 +119,8 @@ fn is_supported(cfg: &Cfg) -> Result<bool> {
     }
 }
 
-fn list(cfg: &Cfg, pin: &str) -> Result<()> {
-    let template_infos = ctap_hid_fido2::bio_enrollment_enumerate_enrollments(cfg, pin)?;
+fn list(pin: &str) -> Result<()> {
+    let template_infos = ctap_hid_fido2::bio_enrollment_enumerate_enrollments(&CFG, pin)?;
     let mut strbuf = StrBuf::new(0);
     strbuf.addln("");
     strbuf.append("Number of registrations", &template_infos.len());
@@ -131,24 +132,24 @@ fn list(cfg: &Cfg, pin: &str) -> Result<()> {
     Ok(())
 }
 
-fn spec(cfg: &Cfg) -> Result<()> {
-    let sensor_info = ctap_hid_fido2::bio_enrollment_get_fingerprint_sensor_info(cfg)?;
+fn spec() -> Result<()> {
+    let sensor_info = ctap_hid_fido2::bio_enrollment_get_fingerprint_sensor_info(&CFG)?;
     println!("{}", sensor_info);
     Ok(())
 }
 
-fn delete(matches: &clap::ArgMatches, cfg: &Cfg, pin: &str) -> Result<()> {
+fn delete(matches: &clap::ArgMatches, pin: &str) -> Result<()> {
     let template_id = matches.value_of("delete").unwrap();
     println!("Delete enrollment");
     println!("value for templateId: {:?}", template_id);
     println!();
 
-    ctap_hid_fido2::bio_enrollment_remove(cfg, pin, &util::to_str_hex(template_id))?;
+    ctap_hid_fido2::bio_enrollment_remove(&CFG, pin, &util::to_str_hex(template_id))?;
     println!("- Success\n");
     Ok(())
 }
 
-fn bio_test(matches: &clap::ArgMatches, cfg: &Cfg) -> Result<()> {
+fn bio_test(matches: &clap::ArgMatches) -> Result<()> {
     let log = if matches.is_present("test-with-log") {
         true
     } else {

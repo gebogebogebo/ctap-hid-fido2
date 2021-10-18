@@ -17,7 +17,14 @@ mod info;
 mod memo;
 mod pin;
 
+use once_cell::sync::Lazy;
+static CFG: Lazy<Cfg> = Lazy::new(|| load_cfg());
+fn load_cfg() -> ctap_hid_fido2::Cfg {
+    Cfg::init()
+}
+
 fn main() -> Result<()> {
+
     let app = App::new("ctapcli")
         .version("0.0.7")
         .author("gebo")
@@ -184,11 +191,9 @@ fn main() -> Result<()> {
         }
     }
 
-    let cfg = Cfg::init();
-
     if matches.is_present("wink") {
         println!("Blink LED on FIDO key.\n");
-        ctap_hid_fido2::wink(&cfg)?;
+        ctap_hid_fido2::wink(&CFG)?;
         println!("Do you see that wink? ;-)\n");
     }
 
@@ -209,7 +214,7 @@ fn main() -> Result<()> {
 
     if let Some(matches) = matches.subcommand_matches("bio") {
         println!("Bio Management.\n");
-        bio::bio(matches, &cfg)?;
+        bio::bio(matches)?;
     }
 
     /*
