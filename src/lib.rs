@@ -464,7 +464,7 @@ pub fn bio_enrollment_get_fingerprint_sensor_info(
     // 6.7.2. Get bio modality
     let data1 = bio_enrollment::bio_enrollment(&device, &init.0, None, None, None, None)
         .map_err(Error::msg)?;
-    if util::is_debug() {
+    if cfg.enable_log {
         println!("{}", data1);
     }
 
@@ -479,7 +479,7 @@ pub fn bio_enrollment_get_fingerprint_sensor_info(
     )
     .map_err(Error::msg)?;
 
-    if util::is_debug() {
+    if cfg.enable_log {
         println!("{}", data2);
     }
 
@@ -622,7 +622,7 @@ pub fn bio_enrollment_set_friendly_name(
         Some(template_info),
         None,
     )?;
-    if util::is_debug() {
+    if cfg.enable_log {
         println!("{}", data);
     }
     Ok(())
@@ -643,7 +643,7 @@ pub fn bio_enrollment_remove(cfg: &LibCfg, pin: &str, template_id: &[u8]) -> Res
         Some(template_info),
         None,
     )?;
-    if util::is_debug() {
+    if cfg.enable_log {
         println!("{}", data);
     }
     Ok(())

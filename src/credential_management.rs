@@ -38,12 +38,12 @@ pub(crate) fn credential_management(
         pkcue,
     );
 
-    if util::is_debug() {
+    if device.enable_log {
         println!("send(cbor) = {}", util::to_hex_str(&send_payload));
     }
 
     let response_cbor = ctaphid::ctaphid_cbor(device, &cid, &send_payload).map_err(Error::msg)?;
-    if util::is_debug() {
+    if device.enable_log {
         println!("response(cbor) = {}", util::to_hex_str(&response_cbor));
     }
 

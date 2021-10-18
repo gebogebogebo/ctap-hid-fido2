@@ -267,7 +267,7 @@ pub fn is_bootloader_mode(cfg: &Cfg) -> Result<bool> {
         Err(_) => return Ok(false),
     };
 
-    if util::is_debug() {
+    if cfg.enable_log {
         println!(
             "- response({:02})    = {:?}",
             response.len(),
