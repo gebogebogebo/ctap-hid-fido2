@@ -227,10 +227,25 @@ pub fn ctaphid_wink(device: &FidoKeyHid, cid: &[u8]) -> Result<(), String> {
     cmd[6] = 0x00;
     cmd[7] = 0x00;
 
-    //println!("CTAPHID_WINK = {}", util::to_hex_str(&cmd));
+    if device.enable_log {
+        println!(
+            "- wink({:02})    = {:?}",
+            cmd.len(),
+            util::to_hex_str(&cmd)
+        );
+    }
 
     device.write(&cmd)?;
+
     let _buf = device.read()?;
+
+    if device.enable_log {
+        println!(
+            "- response wink({:02})    = {:?}",
+            _buf.len(),
+            util::to_hex_str(&_buf)
+        );
+    }
 
     Ok(())
 }

@@ -2,16 +2,42 @@ use crate::str_buf::StrBuf;
 use hidapi::HidApi;
 
 pub struct FidoKeyHid {
-    pub device: hidapi::HidDevice,
+    device_internal: hidapi::HidDevice,
+    pub enable_log: bool,
+    pub use_pre_bio_enrollment: bool,
+    pub use_pre_credential_management: bool,
 }
 
 impl FidoKeyHid {
-    pub fn new(params: &[crate::HidParam]) -> Result<FidoKeyHid, String> {
+    pub fn new_2(params: &[crate::HidParam],cfg: &crate::LibCfg) -> Result<FidoKeyHid, String> {
         let api = HidApi::new().expect("Failed to create HidApi instance");
         for param in params {
             if let Some(dev_info) = FidoKeyHid::get_path(&api, param, 0xf1d0) {
                 if let Ok(dev) = api.open_path(dev_info.path()) {
-                    let result = FidoKeyHid { device: dev };
+                    let result = FidoKeyHid {
+                        device_internal: dev,
+                        enable_log: cfg.enable_log,
+                        use_pre_bio_enrollment: cfg.use_pre_bio_enrollment,
+                        use_pre_credential_management: cfg.use_pre_credential_management,
+                    };
+                    return Ok(result);
+                }
+            }
+        }
+        Err("Failed to open device.".into())
+    }
+
+    pub fn new_old(params: &[crate::HidParam]) -> Result<FidoKeyHid, String> {
+        let api = HidApi::new().expect("Failed to create HidApi instance");
+        for param in params {
+            if let Some(dev_info) = FidoKeyHid::get_path(&api, param, 0xf1d0) {
+                if let Ok(dev) = api.open_path(dev_info.path()) {
+                    let result = FidoKeyHid {
+                        device_internal: dev,
+                        enable_log: false,      // TODO
+                        use_pre_bio_enrollment: false,
+                        use_pre_credential_management: false,
+                    };
                     return Ok(result);
                 }
             }
@@ -73,7 +99,7 @@ impl FidoKeyHid {
     }
 
     pub fn write(&self, cmd: &[u8]) -> Result<usize, String> {
-        match self.device.write(cmd) {
+        match self.device_internal.write(cmd) {
             Ok(size) => Ok(size),
             Err(_) => Err("write error".into()),
         }
@@ -81,7 +107,7 @@ impl FidoKeyHid {
 
     pub fn read(&self) -> Result<Vec<u8>, String> {
         let mut buf: Vec<u8> = vec![0; 64];
-        match self.device.read(&mut buf[..]) {
+        match self.device_internal.read(&mut buf[..]) {
             Ok(_) => Ok(buf),
             Err(_) => Err("read error".into()),
         }

@@ -81,6 +81,24 @@ use crate::fidokey::*;
 use crate::fidokey_pi::*;
 
 pub type Key = HidParam;
+pub type Cfg = LibCfg;
+
+pub struct LibCfg {
+    pub hid_params: Vec<HidParam>,
+    pub enable_log: bool,
+    pub use_pre_bio_enrollment: bool,
+    pub use_pre_credential_management: bool,
+}
+impl LibCfg {
+    pub fn init() -> Self {
+        LibCfg {
+            hid_params: HidParam::auto(),
+            enable_log: false,
+            use_pre_bio_enrollment: false,
+            use_pre_credential_management: false, 
+        }
+    }
+}
 
 /// HID device vendor ID , product ID
 pub struct HidParam {
@@ -170,9 +188,9 @@ pub fn get_fidokey_devices() -> Vec<(String, HidParam)> {
     FidoKeyHid::get_hid_devices(Some(0xf1d0))
 }
 
-pub fn get_device(hid_params: &[HidParam]) -> Result<FidoKeyHid> {
+fn get_device_old(hid_params: &[HidParam]) -> Result<FidoKeyHid> {
     let device = if hid_params.len() > 0 {
-        FidoKeyHid::new(hid_params).map_err(Error::msg)?
+        FidoKeyHid::new_old(hid_params).map_err(Error::msg)?
     } else {
         let devs = get_fidokey_devices();
         if devs.is_empty() {
@@ -183,33 +201,51 @@ pub fn get_device(hid_params: &[HidParam]) -> Result<FidoKeyHid> {
             vid: devs[0].1.vid,
             pid: devs[0].1.pid,
         }];
-        FidoKeyHid::new(&params).map_err(Error::msg)?
+        FidoKeyHid::new_old(&params).map_err(Error::msg)?
+    };
+    Ok(device)
+}
+
+fn get_device(cfg: &LibCfg) -> Result<FidoKeyHid> {
+    let device = if cfg.hid_params.len() > 0 {
+        FidoKeyHid::new_2(&cfg.hid_params, cfg).map_err(Error::msg)?
+    } else {
+        let devs = get_fidokey_devices();
+        if devs.is_empty() {
+            return Err(anyhow!("FIDO device not found."));
+        }
+
+        let params = vec![HidParam {
+            vid: devs[0].1.vid,
+            pid: devs[0].1.pid,
+        }];
+        FidoKeyHid::new_2(&params, cfg).map_err(Error::msg)?
     };
     Ok(device)
 }
 
 /// Lights the LED on the FIDO key
-pub fn wink(hid_params: &[HidParam]) -> Result<()> {
-    let device = get_device(hid_params)?;
+pub fn wink(cfg: &LibCfg) -> Result<()> {
+    let device = get_device(cfg)?;
     let cid = ctaphid::ctaphid_init(&device).map_err(Error::msg)?;
     ctaphid::ctaphid_wink(&device, &cid).map_err(Error::msg)
 }
 
 /// Get FIDO key information
 pub fn get_info(hid_params: &[HidParam]) -> Result<get_info_params::Info> {
-    let device = get_device(hid_params)?;
+    let device = get_device_old(hid_params)?;
     get_info::get_info(&device)
 }
 
 /// Get FIDO key information (CTAP 1.0)
 pub fn get_info_u2f(hid_params: &[HidParam]) -> Result<String> {
-    let device = get_device(hid_params)?;
+    let device = get_device_old(hid_params)?;
     get_info::get_info_u2f(&device)
 }
 
 /// Get PIN retry count
 pub fn get_pin_retries(hid_params: &[HidParam]) -> Result<i32> {
-    let device = get_device(hid_params)?;
+    let device = get_device_old(hid_params)?;
     let cid = ctaphid::ctaphid_init(&device).map_err(Error::msg)?;
 
     let send_payload =
@@ -225,7 +261,7 @@ pub fn get_pin_retries(hid_params: &[HidParam]) -> Result<i32> {
 
 /// Set New PIN
 pub fn set_new_pin(hid_params: &[HidParam], pin: &str) -> Result<()> {
-    let device = get_device(hid_params)?;
+    let device = get_device_old(hid_params)?;
     let cid = ctaphid::ctaphid_init(&device).map_err(Error::msg)?;
     client_pin::set_pin(&device, &cid, pin)?;
     Ok(())
@@ -233,7 +269,7 @@ pub fn set_new_pin(hid_params: &[HidParam], pin: &str) -> Result<()> {
 
 /// Change PIN
 pub fn change_pin(hid_params: &[HidParam], current_pin: &str, new_pin: &str) -> Result<()> {
-    let device = get_device(hid_params)?;
+    let device = get_device_old(hid_params)?;
     let cid = ctaphid::ctaphid_init(&device).map_err(Error::msg)?;
     client_pin::change_pin(&device, &cid, current_pin, new_pin)?;
     Ok(())
@@ -246,7 +282,7 @@ pub fn make_credential(
     challenge: &[u8],
     pin: Option<&str>,
 ) -> Result<make_credential_params::Attestation> {
-    let device = get_device(hid_params)?;
+    let device = get_device_old(hid_params)?;
     make_credential::make_credential(
         &device, rpid, challenge, pin, false, None, /*None,*/ None,
     )
@@ -259,7 +295,7 @@ pub fn make_credential_with_extensions(
     pin: Option<&str>,
     extensions: Option<&Vec<Mext>>,
 ) -> Result<make_credential_params::Attestation> {
-    let device = get_device(hid_params)?;
+    let device = get_device_old(hid_params)?;
     make_credential::make_credential(
         &device, rpid, challenge, pin, false, None, /*None,*/ extensions,
     )
@@ -273,7 +309,7 @@ pub fn make_credential_rk(
     pin: Option<&str>,
     rkparam: &PublicKeyCredentialUserEntity,
 ) -> Result<make_credential_params::Attestation> {
-    let device = get_device(hid_params)?;
+    let device = get_device_old(hid_params)?;
     make_credential::make_credential(
         &device,
         rpid,
@@ -292,7 +328,7 @@ pub fn make_credential_without_pin(
     rpid: &str,
     challenge: &[u8],
 ) -> Result<make_credential_params::Attestation> {
-    let device = get_device(hid_params)?;
+    let device = get_device_old(hid_params)?;
     make_credential::make_credential(
         &device, rpid, challenge, None, false, None, /*None,*/ None,
     )
@@ -306,7 +342,7 @@ pub fn get_assertion(
     credential_id: &[u8],
     pin: Option<&str>,
 ) -> Result<get_assertion_params::Assertion> {
-    let device = get_device(hid_params)?;
+    let device = get_device_old(hid_params)?;
 
     let asss = get_assertion::get_assertion(
         &device,
@@ -330,7 +366,7 @@ pub fn get_assertion_with_extensios(
     pin: Option<&str>,
     extensions: Option<&Vec<Gext>>,
 ) -> Result<get_assertion_params::Assertion> {
-    let device = get_device(hid_params)?;
+    let device = get_device_old(hid_params)?;
     let asss = get_assertion::get_assertion(
         &device,
         rpid,
@@ -351,7 +387,7 @@ pub fn get_assertions_rk(
     challenge: &[u8],
     pin: Option<&str>,
 ) -> Result<Vec<get_assertion_params::Assertion>> {
-    let device = get_device(hid_params)?;
+    let device = get_device_old(hid_params)?;
     let dmy: [u8; 0] = [];
     get_assertion::get_assertion(
         &device, rpid, challenge, &dmy, pin, true, /*None,*/ None,
@@ -372,7 +408,7 @@ pub enum InfoParam {
 }
 
 pub fn enable_info_param(hid_params: &[HidParam], info_param: &InfoParam) -> Result<bool> {
-    let device = get_device(hid_params)?;
+    let device = get_device_old(hid_params)?;
     let info = get_info::get_info(&device)?;
     let find = match info_param {
         InfoParam::VersionsU2Fv2 => "U2F_V2",
@@ -412,7 +448,7 @@ pub fn enable_info_option(
     hid_params: &[HidParam],
     info_option: &InfoOption,
 ) -> Result<Option<bool>> {
-    let device = get_device(hid_params)?;
+    let device = get_device_old(hid_params)?;
     let info = get_info::get_info(&device)?;
     let find = match info_option {
         InfoOption::Rk => "rk",
@@ -438,9 +474,9 @@ pub fn enable_info_option(
 
 /// BioEnrollment - getFingerprintSensorInfo (CTAP 2.1-PRE)
 pub fn bio_enrollment_get_fingerprint_sensor_info(
-    hid_params: &[HidParam],
+    cfg: &LibCfg,
 ) -> Result<BioSensorInfo> {
-    let device = get_device(hid_params)?;
+    let device = get_device(cfg)?;
     let init = bio_enrollment::bio_enrollment_init(&device, None).map_err(Error::msg)?;
 
     // 6.7.2. Get bio modality
@@ -475,11 +511,11 @@ pub fn bio_enrollment_get_fingerprint_sensor_info(
 
 /// BioEnrollment - EnrollBegin
 pub fn bio_enrollment_begin(
-    hid_params: &[HidParam],
+    cfg: &LibCfg,
     pin: &str,
     timeout_milliseconds: Option<u16>,
 ) -> Result<(EnrollStatus1, EnrollStatus2)> {
-    let device = get_device(hid_params)?;
+    let device = get_device(cfg)?;
     let init = bio_enrollment::bio_enrollment_init(&device, Some(pin))?;
 
     let data = bio_enrollment::bio_enrollment(
@@ -490,7 +526,7 @@ pub fn bio_enrollment_begin(
         None,
         timeout_milliseconds,
     )?;
-    if util::is_debug() {
+    if cfg.enable_log {
         println!("{}", data);
     }
     let result1 = EnrollStatus1 {
@@ -513,6 +549,7 @@ pub fn bio_enrollment_begin(
 
 /// BioEnrollment - CaptureNext
 pub fn bio_enrollment_next(
+    cfg: &LibCfg,
     enroll_status: &EnrollStatus1,
     timeout_milliseconds: Option<u16>,
 ) -> Result<EnrollStatus2> {
@@ -525,7 +562,7 @@ pub fn bio_enrollment_next(
         Some(template_info),
         timeout_milliseconds,
     )?;
-    if util::is_debug() {
+    if cfg.enable_log {
         println!("{}", data);
     }
     let finish = data.last_enroll_sample_status == 0x00 && data.remaining_samples == 0;
@@ -541,7 +578,7 @@ pub fn bio_enrollment_next(
 }
 
 /// BioEnrollment - Cancel current enrollment
-pub fn bio_enrollment_cancel(enroll_status: &EnrollStatus1) -> Result<()> {
+pub fn bio_enrollment_cancel(cfg: &LibCfg, enroll_status: &EnrollStatus1) -> Result<()> {
     let data = bio_enrollment::bio_enrollment(
         &enroll_status.device,
         &enroll_status.cid,
@@ -550,7 +587,7 @@ pub fn bio_enrollment_cancel(enroll_status: &EnrollStatus1) -> Result<()> {
         None,
         None,
     )?;
-    if util::is_debug() {
+    if cfg.enable_log {
         println!("{}", data);
     }
     Ok(())
@@ -559,10 +596,10 @@ pub fn bio_enrollment_cancel(enroll_status: &EnrollStatus1) -> Result<()> {
 /// BioEnrollment - enumerateEnrollments (CTAP 2.1-PRE)
 /// 6.7.6. Enumerate enrollments
 pub fn bio_enrollment_enumerate_enrollments(
-    hid_params: &[HidParam],
+    cfg: &LibCfg,
     pin: &str,
 ) -> Result<Vec<TemplateInfo>> {
-    let device = get_device(hid_params)?;
+    let device = get_device(cfg)?;
     let init = bio_enrollment::bio_enrollment_init(&device, Some(pin))?;
     let pin_token = init.1.unwrap();
 
@@ -574,7 +611,7 @@ pub fn bio_enrollment_enumerate_enrollments(
         None,
         None,
     )?;
-    if util::is_debug() {
+    if cfg.enable_log {
         println!("{}", data);
     }
 
@@ -584,14 +621,14 @@ pub fn bio_enrollment_enumerate_enrollments(
 /// BioEnrollment - Rename/Set FriendlyName
 /// 6.7.7. Rename/Set FriendlyName
 pub fn bio_enrollment_set_friendly_name(
-    hid_params: &[HidParam],
+    cfg: &LibCfg,
     pin: &str,
     template_id: &[u8],
     template_name: &str,
 ) -> Result<()> {
     let template_info = TemplateInfo::new(template_id, Some(template_name));
 
-    let device = get_device(hid_params)?;
+    let device = get_device(cfg)?;
     let init = bio_enrollment::bio_enrollment_init(&device, Some(pin))?;
     let pin_token = init.1.unwrap();
 
@@ -610,8 +647,8 @@ pub fn bio_enrollment_set_friendly_name(
 }
 
 /// 6.7.8. Remove enrollment
-pub fn bio_enrollment_remove(hid_params: &[HidParam], pin: &str, template_id: &[u8]) -> Result<()> {
-    let device = get_device(hid_params)?;
+pub fn bio_enrollment_remove(cfg: &LibCfg, pin: &str, template_id: &[u8]) -> Result<()> {
+    let device = get_device(cfg)?;
     let init = bio_enrollment::bio_enrollment_init(&device, Some(pin))?;
     let pin_token = init.1.unwrap();
 
@@ -635,7 +672,7 @@ pub fn credential_management_get_creds_metadata(
     hid_params: &[HidParam],
     pin: Option<&str>,
 ) -> Result<credential_management_params::CredentialsCount> {
-    let device = get_device(hid_params)?;
+    let device = get_device_old(hid_params)?;
     let meta = credential_management::credential_management(
         &device,
         pin,
@@ -652,7 +689,7 @@ pub fn credential_management_enumerate_rps(
     hid_params: &[HidParam],
     pin: Option<&str>,
 ) -> Result<Vec<credential_management_params::Rp>> {
-    let device = get_device(hid_params)?;
+    let device = get_device_old(hid_params)?;
     let mut datas: Vec<credential_management_params::Rp> = Vec::new();
     let data = credential_management::credential_management(
         &device,
@@ -686,7 +723,7 @@ pub fn credential_management_enumerate_credentials(
     pin: Option<&str>,
     rpid_hash: &[u8],
 ) -> Result<Vec<credential_management_params::Credential>> {
-    let device = get_device(hid_params)?;
+    let device = get_device_old(hid_params)?;
     let mut datas: Vec<credential_management_params::Credential> = Vec::new();
 
     let data = credential_management::credential_management(
@@ -721,7 +758,7 @@ pub fn credential_management_delete_credential(
     pin: Option<&str>,
     pkcd: Option<PublicKeyCredentialDescriptor>,
 ) -> Result<()> {
-    let device = get_device(hid_params)?;
+    let device = get_device_old(hid_params)?;
     credential_management::credential_management(
         &device,
         pin,
@@ -740,7 +777,7 @@ pub fn credential_management_update_user_information(
     pkcd: Option<PublicKeyCredentialDescriptor>,
     pkcue: Option<public_key_credential_user_entity::PublicKeyCredentialUserEntity>,
 ) -> Result<()> {
-    let device = get_device(hid_params)?;
+    let device = get_device_old(hid_params)?;
     credential_management::credential_management(
         &device,
         pin,
@@ -754,7 +791,7 @@ pub fn credential_management_update_user_information(
 
 /// Selection (CTAP 2.1-PRE)
 pub fn selection(hid_params: &[HidParam]) -> Result<String> {
-    let device = get_device(hid_params)?;
+    let device = get_device_old(hid_params)?;
     let cid = ctaphid::ctaphid_init(&device).map_err(Error::msg)?;
 
     let send_payload = selection_command::create_payload();
@@ -767,7 +804,7 @@ pub fn selection(hid_params: &[HidParam]) -> Result<String> {
 
 /// Get Config (CTAP 2.1-PRE)
 pub fn config(hid_params: &[HidParam]) -> Result<String> {
-    let device = get_device(hid_params)?;
+    let device = get_device_old(hid_params)?;
     let cid = ctaphid::ctaphid_init(&device).map_err(Error::msg)?;
 
     let send_payload = config_command::create_payload_enable_enterprise_attestation();

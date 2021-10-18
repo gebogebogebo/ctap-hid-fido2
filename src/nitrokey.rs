@@ -98,7 +98,7 @@ impl NitrokeyStatus {
 
 /// Query the firmware version of Nitrokey.
 pub fn get_version(hid_params: &[crate::HidParam]) -> Result<String> {
-    let device = crate::get_device(hid_params)?;
+    let device = crate::get_device_old(hid_params)?;
     let cid = ctaphid::ctaphid_init(&device).map_err(Error::msg)?;
     let version = ctapihd_nitro::ctaphid_nitro_get_version(&device, &cid).map_err(Error::msg)?;
     Ok(version)
@@ -107,7 +107,7 @@ pub fn get_version(hid_params: &[crate::HidParam]) -> Result<String> {
 /// Generate a random number.
 /// - rng_byte : The number of digits of random numbers to generate.
 pub fn get_rng(hid_params: &[crate::HidParam], rng_byte: u8) -> Result<String> {
-    let device = crate::get_device(hid_params)?;
+    let device = crate::get_device_old(hid_params)?;
     let cid = ctaphid::ctaphid_init(&device).map_err(Error::msg)?;
     let status =
         ctapihd_nitro::ctaphid_nitro_get_rng(&device, &cid, rng_byte).map_err(Error::msg)?;
@@ -116,7 +116,7 @@ pub fn get_rng(hid_params: &[crate::HidParam], rng_byte: u8) -> Result<String> {
 
 /// Query the Status of Nitrokey.
 pub fn get_status(hid_params: &[crate::HidParam]) -> Result<NitrokeyStatus> {
-    let device = crate::get_device(hid_params)?;
+    let device = crate::get_device_old(hid_params)?;
     let cid = ctaphid::ctaphid_init(&device).map_err(Error::msg)?;
     let status = ctapihd_nitro::ctaphid_nitro_get_status(&device, &cid).map_err(Error::msg)?;
 
@@ -154,7 +154,7 @@ pub fn get_status(hid_params: &[crate::HidParam]) -> Result<NitrokeyStatus> {
 
 /// firmware update API.
 pub fn enter_boot(hid_params: &[crate::HidParam]) -> Result<()> {
-    let device = crate::get_device(hid_params)?;
+    let device = crate::get_device_old(hid_params)?;
     let cid = ctaphid::ctaphid_init(&device).map_err(Error::msg)?;
     ctapihd_nitro::ctaphid_nitro_enter_boot(&device, &cid).map_err(Error::msg)?;
     Ok(())
@@ -162,7 +162,7 @@ pub fn enter_boot(hid_params: &[crate::HidParam]) -> Result<()> {
 
 /// firmware update API.
 pub fn write_flash(hid_params: &[crate::HidParam], addr: u64, data: &[u8]) -> Result<()> {
-    let device = crate::get_device(hid_params)?;
+    let device = crate::get_device_old(hid_params)?;
     let cid = ctaphid::ctaphid_init(&device).map_err(Error::msg)?;
 
     let solo_bootloader_write = 0x40;
@@ -175,7 +175,7 @@ pub fn write_flash(hid_params: &[crate::HidParam], addr: u64, data: &[u8]) -> Re
 
 /// firmware update API.
 pub fn verify_flash(hid_params: &[crate::HidParam], sig: &[u8]) -> Result<()> {
-    let device = crate::get_device(hid_params)?;
+    let device = crate::get_device_old(hid_params)?;
     let cid = ctaphid::ctaphid_init(&device).map_err(Error::msg)?;
 
     let solo_bootloader_done = 0x41;
@@ -251,7 +251,7 @@ fn create_request_packet(
 
 /// firmware update API.
 pub fn is_bootloader_mode(hid_params: &[crate::HidParam]) -> Result<bool> {
-    let device = crate::get_device(hid_params)?;
+    let device = crate::get_device_old(hid_params)?;
     let cid = ctaphid::ctaphid_init(&device).map_err(Error::msg)?;
 
     let solo_bootloader_version = 0x44;

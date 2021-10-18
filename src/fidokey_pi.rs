@@ -5,7 +5,8 @@ use std::io::Write;
 use crate::hid_linux;
 
 pub struct FidoKeyHid {
-    pub device: std::fs::File,
+    device_internal: std::fs::File,
+    enable_log: bool,
 }
 
 impl FidoKeyHid {
@@ -19,7 +20,8 @@ impl FidoKeyHid {
                         options.read(true).write(true);
 
                         let result = FidoKeyHid {
-                            device: options.open(&dev.path).unwrap(),
+                            device_internal: options.open(&dev.path).unwrap(),
+                            enable_log: false,      // TODO
                         };
                         return Ok(result);
                     }
@@ -68,7 +70,7 @@ impl FidoKeyHid {
     }
 
     pub fn write(&self, cmd: &[u8]) -> Result<usize, String> {
-        let mut dev = &self.device;
+        let mut dev = &self.device_internal;
         match dev.write_all(cmd) {
             Ok(_) => Ok(0),
             Err(_) => Err("write error".into()),
@@ -76,7 +78,7 @@ impl FidoKeyHid {
     }
 
     pub fn read(&self) -> Result<Vec<u8>, String> {
-        let mut dev = &self.device;
+        let mut dev = &self.device_internal;
 
         let mut buf = Vec::with_capacity(64);
         buf.resize(64, 0);

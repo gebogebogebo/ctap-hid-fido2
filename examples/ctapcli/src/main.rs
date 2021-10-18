@@ -8,7 +8,7 @@ extern crate rpassword;
 
 #[allow(unused_imports)]
 use ctap_hid_fido2::util;
-use ctap_hid_fido2::{str_buf, Key};
+use ctap_hid_fido2::{str_buf, Cfg};
 
 mod bio;
 mod common;
@@ -184,9 +184,11 @@ fn main() -> Result<()> {
         }
     }
 
+    let cfg = Cfg::init();
+
     if matches.is_present("wink") {
         println!("Blink LED on FIDO key.\n");
-        ctap_hid_fido2::wink(&Key::auto())?;
+        ctap_hid_fido2::wink(&cfg)?;
         println!("Do you see that wink? ;-)\n");
     }
 
@@ -207,7 +209,7 @@ fn main() -> Result<()> {
 
     if let Some(matches) = matches.subcommand_matches("bio") {
         println!("Bio Management.\n");
-        bio::bio(matches)?;
+        bio::bio(matches, &cfg)?;
     }
 
     /*
