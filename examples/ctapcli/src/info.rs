@@ -1,14 +1,12 @@
-use crate::str_buf::StrBuf;
 use anyhow::{anyhow, Result};
-
-#[allow(unused_imports)]
-use ctap_hid_fido2::util;
-use ctap_hid_fido2::{InfoOption, InfoParam, Key};
+use ctap_hid_fido2::{InfoOption, InfoParam};
+use crate::CFG;
+use crate::str_buf::StrBuf;
 
 pub fn info(matches: &clap::ArgMatches) -> Result<()> {
     if matches.args.is_empty() {
         println!("Get all data.");
-        match ctap_hid_fido2::get_info(&Key::auto()) {
+        match ctap_hid_fido2::get_info(&CFG) {
             Ok(info) => println!("{}", info),
             Err(err) => return Err(err),
         };
@@ -32,7 +30,7 @@ pub fn info(matches: &clap::ArgMatches) -> Result<()> {
         };
 
         if let Some(option) = info_option {
-            match ctap_hid_fido2::enable_info_option(&Key::auto(), &option) {
+            match ctap_hid_fido2::enable_info_option(&CFG, &option) {
                 Ok(result) => println!("{}", option_message(item, &option, result)?),
                 Err(err) => return Err(err),
             }
@@ -47,7 +45,7 @@ pub fn info(matches: &clap::ArgMatches) -> Result<()> {
             };
 
             if let Some(param) = info_param {
-                match ctap_hid_fido2::enable_info_param(&Key::auto(), &param) {
+                match ctap_hid_fido2::enable_info_param(&CFG, &param) {
                     Ok(result) => println!("{}", param_message(item, &param, result)?),
                     Err(err) => return Err(err),
                 }

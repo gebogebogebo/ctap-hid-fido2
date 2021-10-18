@@ -9,7 +9,7 @@ pub struct FidoKeyHid {
 }
 
 impl FidoKeyHid {
-    pub fn new_2(params: &[crate::HidParam],cfg: &crate::LibCfg) -> Result<FidoKeyHid, String> {
+    pub fn new(params: &[crate::HidParam],cfg: &crate::LibCfg) -> Result<FidoKeyHid, String> {
         let api = HidApi::new().expect("Failed to create HidApi instance");
         for param in params {
             if let Some(dev_info) = FidoKeyHid::get_path(&api, param, 0xf1d0) {
@@ -19,24 +19,6 @@ impl FidoKeyHid {
                         enable_log: cfg.enable_log,
                         use_pre_bio_enrollment: cfg.use_pre_bio_enrollment,
                         use_pre_credential_management: cfg.use_pre_credential_management,
-                    };
-                    return Ok(result);
-                }
-            }
-        }
-        Err("Failed to open device.".into())
-    }
-
-    pub fn new_old(params: &[crate::HidParam]) -> Result<FidoKeyHid, String> {
-        let api = HidApi::new().expect("Failed to create HidApi instance");
-        for param in params {
-            if let Some(dev_info) = FidoKeyHid::get_path(&api, param, 0xf1d0) {
-                if let Ok(dev) = api.open_path(dev_info.path()) {
-                    let result = FidoKeyHid {
-                        device_internal: dev,
-                        enable_log: false,      // TODO
-                        use_pre_bio_enrollment: false,
-                        use_pre_credential_management: false,
                     };
                     return Ok(result);
                 }

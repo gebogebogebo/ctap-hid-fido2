@@ -16,21 +16,19 @@ fn test_get_hid_devices() {
 
 #[test]
 fn test_wink() {
-    let hid_params = HidParam::get();
-    wink(&hid_params).unwrap();
+    wink(&Cfg::init()).unwrap();
     assert!(true);
 }
 
 #[test]
 fn test_get_info() {
-    let hid_params = HidParam::get();
-    get_info(&hid_params).unwrap();
+    get_info(&Cfg::init()).unwrap();
     assert!(true);
 }
 
 #[test]
 fn test_get_info_u2f() {
-    match ctap_hid_fido2::enable_info_param(&HidParam::get(), &InfoParam::VersionsU2Fv2) {
+    match ctap_hid_fido2::enable_info_param(&Cfg::init(), &InfoParam::VersionsU2Fv2) {
         Ok(result) => {
             if !result {
                 // Skip
@@ -40,15 +38,13 @@ fn test_get_info_u2f() {
         Err(_) => assert!(false),
     };
 
-    let hid_params = HidParam::get();
-    get_info_u2f(&hid_params).unwrap();
+    get_info_u2f(&Cfg::init()).unwrap();
     assert!(true);
 }
 
 #[test]
 fn test_client_pin_get_retries() {
-    let hid_params = HidParam::get();
-    let retry = get_pin_retries(&hid_params);
+    let retry = get_pin_retries(&Cfg::init());
     println!("- retries = {:?}", retry);
     assert!(true);
 }
@@ -60,14 +56,12 @@ fn test_make_credential_with_pin_non_rk() {
     let challenge = b"this is challenge".to_vec();
     let pin = "1234";
 
-    let params = HidParam::get();
-
-    let att = make_credential(&params, rpid, &challenge, Some(pin)).unwrap();
+    let att = make_credential(&Cfg::init(), rpid, &challenge, Some(pin)).unwrap();
     println!("Attestation");
     println!("{}", att);
 
     let ass = get_assertion(
-        &params,
+        &Cfg::init(),
         rpid,
         &challenge,
         &att.credential_descriptor.id,
@@ -82,7 +76,7 @@ fn test_make_credential_with_pin_non_rk() {
 
 #[test]
 fn test_credential_management_get_creds_metadata() {
-    match ctap_hid_fido2::enable_info_param(&HidParam::get(), &InfoParam::VersionsFido21Pre) {
+    match ctap_hid_fido2::enable_info_param(&Cfg::init(), &InfoParam::VersionsFido21Pre) {
         Ok(result) => {
             if !result {
                 // Skip
@@ -94,7 +88,7 @@ fn test_credential_management_get_creds_metadata() {
 
     let pin = "1234";
     match ctap_hid_fido2::credential_management_get_creds_metadata(
-        &ctap_hid_fido2::HidParam::get(),
+        &Cfg::init(),
         Some(pin),
     ) {
         Ok(_) => assert!(true),
@@ -104,7 +98,7 @@ fn test_credential_management_get_creds_metadata() {
 
 #[test]
 fn test_credential_management_enumerate_rps() {
-    match ctap_hid_fido2::enable_info_param(&HidParam::get(), &InfoParam::VersionsFido21Pre) {
+    match ctap_hid_fido2::enable_info_param(&Cfg::init(), &InfoParam::VersionsFido21Pre) {
         Ok(result) => {
             if !result {
                 // Skip
@@ -116,7 +110,7 @@ fn test_credential_management_enumerate_rps() {
 
     let pin = "1234";
     match ctap_hid_fido2::credential_management_enumerate_rps(
-        &ctap_hid_fido2::HidParam::get(),
+        &Cfg::init(),
         Some(pin),
     ) {
         Ok(_) => assert!(true),
@@ -128,7 +122,7 @@ fn test_credential_management_enumerate_rps() {
 fn test_bio_enrollment_get_fingerprint_sensor_info() {
     let mut skip = true;
     match ctap_hid_fido2::enable_info_option(
-        &HidParam::get(),
+        &Cfg::init(),
         &InfoOption::UserVerificationMgmtPreview,
     ) {
         Ok(result) => {
@@ -148,7 +142,7 @@ fn test_bio_enrollment_get_fingerprint_sensor_info() {
         return;
     };
 
-    match ctap_hid_fido2::bio_enrollment_get_fingerprint_sensor_info(&HidParam::get()) {
+    match ctap_hid_fido2::bio_enrollment_get_fingerprint_sensor_info(&Cfg::init()) {
         Ok(_) => assert!(true),
         Err(_) => assert!(false),
     };
@@ -158,7 +152,7 @@ fn test_bio_enrollment_get_fingerprint_sensor_info() {
 fn test_bio_enrollment_enumerate_enrollments() {
     let mut skip = true;
     match ctap_hid_fido2::enable_info_option(
-        &HidParam::get(),
+        &Cfg::init(),
         &InfoOption::UserVerificationMgmtPreview,
     ) {
         Ok(result) => {
@@ -177,7 +171,7 @@ fn test_bio_enrollment_enumerate_enrollments() {
 
     let pin = "1234";
     match ctap_hid_fido2::bio_enrollment_enumerate_enrollments(
-        &ctap_hid_fido2::HidParam::get(),
+        &Cfg::init(),
         pin,
     ) {
         Ok(_) => assert!(true),

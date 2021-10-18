@@ -1,18 +1,13 @@
 use anyhow::{anyhow, Result};
-
 use clipboard::ClipboardContext;
 use clipboard::ClipboardProvider;
-
-use crate::common;
-
-#[allow(unused_imports)]
-use ctap_hid_fido2::util;
-use ctap_hid_fido2::{InfoOption, Key};
-
+use ctap_hid_fido2::InfoOption;
 use ctap_hid_fido2::credential_management_params::Credential;
 use ctap_hid_fido2::credential_management_params::Rp;
 use ctap_hid_fido2::public_key_credential_user_entity::PublicKeyCredentialUserEntity;
 use ctap_hid_fido2::verifier;
+use crate::common;
+use crate::CFG;
 
 pub fn memo(matches: &clap::ArgMatches) -> Result<()> {
     if !(is_supported()?) {
@@ -68,7 +63,7 @@ fn add(tag: &str, pin: &str, rpid: &str) -> Result<()> {
         let rkparam = PublicKeyCredentialUserEntity::new(Some(tag.as_bytes()), Some(&memo), None);
 
         let _att = ctap_hid_fido2::make_credential_rk(
-            &Key::auto(),
+            &CFG,
             rpid,
             &challenge,
             Some(pin),
@@ -86,7 +81,7 @@ fn add(tag: &str, pin: &str, rpid: &str) -> Result<()> {
 fn del(tag: &str, pin: &str, rpid: &str) -> Result<()> {
     if let Some(cred) = search_cred(pin, rpid, tag.as_bytes())? {
         ctap_hid_fido2::credential_management_delete_credential(
-            &Key::auto(),
+            &CFG,
             Some(pin),
             Some(cred.public_key_credential_descriptor),
         )?;
@@ -123,13 +118,13 @@ fn list(pin: &str, rpid: &str) -> Result<()> {
 }
 
 fn is_supported() -> Result<bool> {
-    if ctap_hid_fido2::enable_info_option(&Key::auto(), &InfoOption::CredentialMgmtPreview)?
+    if ctap_hid_fido2::enable_info_option(&CFG, &InfoOption::CredentialMgmtPreview)?
         .is_some()
     {
         return Ok(true);
     }
 
-    if ctap_hid_fido2::enable_info_option(&Key::auto(), &InfoOption::CredMgmt)?.is_some() {
+    if ctap_hid_fido2::enable_info_option(&CFG, &InfoOption::CredMgmt)?.is_some() {
         Ok(true)
     } else {
         Ok(false)
@@ -137,11 +132,11 @@ fn is_supported() -> Result<bool> {
 }
 
 fn get_rps(pin: Option<&str>) -> Result<Vec<Rp>> {
-    ctap_hid_fido2::credential_management_enumerate_rps(&Key::auto(), pin)
+    ctap_hid_fido2::credential_management_enumerate_rps(&CFG, pin)
 }
 
 fn get_creds(pin: Option<&str>, rp: &Rp) -> Result<Vec<Credential>> {
-    ctap_hid_fido2::credential_management_enumerate_credentials(&Key::auto(), pin, &rp.rpid_hash)
+    ctap_hid_fido2::credential_management_enumerate_credentials(&CFG, pin, &rp.rpid_hash)
 }
 
 fn search_cred(pin: &str, rpid: &str, user_entity_id: &[u8]) -> Result<Option<Credential>> {

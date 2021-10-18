@@ -1,17 +1,15 @@
-use crate::str_buf::StrBuf;
 use anyhow::{anyhow, Result};
-
-#[allow(unused_imports)]
-use ctap_hid_fido2::util;
-use ctap_hid_fido2::{InfoOption, Key};
+use ctap_hid_fido2::InfoOption;
+use crate::str_buf::StrBuf;
+use crate::CFG;
 
 #[allow(dead_code)]
 pub fn cred(matches: &clap::ArgMatches) -> Result<()> {
     let pin = matches.value_of("pin");
 
     // check
-    if ctap_hid_fido2::enable_info_option(&Key::auto(), &InfoOption::CredMgmt)?.is_none()
-        && ctap_hid_fido2::enable_info_option(&Key::auto(), &InfoOption::CredentialMgmtPreview)?
+    if ctap_hid_fido2::enable_info_option(&CFG, &InfoOption::CredMgmt)?.is_none()
+        && ctap_hid_fido2::enable_info_option(&CFG, &InfoOption::CredentialMgmtPreview)?
             .is_none()
     {
         return Err(anyhow!(
@@ -22,7 +20,7 @@ pub fn cred(matches: &clap::ArgMatches) -> Result<()> {
     println!("Enumerate discoverable credentials.");
 
     let credentials_count =
-        ctap_hid_fido2::credential_management_get_creds_metadata(&Key::auto(), pin)?;
+        ctap_hid_fido2::credential_management_get_creds_metadata(&CFG, pin)?;
 
     let mut strbuf = StrBuf::new(0);
     strbuf.addln(&format!(
@@ -43,13 +41,13 @@ pub fn cred(matches: &clap::ArgMatches) -> Result<()> {
     }
 
     // Vec<credential_management_params::Rp>
-    let rps = ctap_hid_fido2::credential_management_enumerate_rps(&Key::auto(), pin)?;
+    let rps = ctap_hid_fido2::credential_management_enumerate_rps(&CFG, pin)?;
 
     for r in rps {
         println!("## rps\n{}", r);
 
         let creds = ctap_hid_fido2::credential_management_enumerate_credentials(
-            &Key::auto(),
+            &CFG,
             pin,
             &r.rpid_hash,
         )?;

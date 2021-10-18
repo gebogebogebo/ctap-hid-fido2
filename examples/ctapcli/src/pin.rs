@@ -1,15 +1,12 @@
 use anyhow::{anyhow, Result};
-
+use ctap_hid_fido2::InfoOption;
 use crate::common;
-
-#[allow(unused_imports)]
-use ctap_hid_fido2::util;
-use ctap_hid_fido2::{InfoOption, Key};
+use crate::CFG;
 
 pub fn pin(matches: &clap::ArgMatches) -> Result<()> {
     if matches.args.is_empty() {
         println!("Get PIN retry counter.\n");
-        match ctap_hid_fido2::get_pin_retries(&Key::auto()) {
+        match ctap_hid_fido2::get_pin_retries(&CFG) {
             Ok(v) => {
                 println!("PIN retry counter = {}", v);
 
@@ -46,7 +43,7 @@ pub fn pin(matches: &clap::ArgMatches) -> Result<()> {
         println!("Set new PIN.\n");
 
         if let Some(client_pin) =
-            ctap_hid_fido2::enable_info_option(&Key::auto(), &InfoOption::ClinetPin)?
+            ctap_hid_fido2::enable_info_option(&CFG, &InfoOption::ClinetPin)?
         {
             if client_pin {
                 return Err(anyhow!("PIN is already set."));
@@ -57,13 +54,13 @@ pub fn pin(matches: &clap::ArgMatches) -> Result<()> {
         let pin = common::get_input();
         println!();
 
-        ctap_hid_fido2::set_new_pin(&Key::auto(), &pin)?;
+        ctap_hid_fido2::set_new_pin(&CFG, &pin)?;
 
         println!("Success! :)\n");
     } else if matches.is_present("change") {
         println!("Change PIN.\n");
 
-        if ctap_hid_fido2::enable_info_option(&Key::auto(), &InfoOption::ClinetPin)?.is_none() {
+        if ctap_hid_fido2::enable_info_option(&CFG, &InfoOption::ClinetPin)?.is_none() {
             return Err(anyhow!("PIN not yet set."));
         };
 
@@ -74,7 +71,7 @@ pub fn pin(matches: &clap::ArgMatches) -> Result<()> {
         let new_pin = common::get_input();
         println!();
 
-        ctap_hid_fido2::change_pin(&Key::auto(), &current_pin, &new_pin)?;
+        ctap_hid_fido2::change_pin(&CFG, &current_pin, &new_pin)?;
 
         println!("Success! :)\n");
     }

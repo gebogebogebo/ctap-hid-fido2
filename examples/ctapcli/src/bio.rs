@@ -1,14 +1,12 @@
 extern crate clap;
 use anyhow::{anyhow, Result};
-
-use crate::common;
-use crate::str_buf::StrBuf;
 use ctap_hid_fido2::bio_enrollment_params::EnrollStatus1;
-#[allow(unused_imports)]
 use ctap_hid_fido2::util;
 use ctap_hid_fido2::verifier;
-use ctap_hid_fido2::{InfoOption, Key};
+use ctap_hid_fido2::InfoOption;
+use crate::common;
 use crate::CFG;
+use crate::str_buf::StrBuf;
 
 #[allow(dead_code)]
 pub fn bio(matches: &clap::ArgMatches) -> Result<()> {
@@ -106,11 +104,11 @@ fn bio_enrollment_next(enroll_status1: &EnrollStatus1) -> Result<bool> {
 }
 
 fn is_supported() -> Result<bool> {
-    if ctap_hid_fido2::enable_info_option(&Key::auto(), &InfoOption::BioEnroll)?.is_some() {
+    if ctap_hid_fido2::enable_info_option(&CFG, &InfoOption::BioEnroll)?.is_some() {
         return Ok(true);
     }
 
-    if ctap_hid_fido2::enable_info_option(&Key::auto(), &InfoOption::UserVerificationMgmtPreview)?
+    if ctap_hid_fido2::enable_info_option(&CFG, &InfoOption::UserVerificationMgmtPreview)?
         .is_some()
     {
         Ok(true)
@@ -175,7 +173,7 @@ fn bio_test(matches: &clap::ArgMatches) -> Result<()> {
                 .build()
         );
     }
-    let att = ctap_hid_fido2::make_credential(&Key::auto(), rpid, &challenge, pin)?;
+    let att = ctap_hid_fido2::make_credential(&CFG, rpid, &challenge, pin)?;
 
     if log {
         println!("Attestation");
@@ -218,7 +216,7 @@ fn bio_test(matches: &clap::ArgMatches) -> Result<()> {
     }
 
     let ass = ctap_hid_fido2::get_assertion(
-        &Key::auto(),
+        &CFG,
         rpid,
         &challenge,
         &verify_result.credential_id,
