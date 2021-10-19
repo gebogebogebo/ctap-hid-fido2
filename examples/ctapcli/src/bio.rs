@@ -70,13 +70,13 @@ fn rename(pin: &str, template_id: &[u8]) -> Result<()> {
 }
 
 fn bio_enrollment(pin: &str) -> Result<Vec<u8>> {
-    let info = ctap_hid_fido2::bio_enrollment_get_fingerprint_sensor_info(&CFG)?;
+    //let info = ctap_hid_fido2::bio_enrollment_get_fingerprint_sensor_info(&CFG)?;
 
     println!("bio enrollment");
-    println!(
-        "{:?} sample collections are required to complete the registration.",
-        info.max_capture_samples_required_for_enroll
-    );
+    //println!(
+    //    "{:?} sample collections are required to complete the registration.",
+    //    info.max_capture_samples_required_for_enroll
+    //);
     println!("Please follow the instructions to touch the sensor on the authenticator.");
     println!();
     println!("Press any key to start the registration.");
@@ -85,8 +85,11 @@ fn bio_enrollment(pin: &str) -> Result<Vec<u8>> {
 
     let (enroll_status1, enroll_status2) =
         ctap_hid_fido2::bio_enrollment_begin(&CFG, pin, Some(10000))?;
-    println!("{}\n", enroll_status2);
-
+    println!();
+    println!("{}", enroll_status2.message);
+    println!("- Number of samples required = {:?}", enroll_status2.remaining_samples);
+    println!();
+    
     for _counter in 0..10 {
         if bio_enrollment_next(&enroll_status1)? {
             break;
@@ -97,9 +100,11 @@ fn bio_enrollment(pin: &str) -> Result<Vec<u8>> {
 }
 
 fn bio_enrollment_next(enroll_status1: &EnrollStatus1) -> Result<bool> {
-    println!("bio enrollment Status");
     let enroll_status2 = ctap_hid_fido2::bio_enrollment_next(&CFG, enroll_status1, Some(10000))?;
-    println!("{}\n", enroll_status2);
+    println!();
+    println!("{}", enroll_status2.message);
+    println!("- Number of samples required = {:?}", enroll_status2.remaining_samples);
+    println!();
     Ok(enroll_status2.is_finish)
 }
 

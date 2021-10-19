@@ -24,6 +24,7 @@ pub(crate) fn bio_enrollment(
         sub_command,
         template_info,
         timeout_milliseconds,
+        device.use_pre_bio_enrollment,
     );
 
     if device.enable_log {

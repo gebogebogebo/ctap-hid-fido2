@@ -7,9 +7,9 @@ pub const AUTHENTICATOR_CLIENT_PIN: u8 = 0x06;
 
 // CTAP 2.1
 // 6.7. authenticatorBioEnrollment (0x09)
-//pub const AUTHENTICATOR_BIO_ENROLLMENT: u8 = 0x09;
+pub const AUTHENTICATOR_BIO_ENROLLMENT: u8 = 0x09;
 // 6.12. Prototype authenticatorBioEnrollment (0x40) (For backwards compatibility with "FIDO_2_1_PRE")
-pub const AUTHENTICATOR_BIO_ENROLLMENT: u8 = 0x40;
+pub const AUTHENTICATOR_BIO_ENROLLMENT_P: u8 = 0x40;
 
 // 6.8. authenticatorCredentialManagement (0x0A)
 //pub const AUTHENTICATOR_CREDENTIAL_MANAGEMENT: u8 = 0x0A;

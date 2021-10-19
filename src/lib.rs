@@ -94,7 +94,7 @@ impl LibCfg {
         LibCfg {
             hid_params: HidParam::auto(),
             enable_log: false,
-            use_pre_bio_enrollment: false,
+            use_pre_bio_enrollment: true,
             use_pre_credential_management: false, 
         }
     }
