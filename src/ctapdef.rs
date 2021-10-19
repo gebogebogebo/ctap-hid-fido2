@@ -12,9 +12,9 @@ pub const AUTHENTICATOR_BIO_ENROLLMENT: u8 = 0x09;
 pub const AUTHENTICATOR_BIO_ENROLLMENT_P: u8 = 0x40;
 
 // 6.8. authenticatorCredentialManagement (0x0A)
-//pub const AUTHENTICATOR_CREDENTIAL_MANAGEMENT: u8 = 0x0A;
+pub const AUTHENTICATOR_CREDENTIAL_MANAGEMENT: u8 = 0x0A;
 // 6.13. Prototype authenticatorCredentialManagement (0x41) (For backwards compatibility with "FIDO_2_1_PRE" )
-pub const AUTHENTICATOR_CREDENTIAL_MANAGEMENT: u8 = 0x41;
+pub const AUTHENTICATOR_CREDENTIAL_MANAGEMENT_P: u8 = 0x41;
 
 pub const AUTHENTICATOR_SELECTION: u8 = 0x0B;
 pub const AUTHENTICATOR_CONFIG: u8 = 0x0D;

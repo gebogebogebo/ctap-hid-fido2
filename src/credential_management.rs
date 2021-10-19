@@ -36,6 +36,7 @@ pub(crate) fn credential_management(
         rpid_hash,
         pkcd,
         pkcue,
+        device.use_pre_credential_management,
     );
 
     if device.enable_log {
