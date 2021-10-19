@@ -111,10 +111,11 @@ fn list(pin: &str, rpid: &str) -> Result<()> {
         }
 
         println!("({}/10)", creds.len());
+        println!();
+        Ok(())
+    } else {
+        Err(anyhow!("No memo is registered."))
     }
-    println!();
-
-    Ok(())
 }
 
 fn is_supported() -> Result<bool> {
@@ -132,7 +133,19 @@ fn is_supported() -> Result<bool> {
 }
 
 fn get_rps(pin: Option<&str>) -> Result<Vec<Rp>> {
-    ctap_hid_fido2::credential_management_enumerate_rps(&CFG, pin)
+    match ctap_hid_fido2::credential_management_enumerate_rps(&CFG, pin) {
+        Ok(rps) => Ok(rps),
+        Err(e) => {
+            // 0x2E CTAP2_ERR_NO_CREDENTIALS is not error
+            if e.to_string().find("0x2E").is_some() {
+                Ok(vec![])
+            } else {
+                Err(e)
+            }
+        }
+    }
+
+    //ctap_hid_fido2::credential_management_enumerate_rps(&CFG, pin)
 }
 
 fn get_creds(pin: Option<&str>, rp: &Rp) -> Result<Vec<Credential>> {

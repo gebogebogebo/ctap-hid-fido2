@@ -681,8 +681,8 @@ pub fn credential_management_enumerate_rps(
         None,
         None,
     )?;
-    datas.push(credential_management_params::Rp::new(&data));
     if data.total_rps > 0 {
+        datas.push(credential_management_params::Rp::new(&data));
         let roop_n = data.total_rps - 1;
         for _ in 0..roop_n {
             let data = credential_management::credential_management(
