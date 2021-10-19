@@ -88,6 +88,7 @@ pub struct LibCfg {
     pub enable_log: bool,
     pub use_pre_bio_enrollment: bool,
     pub use_pre_credential_management: bool,
+    pub keep_alive_msg: String,
 }
 impl LibCfg {
     pub fn init() -> Self {
@@ -95,7 +96,8 @@ impl LibCfg {
             hid_params: HidParam::auto(),
             enable_log: false,
             use_pre_bio_enrollment: true,
-            use_pre_credential_management: true, 
+            use_pre_credential_management: true,
+            keep_alive_msg: "- Touch the sensor on the authenticator".to_string(),
         }
     }
 }

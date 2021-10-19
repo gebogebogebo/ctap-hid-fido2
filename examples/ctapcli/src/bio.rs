@@ -147,7 +147,9 @@ fn delete(matches: &clap::ArgMatches, pin: &str) -> Result<()> {
     println!("value for templateId: {:?}", template_id);
     println!();
 
-    ctap_hid_fido2::bio_enrollment_remove(&CFG, pin, &util::to_str_hex(template_id))?;
+    let mut cfg = ctap_hid_fido2::Cfg::init();
+    cfg.keep_alive_msg = "- Deleting ...".to_string();
+    ctap_hid_fido2::bio_enrollment_remove(&cfg, pin, &util::to_str_hex(template_id))?;
     println!("- Success\n");
     Ok(())
 }

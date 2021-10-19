@@ -6,6 +6,7 @@ pub struct FidoKeyHid {
     pub enable_log: bool,
     pub use_pre_bio_enrollment: bool,
     pub use_pre_credential_management: bool,
+    pub keep_alive_msg: String,
 }
 
 impl FidoKeyHid {
@@ -19,6 +20,7 @@ impl FidoKeyHid {
                         enable_log: cfg.enable_log,
                         use_pre_bio_enrollment: cfg.use_pre_bio_enrollment,
                         use_pre_credential_management: cfg.use_pre_credential_management,
+                        keep_alive_msg: cfg.keep_alive_msg.to_string(),
                     };
                     return Ok(result);
                 }

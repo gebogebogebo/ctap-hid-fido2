@@ -19,8 +19,8 @@
                     "kind": "bin"
                 }
             },
-            //"args": ["memo","-p","1234","-a","bbb"],
-            "args": ["pin"],
+            //"args": ["memo","-a"],
+            "args": ["bio"],
             "cwd": "${workspaceFolder}"
         }
 
