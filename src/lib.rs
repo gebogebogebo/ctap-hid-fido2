@@ -225,6 +225,22 @@ pub fn get_info_u2f(cfg: &LibCfg) -> Result<String> {
     get_info::get_info_u2f(&device)
 }
 
+/// Get UV retry count
+pub fn get_uv_retries(cfg: &LibCfg) -> Result<i32> {
+    let device = get_device(cfg)?;
+    let cid = ctaphid::ctaphid_init(&device).map_err(Error::msg)?;
+
+    let send_payload =
+        client_pin_command::create_payload(PinCmd::GetUVRetries).map_err(Error::msg)?;
+
+    let response_cbor = ctaphid::ctaphid_cbor(&device, &cid, &send_payload).map_err(Error::msg)?;
+
+    let pin = client_pin_response::parse_cbor_client_pin_get_retries(&response_cbor)
+        .map_err(Error::msg)?;
+
+    Ok(pin.uv_retries)
+}
+
 /// Get PIN retry count
 pub fn get_pin_retries(cfg: &LibCfg) -> Result<i32> {
     let device = get_device(cfg)?;
