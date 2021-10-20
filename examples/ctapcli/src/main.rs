@@ -29,7 +29,7 @@ fn load_cfg() -> ctap_hid_fido2::Cfg {
 fn main() -> Result<()> {
 
     let app = App::new("ctapcli")
-        .version("0.0.7")
+        .version("0.0.8")
         .author("gebo")
         .about("This tool implements CTAP HID and can communicate with FIDO Authenticator.\n\nabout CTAP(Client to Authenticator Protocol)\nhttps://fidoalliance.org/specs/fido-v2.1-rd-20210309/fido-client-to-authenticator-protocol-v2.1-rd-20210309.html")
         .arg(
