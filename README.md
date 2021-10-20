@@ -3,6 +3,8 @@
 # ctap-hid-fido2
 Rust FIDO2 CTAP library
 
+**Yubikey Bio is now supported.**
+
 
 
 ## Description
