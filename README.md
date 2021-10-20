@@ -70,11 +70,11 @@ $ ./test_for_pi.sh
 
 ```rust
 use ctap_hid_fido2;
-use ctap_hid_fido2::Key;
+use ctap_hid_fido2::Cfg;
 
 fn main() {
     println!("get_info()");
-    match ctap_hid_fido2::get_info(&Key::auto()) {
+    match ctap_hid_fido2::get_info(&Cfg::init()) {
         Ok(info) => println!("{}", info),
         Err(e) => println!("error: {:?}", e),
     }
@@ -105,11 +105,11 @@ Created to test [CTAPHID_MSG](https://fidoalliance.org/specs/fido-v2.1-ps-202106
 
 ```rust
 use ctap_hid_fido2;
-use ctap_hid_fido2::Key;
+use ctap_hid_fido2::Cfg;
 
 fn main() {
     println!("get_info_u2f()");
-    match ctap_hid_fido2::get_info_u2f(&Key::auto()) {
+    match ctap_hid_fido2::get_info_u2f(&Cfg::init()) {
         Ok(result) => println!("{:?}", result),
         Err(e) => println!("error: {:?}", e),
     }
@@ -133,11 +133,11 @@ pinRetries counter represents the number of attempts left before PIN is disabled
 
 ```Rust
 use ctap_hid_fido2;
-use ctap_hid_fido2::Key;
+use ctap_hid_fido2::Cfg;
 
 fn main() {
     println!("get_pin_retries()");
-    match ctap_hid_fido2::get_pin_retries(&Key::auto()) {
+    match ctap_hid_fido2::get_pin_retries(&Cfg::init()) {
         Ok(retry) => println!("{}", retry),
         Err(e) => println!("error: {:?}", e),
     };
@@ -153,12 +153,35 @@ get_pin_retries()
 
 
 
+### get_uv_retries()
+
+**Yubikey Bio Only**
+
+[6.5.5.3. Platform getting UV Retries from Authenticator](https://fidoalliance.org/specs/fido-v2.1-ps-20210615/fido-client-to-authenticator-protocol-v2.1-ps-20210615.html#gettingUVRetries)
+
+UV retries count is the number of built-in UV attempts remaining before built-in UV is disabled on the device.
+
+```rust
+use ctap_hid_fido2;
+use ctap_hid_fido2::Cfg;
+
+fn main() {
+    println!("get_uv_retries()");
+    match ctap_hid_fido2::get_uv_retries(&Cfg::init()) {
+        Ok(retry) => println!("{}", retry),
+        Err(e) => println!("error: {:?}", e),
+    };
+}
+```
+
+
+
 ### enable_info_param()
 
 Same as get_info(), but checks if it has a specific feature/version.<br>It is specified by the enum of InfoParam.
 
 ```rust
-match ctap_hid_fido2::enable_info_param(&Key::auto(),InfoParam::VersionsFIDO21PRE) {
+match ctap_hid_fido2::enable_info_param(&Cfg::init(),InfoParam::VersionsFIDO21PRE) {
     Ok(result) => println!("FIDO 2.1 PRE = {:?}", result),
     Err(e) => println!("- error: {:?}", e),
 };
@@ -176,7 +199,7 @@ Same as get_info(), but checks if it has a specific option.<br>It is specified b
   - `None` : option is absent
 
 ```rust
-match ctap_hid_fido2::enable_info_option(&Key::auto(),InfoOption::BioEnroll) {
+match ctap_hid_fido2::enable_info_option(&Cfg::init(),InfoOption::BioEnroll) {
     Ok(result) => println!("BioEnroll = {:?}", result),
     Err(e) => println!("- error: {:?}", e),
 };
@@ -190,10 +213,10 @@ Just blink the LED on the FIDO key.
 
 ```Rust
 use ctap_hid_fido2;
-use ctap_hid_fido2::Key;
+use ctap_hid_fido2::Cfg;
 
 fn main() {
-    if let Err(msg) = ctap_hid_fido2::wink(&Key::auto()){
+    if let Err(msg) = ctap_hid_fido2::wink(&Cfg::init()){
         println!("error: {:?}", msg);
     }
 }
@@ -209,12 +232,14 @@ fn main() {
 - verifier::verify_attestation()
 - verifier::verify_assertion()
 
+If you want to use Yubikey bio for fingerprint authentication, specify None for pin.
+
 ```rust
 use anyhow::Result;
 use ctap_hid_fido2;
 use ctap_hid_fido2::util;
 use ctap_hid_fido2::verifier;
-use ctap_hid_fido2::Key;
+use ctap_hid_fido2::Cfg;
 
 fn main() -> Result<()> {
     println!("----- test-with-pin-non-rk start -----");
@@ -222,6 +247,7 @@ fn main() -> Result<()> {
     // parameter
     let rpid = "test.com";
     let pin = Some("1234");
+    // let pin = None; // Yubikey bio for fingerprint authentication
     let challenge = verifier::create_challenge();
 
     // Register
@@ -234,7 +260,7 @@ fn main() -> Result<()> {
     );
 
     let att = ctap_hid_fido2::make_credential(
-        &Key::auto(),
+        &Cfg::init(),
         rpid,
         &challenge,
         pin,
@@ -272,7 +298,7 @@ fn main() -> Result<()> {
     );
 
     let ass = ctap_hid_fido2::get_assertion(
-        &Key::auto(),
+        &Cfg::init(),
         rpid,
         &challenge,
         &verify_result.credential_id,
@@ -350,7 +376,7 @@ Verify
 ```Rust
 use ctap_hid_fido2::verifier;
 use ctap_hid_fido2::make_credential_params::Extension as Mext;
-use ctap_hid_fido2::Key;
+use ctap_hid_fido2::Cfg;
 
 fn main() -> Result<()> {
 
@@ -360,7 +386,7 @@ fn main() -> Result<()> {
 
   let ext = Mext::HmacSecret(Some(true));
   let att = ctap_hid_fido2::make_credential_with_extensions(
-      &Key::auto(),
+      &Cfg::init(),
       rpid,
       &challenge,
       pin,
@@ -376,7 +402,7 @@ fn main() -> Result<()> {
 ```Rust
 use ctap_hid_fido2::verifier;
 use ctap_hid_fido2::get_assertion_params::Extension as Gext;
-use ctap_hid_fido2::Key;
+use ctap_hid_fido2::Cfg;
 
 fn main() -> Result<()> {
 
@@ -387,7 +413,7 @@ fn main() -> Result<()> {
   
   let ext = Gext::create_hmac_secret_from_string("this is salt");
   let ass = ctap_hid_fido2::get_assertion_with_extensios(
-      &Key::auto(),
+      &Cfg::init(),
       rpid,
       &challenge,
       &credential_id,
@@ -409,7 +435,7 @@ use ctap_hid_fido2;
 use ctap_hid_fido2::public_key_credential_user_entity::PublicKeyCredentialUserEntity;
 use ctap_hid_fido2::util;
 use ctap_hid_fido2::verifier;
-use ctap_hid_fido2::Key;
+use ctap_hid_fido2::Cfg;
 
 fn main() -> Result<()> {
     println!("----- test-with-pin-rk start -----");
@@ -432,7 +458,7 @@ fn main() -> Result<()> {
     println!("- rkparam       = {}", rkparam);
 
     let att = ctap_hid_fido2::make_credential_rk(
-        &Key::auto(),
+        &Cfg::init(),
         rpid,
         &challenge,
         pin,
@@ -463,7 +489,7 @@ fn main() -> Result<()> {
     println!("Authenticate - get_assertions_rk()");
     let challenge = verifier::create_challenge();
     let asss = ctap_hid_fido2::get_assertions_rk(
-        &Key::auto(),
+        &Cfg::init(),
         rpid,
         &challenge,
         pin,
@@ -502,7 +528,7 @@ Get discoverable credentials metadata.
 
 ``` rust
 match ctap_hid_fido2::credential_management_get_creds_metadata(
-    &Key::auto(),
+    &Cfg::init(),
     pin,
 ) {
     Ok(result) => println!("{}", result),
@@ -517,7 +543,7 @@ match ctap_hid_fido2::credential_management_get_creds_metadata(
 Enumerate RPs present on the authenticator.
 
 ```rust
-match ctap_hid_fido2::credential_management_enumerate_rps(&Key::auto(), pin)
+match ctap_hid_fido2::credential_management_enumerate_rps(&Cfg::init(), pin)
 {
     Ok(results) => {
         for r in results {
@@ -536,7 +562,7 @@ Enumerate the credentials for a RP.
 
 ```rust
 match ctap_hid_fido2::credential_management_enumerate_credentials(
-    &Key::auto(),
+    &Cfg::init(),
     pin,
     rpid_hash_bytes,
 ) {
@@ -561,7 +587,7 @@ pkcd.id = util::to_str_hex(credential_id.unwrap());
 pkcd.ctype = "public_key".to_string();
 
 match ctap_hid_fido2::credential_management_delete_credential(
-    &Key::auto(),
+    &Cfg::init(),
     pin,
     Some(pkcd),
 ) {
@@ -584,7 +610,7 @@ Get fingerprint sensor information.
 
 ```Rust
 match ctap_hid_fido2::bio_enrollment_get_fingerprint_sensor_info(
-    &Key::auto(),
+    &Cfg::init(),
 ) {
     Ok(result) => println!("- {:?}", result),
     Err(e) => println!("- error: {:?}", e),
@@ -599,7 +625,7 @@ Enumurate a list of registered fingerprints.
 
 ```Rust
 match ctap_hid_fido2::bio_enrollment_enumerate_enrollments(
-    &Key::auto(),
+    &Cfg::init(),
     pin,
 ) {
     Ok(infos) => for i in infos {println!("- {}", i)},
@@ -617,7 +643,7 @@ Enroll one fingerprint.<br>run `bio_enrollment_begin` first and then `bio_enroll
 fn bio_enrollment(pin: &str) -> Result<(), String> {
     println!("bio_enrollment_begin");
     let result = ctap_hid_fido2::bio_enrollment_begin(
-        &Key::auto(),
+        &Cfg::init(),
         pin,
         Some(10000),
     )?;
@@ -649,9 +675,9 @@ Update the registered name of the fingerprint.
 
 ```rust
 match ctap_hid_fido2::bio_enrollment_set_friendly_name(
-    &Key::auto(),
+    &Cfg::init(),
     pin,
-    template_id, "display-name"),
+    template_id, "display-name",
 ) {
     Ok(()) => println!("- Success"),
     Err(e) => println!("- error: {:?}", e),
@@ -666,7 +692,7 @@ Delete a fingerprint.
 
 ```rust
 match ctap_hid_fido2::bio_enrollment_remove(
-     &Key::auto(),
+     &Cfg::init(),
      pin,
      template_id,
  ) {
