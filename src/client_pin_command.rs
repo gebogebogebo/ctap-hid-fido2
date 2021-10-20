@@ -10,6 +10,16 @@ pub enum SubCommand {
     SetPin = 0x03,
     ChangePin = 0x04,
     GetPinToken = 0x05,
+    //GetPinUvAuthTokenUsingUvWithPermissions = 0x06,
+    GetUVRetries= 0x07,
+    //GetPinUvAuthTokenUsingPinWithPermissions = 0x08,
+}
+
+fn create_payload_get_uv_retries() -> Vec<u8> {
+    let mut map = BTreeMap::new();
+    insert_pin_protocol(&mut map);
+    insert_sub_command(&mut map, SubCommand::GetUVRetries);
+    to_payload(map)
 }
 
 fn create_payload_get_retries() -> Vec<u8> {
@@ -130,6 +140,7 @@ fn insert_pin_hash_enc(map: &mut BTreeMap<Value, Value>, pin_hash_enc: &[u8]) {
 
 pub fn create_payload(sub_command: SubCommand) -> Result<Vec<u8>, String> {
     match sub_command {
+        SubCommand::GetUVRetries => Ok(create_payload_get_uv_retries()),
         SubCommand::GetRetries => Ok(create_payload_get_retries()),
         SubCommand::ChangePin => Err(String::from("Not Supported")),
         SubCommand::GetKeyAgreement => Ok(create_payload_get_keyagreement()),

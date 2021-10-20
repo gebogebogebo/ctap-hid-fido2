@@ -4,12 +4,12 @@ use ctap_hid_fido2;
 
 #[allow(unused_imports)]
 use ctap_hid_fido2::util;
-use ctap_hid_fido2::{HidParam, InfoOption, InfoParam};
+use ctap_hid_fido2::{Key, InfoOption, InfoParam};
 
 pub fn info(matches: &clap::ArgMatches) -> Result<()> {
     if matches.is_present("list") {
         println!("list");
-        match ctap_hid_fido2::get_info(&HidParam::get_default_params()) {
+        match ctap_hid_fido2::get_info(&Key::auto()) {
             Ok(info) => {
                 println!("{}", info);
             }
@@ -35,7 +35,7 @@ pub fn info(matches: &clap::ArgMatches) -> Result<()> {
         };
 
         match ctap_hid_fido2::enable_info_option(
-            &HidParam::get_default_params(),
+            &Key::auto(),
             &info_option
         ) {
             Ok(result) => println!("{}", option_message(typ, &info_option, result)?),
@@ -57,7 +57,7 @@ pub fn info(matches: &clap::ArgMatches) -> Result<()> {
         };
 
         match ctap_hid_fido2::enable_info_param(
-            &HidParam::get_default_params(),
+            &Key::auto(),
             &info_param
         ) {
             Ok(result) => println!("{}", param_message(typ, &info_param, result)?),

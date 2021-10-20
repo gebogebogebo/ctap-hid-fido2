@@ -1,34 +1,26 @@
-use crate::str_buf::StrBuf;
 use anyhow::{anyhow, Result};
-
-#[allow(unused_imports)]
-use ctap_hid_fido2::util;
-use ctap_hid_fido2::{HidParam, InfoOption};
+use ctap_hid_fido2::InfoOption;
+use crate::str_buf::StrBuf;
+use crate::CFG;
 
 #[allow(dead_code)]
 pub fn cred(matches: &clap::ArgMatches) -> Result<()> {
     let pin = matches.value_of("pin");
 
     // check
-    if let None =
-        ctap_hid_fido2::enable_info_option(&HidParam::get_default_params(), &InfoOption::CredMgmt)?
+    if ctap_hid_fido2::enable_info_option(&CFG, &InfoOption::CredMgmt)?.is_none()
+        && ctap_hid_fido2::enable_info_option(&CFG, &InfoOption::CredentialMgmtPreview)?
+            .is_none()
     {
-        if let None = ctap_hid_fido2::enable_info_option(
-            &HidParam::get_default_params(),
-            &InfoOption::CredentialMgmtPreview,
-        )? {
-            return Err(anyhow!(
-                "This authenticator is not Supported Credential management."
-            ));
-        }
+        return Err(anyhow!(
+            "This authenticator is not Supported Credential management."
+        ));
     };
 
     println!("Enumerate discoverable credentials.");
 
-    let credentials_count = ctap_hid_fido2::credential_management_get_creds_metadata(
-        &HidParam::get_default_params(),
-        pin,
-    )?;
+    let credentials_count =
+        ctap_hid_fido2::credential_management_get_creds_metadata(&CFG, pin)?;
 
     let mut strbuf = StrBuf::new(0);
     strbuf.addln(&format!(
@@ -43,20 +35,19 @@ pub fn cred(matches: &clap::ArgMatches) -> Result<()> {
 
     println!("{}", strbuf.build().to_string());
 
-    if credentials_count.existing_resident_credentials_count <= 0 {
+    if credentials_count.existing_resident_credentials_count == 0 {
         println!("\nNo discoverable credentials.");
         return Ok(());
     }
 
     // Vec<credential_management_params::Rp>
-    let rps =
-        ctap_hid_fido2::credential_management_enumerate_rps(&HidParam::get_default_params(), pin)?;
+    let rps = ctap_hid_fido2::credential_management_enumerate_rps(&CFG, pin)?;
 
     for r in rps {
         println!("## rps\n{}", r);
 
         let creds = ctap_hid_fido2::credential_management_enumerate_credentials(
-            &HidParam::get_default_params(),
+            &CFG,
             pin,
             &r.rpid_hash,
         )?;

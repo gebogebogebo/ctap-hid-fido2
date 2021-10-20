@@ -5,10 +5,11 @@ use crate::client_pin;
 use crate::ctaphid;
 use crate::pintoken::PinToken;
 use crate::FidoKeyHid;
-use crate::HidParam;
 
 #[allow(unused_imports)]
 use crate::util;
+
+use anyhow::{Error, Result};
 
 pub(crate) fn bio_enrollment(
     device: &FidoKeyHid,
@@ -17,43 +18,43 @@ pub(crate) fn bio_enrollment(
     sub_command: Option<bio_enrollment_command::SubCommand>,
     template_info: Option<TemplateInfo>,
     timeout_milliseconds: Option<u16>,
-) -> Result<BioEnrollmentData, String> {
+) -> Result<BioEnrollmentData> {
     let send_payload = bio_enrollment_command::create_payload(
         pin_token,
         sub_command,
         template_info,
         timeout_milliseconds,
+        device.use_pre_bio_enrollment,
     );
 
-    if util::is_debug() {
+    if device.enable_log {
         println!("send(cbor) = {}", util::to_hex_str(&send_payload));
     }
 
-    let response_cbor = ctaphid::ctaphid_cbor(device, cid, &send_payload)?;
-    if util::is_debug() {
+    let response_cbor = ctaphid::ctaphid_cbor(device, cid, &send_payload).map_err(Error::msg)?;
+    if device.enable_log {
         println!("response(cbor) = {}", util::to_hex_str(&response_cbor));
     }
 
-    let ret = bio_enrollment_response::parse_cbor(&response_cbor)?;
+    let ret = bio_enrollment_response::parse_cbor(&response_cbor).map_err(Error::msg)?;
 
     Ok(ret)
 }
 
 pub fn bio_enrollment_init(
-    hid_params: &[HidParam],
+    device: &FidoKeyHid,
     pin: Option<&str>,
-) -> Result<(FidoKeyHid, [u8; 4], Option<PinToken>), String> {
+) -> Result<([u8; 4], Option<PinToken>)> {
     // init
-    let device = FidoKeyHid::new(hid_params)?;
-    let cid = ctaphid::ctaphid_init(&device)?;
+    let cid = ctaphid::ctaphid_init(&device).map_err(Error::msg)?;
 
     // pin token
     let pin_token = {
         if let Some(pin) = pin {
-            Some(client_pin::get_pin_token(&device, &cid, pin)?)
+            Some(client_pin::get_pin_token(device, &cid, pin)?)
         } else {
             None
         }
     };
-    Ok((device, cid, pin_token))
+    Ok((cid, pin_token))
 }

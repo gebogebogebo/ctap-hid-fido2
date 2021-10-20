@@ -3,23 +3,15 @@
 # ctap-hid-fido2
 Rust FIDO2 CTAP library
 
-- Idem Key added.
-- set_new_pin() , change_pin() added.
-
-- for Mac & Win & raspberry Pi
-
-- Some features of CTAP2.1PRE have been implemented.
-  - authenticatorCredentialManagement
-  - authenticatorBioEnrollment
-
-- HMAC Secret Extension implemented.
+**Yubikey Bio is now supported.**
 
 
 
 ## Description
-- Implements FIDO2 CTAP 2.0 & 2.1PRE (HID)
-- [Client to Authenticator Protocol (CTAP)](https://fidoalliance.org/specs/fido-v2.1-rd-20210309/fido-client-to-authenticator-protocol-v2.1-rd-20210309.html)
+- Implements FIDO2 CTAP 2.0 & 2.1 (HID)
+- [Client to Authenticator Protocol (CTAP)](https://fidoalliance.org/specs/fido-v2.1-ps-20210615/fido-client-to-authenticator-protocol-v2.1-ps-20210615.html)
 - Supported FIDO key
+  - [Yubikey Bio](https://www.yubico.com/products/yubikey-bio-series/)
   - Yubikey Blue (Security Key Series)
   - Yubikey Black (YubiKey 5)
   - FEITIAN ePass FIDO(A4B)
@@ -30,9 +22,9 @@ Rust FIDO2 CTAP library
   - [OpenSK](https://github.com/google/OpenSK)
   - Idem Key
 - Rust Version
-  - cargo 1.51.0 , rustc 1.51.0 , rustup 1.23.1
+  - cargo 1.55.0 , rustc 1.55.0 , rustup 1.24.3
 - for Mac
-  - macOS Catalina / Big Sur
+  - macOS Big Sur
 - for Windows
   - Windows10
 
@@ -44,7 +36,15 @@ gebo
 
 ## Build and run
 
+#### macOS
+
+```sh
+$ cargo build
+$ cargo run
+```
+
 #### Windows
+
 - **Run as administrator**
 
 #### raspberry Pi
@@ -68,20 +68,16 @@ $ ./test_for_pi.sh
 
 ### get_info()
 
-[6.4. authenticatorGetInfo (0x04)](https://fidoalliance.org/specs/fido-v2.1-rd-20210309/fido-client-to-authenticator-protocol-v2.1-rd-20210309.html#authenticatorGetInfo)
-
-> Using this method, platforms can request that the authenticator report a list of its supported protocol versions and extensions, its AAGUID, and other aspects of its overall capabilities. Platforms should use this information to tailor their command parameters choices.
-
-
+[6.4. authenticatorGetInfo (0x04)](https://fidoalliance.org/specs/fido-v2.1-ps-20210615/fido-client-to-authenticator-protocol-v2.1-ps-20210615.html#authenticatorGetInfo)
 
 ```rust
 use ctap_hid_fido2;
-use ctap_hid_fido2::HidParam;
+use ctap_hid_fido2::Cfg;
 
 fn main() {
     println!("get_info()");
-    match ctap_hid_fido2::get_info(&ctap_hid_fido2::HidParam::get_default_params()) {
-        Ok(info) => println!("{}",info),
+    match ctap_hid_fido2::get_info(&Cfg::init()) {
+        Ok(info) => println!("{}", info),
         Err(e) => println!("error: {:?}", e),
     }
 }
@@ -107,15 +103,15 @@ get_info()
 
 ### get_info_u2f()
 
-Created to test [CTAPHID_MSG](https://fidoalliance.org/specs/fido-v2.1-rd-20210309/fido-client-to-authenticator-protocol-v2.1-rd-20210309.html#usb-hid-msg).
+Created to test [CTAPHID_MSG](https://fidoalliance.org/specs/fido-v2.1-ps-20210615/fido-client-to-authenticator-protocol-v2.1-ps-20210615.html#usb-hid-msg).
 
 ```rust
 use ctap_hid_fido2;
-use ctap_hid_fido2::HidParam;
+use ctap_hid_fido2::Cfg;
 
 fn main() {
     println!("get_info_u2f()");
-    match ctap_hid_fido2::get_info_u2f(&HidParam::get_default_params()) {
+    match ctap_hid_fido2::get_info_u2f(&Cfg::init()) {
         Ok(result) => println!("{:?}", result),
         Err(e) => println!("error: {:?}", e),
     }
@@ -133,17 +129,17 @@ get_info_u2f()
 
 ### get_pin_retries()
 
-[6.5.2.2. PIN-Entry and User Verification Retries Counters](https://fidoalliance.org/specs/fido-v2.1-rd-20210309/fido-client-to-authenticator-protocol-v2.1-rd-20210309.html#authnrClientPin-globalState-retries)
+[6.5.5.2. Platform getting PIN retries from Authenticator](https://fidoalliance.org/specs/fido-v2.1-ps-20210615/fido-client-to-authenticator-protocol-v2.1-ps-20210615.html#gettingPINRetries)
 
 pinRetries counter represents the number of attempts left before PIN is disabled.
 
 ```Rust
 use ctap_hid_fido2;
-use ctap_hid_fido2::HidParam;
+use ctap_hid_fido2::Cfg;
 
 fn main() {
     println!("get_pin_retries()");
-    match ctap_hid_fido2::get_pin_retries(&HidParam::get_default_params()) {
+    match ctap_hid_fido2::get_pin_retries(&Cfg::init()) {
         Ok(retry) => println!("{}", retry),
         Err(e) => println!("error: {:?}", e),
     };
@@ -159,12 +155,35 @@ get_pin_retries()
 
 
 
+### get_uv_retries()
+
+**Yubikey Bio Only**
+
+[6.5.5.3. Platform getting UV Retries from Authenticator](https://fidoalliance.org/specs/fido-v2.1-ps-20210615/fido-client-to-authenticator-protocol-v2.1-ps-20210615.html#gettingUVRetries)
+
+UV retries count is the number of built-in UV attempts remaining before built-in UV is disabled on the device.
+
+```rust
+use ctap_hid_fido2;
+use ctap_hid_fido2::Cfg;
+
+fn main() {
+    println!("get_uv_retries()");
+    match ctap_hid_fido2::get_uv_retries(&Cfg::init()) {
+        Ok(retry) => println!("{}", retry),
+        Err(e) => println!("error: {:?}", e),
+    };
+}
+```
+
+
+
 ### enable_info_param()
 
 Same as get_info(), but checks if it has a specific feature/version.<br>It is specified by the enum of InfoParam.
 
 ```rust
-match ctap_hid_fido2::enable_info_param(&HidParam::get_default_params(),InfoParam::VersionsFIDO21PRE) {
+match ctap_hid_fido2::enable_info_param(&Cfg::init(),InfoParam::VersionsFIDO21PRE) {
     Ok(result) => println!("FIDO 2.1 PRE = {:?}", result),
     Err(e) => println!("- error: {:?}", e),
 };
@@ -182,7 +201,7 @@ Same as get_info(), but checks if it has a specific option.<br>It is specified b
   - `None` : option is absent
 
 ```rust
-match ctap_hid_fido2::enable_info_option(&HidParam::get_default_params(),InfoOption::BioEnroll) {
+match ctap_hid_fido2::enable_info_option(&Cfg::init(),InfoOption::BioEnroll) {
     Ok(result) => println!("BioEnroll = {:?}", result),
     Err(e) => println!("- error: {:?}", e),
 };
@@ -196,13 +215,12 @@ Just blink the LED on the FIDO key.
 
 ```Rust
 use ctap_hid_fido2;
+use ctap_hid_fido2::Cfg;
 
 fn main() {
-    println!("----- wink start -----");
-    if let Err(msg) = ctap_hid_fido2::wink(&ctap_hid_fido2::HidParam::get_default_params()){
+    if let Err(msg) = ctap_hid_fido2::wink(&Cfg::init()){
         println!("error: {:?}", msg);
     }
-    println!("----- wink end -----");
 }
 ```
 
@@ -216,19 +234,22 @@ fn main() {
 - verifier::verify_attestation()
 - verifier::verify_assertion()
 
+If you want to use Yubikey bio for fingerprint authentication, specify None for pin.
+
 ```rust
 use anyhow::Result;
 use ctap_hid_fido2;
 use ctap_hid_fido2::util;
 use ctap_hid_fido2::verifier;
-use ctap_hid_fido2::HidParam;
+use ctap_hid_fido2::Cfg;
 
 fn main() -> Result<()> {
     println!("----- test-with-pin-non-rk start -----");
 
     // parameter
     let rpid = "test.com";
-    let pin = "1234";
+    let pin = Some("1234");
+    // let pin = None; // Yubikey bio for fingerprint authentication
     let challenge = verifier::create_challenge();
 
     // Register
@@ -241,10 +262,10 @@ fn main() -> Result<()> {
     );
 
     let att = ctap_hid_fido2::make_credential(
-        &HidParam::get_default_params(),
+        &Cfg::init(),
         rpid,
         &challenge,
-        Some(pin),
+        pin,
     )?;
 
     println!("- Register Success!!");
@@ -279,11 +300,11 @@ fn main() -> Result<()> {
     );
 
     let ass = ctap_hid_fido2::get_assertion(
-        &HidParam::get_default_params(),
+        &Cfg::init(),
         rpid,
         &challenge,
         &verify_result.credential_id,
-        Some(pin),
+        pin,
     )?;
     println!("- Authenticate Success!!");
     println!("Assertion");
@@ -357,20 +378,20 @@ Verify
 ```Rust
 use ctap_hid_fido2::verifier;
 use ctap_hid_fido2::make_credential_params::Extension as Mext;
-use ctap_hid_fido2::HidParam;
+use ctap_hid_fido2::Cfg;
 
 fn main() -> Result<()> {
 
   let rpid = "test.com";
-  let pin = "1234";
+  let pin = Some("1234");
   let challenge = verifier::create_challenge();
 
   let ext = Mext::HmacSecret(Some(true));
   let att = ctap_hid_fido2::make_credential_with_extensions(
-      &HidParam::get_default_params(),
+      &Cfg::init(),
       rpid,
       &challenge,
-      Some(pin),
+      pin,
       Some(&vec![ext]),
   )?;
 }
@@ -383,22 +404,22 @@ fn main() -> Result<()> {
 ```Rust
 use ctap_hid_fido2::verifier;
 use ctap_hid_fido2::get_assertion_params::Extension as Gext;
-use ctap_hid_fido2::HidParam;
+use ctap_hid_fido2::Cfg;
 
 fn main() -> Result<()> {
 
   let rpid = "test.com";
-  let pin = "1234";
+  let pin = Some("1234");
   let challenge = verifier::create_challenge();
   let credential_id = ???;
   
   let ext = Gext::create_hmac_secret_from_string("this is salt");
   let ass = ctap_hid_fido2::get_assertion_with_extensios(
-      &HidParam::get_default_params(),
+      &Cfg::init(),
       rpid,
       &challenge,
       &credential_id,
-      Some(pin),
+      pin,
       Some(&vec![ext]),
   )?;
 }
@@ -416,14 +437,14 @@ use ctap_hid_fido2;
 use ctap_hid_fido2::public_key_credential_user_entity::PublicKeyCredentialUserEntity;
 use ctap_hid_fido2::util;
 use ctap_hid_fido2::verifier;
-use ctap_hid_fido2::HidParam;
+use ctap_hid_fido2::Cfg;
 
 fn main() -> Result<()> {
     println!("----- test-with-pin-rk start -----");
 
     // parameter
     let rpid = "ge.com";
-    let pin = "1234";
+    let pin = Some("1234");
 
     // Register
     println!("Register - make_credential()");
@@ -439,10 +460,10 @@ fn main() -> Result<()> {
     println!("- rkparam       = {}", rkparam);
 
     let att = ctap_hid_fido2::make_credential_rk(
-        &HidParam::get_default_params(),
+        &Cfg::init(),
         rpid,
         &challenge,
-        Some(pin),
+        pin,
         &rkparam,
     )?;
 
@@ -470,10 +491,10 @@ fn main() -> Result<()> {
     println!("Authenticate - get_assertions_rk()");
     let challenge = verifier::create_challenge();
     let asss = ctap_hid_fido2::get_assertions_rk(
-        &HidParam::get_default_params(),
+        &Cfg::init(),
         rpid,
         &challenge,
-        Some(pin),
+        pin,
     )?;
     println!("Authenticate Success!!");
 
@@ -495,7 +516,7 @@ fn main() -> Result<()> {
 
 
 
-## CTAP 2.1 PRE
+## CTAP 2.1
 
 ### authenticatorCredentialManagement
 
@@ -509,7 +530,7 @@ Get discoverable credentials metadata.
 
 ``` rust
 match ctap_hid_fido2::credential_management_get_creds_metadata(
-    &ctap_hid_fido2::HidParam::get_default_params(),
+    &Cfg::init(),
     pin,
 ) {
     Ok(result) => println!("{}", result),
@@ -524,7 +545,7 @@ match ctap_hid_fido2::credential_management_get_creds_metadata(
 Enumerate RPs present on the authenticator.
 
 ```rust
-match ctap_hid_fido2::credential_management_enumerate_rps(&HidParam::get_default_params(), pin)
+match ctap_hid_fido2::credential_management_enumerate_rps(&Cfg::init(), pin)
 {
     Ok(results) => {
         for r in results {
@@ -543,7 +564,7 @@ Enumerate the credentials for a RP.
 
 ```rust
 match ctap_hid_fido2::credential_management_enumerate_credentials(
-    &HidParam::get_default_params(),
+    &Cfg::init(),
     pin,
     rpid_hash_bytes,
 ) {
@@ -568,7 +589,7 @@ pkcd.id = util::to_str_hex(credential_id.unwrap());
 pkcd.ctype = "public_key".to_string();
 
 match ctap_hid_fido2::credential_management_delete_credential(
-    &HidParam::get_default_params(),
+    &Cfg::init(),
     pin,
     Some(pkcd),
 ) {
@@ -581,7 +602,7 @@ match ctap_hid_fido2::credential_management_delete_credential(
 
 ### authenticatorBioEnrollment
 
-This command manages the fingerprints in the authenticator.<br>[6.7. authenticatorBioEnrollment (0x09)](https://fidoalliance.org/specs/fido-v2.1-rd-20210309/fido-client-to-authenticator-protocol-v2.1-rd-20210309.html#authenticatorBioEnrollment)
+This command manages the fingerprints in the authenticator.<br>[6.7. authenticatorBioEnrollment (0x09)](https://fidoalliance.org/specs/fido-v2.1-ps-20210615/fido-client-to-authenticator-protocol-v2.1-ps-20210615.html#authenticatorBioEnrollment)
 
 
 
@@ -591,7 +612,7 @@ Get fingerprint sensor information.
 
 ```Rust
 match ctap_hid_fido2::bio_enrollment_get_fingerprint_sensor_info(
-    &HidParam::get_default_params(),
+    &Cfg::init(),
 ) {
     Ok(result) => println!("- {:?}", result),
     Err(e) => println!("- error: {:?}", e),
@@ -606,7 +627,7 @@ Enumurate a list of registered fingerprints.
 
 ```Rust
 match ctap_hid_fido2::bio_enrollment_enumerate_enrollments(
-    &HidParam::get_default_params(),
+    &Cfg::init(),
     pin,
 ) {
     Ok(infos) => for i in infos {println!("- {}", i)},
@@ -624,7 +645,7 @@ Enroll one fingerprint.<br>run `bio_enrollment_begin` first and then `bio_enroll
 fn bio_enrollment(pin: &str) -> Result<(), String> {
     println!("bio_enrollment_begin");
     let result = ctap_hid_fido2::bio_enrollment_begin(
-        &HidParam::get_default_params(),
+        &Cfg::init(),
         pin,
         Some(10000),
     )?;
@@ -656,9 +677,9 @@ Update the registered name of the fingerprint.
 
 ```rust
 match ctap_hid_fido2::bio_enrollment_set_friendly_name(
-    &HidParam::get_default_params(),
+    &Cfg::init(),
     pin,
-    TemplateInfo::new(util::to_str_hex(template_id), name),
+    template_id, "display-name",
 ) {
     Ok(()) => println!("- Success"),
     Err(e) => println!("- error: {:?}", e),
@@ -673,127 +694,12 @@ Delete a fingerprint.
 
 ```rust
 match ctap_hid_fido2::bio_enrollment_remove(
-     &HidParam::get_default_params(),
+     &Cfg::init(),
      pin,
-     util::to_str_hex(template_id),
+     template_id,
  ) {
      Ok(_) => println!("- Success"),
      Err(e) => println!("- error: {:?}", e),
  }
-```
-
-
-
-
-## Nitrokey Custom Commands
-
-for Nitrokey FIDO2 only.
-
-
-
-### nitrokey::get_version()
-Query the firmware version of Nitrokey.
-
-```rust
-fn main() {
-    println!("----- Nitrokey GETVERSION start -----");
-    // get 4byte payload "2001" -> ver 2.0.0.1
-    match ctap_hid_fido2::nitrokey::get_version(&ctap_hid_fido2::HidParam::get_default_params()) {
-        Ok(version) => println!("version = {}", version),
-        Err(err) => println!("version = {}", err),
-    };
-    println!("----- Nitrokey GETVERSION end -----");
-}
-```
-
-**console**
-
-``` sh
------ Nitrokey GETVERSION start -----
-version = 2.2.0.1
------ Nitrokey GETVERSION end -----
-```
-
-
-
-### nitrokey::get_status()
-Query the Status of Nitrokey.
-
-```rust
-fn main() {
-    println!("----- Nitrokey GETSTATUS start -----");
-    match ctap_hid_fido2::nitrokey::get_status(&ctap_hid_fido2::HidParam::get_default_params()) {
-        Ok(status) => status.print("status"),
-        Err(err) => println!("status = {}", err),
-    };
-    println!("----- Nitrokey GETSTATUS end -----");
-}
-```
-
-**console**
-
-```sh
------ Nitrokey GETSTATUS start -----
-status
-- is_button_pressed_raw          = false
-- button_state                   = 3
-- button_state                   = BstUnpressed
-- last_button_cleared_time_delta = 131
-- last_button_pushed_time_delta  = 131
-- led_is_blinking                = false
-- u2f_ms_clear_button_period     = 200
-- u2f_ms_init_button_period      = 5
-- button_min_press_t_ms          = 100
------ Nitrokey GETSTATUS end -----
-```
-
-
-
-### nitrokey::get_rng()
-
-Generate a random number.
-
-```rust
-fn main() {
-    println!("----- Nitrokey GETRNG start -----");
-    // get 8 byte rundom data
-    match ctap_hid_fido2::nitrokey::get_rng(&ctap_hid_fido2::HidParam::get_default_params(), 8) {
-        Ok(rng) => println!("rng = {}", rng),
-        Err(err) => println!("rng = {}", err),
-    };
-    println!("----- Nitrokey GETRNG end -----");
-}
-```
-
-**console**
-
-```sh
------ Nitrokey GETRNG start -----
-rng = D93C4D39DAA8FEF8
------ Nitrokey GETRNG end -----
-```
-
-
-
-## Nitrokey Firmware Update Tool
-
-see [nitro-update](https://github.com/gebogebogebo/ctap-hid-fido2/tree/master/examples/nitro-update)
-
-```zsh
-NitoroKey Firmwware Update Tool(Non-Formula)
-
-USAGE:
-    nitro-update [FLAGS] [OPTIONS]
-
-FLAGS:
-    -b, --bootloader    Set to bootloader mode.
-    -d, --download      Download Firmware json file from Web.
-    -h, --help          Prints help information
-    -i, --info          Get Firmware Information.
-    -V, --version       Prints version information
-
-OPTIONS:
-    -j, --json <file>     Checking Firmware json file.
-    -f, --flash <file>    Write firmware.
 ```
 

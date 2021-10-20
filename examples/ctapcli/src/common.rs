@@ -1,6 +1,3 @@
-
-use rpassword;
-
 pub fn get_input() -> String {
     let mut word = String::new();
     std::io::stdin().read_line(&mut word).ok();
@@ -8,7 +5,7 @@ pub fn get_input() -> String {
 }
 
 pub fn get_input_with_message(message: &str) -> String {
-    println!("{}",message);
+    println!("{}", message);
     let input = get_input();
     println!();
     input

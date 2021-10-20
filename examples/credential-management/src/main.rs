@@ -2,7 +2,7 @@ use ctap_hid_fido2;
 use ctap_hid_fido2::public_key_credential_descriptor::PublicKeyCredentialDescriptor;
 use ctap_hid_fido2::public_key_credential_user_entity::PublicKeyCredentialUserEntity;
 use ctap_hid_fido2::util;
-use ctap_hid_fido2::HidParam;
+use ctap_hid_fido2::Key;
 use ctap_hid_fido2::InfoParam;
 extern crate clap;
 use clap::{App, Arg};
@@ -10,7 +10,7 @@ use clap::{App, Arg};
 fn metadata(pin: Option<&str>) {
     println!("# credential_management_get_creds_metadata()");
     match ctap_hid_fido2::credential_management_get_creds_metadata(
-        &HidParam::get_default_params(),
+        &Key::auto(),
         pin,
     ) {
         Ok(result) => println!("{}", result),
@@ -20,7 +20,7 @@ fn metadata(pin: Option<&str>) {
 
 fn rps(pin: Option<&str>) {
     println!("# credential_management_enumerate_rps()");
-    match ctap_hid_fido2::credential_management_enumerate_rps(&HidParam::get_default_params(), pin)
+    match ctap_hid_fido2::credential_management_enumerate_rps(&Key::auto(), pin)
     {
         Ok(results) => {
             for r in results {
@@ -39,7 +39,7 @@ fn credentials(pin: Option<&str>, rpid_hash: Option<&str>) {
     let rpid_hash_bytes: Vec<u8> = util::to_str_hex(rpid_hash.unwrap());
 
     match ctap_hid_fido2::credential_management_enumerate_credentials(
-        &HidParam::get_default_params(),
+        &Key::auto(),
         pin,
         &rpid_hash_bytes,
     ) {
@@ -62,7 +62,7 @@ fn delete(pin: Option<&str>, credential_id: Option<&str>) {
     pkcd.ctype = "public_key".to_string();
 
     match ctap_hid_fido2::credential_management_delete_credential(
-        &HidParam::get_default_params(),
+        &Key::auto(),
         pin,
         Some(pkcd),
     ) {
@@ -86,7 +86,7 @@ fn update(pin: Option<&str>, credential_id: Option<&str>) {
     pkcue.display_name = "test-display".to_string();
 
     match ctap_hid_fido2::credential_management_update_user_information(
-        &HidParam::get_default_params(),
+        &Key::auto(),
         pin,
         Some(pkcd),
         Some(pkcue),
@@ -164,7 +164,7 @@ fn main() {
     ctap_hid_fido2::hello();
 
     match ctap_hid_fido2::enable_info_param(
-        &HidParam::get_default_params(),
+        &Key::auto(),
         &InfoParam::VersionsFido21Pre,
     ) {
         Ok(result) => println!("Enable CTAP 2.1 PRE = {:?}", result),
@@ -173,7 +173,7 @@ fn main() {
 
     if matches.is_present("info") {
         println!("get_info()");
-        match ctap_hid_fido2::get_info(&HidParam::get_default_params()) {
+        match ctap_hid_fido2::get_info(&Key::auto()) {
             Ok(info) => println!("{}", info),
             Err(error) => println!("error: {:?}", error),
         };

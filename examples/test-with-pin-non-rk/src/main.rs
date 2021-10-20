@@ -3,16 +3,25 @@ use ctap_hid_fido2::get_assertion_params::Extension as Gext;
 use ctap_hid_fido2::make_credential_params::Extension as Mext;
 use ctap_hid_fido2::str_buf::StrBuf;
 use ctap_hid_fido2::verifier;
-use ctap_hid_fido2::HidParam;
+use ctap_hid_fido2::Cfg;
+use ctap_hid_fido2::Key;
 
 fn main() -> Result<()> {
-    println!("----- test-with-pin-non-rk start -----");
+    let key_auto = true;
+    println!(
+        "----- test-with-pin-non-rk start : key_auto = {:?} -----",
+        key_auto
+    );
+    let mut cfg = Cfg::init();
+    //cfg.enable_log = true;
+    cfg.hid_params = if key_auto { Key::auto() } else { Key::get() };
 
     // parameter
-    let hmac_make=false;
-    let hmac_get=false;
+    let hmac_make=true;
+    let hmac_get=true;
     let rpid = "test.com";
-    let pin = "1234";
+    let pin = Some("1234");
+    //let pin = None;
     let challenge = verifier::create_challenge();
 
     // Register
@@ -31,18 +40,18 @@ fn main() -> Result<()> {
         // with extensions
         let ext = Mext::HmacSecret(Some(true));
         ctap_hid_fido2::make_credential_with_extensions(
-            &HidParam::get_default_params(),
+            &cfg,
             rpid,
             &challenge,
-            Some(pin),
+            pin,
             Some(&vec![ext]),
         )?
     }else{
         ctap_hid_fido2::make_credential(
-            &HidParam::get_default_params(),
+            &cfg,
             rpid,
             &challenge,
-            Some(pin),
+            pin
         )?
     };
 
@@ -79,20 +88,20 @@ fn main() -> Result<()> {
     let ass = if hmac_get{
         let ext = Gext::create_hmac_secret_from_string("this is test");
         ctap_hid_fido2::get_assertion_with_extensios(
-            &HidParam::get_default_params(),
+            &cfg,
             rpid,
             &challenge,
             &verify_result.credential_id,
-            Some(pin),
+            pin,
             Some(&vec![ext]),
         )?    
     }else{
         ctap_hid_fido2::get_assertion(
-            &HidParam::get_default_params(),
+            &cfg,
             rpid,
             &challenge,
             &verify_result.credential_id,
-            Some(pin),
+            pin,
         )?
     };
 

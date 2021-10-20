@@ -7,44 +7,35 @@ use crate::get_assertion_params::Extension as Gext;
 use crate::get_assertion_response;
 use crate::get_next_assertion_command;
 use crate::hmac::HmacExt;
-#[allow(unused_imports)]
-use crate::util;
 use crate::FidoKeyHid;
-use crate::HidParam;
 use anyhow::{Error, Result};
 
 pub fn get_assertion(
-    hid_params: &[HidParam],
+    device: &FidoKeyHid,
     rpid: &str,
     challenge: &[u8],
     credential_id: &[u8],
     pin: Option<&str>,
     up: bool,
-    uv: Option<bool>,
+    //uv: Option<bool>,
     extensions: Option<&Vec<Gext>>,
 ) -> Result<Vec<Assertion>> {
     // init
-    let device = FidoKeyHid::new(hid_params).map_err(Error::msg)?;
     let cid = ctaphid::ctaphid_init(&device).map_err(Error::msg)?;
 
-    /*
-    // uv
     let uv = {
         match pin {
-            Some(_) => false,
-            None => true,
+            Some(_) => None,
+            None => Some(true),
         }
     };
-    */
 
     let hmac_ext = create_hmacext(&device, &cid, extensions)?;
 
     // pin token
     let pin_token = {
         if let Some(pin) = pin {
-            //let shared_secret = client_pin::get_shared_secret(&device, &cid, pin).map_err(Error::msg)?;
-            //Some(client_pin::get_pin_token2(&shared_secret, &device, &cid, pin).map_err(Error::msg)?)
-            Some(client_pin::get_pin_token(&device, &cid, pin).map_err(Error::msg)?)
+            Some(client_pin::get_pin_token(&device, &cid, pin)?)
         } else {
             None
         }
@@ -65,11 +56,9 @@ pub fn get_assertion(
 
         get_assertion_command::create_payload(params, hmac_ext)
     };
-    util::debugp("- get_assertion", &send_payload);
 
     // send & response
     let response_cbor = ctaphid::ctaphid_cbor(&device, &cid, &send_payload).map_err(Error::msg)?;
-    util::debugp("- response_cbor", &response_cbor);
 
     let ass = get_assertion_response::parse_cbor(&response_cbor).map_err(Error::msg)?;
 
@@ -84,7 +73,7 @@ pub fn get_assertion(
 
 fn get_next_assertion(device: &FidoKeyHid, cid: &[u8]) -> Result<Assertion, String> {
     let send_payload = get_next_assertion_command::create_payload();
-    let response_cbor = ctaphid::ctaphid_cbor(&device, &cid, &send_payload)?;
+    let response_cbor = ctaphid::ctaphid_cbor(device, cid, &send_payload)?;
     get_assertion_response::parse_cbor(&response_cbor)
 }
 

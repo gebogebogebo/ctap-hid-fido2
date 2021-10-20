@@ -3,9 +3,10 @@ Utility API
 */
 
 use crate::str_buf::StrBuf;
+use crypto::digest::Digest;
+use crypto::sha2::Sha256;
 use num::NumCast;
 use serde_cbor::Value;
-use sha2::{Digest, Sha256};
 use std::collections::BTreeMap;
 
 pub fn to_hex_str(bytes: &[u8]) -> String {
@@ -27,17 +28,17 @@ pub fn print_typename<T>(_: T) {
 // pub crate
 //
 
+/*
 // for debug
 #[allow(dead_code)]
 pub(crate) fn is_debug() -> bool {
     false
 }
+*/
 
 #[allow(dead_code)]
 pub(crate) fn debugp(title: &str, bytes: &[u8]) {
-    if is_debug() {
-        println!("{}", StrBuf::bufh(title, bytes));
-    }
+    println!("{}", StrBuf::bufh(title, bytes));
 }
 
 // for cbor
@@ -177,13 +178,14 @@ pub(crate) fn cbor_value_print(value: &Value) {
     };
 }
 
-#[allow(dead_code)]
 pub(crate) fn create_clientdata_hash(challenge: Vec<u8>) -> Vec<u8> {
     // sha256
+    let mut out = [0u8; 32];
     let mut hasher = Sha256::new();
-    hasher.update(challenge);
-    let result = hasher.finalize();
-    result.to_vec()
+    hasher.input(&challenge);
+    hasher.result(&mut out);
+    //print!("{}", StrBuf::bufh("- Sha256(challenge)", &out));
+    out.to_vec()
 }
 
 #[allow(dead_code)]

@@ -62,6 +62,7 @@ pub fn create_payload(
     rpid_hash: Option<Vec<u8>>,
     pkcd: Option<PublicKeyCredentialDescriptor>,
     pkcue: Option<PublicKeyCredentialUserEntity>,
+    use_pre_credential_management: bool,
 ) -> Vec<u8> {
     let mut map = BTreeMap::new();
 
@@ -126,7 +127,12 @@ pub fn create_payload(
     //parse_test(cbor.clone());
 
     // create payload
-    let mut payload = [ctapdef::AUTHENTICATOR_CREDENTIAL_MANAGEMENT].to_vec();
+    let mut payload = if use_pre_credential_management {
+        [ctapdef::AUTHENTICATOR_CREDENTIAL_MANAGEMENT_P].to_vec()
+    } else {
+        [ctapdef::AUTHENTICATOR_CREDENTIAL_MANAGEMENT].to_vec()
+    };
+
     payload.append(&mut to_vec(&cbor).unwrap());
     payload
 }

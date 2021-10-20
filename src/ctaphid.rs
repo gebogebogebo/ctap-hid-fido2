@@ -227,10 +227,25 @@ pub fn ctaphid_wink(device: &FidoKeyHid, cid: &[u8]) -> Result<(), String> {
     cmd[6] = 0x00;
     cmd[7] = 0x00;
 
-    //println!("CTAPHID_WINK = {}", util::to_hex_str(&cmd));
+    if device.enable_log {
+        println!(
+            "- wink({:02})    = {:?}",
+            cmd.len(),
+            util::to_hex_str(&cmd)
+        );
+    }
 
     device.write(&cmd)?;
+
     let _buf = device.read()?;
+
+    if device.enable_log {
+        println!(
+            "- response wink({:02})    = {:?}",
+            _buf.len(),
+            util::to_hex_str(&_buf)
+        );
+    }
 
     Ok(())
 }
@@ -241,10 +256,10 @@ fn ctaphid_cbormsg(
     command: u8,
     payload: &[u8],
 ) -> Result<Vec<u8>, String> {
-
-    if util::is_debug() {
-        println!("");
-        println!("-- send cbor = {}", util::to_hex_str(payload));
+    if device.enable_log {
+        println!();
+        println!("-- send cbor({:02})", payload.len());
+        println!("{}", util::to_hex_str(payload));
         println!("--");
     }
 
@@ -294,7 +309,9 @@ fn ctaphid_cbormsg(
             break;
         } else if st.0 == CTAPHID_KEEPALIVE {
             if !keep_alive_msg_flag {
-                println!("- touch fido key");
+                if !device.keep_alive_msg.is_empty() {
+                    println!("{}",device.keep_alive_msg);
+                }
                 keep_alive_msg_flag = true;
             }
             thread::sleep(time::Duration::from_millis(100));
@@ -346,9 +363,9 @@ fn ctaphid_cbormsg(
         // get data
         let data = get_data(st, payload);
 
-        if util::is_debug() {
-            println!("");
-            println!("## response cbor");
+        if device.enable_log {
+            println!();
+            println!("## response cbor({:02})", data.len());
             println!("{}", util::to_hex_str(&data));
             println!("##");
         }

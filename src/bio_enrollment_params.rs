@@ -1,9 +1,50 @@
 use crate::pintoken::PinToken;
 use crate::str_buf::StrBuf;
+use crate::util;
 use crate::FidoKeyHid;
 use std::fmt;
 
-#[allow(dead_code)]
+#[derive(Debug, Default, Clone)]
+pub struct BioSensorInfo {
+    pub modality: Modality,
+    pub fingerprint_kind: FingerprintKind,
+    pub max_capture_samples_required_for_enroll: u32,
+    pub max_template_friendly_name: u32,
+}
+impl fmt::Display for BioSensorInfo {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let mut strbuf = StrBuf::new(0);
+        strbuf.addln("- Modality");
+        strbuf.addln(&format!("  - {:?}", self.modality));
+
+        strbuf.addln("- Fingerprint kind");
+        match self.fingerprint_kind {
+            FingerprintKind::TouchType => {
+                strbuf.addln("  - touch type fingerprints");
+            }
+            FingerprintKind::SwipeType => {
+                strbuf.addln("  - swipe type fingerprints");
+            }
+            _ => {
+                strbuf.addln("  - unknown");
+            }
+        }
+
+        strbuf.addln("- Maximum good samples required for enrollment");
+        strbuf.addln(&format!(
+            "  - {:?}",
+            self.max_capture_samples_required_for_enroll
+        ));
+
+        strbuf.addln(
+            "- Maximum number of bytes the authenticator will accept as a templateFriendlyName",
+        );
+        strbuf.addln(&format!("  - {:?}", self.max_template_friendly_name));
+
+        write!(f, "{}", strbuf.build())
+    }
+}
+
 #[derive(Debug, Copy, Clone)]
 pub enum Modality {
     Unknown,
@@ -92,9 +133,9 @@ pub struct TemplateInfo {
     pub template_friendly_name: Option<String>,
 }
 impl TemplateInfo {
-    pub fn new(template_id: Vec<u8>, template_friendly_name: Option<&str>) -> TemplateInfo {
+    pub fn new(template_id: &[u8], template_friendly_name: Option<&str>) -> TemplateInfo {
         let mut ret = TemplateInfo {
-            template_id,
+            template_id: template_id.to_vec(),
             ..Default::default()
         };
         if let Some(v) = template_friendly_name {
@@ -110,23 +151,16 @@ impl fmt::Display for TemplateInfo {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let name = self.template_friendly_name.clone().unwrap();
         let mut strbuf = StrBuf::new(19);
+        /*
         strbuf
             .appenh("- template_id", &self.template_id)
             .append("- template_friendly_name", &name);
         write!(f, "{}", strbuf.build())
-
-        /*
-        let tmp1 = format!("({:02}byte)0x", self.template_id.len());
-        let tmp2 = format!("");
-        write!(
-            f,
-            "({}{},{}{:?})",
-            tmp1,
-            util::to_hex_str(&self.template_id),
-            tmp2,
-            self.template_friendly_name,
-        )
         */
+
+        strbuf.add(&format!("{:02} : ", util::to_hex_str(&self.template_id)));
+        strbuf.add(&name);
+        write!(f, "{}", strbuf.build())
     }
 }
 

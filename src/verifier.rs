@@ -8,7 +8,6 @@ use crate::util;
 use ring::digest;
 use ring::rand::SecureRandom;
 use ring::signature;
-//use x509_parser::parse_x509_der;
 use x509_parser::prelude::*;
 
 // Create Random Data
@@ -107,7 +106,7 @@ fn verify_sig(public_key_der: &[u8], challenge: &[u8], auth_data: &[u8], sig: &[
     let result = peer_public_key.verify(&message, sig);
 
     // log
-    print_verify_info(public_key_der, &message, sig, &result);
+    //print_verify_info(public_key_der, &message, sig, &result);
 
     match result {
         Ok(()) => true,
@@ -125,16 +124,13 @@ fn verify_rpid(rpid: &str, rpid_hash: &[u8]) -> bool {
     rpid_hash_comp == util::to_hex_str(rpid_hash)
 }
 
+#[allow(dead_code)]
 fn print_verify_info(
     public_key_der: &[u8],
     message: &[u8],
     sig: &[u8],
     verify_result: &Result<(), ring::error::Unspecified>,
 ) {
-    if !util::is_debug() {
-        return;
-    }
-
     let public_key_pem = util::convert_to_publickey_pem(public_key_der);
 
     println!("-----------------------------");
