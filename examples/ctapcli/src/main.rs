@@ -31,7 +31,7 @@ fn main() -> Result<()> {
     let app = App::new("ctapcli")
         .version("0.0.8")
         .author("gebo")
-        .about("This tool implements CTAP HID and can communicate with FIDO Authenticator.\n\nabout CTAP(Client to Authenticator Protocol)\nhttps://fidoalliance.org/specs/fido-v2.1-rd-20210309/fido-client-to-authenticator-protocol-v2.1-rd-20210309.html")
+        .about("This tool implements CTAP HID and can communicate with FIDO Authenticator.\n\nabout CTAP(Client to Authenticator Protocol)\nhttps://fidoalliance.org/specs/fido-v2.1-ps-20210615/fido-client-to-authenticator-protocol-v2.1-ps-20210615.html")
         .arg(
             Arg::with_name("device")
                 .help("Enumerate HID devices")
