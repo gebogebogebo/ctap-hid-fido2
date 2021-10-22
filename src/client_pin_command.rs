@@ -12,7 +12,7 @@ pub enum SubCommand {
     GetPinToken = 0x05,
     GetPinUvAuthTokenUsingUvWithPermissions = 0x06,
     GetUVRetries= 0x07,
-    //GetPinUvAuthTokenUsingPinWithPermissions = 0x09,
+    GetPinUvAuthTokenUsingPinWithPermissions = 0x09,
 }
 
 pub enum Permission {
@@ -84,7 +84,28 @@ pub fn create_payload_change_pin(
     to_payload(map)
 }
 
-pub fn create_payload_get_pin_uv_authToken_using_uv_with_permissions(
+pub fn create_payload_get_pin_uv_auth_token_using_pin_with_permissions(
+    key_agreement: &cose::CoseKey,
+    pin_hash_enc: &[u8],
+    permission: Permission,
+) -> Vec<u8> {
+    let mut map = BTreeMap::new();
+    insert_pin_protocol(&mut map);
+    insert_sub_command(&mut map, SubCommand::GetPinUvAuthTokenUsingPinWithPermissions);
+    insert_key_agreement(&mut map, key_agreement);
+
+    // pinHashEnc(0x06) - Byte String
+    let value = Value::Bytes(pin_hash_enc.to_vec());
+    map.insert(Value::Integer(0x06), value);
+
+    // permission(0x09) - Unsigned Integer
+    let value = Value::Integer(permission as i128);
+    map.insert(Value::Integer(0x09), value);
+
+    to_payload(map)
+}
+
+pub fn create_payload_get_pin_uv_auth_token_using_uv_with_permissions(
     key_agreement: &cose::CoseKey,
     permission: Permission,
     rpid: &str,
@@ -177,5 +198,6 @@ pub fn create_payload(sub_command: SubCommand) -> Result<Vec<u8>, String> {
         SubCommand::GetPinToken => Err(String::from("Not Supported")),
         SubCommand::GetPinUvAuthTokenUsingUvWithPermissions => Err(String::from("Not Supported")),
         SubCommand::GetUVRetries => Ok(create_payload_get_uv_retries()),
+        SubCommand::GetPinUvAuthTokenUsingPinWithPermissions => Err(String::from("Not Supported")),
     }
 }

@@ -35,8 +35,8 @@ pub fn bio(matches: &clap::ArgMatches) -> Result<()> {
     } else if matches.is_present("test") || matches.is_present("test-with-log") {
         bio_test(matches)?;
     } else {
-        let pin = common::get_pin();
-        //let pin = "1234";
+        //let pin = common::get_pin();
+        let pin = "1234";
 
         if matches.is_present("delete") {
             delete(matches, &pin)?;
