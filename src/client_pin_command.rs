@@ -15,6 +15,7 @@ pub enum SubCommand {
     GetPinUvAuthTokenUsingPinWithPermissions = 0x09,
 }
 
+#[allow(dead_code)]
 pub enum Permission {
     Mc = 0x01,
     Ga = 0x02,

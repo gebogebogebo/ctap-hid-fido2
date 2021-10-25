@@ -9,16 +9,20 @@ use crate::enc_hmac_sha_256;
 use crate::pintoken::PinToken;
 use crate::ss::SharedSecret;
 use crate::FidoKeyHid;
+use crate::cose;
+
+pub fn get_authenticator_key_agreement(device: &FidoKeyHid, cid: &[u8]) -> Result<cose::CoseKey> {
+    let send_payload = client_pin_command::create_payload(PinCmd::GetKeyAgreement).map_err(Error::msg)?;
+    let response_cbor = ctaphid::ctaphid_cbor(device, &cid, &send_payload).map_err(Error::msg)?;
+    let authenticator_key_agreement = client_pin_response::parse_cbor_client_pin_get_keyagreement(&response_cbor).map_err(Error::msg)?;
+    Ok(authenticator_key_agreement)
+}
 
 pub fn get_pin_token(device: &FidoKeyHid, cid: &[u8], pin: &str) -> Result<PinToken> {
     if !pin.is_empty() {
-        let send_payload = client_pin_command::create_payload(PinCmd::GetKeyAgreement).map_err(Error::msg)?;
-        let response_cbor = ctaphid::ctaphid_cbor(device, cid, &send_payload).map_err(Error::msg)?;
+        let authenticator_key_agreement = get_authenticator_key_agreement(device,cid)?;
 
-        let key_agreement =
-            client_pin_response::parse_cbor_client_pin_get_keyagreement(&response_cbor).map_err(Error::msg)?;
-
-        let shared_secret = SharedSecret::new(&key_agreement).map_err(Error::msg)?;
+        let shared_secret = SharedSecret::new(&authenticator_key_agreement).map_err(Error::msg)?;
         let pin_hash_enc = shared_secret.encrypt_pin(pin).map_err(Error::msg)?;
 
         let send_payload = client_pin_command::create_payload_get_pin_token(

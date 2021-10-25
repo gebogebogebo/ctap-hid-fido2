@@ -67,12 +67,13 @@ pub fn create_payload(
 
             // pinUvAuthParam (0x05)
             // - authenticate(pinUvAuthToken, fingerprint (0x01) || enumerateEnrollments (0x04)).
-            let mut message = vec![0x01_u8];
-            message.append(&mut vec![sub_command as u8]);
-            message.append(&mut sub_command_params_cbor.to_vec());
-
-            let sig = enc_hmac_sha_256::authenticate(&pin_token.key, &message);
-            let pin_uv_auth_param = sig[0..16].to_vec();
+            let pin_uv_auth_param = {
+                let mut message = vec![0x01_u8];
+                message.append(&mut vec![sub_command as u8]);
+                message.append(&mut sub_command_params_cbor.to_vec());
+                let sig = enc_hmac_sha_256::authenticate(&pin_token.key, &message);
+                sig[0..16].to_vec()
+            };
 
             map.insert(Value::Integer(0x05), Value::Bytes(pin_uv_auth_param));
         }
