@@ -23,7 +23,7 @@ fn load_cfg() -> ctap_hid_fido2::Cfg {
     let mut cfg = Cfg::init();
     //cfg.enable_log = true;
     cfg.use_pre_bio_enrollment = false;
-    //cfg.use_pre_credential_management = false;
+    cfg.use_pre_credential_management = false;
     cfg
 }
 
