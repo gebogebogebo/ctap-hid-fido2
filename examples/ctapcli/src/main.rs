@@ -195,6 +195,8 @@ fn main() -> Result<()> {
         }
     }
 
+    //ctap_hid_fido2::selection(&CFG)?;
+
     if matches.is_present("wink") {
         println!("Blink LED on FIDO key.\n");
         ctap_hid_fido2::wink(&CFG)?;
