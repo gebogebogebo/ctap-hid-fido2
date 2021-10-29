@@ -1,4 +1,4 @@
-use anyhow::Result;
+use anyhow::{anyhow, Result};
 
 extern crate clap;
 use clap::{App, Arg, SubCommand};
@@ -9,6 +9,7 @@ extern crate rpassword;
 #[allow(unused_imports)]
 use ctap_hid_fido2::util;
 use ctap_hid_fido2::{str_buf, Cfg};
+use ctap_hid_fido2::InfoParam;
 
 mod bio;
 mod common;
@@ -16,6 +17,7 @@ mod cred;
 mod info;
 mod memo;
 mod pin;
+
 
 use once_cell::sync::Lazy;
 static CFG: Lazy<Cfg> = Lazy::new(|| load_cfg());
@@ -50,6 +52,12 @@ fn main() -> Result<()> {
                 .help("Blink the LED on the FIDO key")
                 .short("w")
                 .long("wink")
+        )
+        .arg(
+            Arg::with_name("user-presence")
+                .help("User Presence Test")
+                .short("u")
+                .long("up")
         )
         .subcommand(
             SubCommand::with_name("pin")
@@ -195,7 +203,10 @@ fn main() -> Result<()> {
         }
     }
 
-    //ctap_hid_fido2::selection(&CFG)?;
+    if matches.is_present("user-presence") {
+        println!("User Presence Test.\n");
+        up()?;
+    }
 
     if matches.is_present("wink") {
         println!("Blink LED on FIDO key.\n");
@@ -237,12 +248,17 @@ fn main() -> Result<()> {
         Ok(result) => println!("- config : {:?}", result),
         Err(error) => println!("- config error: {:?}", error),
     };
-
-    println!("selection()");
-    match ctap_hid_fido2::selection(&HidParam::get_default_params()) {
-        Ok(result) => println!("- selection : {:?}", result),
-        Err(error) => println!("- selection error: {:?}", error),
-    };
     */
+
+    Ok(())
+}
+
+pub fn up() -> Result<()> {
+    if !ctap_hid_fido2::enable_info_param(&CFG, &InfoParam::VersionsFido21)? {
+        return Err(anyhow!(
+            "This authenticator is not supported for this functions."
+        ));
+    }
+    ctap_hid_fido2::selection(&CFG)?;
     Ok(())
 }
