@@ -284,7 +284,22 @@ pub fn make_credential(
 ) -> Result<make_credential_params::Attestation> {
     let device = get_device(cfg)?;
     make_credential::make_credential(
-        &device, rpid, challenge, pin, false, None, /*None,*/ None,
+        &device, rpid, challenge, pin, false, None, /*None,*/ None, None,
+    )
+}
+
+/// Registration command. Generate credentials (with PIN, non Resident Key) while also
+/// specifying the type of key you'd like to create.
+pub fn make_credential_with_key_type(
+    cfg: &LibCfg,
+    rpid: &str,
+    challenge: &[u8],
+    pin: Option<&str>,
+    key_type: Option<make_credential_params::CredentialSupportedKeyType>,
+) -> Result<make_credential_params::Attestation> {
+    let device = get_device(cfg)?;
+    make_credential::make_credential(
+        &device, rpid, challenge, pin, false, None, /*None,*/ None, key_type,
     )
 }
 
@@ -297,7 +312,7 @@ pub fn make_credential_with_extensions(
 ) -> Result<make_credential_params::Attestation> {
     let device = get_device(cfg)?;
     make_credential::make_credential(
-        &device, rpid, challenge, pin, false, None, /*None,*/ extensions,
+        &device, rpid, challenge, pin, false, None, /*None,*/ extensions, None,
     )
 }
 
@@ -319,6 +334,7 @@ pub fn make_credential_rk(
         Some(rkparam),
         //None,
         None,
+        None,
     )
 }
 
@@ -330,7 +346,7 @@ pub fn make_credential_without_pin(
 ) -> Result<make_credential_params::Attestation> {
     let device = get_device(cfg)?;
     make_credential::make_credential(
-        &device, rpid, challenge, None, false, None, /*None,*/ None,
+        &device, rpid, challenge, None, false, None, /*None,*/ None, None,
     )
 }
 

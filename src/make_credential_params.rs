@@ -75,3 +75,15 @@ pub enum Extension {
     #[strum(serialize = "hmac-secret")]
     HmacSecret(Option<bool>),
 }
+
+#[derive(Debug)]
+pub enum CredentialSupportedKeyType {
+    Ecdsa256 = -7,
+    Ed25519 = -8,
+}
+
+impl std::default::Default for CredentialSupportedKeyType {
+    fn default() -> Self {
+        Self::Ecdsa256
+    }
+}
