@@ -64,7 +64,7 @@ impl fmt::Display for Attestation {
     }
 }
 
-#[derive(Debug, Clone, strum_macros::ToString, AsRefStr)]
+#[derive(Debug, Clone, strum_macros::Display, AsRefStr)]
 pub enum Extension {
     #[strum(serialize = "credProtect")]
     CredProtect(Option<CredentialProtectionPolicy>),
