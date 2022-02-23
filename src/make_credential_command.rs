@@ -1,9 +1,10 @@
 use crate::ctapdef;
-use crate::make_credential_params::Extension;
+use crate::make_credential_params::{CredentialSupportedKeyType, Extension};
 use crate::util;
 use serde_cbor::to_vec;
 use serde_cbor::Value;
 use std::collections::BTreeMap;
+
 
 #[derive(Debug, Default)]
 pub struct Params {
@@ -17,6 +18,7 @@ pub struct Params {
     pub option_uv: Option<bool>,
     pub client_data_hash: Vec<u8>,
     pub pin_auth: Vec<u8>,
+    pub key_type: CredentialSupportedKeyType,
 }
 
 impl Params {
@@ -25,6 +27,7 @@ impl Params {
             rp_id: rp_id.to_string(),
             user_id: user_id.to_vec(),
             client_data_hash: util::create_clientdata_hash(challenge),
+            key_type: CredentialSupportedKeyType::Ecdsa256,
             ..Default::default()
         }
     }
@@ -88,7 +91,7 @@ pub fn create_payload(params: Params, extensions: Option<&Vec<Extension>>) -> Ve
 
     // 0x04 : pubKeyCredParams
     let mut pub_key_cred_params_val = BTreeMap::new();
-    pub_key_cred_params_val.insert(Value::Text("alg".to_string()), Value::Integer(-7));
+    pub_key_cred_params_val.insert(Value::Text("alg".to_string()), Value::Integer(params.key_type as i128));
     pub_key_cred_params_val.insert(
         Value::Text("type".to_string()),
         Value::Text("public-key".to_string()),

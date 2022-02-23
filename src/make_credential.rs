@@ -3,7 +3,7 @@ use crate::ctaphid;
 use crate::enc_hmac_sha_256;
 use crate::make_credential_command;
 use crate::make_credential_params;
-use crate::make_credential_params::Extension;
+use crate::make_credential_params::{CredentialSupportedKeyType, Extension};
 use crate::make_credential_response;
 use crate::public_key_credential_user_entity::PublicKeyCredentialUserEntity;
 use crate::FidoKeyHid;
@@ -22,6 +22,7 @@ pub fn make_credential(
     rkparam: Option<&PublicKeyCredentialUserEntity>,
     //uv: Option<bool>,
     extensions: Option<&Vec<Extension>>,
+    key_type: Option<CredentialSupportedKeyType>,
 ) -> Result<make_credential_params::Attestation> {
     // init
     let cid = ctaphid::ctaphid_init(device).map_err(Error::msg)?;
@@ -47,6 +48,7 @@ pub fn make_credential(
         let mut params = make_credential_command::Params::new(rpid, challenge.to_vec(), user_id);
         params.option_rk = rk;
         params.option_uv = uv;
+        params.key_type = key_type.unwrap_or(CredentialSupportedKeyType::Ecdsa256);
 
         if let Some(rkp) = rkparam {
             params.user_name = rkp.name.to_string();
