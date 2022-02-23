@@ -25,9 +25,6 @@
 			"path": "examples/credential-management"
 		},
 		{
-			"path": "examples/test-ctap21"
-		},
-		{
 			"path": "examples/ctapcli"
 		}
 	],

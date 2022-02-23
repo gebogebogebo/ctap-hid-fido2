@@ -106,6 +106,7 @@ pub fn create_payload_get_pin_uv_auth_token_using_pin_with_permissions(
     to_payload(map)
 }
 
+/* TODO WIP
 pub fn create_payload_get_pin_uv_auth_token_using_uv_with_permissions(
     key_agreement: &cose::CoseKey,
     permission: Permission,
@@ -126,6 +127,7 @@ pub fn create_payload_get_pin_uv_auth_token_using_uv_with_permissions(
 
     to_payload(map)
 }
+ */
 
 // create payload
 fn to_payload(map: BTreeMap<Value, Value>) -> Vec<u8> {

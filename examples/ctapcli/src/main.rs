@@ -23,9 +23,9 @@ use once_cell::sync::Lazy;
 static CFG: Lazy<Cfg> = Lazy::new(|| load_cfg());
 fn load_cfg() -> ctap_hid_fido2::Cfg {
     let mut cfg = Cfg::init();
-    //cfg.enable_log = true;
-    cfg.use_pre_bio_enrollment = false;
-    cfg.use_pre_credential_management = false;
+    cfg.enable_log = false;
+    cfg.use_pre_bio_enrollment = true;
+    cfg.use_pre_credential_management = true;
     cfg
 }
 
@@ -158,22 +158,17 @@ fn main() -> Result<()> {
                         .help("Test register and authenticate(with log)")
                         .long("test-log")
                 )
+        )
+        .subcommand(
+            SubCommand::with_name("cred")
+                .about("(alpha)Credential management\n- Enumerate discoverable credentials")
+                .arg(
+                    Arg::with_name("list")
+                        .help("List cred")
+                        .short("l")
+                        .long("list")
+                )
         );
-    /*
-    .subcommand(
-        SubCommand::with_name("cred")
-            .about("Credential management")
-            // - Enumerate discoverable credentials without any FLAGS and OPTIONS.
-            .arg(
-                Arg::with_name("pin")
-                    .help("pin")
-                    .required(true)
-                    .short("p")
-                    .long("pin")
-                    .takes_value(true)
-            )
-    )
-     */
 
     // Parse arguments
     let matches = app.get_matches();
@@ -234,13 +229,10 @@ fn main() -> Result<()> {
         bio::bio(matches)?;
     }
 
-    /*
     if let Some(ref matches) = matches.subcommand_matches("cred") {
         println!("Credential Management.\n");
         cred::cred(&matches)?;
     }
-
-    */
 
     /*
     println!("config()");
