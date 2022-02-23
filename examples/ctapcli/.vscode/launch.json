@@ -20,7 +20,7 @@
                 }
             },
             //"args": ["memo","-a"],
-            "args": ["cred","-p","1234"],
+            "args": ["cred","-m"],
             "cwd": "${workspaceFolder}"
         }
 

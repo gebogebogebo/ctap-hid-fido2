@@ -5,17 +5,6 @@ use ctap_hid_fido2::{util, Key, Cfg, InfoParam};
 extern crate clap;
 use clap::{App, Arg};
 
-fn metadata(cfg: &Cfg, pin: Option<&str>) {
-    println!("# credential_management_get_creds_metadata()");
-    match ctap_hid_fido2::credential_management_get_creds_metadata(
-        cfg,
-        pin,
-    ) {
-        Ok(result) => println!("{}", result),
-        Err(e) => println!("- error: {:?}", e),
-    }
-}
-
 fn rps(cfg: &Cfg, pin: Option<&str>) {
     println!("# credential_management_enumerate_rps()");
     match ctap_hid_fido2::credential_management_enumerate_rps(cfg, pin)
@@ -118,12 +107,6 @@ fn main() {
                 .default_value("1234"),
         )
         .arg(
-            Arg::with_name("metadata")
-                .help("credential_management_get_creds_metadata")
-                .short("m")
-                .long("metadata"),
-        )
-        .arg(
             Arg::with_name("rps")
                 .help("credential_management_enumerate_rps")
                 .short("r")
@@ -186,10 +169,6 @@ fn main() {
     println!("Value for pin: {:?}", pin);
 
     println!("----- credential-management start -----");
-
-    if matches.is_present("metadata") {
-        metadata(&cfg, pin);
-    }
 
     if matches.is_present("rps") {
         rps(&cfg, pin);

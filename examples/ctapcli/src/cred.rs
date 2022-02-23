@@ -4,10 +4,7 @@ use crate::str_buf::StrBuf;
 use crate::CFG;
 use crate::common;
 
-#[allow(dead_code)]
-pub fn cred(_matches: &clap::ArgMatches) -> Result<()> {
-    let pin = common::get_pin();
-
+pub fn cred(matches: &clap::ArgMatches) -> Result<()> {
     // check
     if ctap_hid_fido2::enable_info_option(&CFG, &InfoOption::CredMgmt)?.is_none()
         && ctap_hid_fido2::enable_info_option(&CFG, &InfoOption::CredentialMgmtPreview)?
@@ -17,6 +14,14 @@ pub fn cred(_matches: &clap::ArgMatches) -> Result<()> {
             "This authenticator is not Supported Credential management."
         ));
     };
+
+    let pin = common::get_pin();
+
+    if matches.is_present("metadata") {
+        println!("# credential_management_get_creds_metadata()");
+        metadata(&pin);
+        return Ok(());
+    }
 
     println!("Enumerate discoverable credentials.");
 
@@ -60,3 +65,14 @@ pub fn cred(_matches: &clap::ArgMatches) -> Result<()> {
 
     Ok(())
 }
+
+fn metadata(pin: &str) {
+    match ctap_hid_fido2::credential_management_get_creds_metadata(
+        &CFG,
+        Some(pin),
+    ) {
+        Ok(result) => println!("{}", result),
+        Err(e) => println!("- error: {:?}", e),
+    }
+}
+

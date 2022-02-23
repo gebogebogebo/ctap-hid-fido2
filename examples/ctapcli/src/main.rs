@@ -167,6 +167,12 @@ fn main() -> Result<()> {
                         .short("l")
                         .long("list")
                 )
+                .arg(
+                    Arg::with_name("metadata")
+                        .help("credential_management_get_creds_metadata")
+                        .short("m")
+                        .long("metadata"),
+                )
         );
 
     // Parse arguments
