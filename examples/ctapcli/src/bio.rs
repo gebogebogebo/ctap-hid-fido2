@@ -36,7 +36,6 @@ pub fn bio(matches: &clap::ArgMatches) -> Result<()> {
         bio_test(matches)?;
     } else {
         let pin = common::get_pin();
-        //let pin = "1234";
 
         if matches.is_present("delete") {
             delete(matches, &pin)?;

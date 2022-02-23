@@ -1,4 +1,4 @@
-use anyhow::Result;
+use anyhow::{anyhow, Result};
 
 extern crate clap;
 use clap::{App, Arg, SubCommand};
@@ -8,7 +8,7 @@ extern crate rpassword;
 
 #[allow(unused_imports)]
 use ctap_hid_fido2::util;
-use ctap_hid_fido2::{str_buf, Cfg};
+use ctap_hid_fido2::{str_buf, Cfg, InfoParam};
 
 mod bio;
 mod common;
@@ -17,12 +17,14 @@ mod info;
 mod memo;
 mod pin;
 
+
 use once_cell::sync::Lazy;
 static CFG: Lazy<Cfg> = Lazy::new(|| load_cfg());
 fn load_cfg() -> ctap_hid_fido2::Cfg {
     let mut cfg = Cfg::init();
     cfg.enable_log = false;
-    //cfg.use_pre_bio_enrollment = false;
+    cfg.use_pre_bio_enrollment = true;
+    cfg.use_pre_credential_management = true;
     cfg
 }
 
@@ -31,7 +33,7 @@ fn main() -> Result<()> {
     let app = App::new("ctapcli")
         .version("0.0.8")
         .author("gebo")
-        .about("This tool implements CTAP HID and can communicate with FIDO Authenticator.\n\nabout CTAP(Client to Authenticator Protocol)\nhttps://fidoalliance.org/specs/fido-v2.1-rd-20210309/fido-client-to-authenticator-protocol-v2.1-rd-20210309.html")
+        .about("This tool implements CTAP HID and can communicate with FIDO Authenticator.\n\nabout CTAP(Client to Authenticator Protocol)\nhttps://fidoalliance.org/specs/fido-v2.1-ps-20210615/fido-client-to-authenticator-protocol-v2.1-ps-20210615.html")
         .arg(
             Arg::with_name("device")
                 .help("Enumerate HID devices")
@@ -49,6 +51,12 @@ fn main() -> Result<()> {
                 .help("Blink the LED on the FIDO key")
                 .short("w")
                 .long("wink")
+        )
+        .arg(
+            Arg::with_name("user-presence")
+                .help("User Presence Test")
+                .short("u")
+                .long("up")
         )
         .subcommand(
             SubCommand::with_name("pin")
@@ -149,22 +157,23 @@ fn main() -> Result<()> {
                         .help("Test register and authenticate(with log)")
                         .long("test-log")
                 )
+        )
+        .subcommand(
+            SubCommand::with_name("cred")
+                .about("(alpha)Credential management\n- Enumerate discoverable credentials")
+                .arg(
+                    Arg::with_name("list")
+                        .help("List cred")
+                        .short("l")
+                        .long("list")
+                )
+                .arg(
+                    Arg::with_name("metadata")
+                        .help("credential_management_get_creds_metadata")
+                        .short("m")
+                        .long("metadata"),
+                )
         );
-    /*
-    .subcommand(
-        SubCommand::with_name("cred")
-            .about("Credential management")
-            // - Enumerate discoverable credentials without any FLAGS and OPTIONS.
-            .arg(
-                Arg::with_name("pin")
-                    .help("pin")
-                    .required(true)
-                    .short("p")
-                    .long("pin")
-                    .takes_value(true)
-            )
-    )
-     */
 
     // Parse arguments
     let matches = app.get_matches();
@@ -194,6 +203,11 @@ fn main() -> Result<()> {
         }
     }
 
+    if matches.is_present("user-presence") {
+        println!("User Presence Test.\n");
+        up()?;
+    }
+
     if matches.is_present("wink") {
         println!("Blink LED on FIDO key.\n");
         ctap_hid_fido2::wink(&CFG)?;
@@ -220,13 +234,10 @@ fn main() -> Result<()> {
         bio::bio(matches)?;
     }
 
-    /*
     if let Some(ref matches) = matches.subcommand_matches("cred") {
         println!("Credential Management.\n");
         cred::cred(&matches)?;
     }
-
-    */
 
     /*
     println!("config()");
@@ -234,12 +245,17 @@ fn main() -> Result<()> {
         Ok(result) => println!("- config : {:?}", result),
         Err(error) => println!("- config error: {:?}", error),
     };
-
-    println!("selection()");
-    match ctap_hid_fido2::selection(&HidParam::get_default_params()) {
-        Ok(result) => println!("- selection : {:?}", result),
-        Err(error) => println!("- selection error: {:?}", error),
-    };
     */
+
+    Ok(())
+}
+
+pub fn up() -> Result<()> {
+    if !ctap_hid_fido2::enable_info_param(&CFG, &InfoParam::VersionsFido21)? {
+        return Err(anyhow!(
+            "This authenticator is not supported for this functions."
+        ));
+    }
+    ctap_hid_fido2::selection(&CFG)?;
     Ok(())
 }

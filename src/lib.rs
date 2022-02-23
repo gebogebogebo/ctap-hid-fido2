@@ -809,12 +809,8 @@ pub fn credential_management_update_user_information(
 pub fn selection(cfg: &LibCfg) -> Result<String> {
     let device = get_device(cfg)?;
     let cid = ctaphid::ctaphid_init(&device).map_err(Error::msg)?;
-
     let send_payload = selection_command::create_payload();
-    println!("{}", util::to_hex_str(&send_payload));
-
     let _response_cbor = ctaphid::ctaphid_cbor(&device, &cid, &send_payload).map_err(Error::msg)?;
-
     Ok("".to_string())
 }
 
@@ -822,12 +818,8 @@ pub fn selection(cfg: &LibCfg) -> Result<String> {
 pub fn config(cfg: &LibCfg) -> Result<String> {
     let device = get_device(cfg)?;
     let cid = ctaphid::ctaphid_init(&device).map_err(Error::msg)?;
-
     let send_payload = config_command::create_payload_enable_enterprise_attestation();
-    println!("{}", util::to_hex_str(&send_payload));
-
     let _response_cbor = ctaphid::ctaphid_cbor(&device, &cid, &send_payload).map_err(Error::msg)?;
-
     Ok("".to_string())
 }
 

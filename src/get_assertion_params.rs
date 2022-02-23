@@ -52,7 +52,7 @@ impl fmt::Display for Assertion {
     }
 }
 
-#[derive(Debug, Clone, strum_macros::ToString, AsRefStr)]
+#[derive(Debug, Clone, strum_macros::Display, AsRefStr)]
 pub enum Extension {
     #[strum(serialize = "hmac-secret")]
     HmacSecret(Option<[u8; 32]>),

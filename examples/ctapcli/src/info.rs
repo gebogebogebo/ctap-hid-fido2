@@ -146,7 +146,18 @@ fn option_message(typ: &str, info_option: &InfoOption, val: Option<bool>) -> Res
             }
             strbuf.build().to_string()
         }
-        _ => "".to_string(),
+        InfoOption::CredMgmt | InfoOption::CredentialMgmtPreview => {
+            let mut strbuf = StrBuf::new(0);
+            strbuf.addln("Credential management support");
+
+            if val.is_some() && val.unwrap() {
+                strbuf.addln("This authenticatorCredentialManagement command is supported.");
+            } else {
+                strbuf.addln("The authenticatorCredentialManagement commands are NOT supported.");
+            }
+            strbuf.build().to_string()
+        }
+        //_ => "".to_string(),
     };
     Ok(format!("{}\n\n{}", message1, message2))
 }

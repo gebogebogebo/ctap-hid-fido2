@@ -6,6 +6,7 @@ use crate::ctaphid;
 use crate::public_key_credential_descriptor::PublicKeyCredentialDescriptor;
 use crate::public_key_credential_user_entity::PublicKeyCredentialUserEntity;
 use crate::FidoKeyHid;
+use crate::client_pin_command::Permission;
 
 #[allow(unused_imports)]
 use crate::util;
@@ -24,7 +25,11 @@ pub(crate) fn credential_management(
     // pin token
     let pin_token = {
         if let Some(pin) = pin {
-            Some(client_pin::get_pin_token(device, &cid, pin)?)
+            if device.use_pre_credential_management {
+                Some(client_pin::get_pin_token(device, &cid, pin)?)
+            } else {
+                Some(client_pin::get_pinuv_auth_token_with_permission(device, &cid, pin, Permission::Cm)?)
+            }
         } else {
             None
         }

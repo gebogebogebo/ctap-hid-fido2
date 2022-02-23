@@ -2,6 +2,7 @@ use anyhow::{anyhow, Error, Result};
 
 use crate::client_pin_command;
 use crate::client_pin_command::SubCommand as PinCmd;
+use crate::client_pin_command::Permission;
 use crate::client_pin_response;
 use crate::ctaphid;
 use crate::enc_aes256_cbc;
@@ -9,16 +10,20 @@ use crate::enc_hmac_sha_256;
 use crate::pintoken::PinToken;
 use crate::ss::SharedSecret;
 use crate::FidoKeyHid;
+use crate::cose;
+
+pub fn get_authenticator_key_agreement(device: &FidoKeyHid, cid: &[u8]) -> Result<cose::CoseKey> {
+    let send_payload = client_pin_command::create_payload(PinCmd::GetKeyAgreement).map_err(Error::msg)?;
+    let response_cbor = ctaphid::ctaphid_cbor(device, &cid, &send_payload).map_err(Error::msg)?;
+    let authenticator_key_agreement = client_pin_response::parse_cbor_client_pin_get_keyagreement(&response_cbor).map_err(Error::msg)?;
+    Ok(authenticator_key_agreement)
+}
 
 pub fn get_pin_token(device: &FidoKeyHid, cid: &[u8], pin: &str) -> Result<PinToken> {
     if !pin.is_empty() {
-        let send_payload = client_pin_command::create_payload(PinCmd::GetKeyAgreement).map_err(Error::msg)?;
-        let response_cbor = ctaphid::ctaphid_cbor(device, cid, &send_payload).map_err(Error::msg)?;
+        let authenticator_key_agreement = get_authenticator_key_agreement(device,cid)?;
 
-        let key_agreement =
-            client_pin_response::parse_cbor_client_pin_get_keyagreement(&response_cbor).map_err(Error::msg)?;
-
-        let shared_secret = SharedSecret::new(&key_agreement).map_err(Error::msg)?;
+        let shared_secret = SharedSecret::new(&authenticator_key_agreement).map_err(Error::msg)?;
         let pin_hash_enc = shared_secret.encrypt_pin(pin).map_err(Error::msg)?;
 
         let send_payload = client_pin_command::create_payload_get_pin_token(
@@ -35,6 +40,36 @@ pub fn get_pin_token(device: &FidoKeyHid, cid: &[u8], pin: &str) -> Result<PinTo
         // pintoken -> dec(pintoken)
         let pin_token_dec = shared_secret.decrypt_token(&mut pin_token_enc).map_err(Error::msg)?;
 
+        Ok(pin_token_dec)
+    } else {
+        Err(anyhow!("pin not set"))
+    }
+}
+
+pub fn get_pinuv_auth_token_with_permission(device: &FidoKeyHid, cid: &[u8], pin: &str, permission: Permission) -> Result<PinToken> {
+    if !pin.is_empty() {
+        let authenticator_key_agreement = get_authenticator_key_agreement(device,&cid)?;
+
+        // Get pinHashEnc
+        // - shared_secret.public_key -> platform KeyAgreement
+        let shared_secret = SharedSecret::new(&authenticator_key_agreement).map_err(Error::msg)?;
+        let pin_hash_enc = shared_secret.encrypt_pin(pin).map_err(Error::msg)?;
+
+        // Get pin token
+        let send_payload = client_pin_command::create_payload_get_pin_uv_auth_token_using_pin_with_permissions(
+            &shared_secret.public_key,
+            &pin_hash_enc,
+            permission,
+        );
+        let response_cbor = ctaphid::ctaphid_cbor(device, &cid, &send_payload).map_err(Error::msg)?;
+
+        // get pin_token (enc)
+        let mut pin_token_enc =
+            client_pin_response::parse_cbor_client_pin_get_pin_token(&response_cbor).map_err(Error::msg)?;
+ 
+        // pintoken -> dec(pintoken)
+        let pin_token_dec = shared_secret.decrypt_token(&mut pin_token_enc).map_err(Error::msg)?;
+            
         Ok(pin_token_dec)
     } else {
         Err(anyhow!("pin not set"))

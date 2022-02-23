@@ -10,9 +10,19 @@ pub enum SubCommand {
     SetPin = 0x03,
     ChangePin = 0x04,
     GetPinToken = 0x05,
-    //GetPinUvAuthTokenUsingUvWithPermissions = 0x06,
+    GetPinUvAuthTokenUsingUvWithPermissions = 0x06,
     GetUVRetries= 0x07,
-    //GetPinUvAuthTokenUsingPinWithPermissions = 0x08,
+    GetPinUvAuthTokenUsingPinWithPermissions = 0x09,
+}
+
+#[allow(dead_code)]
+pub enum Permission {
+    Mc = 0x01,
+    Ga = 0x02,
+    Cm = 0x04,
+    Be = 0x08,
+    Lbw = 0x10,
+    Acfg = 0x20,
 }
 
 fn create_payload_get_uv_retries() -> Vec<u8> {
@@ -74,6 +84,50 @@ pub fn create_payload_change_pin(
     insert_pin_hash_enc(&mut map, pin_hash_enc);
     to_payload(map)
 }
+
+pub fn create_payload_get_pin_uv_auth_token_using_pin_with_permissions(
+    key_agreement: &cose::CoseKey,
+    pin_hash_enc: &[u8],
+    permission: Permission,
+) -> Vec<u8> {
+    let mut map = BTreeMap::new();
+    insert_pin_protocol(&mut map);
+    insert_sub_command(&mut map, SubCommand::GetPinUvAuthTokenUsingPinWithPermissions);
+    insert_key_agreement(&mut map, key_agreement);
+
+    // pinHashEnc(0x06) - Byte String
+    let value = Value::Bytes(pin_hash_enc.to_vec());
+    map.insert(Value::Integer(0x06), value);
+
+    // permission(0x09) - Unsigned Integer
+    let value = Value::Integer(permission as i128);
+    map.insert(Value::Integer(0x09), value);
+
+    to_payload(map)
+}
+
+/* TODO WIP
+pub fn create_payload_get_pin_uv_auth_token_using_uv_with_permissions(
+    key_agreement: &cose::CoseKey,
+    permission: Permission,
+    rpid: &str,
+) -> Vec<u8> {
+    let mut map = BTreeMap::new();
+    insert_pin_protocol(&mut map);
+    insert_sub_command(&mut map, SubCommand::GetPinUvAuthTokenUsingUvWithPermissions);
+    insert_key_agreement(&mut map, key_agreement);
+
+    // permission(0x09) - Unsigned Integer
+    let value = Value::Integer(permission as i128);
+    map.insert(Value::Integer(0x09), value);
+
+    // rpid(0x0A) - String
+    let value = Value::Text(rpid.to_string());
+    map.insert(Value::Integer(0x0A), value);
+
+    to_payload(map)
+}
+ */
 
 // create payload
 fn to_payload(map: BTreeMap<Value, Value>) -> Vec<u8> {
@@ -140,11 +194,13 @@ fn insert_pin_hash_enc(map: &mut BTreeMap<Value, Value>, pin_hash_enc: &[u8]) {
 
 pub fn create_payload(sub_command: SubCommand) -> Result<Vec<u8>, String> {
     match sub_command {
-        SubCommand::GetUVRetries => Ok(create_payload_get_uv_retries()),
         SubCommand::GetRetries => Ok(create_payload_get_retries()),
-        SubCommand::ChangePin => Err(String::from("Not Supported")),
         SubCommand::GetKeyAgreement => Ok(create_payload_get_keyagreement()),
-        SubCommand::GetPinToken => Err(String::from("Not Supported")),
         SubCommand::SetPin => Err(String::from("Not Supported")),
+        SubCommand::ChangePin => Err(String::from("Not Supported")),
+        SubCommand::GetPinToken => Err(String::from("Not Supported")),
+        SubCommand::GetPinUvAuthTokenUsingUvWithPermissions => Err(String::from("Not Supported")),
+        SubCommand::GetUVRetries => Ok(create_payload_get_uv_retries()),
+        SubCommand::GetPinUvAuthTokenUsingPinWithPermissions => Err(String::from("Not Supported")),
     }
 }

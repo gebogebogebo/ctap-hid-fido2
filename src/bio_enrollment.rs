@@ -2,6 +2,7 @@ use crate::bio_enrollment_command;
 use crate::bio_enrollment_params::{BioEnrollmentData, TemplateInfo};
 use crate::bio_enrollment_response;
 use crate::client_pin;
+use crate::client_pin_command::Permission;
 use crate::ctaphid;
 use crate::pintoken::PinToken;
 use crate::FidoKeyHid;
@@ -37,7 +38,6 @@ pub(crate) fn bio_enrollment(
     }
 
     let ret = bio_enrollment_response::parse_cbor(&response_cbor).map_err(Error::msg)?;
-
     Ok(ret)
 }
 
@@ -51,10 +51,15 @@ pub fn bio_enrollment_init(
     // pin token
     let pin_token = {
         if let Some(pin) = pin {
-            Some(client_pin::get_pin_token(device, &cid, pin)?)
+            if device.use_pre_bio_enrollment {
+                Some(client_pin::get_pin_token(device, &cid, pin)?)
+            } else {
+                Some(client_pin::get_pinuv_auth_token_with_permission(device, &cid, pin, Permission::Be)?)
+            }
         } else {
             None
         }
     };
+
     Ok((cid, pin_token))
 }
