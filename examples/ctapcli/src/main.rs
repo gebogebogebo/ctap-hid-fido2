@@ -8,8 +8,7 @@ extern crate rpassword;
 
 #[allow(unused_imports)]
 use ctap_hid_fido2::util;
-use ctap_hid_fido2::{str_buf, Cfg};
-use ctap_hid_fido2::InfoParam;
+use ctap_hid_fido2::{str_buf, Cfg, InfoParam};
 
 mod bio;
 mod common;
