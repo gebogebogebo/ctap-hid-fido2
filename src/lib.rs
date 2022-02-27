@@ -57,6 +57,8 @@ use crate::bio_enrollment_params::{BioSensorInfo, EnrollStatus1, EnrollStatus2, 
 use crate::client_pin_command::SubCommand as PinCmd;
 use crate::get_assertion_params::Extension as Gext;
 use crate::make_credential_params::Extension as Mext;
+use crate::make_credential_params::CredentialSupportedKeyType;
+use crate::make_credential_params::Attestation;
 use crate::public_key_credential_descriptor::PublicKeyCredentialDescriptor;
 use crate::public_key_credential_user_entity::PublicKeyCredentialUserEntity;
 use anyhow::{anyhow, Error, Result};
@@ -281,10 +283,10 @@ pub fn make_credential(
     rpid: &str,
     challenge: &[u8],
     pin: Option<&str>,
-) -> Result<make_credential_params::Attestation> {
+) -> Result<Attestation> {
     let device = get_device(cfg)?;
     make_credential::make_credential(
-        &device, rpid, challenge, pin, false, None, /*None,*/ None, None,
+        &device, rpid, challenge, pin, false, None, None, None,
     )
 }
 
@@ -295,11 +297,11 @@ pub fn make_credential_with_key_type(
     rpid: &str,
     challenge: &[u8],
     pin: Option<&str>,
-    key_type: Option<make_credential_params::CredentialSupportedKeyType>,
-) -> Result<make_credential_params::Attestation> {
+    key_type: Option<CredentialSupportedKeyType>,
+) -> Result<Attestation> {
     let device = get_device(cfg)?;
     make_credential::make_credential(
-        &device, rpid, challenge, pin, false, None, /*None,*/ None, key_type,
+        &device, rpid, challenge, pin, false, None, None, key_type,
     )
 }
 
@@ -309,10 +311,10 @@ pub fn make_credential_with_extensions(
     challenge: &[u8],
     pin: Option<&str>,
     extensions: Option<&Vec<Mext>>,
-) -> Result<make_credential_params::Attestation> {
+) -> Result<Attestation> {
     let device = get_device(cfg)?;
     make_credential::make_credential(
-        &device, rpid, challenge, pin, false, None, /*None,*/ extensions, None,
+        &device, rpid, challenge, pin, false, None, extensions, None,
     )
 }
 
@@ -323,7 +325,7 @@ pub fn make_credential_rk(
     challenge: &[u8],
     pin: Option<&str>,
     rkparam: &PublicKeyCredentialUserEntity,
-) -> Result<make_credential_params::Attestation> {
+) -> Result<Attestation> {
     let device = get_device(cfg)?;
     make_credential::make_credential(
         &device,
@@ -343,12 +345,107 @@ pub fn make_credential_without_pin(
     cfg: &LibCfg,
     rpid: &str,
     challenge: &[u8],
-) -> Result<make_credential_params::Attestation> {
+) -> Result<Attestation> {
     let device = get_device(cfg)?;
     make_credential::make_credential(
-        &device, rpid, challenge, None, false, None, /*None,*/ None, None,
+        &device, rpid, challenge, None, false, None, None, None,
     )
 }
+
+pub fn make_credential_with_args(
+    cfg: &LibCfg,
+    args: &MakeCredentialArgs,
+) -> Result<Attestation> {
+    let device = get_device(cfg)?;
+
+    let extensions = if args.extensions.is_some() {
+        Some(args.extensions.as_ref().unwrap())
+    } else {
+        None
+    };
+
+    let (rk,rk_param) = if args.rkparam.is_some() {
+        (true,Some(args.rkparam.as_ref().unwrap()))
+    } else {
+        (false,None)
+    };
+
+    make_credential::make_credential(
+        &device,
+        &args.rpid,
+        &args.challenge,
+        args.pin,
+        rk,
+        rk_param,
+        extensions,
+        args.key_type,
+    )
+}
+
+#[derive(Debug)]
+pub struct MakeCredentialArgs<'a> {
+    rpid: String,
+    challenge: Vec<u8>,
+    pin: Option<&'a str>,
+    key_type: Option<CredentialSupportedKeyType>,
+    extensions: Option<Vec<Mext>>,
+    rkparam: Option<PublicKeyCredentialUserEntity>,
+}
+impl<'a> MakeCredentialArgs<'a> {
+    pub fn builder() -> MakeCredentialArgsBuilder<'a> {
+        MakeCredentialArgsBuilder::default()
+    }
+}
+
+#[derive(Default)]
+pub struct MakeCredentialArgsBuilder<'a> {
+    rpid: String,
+    challenge: Vec<u8>,
+    pin: Option<&'a str>,
+    key_type: Option<CredentialSupportedKeyType>,
+    extensions: Option<Vec<Mext>>,
+    rkparam: Option<PublicKeyCredentialUserEntity>,
+}
+impl<'a> MakeCredentialArgsBuilder<'a> {
+    pub fn new(rpid: &str, challenge: &[u8]) -> MakeCredentialArgsBuilder<'a> {
+        let mut result = MakeCredentialArgsBuilder::default();
+        result.rpid = String::from(rpid);
+        result.challenge = challenge.to_vec();
+        result
+    }
+
+    pub fn pin(mut self, pin: &'a str) -> MakeCredentialArgsBuilder {
+        self.pin = Some(pin);
+        self
+    }
+
+    pub fn key_type(mut self, key_type: CredentialSupportedKeyType) -> MakeCredentialArgsBuilder<'a> {
+        self.key_type = Some(key_type);
+        self
+    }
+
+    pub fn extensions(mut self, extensions: &[Mext]) -> MakeCredentialArgsBuilder<'a> {
+        self.extensions = Some(extensions.to_vec());
+        self
+    }
+
+    pub fn rkparam(mut self, rkparam: &PublicKeyCredentialUserEntity) -> MakeCredentialArgsBuilder<'a> {
+        self.rkparam = Some(rkparam.clone());
+        self
+    }
+
+    pub fn build(self) -> MakeCredentialArgs<'a> {
+        MakeCredentialArgs {
+            rpid: self.rpid,
+            challenge: self.challenge,
+            pin: self.pin,
+            key_type: self.key_type,
+            extensions: self.extensions,
+            rkparam: self.rkparam,
+        }
+    }    
+}
+
 
 /// Authentication command(with PIN , non Resident Key)
 pub fn get_assertion(
@@ -367,7 +464,6 @@ pub fn get_assertion(
         credential_id,
         pin,
         true,
-        //None,
         None,
     )?;
     Ok(asss[0].clone())
@@ -406,9 +502,97 @@ pub fn get_assertions_rk(
     let device = get_device(cfg)?;
     let dmy: [u8; 0] = [];
     get_assertion::get_assertion(
-        &device, rpid, challenge, &dmy, pin, true, /*None,*/ None,
+        &device, rpid, challenge, &dmy, pin, true, None,
     )
 }
+
+#[derive(Debug)]
+pub struct GetAssertionArgs<'a> {
+    rpid: String,
+    challenge: Vec<u8>,
+    pin: Option<&'a str>,
+    credential_id: Option<Vec<u8>>,
+    extensions: Option<Vec<Gext>>,
+}
+impl<'a> GetAssertionArgs<'a> {
+    pub fn builder() -> GetAssertionArgsBuilder<'a> {
+        GetAssertionArgsBuilder::default()
+    }
+}
+
+#[derive(Default)]
+pub struct GetAssertionArgsBuilder<'a> {
+    rpid: String,
+    challenge: Vec<u8>,
+    pin: Option<&'a str>,
+    credential_id: Option<Vec<u8>>,
+    extensions: Option<Vec<Gext>>,
+}
+impl<'a> GetAssertionArgsBuilder<'a> {
+    pub fn new(rpid: &str, challenge: &[u8]) -> GetAssertionArgsBuilder<'a> {
+        let mut result = GetAssertionArgsBuilder::default();
+        result.rpid = String::from(rpid);
+        result.challenge = challenge.to_vec();
+        result
+    }
+
+    pub fn pin(mut self, pin: &'a str) -> GetAssertionArgsBuilder {
+        self.pin = Some(pin);
+        self
+    }
+
+    pub fn extensions(mut self, extensions: &[Gext]) -> GetAssertionArgsBuilder<'a> {
+        self.extensions = Some(extensions.to_vec());
+        self
+    }
+
+    pub fn credential_id(mut self, credential_id: &[u8]) -> GetAssertionArgsBuilder<'a> {
+        self.credential_id = Some(credential_id.to_vec());
+        self
+    }
+
+    pub fn build(self) -> GetAssertionArgs<'a> {
+        GetAssertionArgs {
+            rpid: self.rpid,
+            challenge: self.challenge,
+            pin: self.pin,
+            credential_id: self.credential_id,
+            extensions: self.extensions,
+        }
+    }    
+}
+pub fn get_assertion_with_args(
+    cfg: &LibCfg,
+    args: &GetAssertionArgs,
+) -> Result<get_assertion_params::Assertion> {
+    let device = get_device(cfg)?;
+
+    let credential_id = if args.credential_id.is_some() {
+        args.credential_id.as_ref().unwrap().to_vec()
+    } else {
+        let dmy: [u8; 0] = [];
+        dmy.to_vec()
+    };
+
+    let extensions = if args.extensions.is_some() {
+        Some(args.extensions.as_ref().unwrap())
+    } else {
+        None
+    };
+
+    let asss = get_assertion::get_assertion(
+        &device,
+        &args.rpid,
+        &args.challenge,
+        &credential_id,
+        args.pin,
+        true,
+        extensions,
+    )?;
+
+    Ok(asss[0].clone())
+}
+
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum InfoParam {

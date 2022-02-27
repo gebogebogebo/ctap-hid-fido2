@@ -76,7 +76,7 @@ pub enum Extension {
     HmacSecret(Option<bool>),
 }
 
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 pub enum CredentialSupportedKeyType {
     Ecdsa256 = -7,
     Ed25519 = -8,
