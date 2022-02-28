@@ -5,6 +5,7 @@ use ctap_hid_fido2::str_buf::StrBuf;
 use ctap_hid_fido2::verifier;
 use ctap_hid_fido2::Cfg;
 use ctap_hid_fido2::Key;
+use ctap_hid_fido2::make_credential_params::CredentialSupportedKeyType;
 
 fn main() -> Result<()> {
     let key_auto = true;
@@ -20,6 +21,9 @@ fn main() -> Result<()> {
 
     // with pin
     with_pin(&cfg, pin)?;
+
+    // with key type
+    with_key_type(&cfg, pin)?;
 
     // with HMAC extensions
     with_hmac(&cfg, pin)?;
@@ -104,7 +108,7 @@ fn main() -> Result<()> {
             &verify_result.credential_id,
             pin,
             Some(&vec![ext]),
-        )?    
+        )?
     }else{
         ctap_hid_fido2::get_assertion(
             &cfg,
@@ -147,7 +151,7 @@ fn with_pin(cfg: &Cfg,pin: &str) -> Result<()> {
             .appenh("- challenge", &challenge)
             .build()
     );
-    
+
     let make_credential_args = ctap_hid_fido2::MakeCredentialArgsBuilder::new(&rpid, &challenge)
     .pin(pin)
     .build();
@@ -180,7 +184,7 @@ fn with_pin(cfg: &Cfg,pin: &str) -> Result<()> {
             .appenh("- challenge", &challenge)
             .build()
     );
-    
+
     let get_assertion_args = ctap_hid_fido2::GetAssertionArgsBuilder::new(&rpid, &challenge)
     .pin(pin)
     .credential_id(&verify_result.credential_id)
@@ -219,7 +223,7 @@ fn with_hmac(cfg: &Cfg,pin: &str) -> Result<()> {
             .appenh("- challenge", &challenge)
             .build()
     );
-    
+
     let make_credential_args = ctap_hid_fido2::MakeCredentialArgsBuilder::new(&rpid, &challenge)
     .pin(pin)
     .extensions(&vec![ext])
@@ -255,11 +259,65 @@ fn with_hmac(cfg: &Cfg,pin: &str) -> Result<()> {
             .appenh("- challenge", &challenge)
             .build()
     );
-    
+
     let get_assertion_args = ctap_hid_fido2::GetAssertionArgsBuilder::new(&rpid, &challenge)
     .pin(pin)
     .credential_id(&verify_result.credential_id)
     .extensions(&vec![ext])
+    .build();
+
+    let ass = ctap_hid_fido2::get_assertion_with_args(cfg,&get_assertion_args)?;
+
+    println!("!! Authenticate Success !!");
+    //println!("Assertion");
+    //println!("{}", ass);
+
+    println!("Verify");
+    let is_success = verifier::verify_assertion(
+        rpid,
+        &verify_result.credential_publickey_der,
+        &challenge,
+        &ass,
+    );
+    println!("- is_success = {:?}", is_success);
+
+    Ok(())
+}
+
+fn with_key_type(cfg: &Cfg,pin: &str) -> Result<()> {
+    println!("----- with key type -----");
+    let rpid = "test.com";
+    let challenge = verifier::create_challenge();
+
+    let make_credential_args = ctap_hid_fido2::MakeCredentialArgsBuilder::new(&rpid, &challenge)
+    .pin(pin)
+    .key_type(CredentialSupportedKeyType::Ed25519)
+    .build();
+
+    let att = ctap_hid_fido2::make_credential_with_args(&cfg, &make_credential_args)?;
+
+    println!("!! Register Success !!");
+    //println!("Attestation");
+    //println!("{}", att);
+
+    println!("Verify");
+    let verify_result = verifier::verify_attestation(rpid, &challenge, &att);
+
+    let mut strbuf = StrBuf::new(30);
+    println!(
+        "{}",
+        strbuf
+            .append("- is_success", &verify_result.is_success)
+            .appenh("- credential_id", &verify_result.credential_id)
+            .build()
+    );
+
+    // Authenticate
+    let challenge = verifier::create_challenge();
+
+    let get_assertion_args = ctap_hid_fido2::GetAssertionArgsBuilder::new(&rpid, &challenge)
+    .pin(pin)
+    .credential_id(&verify_result.credential_id)
     .build();
 
     let ass = ctap_hid_fido2::get_assertion_with_args(cfg,&get_assertion_args)?;
