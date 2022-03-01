@@ -56,6 +56,7 @@ use crate::bio_enrollment_command::SubCommand as BioCmd;
 use crate::bio_enrollment_params::{BioSensorInfo, EnrollStatus1, EnrollStatus2, TemplateInfo};
 use crate::client_pin_command::SubCommand as PinCmd;
 use crate::get_assertion_params::Extension as Gext;
+use crate::get_assertion_params::Assertion;
 use crate::make_credential_params::Extension as Mext;
 use crate::make_credential_params::CredentialSupportedKeyType;
 use crate::make_credential_params::Attestation;
@@ -443,7 +444,7 @@ impl<'a> MakeCredentialArgsBuilder<'a> {
             extensions: self.extensions,
             rkparam: self.rkparam,
         }
-    }    
+    }
 }
 
 
@@ -454,7 +455,7 @@ pub fn get_assertion(
     challenge: &[u8],
     credential_id: &[u8],
     pin: Option<&str>,
-) -> Result<get_assertion_params::Assertion> {
+) -> Result<Assertion> {
     let device = get_device(cfg)?;
 
     let asss = get_assertion::get_assertion(
@@ -477,7 +478,7 @@ pub fn get_assertion_with_extensios(
     credential_id: &[u8],
     pin: Option<&str>,
     extensions: Option<&Vec<Gext>>,
-) -> Result<get_assertion_params::Assertion> {
+) -> Result<Assertion> {
     let device = get_device(cfg)?;
     let asss = get_assertion::get_assertion(
         &device,
@@ -498,7 +499,7 @@ pub fn get_assertions_rk(
     rpid: &str,
     challenge: &[u8],
     pin: Option<&str>,
-) -> Result<Vec<get_assertion_params::Assertion>> {
+) -> Result<Vec<Assertion>> {
     let device = get_device(cfg)?;
     let dmy: [u8; 0] = [];
     get_assertion::get_assertion(
@@ -559,12 +560,12 @@ impl<'a> GetAssertionArgsBuilder<'a> {
             credential_id: self.credential_id,
             extensions: self.extensions,
         }
-    }    
+    }
 }
 pub fn get_assertion_with_args(
     cfg: &LibCfg,
     args: &GetAssertionArgs,
-) -> Result<get_assertion_params::Assertion> {
+) -> Result<Vec<Assertion>> {
     let device = get_device(cfg)?;
 
     let credential_id = if args.credential_id.is_some() {
@@ -590,7 +591,7 @@ pub fn get_assertion_with_args(
         extensions,
     )?;
 
-    Ok(asss[0].clone())
+    Ok(asss)
 }
 
 

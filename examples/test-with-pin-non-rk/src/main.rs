@@ -190,7 +190,7 @@ fn with_pin(cfg: &Cfg,pin: &str) -> Result<()> {
     .credential_id(&verify_result.credential_id)
     .build();
 
-    let ass = ctap_hid_fido2::get_assertion_with_args(cfg,&get_assertion_args)?;
+    let assertions = ctap_hid_fido2::get_assertion_with_args(cfg,&get_assertion_args)?;
 
     println!("!! Authenticate Success !!");
     //println!("Assertion");
@@ -201,7 +201,7 @@ fn with_pin(cfg: &Cfg,pin: &str) -> Result<()> {
         rpid,
         &verify_result.credential_publickey_der,
         &challenge,
-        &ass,
+        &assertions[0],
     );
     println!("- is_success = {:?}", is_success);
 
@@ -266,7 +266,7 @@ fn with_hmac(cfg: &Cfg,pin: &str) -> Result<()> {
     .extensions(&vec![ext])
     .build();
 
-    let ass = ctap_hid_fido2::get_assertion_with_args(cfg,&get_assertion_args)?;
+    let assertions = ctap_hid_fido2::get_assertion_with_args(cfg,&get_assertion_args)?;
 
     println!("!! Authenticate Success !!");
     //println!("Assertion");
@@ -277,7 +277,7 @@ fn with_hmac(cfg: &Cfg,pin: &str) -> Result<()> {
         rpid,
         &verify_result.credential_publickey_der,
         &challenge,
-        &ass,
+        &assertions[0],
     );
     println!("- is_success = {:?}", is_success);
 
@@ -320,7 +320,7 @@ fn with_key_type(cfg: &Cfg,pin: &str) -> Result<()> {
     .credential_id(&verify_result.credential_id)
     .build();
 
-    let ass = ctap_hid_fido2::get_assertion_with_args(cfg,&get_assertion_args)?;
+    let assertions = ctap_hid_fido2::get_assertion_with_args(cfg,&get_assertion_args)?;
 
     println!("!! Authenticate Success !!");
     //println!("Assertion");
@@ -331,7 +331,7 @@ fn with_key_type(cfg: &Cfg,pin: &str) -> Result<()> {
         rpid,
         &verify_result.credential_publickey_der,
         &challenge,
-        &ass,
+        &assertions[0],
     );
     println!("- is_success = {:?}", is_success);
 
