@@ -164,6 +164,9 @@ fn with_pin(cfg: &Cfg,pin: &str) -> Result<()> {
 
     println!("Verify");
     let verify_result = verifier::verify_attestation(rpid, &challenge, &att);
+    if verify_result.is_success {
+        println!("Verify Success");
+    }
 
     let mut strbuf = StrBuf::new(30);
     println!(
@@ -203,6 +206,10 @@ fn with_pin(cfg: &Cfg,pin: &str) -> Result<()> {
         &challenge,
         &assertions[0],
     );
+    if is_success {
+        println!("Verify Success");
+    }
+
     println!("- is_success = {:?}", is_success);
 
     Ok(())
