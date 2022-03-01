@@ -289,55 +289,57 @@ fn main() -> Result<()> {
 
 ### non-discoverable credentials/non-resident-key
 
-**Register**
-
 ```rust
-fn main() -> Result<()> {
-  let rpid = "test.com";
-  let pin = "1234";
+// ex.
+// let cfg = Cfg::init();
+// let rpid = "test.com";
+// let pin = "1234";
+fn non_discoverable_credentials(cfg: &Cfg, rpid: &str, pin: &str) -> Result<()> {
+  println!("----- non_discoverable_credentials -----");
+
+  println!("- Register");
   let challenge = verifier::create_challenge();
 
-  let make_credential_args = ctap_hid_fido2::MakeCredentialArgsBuilder::new(&rpid, &challenge)
+  let make_credential_args = MakeCredentialArgsBuilder::new(&rpid, &challenge)
   .pin(pin)
   .build();
 
-  let att = ctap_hid_fido2::make_credential_with_args(&cfg, &make_credential_args)?;
-  let verify_result = verifier::verify_attestation(rpid, &challenge, &att);
+  let attestation = ctap_hid_fido2::make_credential_with_args(&cfg, &make_credential_args)?;
+  println!("-- Register Success");
+
+  println!("-- Verify Attestation");
+  let verify_result = verifier::verify_attestation(rpid, &challenge, &attestation);
   if verify_result.is_success {
-    println!("Verify Success");
-    // store
-    // - verify_result.credential_id
-    // - verify_result.credential_publickey_der
+    println!("-- Verify Attestation Success");
+  } else {
+    println!("-- Verify Attestation Failed");
   }
-}
-```
 
-**Authenticate**
-
-```rust
-fn main() -> Result<()> {
-  let rpid = "test.com";
-  let pin = "1234";
+  println!("- Authenticate");
   let challenge = verifier::create_challenge();
-  let credential_id = ???;
-  let credential_publickey_der = ???
 
   let get_assertion_args = ctap_hid_fido2::GetAssertionArgsBuilder::new(&rpid, &challenge)
   .pin(pin)
-  .credential_id(&credential_id)
+  .credential_id(&verify_result.credential_id)
   .build();
 
   let assertions = ctap_hid_fido2::get_assertion_with_args(cfg,&get_assertion_args)?;
+  println!("-- Authenticate Success");
 
+  println!("-- Verify Assertion");
   let is_success = verifier::verify_assertion(
     rpid,
-    &credential_publickey_der,
+    &verify_result.credential_publickey_der,
     &challenge,
     &assertions[0],
   );
   if is_success {
-    println!("Verify Success");
+    println!("-- Verify Assertion Success");
+  } else {
+    println!("-- Verify Assertion Failed");
   }
+
+  Ok(())
 }
 ```
 
