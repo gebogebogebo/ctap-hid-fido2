@@ -103,8 +103,8 @@ fn verify_sig(public_key_der: &[u8], challenge: &[u8], auth_data: &[u8], sig: &[
     
     // TODO
     // https://www.iana.org/assignments/cose/cose.xhtml#algorithms
-    // let peer_public_key =
-    //     signature::UnparsedPublicKey::new(&signature::ED25519, peer_public_key_bytes);
+    //let peer_public_key =
+    //     signature::UnparsedPublicKey::new(&signature::ED25519, public_key_der);
     let peer_public_key =
         signature::UnparsedPublicKey::new(&signature::ECDSA_P256_SHA256_ASN1, public_key_der);
 

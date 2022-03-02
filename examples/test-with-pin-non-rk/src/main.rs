@@ -207,8 +207,8 @@ fn using_key_type(cfg: &Cfg, rpid: &str, pin: &str) -> Result<()> {
 
     let attestation = ctap_hid_fido2::make_credential_with_args(&cfg, &make_credential_args)?;
     println!("-- Register Success");
-    //println!("Attestation");
-    //println!("{}", attestation);
+    println!("Attestation");
+    println!("{}", attestation);
 
     println!("-- Verify Attestation");
     let verify_result = verifier::verify_attestation(rpid, &challenge, &attestation);
