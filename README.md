@@ -25,9 +25,6 @@ Rust FIDO2 CTAP library
   - cargo 1.55.0 , rustc 1.55.0 , rustup 1.24.3
 - for Mac
   - macOS Big Sur
-- for Windows
-  - Windows10
-- for Raspberry Pi
 
 
 
@@ -46,26 +43,7 @@ $ cargo build
 $ cargo run
 ```
 
-#### Windows
 
-- **Run as administrator**
-
-#### raspberry Pi
-- **Cargo.toml modified and build**
-
-```
-[dependencies]
-# hidapi = "1.2.3"    <- comment out
-serde_cbor = "0.11.1"
-```
-
-- Run as sudo
-
-
-```
-$ chmod +x test_for_pi.sh
-$ ./test_for_pi.sh
-```
 
 ## Examples
 
@@ -231,28 +209,7 @@ fn main() {
 
 ### Register and Authenticate
 
---
-
-#### non-discoverable credentials/non-resident-key
-
--- 
-
-
-
-#### HMAC Secret Extension - Register
-
---
-
-
-
-#### HMAC Secret Extension - Authenticate
-
---
-
-
-
-### Register and Authenticate ( discoverable credentials/resident-key)
---
+-- TODO
 
 
 
