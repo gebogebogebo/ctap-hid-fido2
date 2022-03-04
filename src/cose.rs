@@ -34,6 +34,7 @@ impl fmt::Display for CoseKey {
     }
 }
 
+// https://tex2e.github.io/rfc-translater/html/rfc8152.html
 impl CoseKey {
     #[allow(dead_code)]
     pub fn decode(cbor: &Value) -> Result<Self, String> {
@@ -42,13 +43,34 @@ impl CoseKey {
         if let Value::Map(xs) = cbor {
             for (key, val) in xs {
                 // debug
-                //util::cbor_value_print(val);
+                util::cbor_value_print(val);
 
                 if let Value::Integer(member) = key {
                     match member {
-                        1 => cose.key_type = util::cbor_value_to_num(val)?,
-                        3 => cose.algorithm = util::cbor_value_to_num(val)?,
+                        1 => {
+                            // Table 21: Key Type Values
+                            // 1: kty
+                            //      1: OKP
+                            //      2: EC2
+                            cose.key_type = util::cbor_value_to_num(val)?;
+                        }
+                            // 2: kid
+                        3 => {
+                            // 3: alg
+                            //       -7: ES256
+                            //       -8: EdDSA
+                            //      -25: ECDH-ES + HKDF-256
+                            //      -35: ES384
+                            //      -36: ES512
+                            cose.algorithm = util::cbor_value_to_num(val)?;
+                        }
+                            // 4: key_ops
+                            // 5: Base IV
                         -1 => {
+                            // Table 22: Elliptic Curves
+                            // -1: Curves
+                            //      1: P-256(EC2)
+                            //      6: Ed25519(OKP)
                             //println!("member = {:?} , val = {:?}",member,val);
                             cose.parameters.insert(
                                 NumCast::from(*member).unwrap(),
