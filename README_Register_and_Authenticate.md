@@ -5,7 +5,7 @@
 
 ## Builder Pattern Sample
 
-- [non-discoverable credentials/non-resident-key](./examples/test-with-pin-non-rk/src/main.rs#L53-L104)
+- [non-discoverable credentials/non-resident-key](https://github.com/gebogebogebo/ctap-hid-fido2/blob/511bbc5f64cce744bbbbabaf9bde713f1ed33119/examples/test-with-pin-non-rk/src/main.rs#L53-L104)
   - Most common use to specify PIN.
 - [with UV](./examples/test-with-pin-non-rk/src/main.rs#L106-L155)
   - to use Yubikey bio for fingerprint authentication.
