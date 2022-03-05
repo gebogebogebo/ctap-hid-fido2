@@ -5,23 +5,13 @@
 
 ## Builder Pattern Sample
 
-### non-discoverable credentials/non-resident-key
+- [non-discoverable credentials/non-resident-key](./examples/test-with-pin-non-rk/src/main.rs#L50-L101)
 
-[non_discoverable_credential s](./examples/test-with-pin-non-rk/src/main.rs#L50)
-
-
-
-#### with Key Type
-
-→ link
-
-- Verify Assertion in Ed25519 is always false because it is not yet implemented
+- [with Key Type](./examples/test-with-pin-non-rk/src/main.rs#L103)
+  - Verify Assertion in Ed25519 is always false because it is not yet implemented
 
 
-
-#### with HMAC Secret Extension
-
-→ link
+- [with HMAC Secret Extension](./examples/test-with-pin-non-rk/src/main.rs#L157)
 
 
 
@@ -39,15 +29,11 @@
 
 ## Legacy Pattern Sample
 
-### non-discoverable credentials/non-resident-key
-
-→ link
-
-- If you want to use Yubikey bio for fingerprint authentication, specify None for pin.
+- [non-discoverable credentials/non-resident-key]()
+  - If you want to use Yubikey bio for fingerprint authentication, specify None for pin.
 
 
-
-#### Using Key Type
+- [with Key Type]()
 
 → link
 
