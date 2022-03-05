@@ -14,11 +14,10 @@ pub struct PublicKey {
 }
 impl PublicKey {
     pub fn new(cbor: &Value) -> Self {
-        // TODO CoseKey::new(cbor)
-        let cose_key = CoseKey::decode(cbor).unwrap();
+        let cose_key = CoseKey::new(cbor).unwrap();
 
         let mut cose_public_key = PublicKey::default();
-        cose_public_key.der = cose_key.convert_to_publickey_der();
+        cose_public_key.der = cose_key.to_public_key_der();
         cose_public_key.pem = util::convert_to_publickey_pem(&cose_public_key.der);
         cose_public_key
     }

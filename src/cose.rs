@@ -1,7 +1,6 @@
 use crate::str_buf::StrBuf;
 use crate::util;
 use anyhow::Result;
-use byteorder::{BigEndian, WriteBytesExt};
 use num::NumCast;
 use serde_cbor::Value;
 use std::collections::{BTreeMap, HashMap};
@@ -35,8 +34,7 @@ impl fmt::Display for CoseKey {
 
 // https://tex2e.github.io/rfc-translater/html/rfc8152.html
 impl CoseKey {
-    #[allow(dead_code)]
-    pub fn decode(cbor: &Value) -> Result<Self, String> {
+    pub fn new(cbor: &Value) -> Result<Self, String> {
         let mut cose = CoseKey::default();
 
         if let Value::Map(xs) = cbor {
@@ -89,7 +87,7 @@ impl CoseKey {
             }
         }
         Ok(cose)
-    }
+    }    
 
     pub fn to_value(&self) -> Result<Value> {
         let mut map = BTreeMap::new();
@@ -110,31 +108,7 @@ impl CoseKey {
         Ok(Value::Map(map))
     }
 
-    #[allow(dead_code)]
-    pub fn encode(&self) -> Vec<u8> {
-        let mut wtr = vec![];
-
-        // key type
-        wtr.write_i16::<BigEndian>(0x01).unwrap();
-        wtr.write_u16::<BigEndian>(self.key_type).unwrap();
-
-        // algorithm
-        wtr.write_i16::<BigEndian>(0x02).unwrap();
-        wtr.write_i32::<BigEndian>(self.algorithm).unwrap();
-
-        // parameter
-        for (key, value) in self.parameters.iter() {
-            wtr.write_i16::<BigEndian>(*key).unwrap();
-            if let Value::Bytes(bytes) = value {
-                wtr.append(&mut bytes.to_vec());
-            }
-        }
-
-        wtr
-    }
-
-    #[allow(dead_code)]
-    pub fn convert_to_publickey_der(&self) -> Vec<u8> {
+    pub fn to_public_key_der(&self) -> Vec<u8> {
         if self.key_type == 2 {
             // kty == 2: EC2 → need x&y
 
@@ -158,16 +132,5 @@ impl CoseKey {
             // ???
             vec![]
         }
-    }
-
-    #[allow(dead_code)]
-    pub fn create(&mut self, key_type: u16, algorithm: i32, crv: i32, x: &str, y: &str) {
-        self.key_type = key_type;
-        self.algorithm = algorithm;
-        self.parameters.insert(-1, Value::Integer(crv.into()));
-        self.parameters
-            .insert(-2, Value::Bytes(util::to_str_hex(x)));
-        self.parameters
-            .insert(-3, Value::Bytes(util::to_str_hex(y)));
     }
 }
