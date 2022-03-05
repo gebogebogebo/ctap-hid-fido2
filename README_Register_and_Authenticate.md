@@ -7,7 +7,7 @@
 
 ### non-discoverable credentials/non-resident-key
 
-→ link
+[non_discoverable_credential s](./examples/test-with-pin-non-rk/src/main.rs#L50)
 
 
 
@@ -56,5 +56,4 @@
 ### discoverable credentials/resident-key
 
 → link
-
 
