@@ -24,7 +24,7 @@ fn main() -> Result<()> {
     builder_pattern_sample(&cfg, rpid, pin)?;
 
     // with HMAC extensions
-    with_hmac(&cfg, pin)?;
+    //with_hmac(&cfg, pin)?;
 
     /*
     // parameter
@@ -136,9 +136,15 @@ fn main() -> Result<()> {
 }
 
 fn builder_pattern_sample(cfg: &Cfg, rpid: &str, pin: &str) -> Result<()> {
-    using_key_type(cfg, rpid, pin)?;
+    using_key_type(cfg, rpid, pin, CredentialSupportedKeyType::Ecdsa256)
+       .unwrap_or_else(|err| eprintln!("Error => {}", err));
 
-    //non_discoverable_credentials(cfg, rpid, pin)?;
+    using_key_type(cfg, rpid, pin, CredentialSupportedKeyType::Ed25519)
+        .unwrap_or_else(|err| eprintln!("Error => {}", err));
+
+    non_discoverable_credentials(cfg, rpid, pin)
+        .unwrap_or_else(|err| eprintln!("Error => {}", err));
+
     Ok(())
 }
 
@@ -162,7 +168,7 @@ fn non_discoverable_credentials(cfg: &Cfg, rpid: &str, pin: &str) -> Result<()> 
     if verify_result.is_success {
         println!("-- Verify Attestation Success");
     } else {
-        println!("-- Verify Attestation Failed");
+        println!("-- ! Verify Attestation Failed");
     }
 
     println!("- Authenticate");
@@ -188,34 +194,35 @@ fn non_discoverable_credentials(cfg: &Cfg, rpid: &str, pin: &str) -> Result<()> 
     if is_success {
         println!("-- Verify Assertion Success");
     } else {
-        println!("-- Verify Assertion Failed");
+        println!("-- ! Verify Assertion Failed");
     }
 
+    println!();
     Ok(())
 }
 
-fn using_key_type(cfg: &Cfg, rpid: &str, pin: &str) -> Result<()> {
-    println!("----- using_key_type -----");
+fn using_key_type(cfg: &Cfg, rpid: &str, pin: &str, key_type: CredentialSupportedKeyType) -> Result<()> {
+    println!("----- using_key_type ({:?}) -----", key_type);
 
     println!("- Register");
     let challenge = verifier::create_challenge();
 
     let make_credential_args = MakeCredentialArgsBuilder::new(&rpid, &challenge)
     .pin(pin)
-    .key_type(CredentialSupportedKeyType::Ed25519)
+    .key_type(key_type)
     .build();
 
     let attestation = ctap_hid_fido2::make_credential_with_args(&cfg, &make_credential_args)?;
     println!("-- Register Success");
-    println!("Attestation");
-    println!("{}", attestation);
+    //println!("Attestation");
+    //println!("{}", attestation);
 
     println!("-- Verify Attestation");
     let verify_result = verifier::verify_attestation(rpid, &challenge, &attestation);
     if verify_result.is_success {
         println!("-- Verify Attestation Success");
     } else {
-        println!("-- Verify Attestation Failed");
+        println!("-- ! Verify Attestation Failed");
     }
 
     println!("- Authenticate");
@@ -228,8 +235,8 @@ fn using_key_type(cfg: &Cfg, rpid: &str, pin: &str) -> Result<()> {
 
     let assertions = ctap_hid_fido2::get_assertion_with_args(cfg,&get_assertion_args)?;
     println!("-- Authenticate Success");
-    println!("Assertion");
-    println!("{}", assertions[0]);
+    //println!("Assertion");
+    //println!("{}", assertions[0]);
 
     println!("-- Verify Assertion");
     let is_success = verifier::verify_assertion(
@@ -241,9 +248,10 @@ fn using_key_type(cfg: &Cfg, rpid: &str, pin: &str) -> Result<()> {
     if is_success {
         println!("-- Verify Assertion Success");
     } else {
-        println!("-- Verify Assertion Failed");
+        println!("-- ! Verify Assertion Failed");
     }
 
+    println!();
     Ok(())
 }
 
