@@ -47,6 +47,12 @@ $ cargo run
 
 ## Examples
 
+### Register and Authenticate
+
+[Register and Authenticate Examples](README_Register_and_Authenticate.md)
+
+
+
 ### get_info()
 
 [6.4. authenticatorGetInfo (0x04)](https://fidoalliance.org/specs/fido-v2.1-ps-20210615/fido-client-to-authenticator-protocol-v2.1-ps-20210615.html#authenticatorGetInfo)
@@ -206,10 +212,6 @@ fn main() {
 ```
 
 
-
-### Register and Authenticate
-
--- TODO
 
 
 
