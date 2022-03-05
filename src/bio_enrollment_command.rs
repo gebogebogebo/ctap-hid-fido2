@@ -26,7 +26,7 @@ pub fn create_payload(
     sub_command: Option<SubCommand>,
     template_info: Option<TemplateInfo>,
     timeout_milliseconds: Option<u16>,
-    use_pre_bio_enrollment: bool
+    use_pre_bio_enrollment: bool,
 ) -> Vec<u8> {
     let mut map = BTreeMap::new();
 

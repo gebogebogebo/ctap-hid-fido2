@@ -35,7 +35,7 @@ impl Flags {
         if self.extension_data_included {
             ret = ret | 0x80;
         }
-    
+
         ret
     }
 }

@@ -5,7 +5,6 @@ use serde_cbor::to_vec;
 use serde_cbor::Value;
 use std::collections::BTreeMap;
 
-
 #[derive(Debug, Default)]
 pub struct Params {
     pub rp_id: String,
@@ -91,7 +90,10 @@ pub fn create_payload(params: Params, extensions: Option<&Vec<Extension>>) -> Ve
 
     // 0x04 : pubKeyCredParams
     let mut pub_key_cred_params_val = BTreeMap::new();
-    pub_key_cred_params_val.insert(Value::Text("alg".to_string()), Value::Integer(params.key_type as i128));
+    pub_key_cred_params_val.insert(
+        Value::Text("alg".to_string()),
+        Value::Integer(params.key_type as i128),
+    );
     pub_key_cred_params_val.insert(
         Value::Text("type".to_string()),
         Value::Text("public-key".to_string()),

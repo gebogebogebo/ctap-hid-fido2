@@ -61,7 +61,7 @@ pub fn parse_cbor(bytes: &[u8]) -> Result<get_info_params::Info, String> {
                             }
                         }
                     }
-                },
+                }
                 0x0B => info.max_serialized_large_blob_array = util::cbor_value_to_num(val)?,
                 0x0C => info.force_pin_change = util::cbor_value_to_bool(val)?,
                 0x0D => info.min_pin_length = util::cbor_value_to_num(val)?,

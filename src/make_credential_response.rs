@@ -1,6 +1,6 @@
 use crate::credential_management_params::CredentialProtectionPolicy;
-use crate::make_credential_params::Attestation;
-use crate::make_credential_params::Extension;
+use crate::make_credential_params::{Attestation, Extension};
+use crate::public_key::PublicKey;
 use crate::util;
 
 use byteorder::{BigEndian, ReadBytesExt};
@@ -80,7 +80,7 @@ fn parse_cbor_authdata(authdata: &[u8], attestation: &mut Attestation) -> Result
         let slice = &authdata[index..authdata.len()];
         let mut deserializer = serde_cbor::Deserializer::from_slice(slice);
         let value: Value = serde::de::Deserialize::deserialize(&mut deserializer).unwrap();
-        attestation.credential_publickey = attestation.credential_publickey.get(&value);
+        attestation.credential_publickey = PublicKey::new(&value);
         slice[deserializer.byte_offset()..].to_vec()
     } else {
         authdata[index..authdata.len()].to_vec()

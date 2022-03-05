@@ -2,7 +2,7 @@
 PublicKey
 */
 
-use crate::cose;
+use crate::cose::CoseKey;
 use crate::util;
 use serde_cbor::Value;
 use std::fmt;
@@ -13,15 +13,17 @@ pub struct PublicKey {
     pub der: Vec<u8>,
 }
 impl PublicKey {
-    pub fn get(self: &mut PublicKey, cbor: &Value) -> Self {
-        let mut ret = self.clone();
-        let cose_key = cose::CoseKey::decode(cbor).unwrap();
-        ret.der = cose_key.convert_to_publickey_der();
-        ret.pem = util::convert_to_publickey_pem(&ret.der);
+    pub fn new(cbor: &Value) -> Self {
+        // TODO CoseKey::new(cbor)
+        let cose_key = CoseKey::decode(cbor).unwrap();
 
-        ret
+        let mut cose_public_key = PublicKey::default();
+        cose_public_key.der = cose_key.convert_to_publickey_der();
+        cose_public_key.pem = util::convert_to_publickey_pem(&cose_public_key.der);
+        cose_public_key
     }
 }
+
 impl fmt::Display for PublicKey {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(

@@ -4,8 +4,7 @@ use anyhow::Result;
 use byteorder::{BigEndian, WriteBytesExt};
 use num::NumCast;
 use serde_cbor::Value;
-use std::collections::BTreeMap;
-use std::collections::HashMap;
+use std::collections::{BTreeMap, HashMap};
 use std::fmt;
 
 #[derive(Debug, Default, Clone)]
@@ -43,18 +42,18 @@ impl CoseKey {
         if let Value::Map(xs) = cbor {
             for (key, val) in xs {
                 // debug
-                util::cbor_value_print(val);
+                //util::cbor_value_print(val);
 
                 if let Value::Integer(member) = key {
                     match member {
                         1 => {
                             // Table 21: Key Type Values
                             // 1: kty
-                            //      1: OKP
-                            //      2: EC2
+                            //      1: OKP (Octet Key Pair) → need x
+                            //      2: EC2 (Double Coordinate Curves) → need x&y
                             cose.key_type = util::cbor_value_to_num(val)?;
                         }
-                            // 2: kid
+                        // 2: kid
                         3 => {
                             // 3: alg
                             //       -7: ES256
@@ -64,8 +63,8 @@ impl CoseKey {
                             //      -36: ES512
                             cose.algorithm = util::cbor_value_to_num(val)?;
                         }
-                            // 4: key_ops
-                            // 5: Base IV
+                        // 4: key_ops
+                        // 5: Base IV
                         -1 => {
                             // Table 22: Elliptic Curves
                             // -1: Curves
@@ -123,6 +122,7 @@ impl CoseKey {
         wtr.write_i16::<BigEndian>(0x02).unwrap();
         wtr.write_i32::<BigEndian>(self.algorithm).unwrap();
 
+        // parameter
         for (key, value) in self.parameters.iter() {
             wtr.write_i16::<BigEndian>(*key).unwrap();
             if let Value::Bytes(bytes) = value {
@@ -135,19 +135,29 @@ impl CoseKey {
 
     #[allow(dead_code)]
     pub fn convert_to_publickey_der(&self) -> Vec<u8> {
-        // 1.0x04
-        let mut pub_key = vec![0x04];
+        if self.key_type == 2 {
+            // kty == 2: EC2 → need x&y
 
-        // 2.add X
-        if let Some(Value::Bytes(bytes)) = self.parameters.get(&-2) {
-            pub_key.append(&mut bytes.to_vec());
-        }
-        // 3.add Y
-        if let Some(Value::Bytes(bytes)) = self.parameters.get(&-3) {
-            pub_key.append(&mut bytes.to_vec());
-        }
+            // tag:0x04(OCTET STRING)
+            let mut pub_key = vec![0x04];
 
-        pub_key
+            // 2.add X
+            if let Some(Value::Bytes(bytes)) = self.parameters.get(&-2) {
+                pub_key.append(&mut bytes.to_vec());
+            }
+            // 3.add Y
+            if let Some(Value::Bytes(bytes)) = self.parameters.get(&-3) {
+                pub_key.append(&mut bytes.to_vec());
+            }
+
+            pub_key
+        } else {
+            // kty == 1: OKP → need x&y
+
+            // TODO
+            // ???
+            vec![]
+        }
     }
 
     #[allow(dead_code)]

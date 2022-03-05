@@ -51,15 +51,36 @@ impl fmt::Display for Info {
             .append("- max_credential_id_length", &self.max_credential_id_length)
             .append("- transports", &format!("{:?}", self.transports))
             .append("- algorithms", &format!("{:?}", self.algorithms))
-            .append("- max_serialized_large_blob_array", &format!("{:?}", self.max_serialized_large_blob_array))
-            .append("- force_pin_change", &format!("{:?}", self.force_pin_change))
+            .append(
+                "- max_serialized_large_blob_array",
+                &format!("{:?}", self.max_serialized_large_blob_array),
+            )
+            .append(
+                "- force_pin_change",
+                &format!("{:?}", self.force_pin_change),
+            )
             .append("- min_pin_length", &format!("{:?}", self.min_pin_length))
-            .append("- firmware_version", &format!("{:?}", self.firmware_version))
-            .append("- max_cred_blob_length", &format!("{:?}", self.max_cred_blob_length))
-            .append("- max_rpids_for_set_min_pin_length", &format!("{:?}", self.max_rpids_for_set_min_pin_length))
-            .append("- preferred_platform_uv_attempts", &format!("{:?}", self.preferred_platform_uv_attempts))
+            .append(
+                "- firmware_version",
+                &format!("{:?}", self.firmware_version),
+            )
+            .append(
+                "- max_cred_blob_length",
+                &format!("{:?}", self.max_cred_blob_length),
+            )
+            .append(
+                "- max_rpids_for_set_min_pin_length",
+                &format!("{:?}", self.max_rpids_for_set_min_pin_length),
+            )
+            .append(
+                "- preferred_platform_uv_attempts",
+                &format!("{:?}", self.preferred_platform_uv_attempts),
+            )
             .append("- uv_modality", &format!("{:?}", self.uv_modality))
-            .append("- remaining_discoverable_credentials", &format!("{:?}", self.remaining_discoverable_credentials));
+            .append(
+                "- remaining_discoverable_credentials",
+                &format!("{:?}", self.remaining_discoverable_credentials),
+            );
 
         write!(f, "{}", strbuf.build())
     }
