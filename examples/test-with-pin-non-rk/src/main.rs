@@ -1,12 +1,10 @@
 use anyhow::Result;
 use ctap_hid_fido2::get_assertion_params::Extension as Gext;
 use ctap_hid_fido2::make_credential_params::Extension as Mext;
-use ctap_hid_fido2::str_buf::StrBuf;
-use ctap_hid_fido2::verifier;
-use ctap_hid_fido2::Cfg;
-use ctap_hid_fido2::Key;
 use ctap_hid_fido2::make_credential_params::CredentialSupportedKeyType;
+use ctap_hid_fido2::{verifier, Cfg, Key};
 use ctap_hid_fido2::MakeCredentialArgsBuilder;
+//use ctap_hid_fido2::str_buf::StrBuf;
 
 fn main() -> Result<()> {
     let key_auto = true;
@@ -22,9 +20,6 @@ fn main() -> Result<()> {
     let pin = "1234";
 
     builder_pattern_sample(&cfg, rpid, pin)?;
-
-    // with HMAC extensions
-    //with_hmac(&cfg, pin)?;
 
     /*
     // parameter
@@ -136,14 +131,17 @@ fn main() -> Result<()> {
 }
 
 fn builder_pattern_sample(cfg: &Cfg, rpid: &str, pin: &str) -> Result<()> {
-    using_key_type(cfg, rpid, pin, CredentialSupportedKeyType::Ecdsa256)
-       .unwrap_or_else(|err| eprintln!("Error => {}", err));
-
-    using_key_type(cfg, rpid, pin, CredentialSupportedKeyType::Ed25519)
-        .unwrap_or_else(|err| eprintln!("Error => {}", err));
+    with_hmac(cfg, rpid, pin)
+    .unwrap_or_else(|err| eprintln!("Error => {}", err));
 
     non_discoverable_credentials(cfg, rpid, pin)
-        .unwrap_or_else(|err| eprintln!("Error => {}", err));
+    .unwrap_or_else(|err| eprintln!("Error => {}", err));
+
+    with_key_type(cfg, rpid, pin, CredentialSupportedKeyType::Ecdsa256)
+    .unwrap_or_else(|err| eprintln!("Error => {}", err));
+
+    with_key_type(cfg, rpid, pin, CredentialSupportedKeyType::Ed25519)
+    .unwrap_or_else(|err| eprintln!("Error => {}", err));
 
     Ok(())
 }
@@ -201,8 +199,8 @@ fn non_discoverable_credentials(cfg: &Cfg, rpid: &str, pin: &str) -> Result<()> 
     Ok(())
 }
 
-fn using_key_type(cfg: &Cfg, rpid: &str, pin: &str, key_type: CredentialSupportedKeyType) -> Result<()> {
-    println!("----- using_key_type ({:?}) -----", key_type);
+fn with_key_type(cfg: &Cfg, rpid: &str, pin: &str, key_type: CredentialSupportedKeyType) -> Result<()> {
+    println!("----- with_key_type ({:?}) -----", key_type);
 
     println!("- Register");
     let challenge = verifier::create_challenge();
@@ -255,79 +253,60 @@ fn using_key_type(cfg: &Cfg, rpid: &str, pin: &str, key_type: CredentialSupporte
     Ok(())
 }
 
-fn with_hmac(cfg: &Cfg,pin: &str) -> Result<()> {
+fn with_hmac(cfg: &Cfg,rpid: &str, pin: &str) -> Result<()> {
     println!("----- with hmac -----");
-    let rpid = "test.com";
+
+    println!("- Register");
     let challenge = verifier::create_challenge();
     let ext = Mext::HmacSecret(Some(true));
 
-    let mut strbuf = StrBuf::new(30);
-    println!(
-        "{}",
-        strbuf
-            .appent("Register - with hmac")
-            .append("- rpid", &rpid)
-            .appenh("- challenge", &challenge)
-            .build()
-    );
-
-    let make_credential_args = ctap_hid_fido2::MakeCredentialArgsBuilder::new(&rpid, &challenge)
+    let make_credential_args = MakeCredentialArgsBuilder::new(&rpid, &challenge)
     .pin(pin)
     .extensions(&vec![ext])
     .build();
 
-    let att = ctap_hid_fido2::make_credential_with_args(&cfg, &make_credential_args)?;
-
-    println!("!! Register Success !!");
+    let attestation = ctap_hid_fido2::make_credential_with_args(&cfg, &make_credential_args)?;
+    println!("-- Register Success");
     //println!("Attestation");
-    //println!("{}", att);
+    //println!("{}", attestation);
 
-    println!("Verify");
-    let verify_result = verifier::verify_attestation(rpid, &challenge, &att);
+    println!("-- Verify Attestation");
+    let verify_result = verifier::verify_attestation(rpid, &challenge, &attestation);
+    if verify_result.is_success {
+        println!("-- Verify Attestation Success");
+    } else {
+        println!("-- ! Verify Attestation Failed");
+    }
 
-    let mut strbuf = StrBuf::new(30);
-    println!(
-        "{}",
-        strbuf
-            .append("- is_success", &verify_result.is_success)
-            .appenh("- credential_id", &verify_result.credential_id)
-            .build()
-    );
-
-    // Authenticate
+    println!("- Authenticate");
     let challenge = verifier::create_challenge();
     let ext = Gext::create_hmac_secret_from_string("this is test");
 
-    let mut strbuf = StrBuf::new(30);
-    println!(
-        "{}",
-        strbuf
-            .appent("Authenticate - with hmac")
-            .appenh("- challenge", &challenge)
-            .build()
-    );
-
-    let get_assertion_args = ctap_hid_fido2::GetAssertionArgsBuilder::new(&rpid, &challenge)
+    let get_assertion_args = ctap_hid_fido2::GetAssertionArgsBuilder::new(rpid, &challenge)
     .pin(pin)
     .credential_id(&verify_result.credential_id)
     .extensions(&vec![ext])
     .build();
 
     let assertions = ctap_hid_fido2::get_assertion_with_args(cfg,&get_assertion_args)?;
-
-    println!("!! Authenticate Success !!");
+    println!("-- Authenticate Success");
     //println!("Assertion");
-    //println!("{}", ass);
+    //println!("{}", assertions[0]);
 
-    println!("Verify");
+    println!("-- Verify Assertion");
     let is_success = verifier::verify_assertion(
         rpid,
         &verify_result.credential_publickey_der,
         &challenge,
         &assertions[0],
     );
-    println!("- is_success = {:?}", is_success);
+    if is_success {
+        println!("-- Verify Assertion Success");
+    } else {
+        println!("-- ! Verify Assertion Failed");
+    }
 
+    println!();
     Ok(())
 }
 
