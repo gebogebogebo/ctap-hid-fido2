@@ -192,6 +192,10 @@ pub(crate) fn create_clientdata_hash(challenge: Vec<u8>) -> Vec<u8> {
 pub(crate) fn convert_to_publickey_pem(public_key_der: &[u8]) -> String {
     let mut tmp = vec![];
 
+    if public_key_der.len() == 0 {
+        return "".to_string();
+    }
+
     // 0.metadata(26byte)
     let meta_header = hex::decode("3059301306072a8648ce3d020106082a8648ce3d030107034200").unwrap();
     tmp.append(&mut meta_header.to_vec());

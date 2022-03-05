@@ -11,7 +11,7 @@ pub enum SubCommand {
     ChangePin = 0x04,
     GetPinToken = 0x05,
     GetPinUvAuthTokenUsingUvWithPermissions = 0x06,
-    GetUVRetries= 0x07,
+    GetUVRetries = 0x07,
     GetPinUvAuthTokenUsingPinWithPermissions = 0x09,
 }
 
@@ -92,7 +92,10 @@ pub fn create_payload_get_pin_uv_auth_token_using_pin_with_permissions(
 ) -> Vec<u8> {
     let mut map = BTreeMap::new();
     insert_pin_protocol(&mut map);
-    insert_sub_command(&mut map, SubCommand::GetPinUvAuthTokenUsingPinWithPermissions);
+    insert_sub_command(
+        &mut map,
+        SubCommand::GetPinUvAuthTokenUsingPinWithPermissions,
+    );
     insert_key_agreement(&mut map, key_agreement);
 
     // pinHashEnc(0x06) - Byte String

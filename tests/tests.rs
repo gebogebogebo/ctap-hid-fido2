@@ -87,10 +87,7 @@ fn test_credential_management_get_creds_metadata() {
     };
 
     let pin = "1234";
-    match ctap_hid_fido2::credential_management_get_creds_metadata(
-        &Cfg::init(),
-        Some(pin),
-    ) {
+    match ctap_hid_fido2::credential_management_get_creds_metadata(&Cfg::init(), Some(pin)) {
         Ok(_) => assert!(true),
         Err(_) => assert!(false),
     };
@@ -109,10 +106,7 @@ fn test_credential_management_enumerate_rps() {
     };
 
     let pin = "1234";
-    match ctap_hid_fido2::credential_management_enumerate_rps(
-        &Cfg::init(),
-        Some(pin),
-    ) {
+    match ctap_hid_fido2::credential_management_enumerate_rps(&Cfg::init(), Some(pin)) {
         Ok(_) => assert!(true),
         Err(_) => assert!(false),
     };
@@ -121,10 +115,8 @@ fn test_credential_management_enumerate_rps() {
 #[test]
 fn test_bio_enrollment_get_fingerprint_sensor_info() {
     let mut skip = true;
-    match ctap_hid_fido2::enable_info_option(
-        &Cfg::init(),
-        &InfoOption::UserVerificationMgmtPreview,
-    ) {
+    match ctap_hid_fido2::enable_info_option(&Cfg::init(), &InfoOption::UserVerificationMgmtPreview)
+    {
         Ok(result) => {
             //println!("result = {:?}", result);
             if let Some(v) = result {
@@ -151,10 +143,8 @@ fn test_bio_enrollment_get_fingerprint_sensor_info() {
 #[test]
 fn test_bio_enrollment_enumerate_enrollments() {
     let mut skip = true;
-    match ctap_hid_fido2::enable_info_option(
-        &Cfg::init(),
-        &InfoOption::UserVerificationMgmtPreview,
-    ) {
+    match ctap_hid_fido2::enable_info_option(&Cfg::init(), &InfoOption::UserVerificationMgmtPreview)
+    {
         Ok(result) => {
             if let Some(v) = result {
                 if v {
@@ -170,10 +160,7 @@ fn test_bio_enrollment_enumerate_enrollments() {
     };
 
     let pin = "1234";
-    match ctap_hid_fido2::bio_enrollment_enumerate_enrollments(
-        &Cfg::init(),
-        pin,
-    ) {
+    match ctap_hid_fido2::bio_enrollment_enumerate_enrollments(&Cfg::init(), pin) {
         Ok(_) => assert!(true),
         Err(_) => assert!(false),
     };

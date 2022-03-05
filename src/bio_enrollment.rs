@@ -54,7 +54,12 @@ pub fn bio_enrollment_init(
             if device.use_pre_bio_enrollment {
                 Some(client_pin::get_pin_token(device, &cid, pin)?)
             } else {
-                Some(client_pin::get_pinuv_auth_token_with_permission(device, &cid, pin, Permission::Be)?)
+                Some(client_pin::get_pinuv_auth_token_with_permission(
+                    device,
+                    &cid,
+                    pin,
+                    Permission::Be,
+                )?)
             }
         } else {
             None

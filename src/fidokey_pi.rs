@@ -21,7 +21,7 @@ impl FidoKeyHid {
 
                         let result = FidoKeyHid {
                             device_internal: options.open(&dev.path).unwrap(),
-                            enable_log: false,      // TODO
+                            enable_log: false, // TODO
                         };
                         return Ok(result);
                     }

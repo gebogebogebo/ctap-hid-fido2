@@ -1,4 +1,4 @@
-use crate::cose;
+use crate::cose::CoseKey;
 use crate::util;
 use serde_cbor::Value;
 
@@ -23,7 +23,7 @@ pub fn parse_cbor_client_pin_get_pin_token(bytes: &[u8]) -> Result<Vec<u8>, Stri
     Err("parse_cbor_client_pin_get_pin_token error".into())
 }
 
-pub fn parse_cbor_client_pin_get_keyagreement(bytes: &[u8]) -> Result<cose::CoseKey, String> {
+pub fn parse_cbor_client_pin_get_keyagreement(bytes: &[u8]) -> Result<CoseKey, String> {
     let cbor: Value = serde_cbor::from_slice(bytes).unwrap();
 
     if let Value::Map(n) = cbor {
@@ -31,7 +31,7 @@ pub fn parse_cbor_client_pin_get_keyagreement(bytes: &[u8]) -> Result<cose::Cose
         let (key, val) = n.iter().next().unwrap();
         if let Value::Integer(member) = key {
             if *member == 1 {
-                return Ok(cose::CoseKey::decode(val).unwrap());
+                return Ok(CoseKey::new(val).unwrap());
             }
         }
     }

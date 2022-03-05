@@ -55,10 +55,11 @@ pub mod verifier;
 use crate::bio_enrollment_command::SubCommand as BioCmd;
 use crate::bio_enrollment_params::{BioSensorInfo, EnrollStatus1, EnrollStatus2, TemplateInfo};
 use crate::client_pin_command::SubCommand as PinCmd;
+use crate::get_assertion_params::Assertion;
 use crate::get_assertion_params::Extension as Gext;
-use crate::make_credential_params::Extension as Mext;
-use crate::make_credential_params::CredentialSupportedKeyType;
 use crate::make_credential_params::Attestation;
+use crate::make_credential_params::CredentialSupportedKeyType;
+use crate::make_credential_params::Extension as Mext;
 use crate::public_key_credential_descriptor::PublicKeyCredentialDescriptor;
 use crate::public_key_credential_user_entity::PublicKeyCredentialUserEntity;
 use anyhow::{anyhow, Error, Result};
@@ -285,9 +286,7 @@ pub fn make_credential(
     pin: Option<&str>,
 ) -> Result<Attestation> {
     let device = get_device(cfg)?;
-    make_credential::make_credential(
-        &device, rpid, challenge, pin, false, None, None, None,
-    )
+    make_credential::make_credential(&device, rpid, challenge, pin, false, None, None, None)
 }
 
 /// Registration command. Generate credentials (with PIN, non Resident Key) while also
@@ -300,9 +299,7 @@ pub fn make_credential_with_key_type(
     key_type: Option<CredentialSupportedKeyType>,
 ) -> Result<Attestation> {
     let device = get_device(cfg)?;
-    make_credential::make_credential(
-        &device, rpid, challenge, pin, false, None, None, key_type,
-    )
+    make_credential::make_credential(&device, rpid, challenge, pin, false, None, None, key_type)
 }
 
 pub fn make_credential_with_extensions(
@@ -313,9 +310,7 @@ pub fn make_credential_with_extensions(
     extensions: Option<&Vec<Mext>>,
 ) -> Result<Attestation> {
     let device = get_device(cfg)?;
-    make_credential::make_credential(
-        &device, rpid, challenge, pin, false, None, extensions, None,
-    )
+    make_credential::make_credential(&device, rpid, challenge, pin, false, None, extensions, None)
 }
 
 /// Registration command.Generate credentials(with PIN ,Resident Key)
@@ -347,15 +342,10 @@ pub fn make_credential_without_pin(
     challenge: &[u8],
 ) -> Result<Attestation> {
     let device = get_device(cfg)?;
-    make_credential::make_credential(
-        &device, rpid, challenge, None, false, None, None, None,
-    )
+    make_credential::make_credential(&device, rpid, challenge, None, false, None, None, None)
 }
 
-pub fn make_credential_with_args(
-    cfg: &LibCfg,
-    args: &MakeCredentialArgs,
-) -> Result<Attestation> {
+pub fn make_credential_with_args(cfg: &LibCfg, args: &MakeCredentialArgs) -> Result<Attestation> {
     let device = get_device(cfg)?;
 
     let extensions = if args.extensions.is_some() {
@@ -364,10 +354,10 @@ pub fn make_credential_with_args(
         None
     };
 
-    let (rk,rk_param) = if args.rkparam.is_some() {
-        (true,Some(args.rkparam.as_ref().unwrap()))
+    let (rk, rk_param) = if args.rkparam.is_some() {
+        (true, Some(args.rkparam.as_ref().unwrap()))
     } else {
-        (false,None)
+        (false, None)
     };
 
     make_credential::make_credential(
@@ -419,7 +409,10 @@ impl<'a> MakeCredentialArgsBuilder<'a> {
         self
     }
 
-    pub fn key_type(mut self, key_type: CredentialSupportedKeyType) -> MakeCredentialArgsBuilder<'a> {
+    pub fn key_type(
+        mut self,
+        key_type: CredentialSupportedKeyType,
+    ) -> MakeCredentialArgsBuilder<'a> {
         self.key_type = Some(key_type);
         self
     }
@@ -429,7 +422,10 @@ impl<'a> MakeCredentialArgsBuilder<'a> {
         self
     }
 
-    pub fn rkparam(mut self, rkparam: &PublicKeyCredentialUserEntity) -> MakeCredentialArgsBuilder<'a> {
+    pub fn rkparam(
+        mut self,
+        rkparam: &PublicKeyCredentialUserEntity,
+    ) -> MakeCredentialArgsBuilder<'a> {
         self.rkparam = Some(rkparam.clone());
         self
     }
@@ -443,9 +439,8 @@ impl<'a> MakeCredentialArgsBuilder<'a> {
             extensions: self.extensions,
             rkparam: self.rkparam,
         }
-    }    
+    }
 }
-
 
 /// Authentication command(with PIN , non Resident Key)
 pub fn get_assertion(
@@ -454,18 +449,11 @@ pub fn get_assertion(
     challenge: &[u8],
     credential_id: &[u8],
     pin: Option<&str>,
-) -> Result<get_assertion_params::Assertion> {
+) -> Result<Assertion> {
     let device = get_device(cfg)?;
 
-    let asss = get_assertion::get_assertion(
-        &device,
-        rpid,
-        challenge,
-        credential_id,
-        pin,
-        true,
-        None,
-    )?;
+    let asss =
+        get_assertion::get_assertion(&device, rpid, challenge, credential_id, pin, true, None)?;
     Ok(asss[0].clone())
 }
 
@@ -477,7 +465,7 @@ pub fn get_assertion_with_extensios(
     credential_id: &[u8],
     pin: Option<&str>,
     extensions: Option<&Vec<Gext>>,
-) -> Result<get_assertion_params::Assertion> {
+) -> Result<Assertion> {
     let device = get_device(cfg)?;
     let asss = get_assertion::get_assertion(
         &device,
@@ -498,12 +486,10 @@ pub fn get_assertions_rk(
     rpid: &str,
     challenge: &[u8],
     pin: Option<&str>,
-) -> Result<Vec<get_assertion_params::Assertion>> {
+) -> Result<Vec<Assertion>> {
     let device = get_device(cfg)?;
     let dmy: [u8; 0] = [];
-    get_assertion::get_assertion(
-        &device, rpid, challenge, &dmy, pin, true, None,
-    )
+    get_assertion::get_assertion(&device, rpid, challenge, &dmy, pin, true, None)
 }
 
 #[derive(Debug)]
@@ -559,12 +545,9 @@ impl<'a> GetAssertionArgsBuilder<'a> {
             credential_id: self.credential_id,
             extensions: self.extensions,
         }
-    }    
+    }
 }
-pub fn get_assertion_with_args(
-    cfg: &LibCfg,
-    args: &GetAssertionArgs,
-) -> Result<get_assertion_params::Assertion> {
+pub fn get_assertion_with_args(cfg: &LibCfg, args: &GetAssertionArgs) -> Result<Vec<Assertion>> {
     let device = get_device(cfg)?;
 
     let credential_id = if args.credential_id.is_some() {
@@ -590,9 +573,8 @@ pub fn get_assertion_with_args(
         extensions,
     )?;
 
-    Ok(asss[0].clone())
+    Ok(asss)
 }
-
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum InfoParam {
@@ -644,10 +626,7 @@ pub enum InfoOption {
     UserVerificationMgmtPreview,
     BioEnroll,
 }
-pub fn enable_info_option(
-    cfg: &LibCfg,
-    info_option: &InfoOption,
-) -> Result<Option<bool>> {
+pub fn enable_info_option(cfg: &LibCfg, info_option: &InfoOption) -> Result<Option<bool>> {
     let device = get_device(cfg)?;
     let info = get_info::get_info(&device)?;
     let find = match info_option {
@@ -673,9 +652,7 @@ pub fn enable_info_option(
 }
 
 /// BioEnrollment - getFingerprintSensorInfo (CTAP 2.1-PRE)
-pub fn bio_enrollment_get_fingerprint_sensor_info(
-    cfg: &LibCfg,
-) -> Result<BioSensorInfo> {
+pub fn bio_enrollment_get_fingerprint_sensor_info(cfg: &LibCfg) -> Result<BioSensorInfo> {
     let device = get_device(cfg)?;
     let init = bio_enrollment::bio_enrollment_init(&device, None).map_err(Error::msg)?;
 
@@ -795,10 +772,7 @@ pub fn bio_enrollment_cancel(cfg: &LibCfg, enroll_status: &EnrollStatus1) -> Res
 
 /// BioEnrollment - enumerateEnrollments (CTAP 2.1-PRE)
 /// 6.7.6. Enumerate enrollments
-pub fn bio_enrollment_enumerate_enrollments(
-    cfg: &LibCfg,
-    pin: &str,
-) -> Result<Vec<TemplateInfo>> {
+pub fn bio_enrollment_enumerate_enrollments(cfg: &LibCfg, pin: &str) -> Result<Vec<TemplateInfo>> {
     let device = get_device(cfg)?;
     let init = bio_enrollment::bio_enrollment_init(&device, Some(pin))?;
     let pin_token = init.1.unwrap();

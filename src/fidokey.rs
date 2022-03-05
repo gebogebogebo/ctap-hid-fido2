@@ -10,7 +10,7 @@ pub struct FidoKeyHid {
 }
 
 impl FidoKeyHid {
-    pub fn new(params: &[crate::HidParam],cfg: &crate::LibCfg) -> Result<FidoKeyHid, String> {
+    pub fn new(params: &[crate::HidParam], cfg: &crate::LibCfg) -> Result<FidoKeyHid, String> {
         let api = HidApi::new().expect("Failed to create HidApi instance");
         for param in params {
             if let Some(dev_info) = FidoKeyHid::get_path(&api, param, 0xf1d0) {

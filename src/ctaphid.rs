@@ -228,11 +228,7 @@ pub fn ctaphid_wink(device: &FidoKeyHid, cid: &[u8]) -> Result<(), String> {
     cmd[7] = 0x00;
 
     if device.enable_log {
-        println!(
-            "- wink({:02})    = {:?}",
-            cmd.len(),
-            util::to_hex_str(&cmd)
-        );
+        println!("- wink({:02})    = {:?}", cmd.len(), util::to_hex_str(&cmd));
     }
 
     device.write(&cmd)?;
@@ -310,7 +306,7 @@ fn ctaphid_cbormsg(
         } else if st.0 == CTAPHID_KEEPALIVE {
             if !keep_alive_msg_flag {
                 if !device.keep_alive_msg.is_empty() {
-                    println!("{}",device.keep_alive_msg);
+                    println!("{}", device.keep_alive_msg);
                 }
                 keep_alive_msg_flag = true;
             }
