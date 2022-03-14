@@ -1,6 +1,10 @@
 use anyhow::{anyhow, Result};
+
+#[cfg(not(target_os = "linux"))]
 use clipboard::ClipboardContext;
+#[cfg(not(target_os = "linux"))]
 use clipboard::ClipboardProvider;
+
 use ctap_hid_fido2::InfoOption;
 use ctap_hid_fido2::credential_management_params::Credential;
 use ctap_hid_fido2::credential_management_params::Rp;
@@ -173,6 +177,7 @@ fn search_cred(pin: &str, rpid: &str, user_entity_id: &[u8]) -> Result<Option<Cr
     Ok(None)
 }
 
+#[cfg(not(target_os = "linux"))]
 fn get(tag: &str, pin: &str, rpid: &str) -> Result<()> {
     if let Some(cred) = search_cred(pin, rpid, tag.as_bytes())? {
         let data = cred.public_key_credential_user_entity.name;
@@ -181,6 +186,19 @@ fn get(tag: &str, pin: &str, rpid: &str) -> Result<()> {
         ctx.set_contents(data).unwrap();
 
         println!("Copied it to the clipboard :) :) :) !");
+    } else {
+        println!("tag not found...");
+    }
+    Ok(())
+}
+
+// for pi
+#[cfg(target_os = "linux")]
+fn get(tag: &str, pin: &str, rpid: &str) -> Result<()> {
+    if let Some(cred) = search_cred(pin, rpid, tag.as_bytes())? {
+        let data = cred.public_key_credential_user_entity.name;
+        println!("tag found :) :) :) !");
+        println!("{:?}",data);
     } else {
         println!("tag not found...");
     }
