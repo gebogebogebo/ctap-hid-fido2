@@ -5,12 +5,15 @@ use std::io::Write;
 use crate::hid_linux;
 
 pub struct FidoKeyHid {
-    device_internal: std::fs::File,
-    enable_log: bool,
+    pub device_internal: std::fs::File,
+    pub enable_log: bool,
+    pub use_pre_bio_enrollment: bool,
+    pub use_pre_credential_management: bool,
+    pub keep_alive_msg: String,
 }
 
 impl FidoKeyHid {
-    pub fn new(_params: &[crate::HidParam]) -> Result<FidoKeyHid, String> {
+    pub fn new(_params: &[crate::HidParam], cfg: &crate::LibCfg) -> Result<FidoKeyHid, String> {
         match hid_linux::enumerate() {
             Ok(devs) => {
                 for dev in devs {
@@ -21,7 +24,10 @@ impl FidoKeyHid {
 
                         let result = FidoKeyHid {
                             device_internal: options.open(&dev.path).unwrap(),
-                            enable_log: false, // TODO
+                            enable_log: cfg.enable_log,
+                            use_pre_bio_enrollment: cfg.use_pre_bio_enrollment,
+                            use_pre_credential_management: cfg.use_pre_credential_management,
+                            keep_alive_msg: cfg.keep_alive_msg.to_string(),
                         };
                         return Ok(result);
                     }
