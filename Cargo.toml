@@ -13,7 +13,8 @@ keywords=["FIDO2","CTAP"]
 readme="README.md"
 
 [dependencies]
-# hidapi = "1.2.3"
+# for Raspberry pi/Linux Comment out hidapi
+hidapi = "1.2.3"
 serde_cbor = "0.11.1"
 num = "0.4.0"
 hex = "0.4.2"
