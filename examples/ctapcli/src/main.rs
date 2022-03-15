@@ -3,7 +3,9 @@ use anyhow::{anyhow, Result};
 extern crate clap;
 use clap::{App, Arg, SubCommand};
 
+#[cfg(not(target_os = "linux"))]
 extern crate clipboard;
+
 extern crate rpassword;
 
 #[allow(unused_imports)]
