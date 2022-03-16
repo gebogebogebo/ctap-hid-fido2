@@ -29,7 +29,7 @@ Rust FIDO2 CTAP library
 - for Windows
   - Windows11 (21H2)
 - for Raspberry Pi
-  - Raspberry Pi OS 32bit (January 28th 2022)
+  - Raspberry Pi OS 32bit (11 bullseye)
 
 
 
