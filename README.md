@@ -26,6 +26,11 @@ Rust FIDO2 CTAP library
 - for Mac
   - macOS Big Sur
 
+- for Windows
+  - Windows11 (21H2)
+- for Raspberry Pi
+  - Raspberry Pi OS 32bit (January 28th 2022)
+
 
 
 ## Author
@@ -42,6 +47,25 @@ gebo
 $ cargo build
 $ cargo run
 ```
+
+
+
+#### Windows
+
+- **Run as administrator**
+
+
+
+#### raspberry Pi
+- **Cargo.toml modified and build**
+
+```toml
+[dependencies]
+# hidapi = "1.2.3"    <- comment out
+serde_cbor = "0.11.1"
+```
+
+
 
 
 
