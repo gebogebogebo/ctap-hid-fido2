@@ -1,9 +1,10 @@
-#### ![license](https://img.shields.io/github/license/gebogebogebo/ctap-hid-fido2)
+![license](https://img.shields.io/github/license/gebogebogebo/ctap-hid-fido2)
+![macOS](https://img.shields.io/badge/macOS-Supported-orange) ![Windows](https://img.shields.io/badge/Windows-Supported-orange) ![Raspberry Pi](https://img.shields.io/badge/Raspberry Pi-Supported-orange)
+
+
 
 # ctap-hid-fido2
 Rust FIDO2 CTAP library
-
-**Yubikey Bio is now supported.**
 
 
 
@@ -12,20 +13,18 @@ Rust FIDO2 CTAP library
 - [Client to Authenticator Protocol (CTAP)](https://fidoalliance.org/specs/fido-v2.1-ps-20210615/fido-client-to-authenticator-protocol-v2.1-ps-20210615.html)
 - Supported FIDO key
   - [Yubikey Bio](https://www.yubico.com/products/yubikey-bio-series/)
-  - Yubikey Blue (Security Key Series)
-  - Yubikey Black (YubiKey 5)
+  - [Yubikey](https://www.yubico.com/products/)
   - FEITIAN ePass FIDO(A4B)
   - FEITIAN BioPass K27 USB Security Key
   - FEITIAN AllinPass FIDO2 K33
   - [SoloKey](https://github.com/solokeys/solo)
-  - Nitrokey FIDO2
+  - [Nitrokey FIDO2](https://www.nitrokey.com/)
   - [OpenSK](https://github.com/google/OpenSK)
   - Idem Key
 - Rust Version
   - cargo 1.55.0 , rustc 1.55.0 , rustup 1.24.3
 - for Mac
-  - macOS Big Sur
-
+  - macOS Monterey
 - for Windows
   - Windows11 (21H2)
 - for Raspberry Pi
