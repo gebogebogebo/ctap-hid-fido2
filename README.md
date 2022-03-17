@@ -1,5 +1,7 @@
 ![license](https://img.shields.io/github/license/gebogebogebo/ctap-hid-fido2)
-![macOS](https://img.shields.io/badge/macOS-Supported-orange) ![Windows](https://img.shields.io/badge/Windows-Supported-orange) ![Raspberry Pi](https://img.shields.io/badge/Raspberry Pi-Supported-orange)
+![macOS](https://img.shields.io/badge/macOS-Supported-orange)
+![Windows](https://img.shields.io/badge/Windows-Supported-orange)
+![Raspberry Pi](https://img.shields.io/badge/Raspberry Pi-Supported-orange)
 
 
 
