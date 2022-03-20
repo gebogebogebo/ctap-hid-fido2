@@ -1,35 +1,24 @@
-use crypto::aes;
-use crypto::buffer::{ReadBuffer, RefReadBuffer, RefWriteBuffer, WriteBuffer};
+use aes::Aes256;
+use block_modes::{BlockMode, Cbc};
+use block_modes::block_padding::NoPadding;
 
 // AES256-CBC(key,IV=0,message)
+type Aes256Cbc = Cbc<Aes256, NoPadding>;
 
 pub fn encrypt_message_str(key: &[u8; 32], message: &str) -> Vec<u8> {
     encrypt_message(key, message.as_bytes())
 }
 
 pub fn encrypt_message(key: &[u8; 32], message: &[u8]) -> Vec<u8> {
-    let mut encryptor = aes::cbc_encryptor(
-        aes::KeySize::KeySize256,
-        key,
-        &[0u8; 16],
-        crypto::blockmodes::NoPadding,
-    );
+    if message.len() > 4096 {
+        panic!("Message too long");
+    }
 
-    // read buffer
-    let mut input = RefReadBuffer::new(message);
+    let cipher = Aes256Cbc::new_from_slices(key, &[0u8; 16]).unwrap();
+    let mut buffer = message.to_vec();
+    let ciphertext = cipher.encrypt(&mut buffer, message.len()).unwrap();
 
-    // write buffer(MAX 4096 byte)
-    let mut buffer = [0; 4096];
-    let mut output = RefWriteBuffer::new(&mut buffer);
-
-    // encrypt
-    let _encrypt_result = encryptor.encrypt(&mut input, &mut output, true).unwrap();
-
-    // get result
-    let mut result = Vec::<u8>::new();
-    result.extend(output.take_read_buffer().take_remaining().iter().copied());
-
-    result
+    ciphertext.to_vec()
 }
 
 pub fn decrypt_message_str(key: &[u8; 32], message: &[u8]) -> String {
@@ -38,25 +27,14 @@ pub fn decrypt_message_str(key: &[u8; 32], message: &[u8]) -> String {
 }
 
 pub fn decrypt_message(key: &[u8; 32], message: &[u8]) -> Vec<u8> {
-    let mut decryptor = aes::cbc_decryptor(
-        aes::KeySize::KeySize256,
-        key,
-        &[0u8; 16],
-        crypto::blockmodes::NoPadding,
-    );
+    if message.len() > 4096 {
+        panic!("Message too long");
+    }
 
-    // read buffer
-    let mut input = RefReadBuffer::new(message);
+    let cipher = Aes256Cbc::new_from_slices(key, &[0u8; 16]).unwrap();
+    let mut buffer = message.to_vec();
 
-    // write buffer(MAX 4096 byte)
-    let mut buffer = [0; 4096];
-    let mut output = RefWriteBuffer::new(&mut buffer);
+    let plaintext = cipher.decrypt(&mut buffer).unwrap();
 
-    let _decrypt_result = decryptor.decrypt(&mut input, &mut output, true).unwrap();
-
-    // get result
-    let mut result = Vec::<u8>::new();
-    result.extend(output.take_read_buffer().take_remaining().iter().copied());
-
-    result
+    plaintext.to_vec()
 }
