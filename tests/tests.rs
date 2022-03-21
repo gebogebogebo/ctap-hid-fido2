@@ -2,11 +2,11 @@
 // cargo test -- --test-threads=1
 //
 
-use crypto::digest::Digest;
-use crypto::sha2::Sha256;
+use ring::digest;
 use ctap_hid_fido2::str_buf::StrBuf;
 use ctap_hid_fido2::util;
 use ctap_hid_fido2::*;
+use std::convert::TryFrom;
 
 #[test]
 fn test_get_hid_devices() {
@@ -169,10 +169,8 @@ fn test_bio_enrollment_enumerate_enrollments() {
 #[test]
 fn test_enc_hmac_sha_256() {
     let key_str = "this is key.";
-    let mut key = [0u8; 32];
-    let mut digest = Sha256::new();
-    digest.input(&key_str.as_bytes());
-    digest.result(&mut key);
+    let hasher = digest::digest(&digest::SHA256, &key_str.as_bytes());
+    let key = <[u8; 32]>::try_from(hasher.as_ref()).unwrap();
 
     let message = "this is message.";
     let sig = enc_hmac_sha_256::authenticate(&key, message.as_bytes());
@@ -186,10 +184,8 @@ fn test_enc_hmac_sha_256() {
 #[test]
 fn test_enc_aes256_cbc() {
     let key_str = "this is key.";
-    let mut key = [0u8; 32];
-    let mut digest = Sha256::new();
-    digest.input(&key_str.as_bytes());
-    digest.result(&mut key);
+    let hasher = digest::digest(&digest::SHA256, &key_str.as_bytes());
+    let key = <[u8; 32]>::try_from(hasher.as_ref()).unwrap();
 
     let message = "this is message.";
     let enc_data = enc_aes256_cbc::encrypt_message_str(&key, message);

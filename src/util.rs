@@ -3,8 +3,7 @@ Utility API
 */
 
 use crate::str_buf::StrBuf;
-use crypto::digest::Digest;
-use crypto::sha2::Sha256;
+use ring::digest;
 use num::NumCast;
 use serde_cbor::Value;
 use std::collections::BTreeMap;
@@ -180,12 +179,8 @@ pub(crate) fn cbor_value_print(value: &Value) {
 
 pub(crate) fn create_clientdata_hash(challenge: Vec<u8>) -> Vec<u8> {
     // sha256
-    let mut out = [0u8; 32];
-    let mut hasher = Sha256::new();
-    hasher.input(&challenge);
-    hasher.result(&mut out);
-    //print!("{}", StrBuf::bufh("- Sha256(challenge)", &out));
-    out.to_vec()
+    let hasher = digest::digest(&digest::SHA256, &challenge);
+    hasher.as_ref().to_vec()
 }
 
 #[allow(dead_code)]
