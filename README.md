@@ -24,7 +24,7 @@ Rust FIDO2 CTAP library
   - [OpenSK](https://github.com/google/OpenSK)
   - Idem Key
 - Rust Version
-  - cargo 1.55.0 , rustc 1.55.0 , rustup 1.24.3
+  - cargo 1.59.0 , rustc 1.59.0 , rustup 1.24.3
 - for Mac
   - macOS Monterey
 - for Windows
