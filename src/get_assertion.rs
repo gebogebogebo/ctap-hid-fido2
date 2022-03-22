@@ -1,4 +1,3 @@
-use crate::client_pin;
 use crate::ctaphid;
 use crate::enc_hmac_sha_256;
 use crate::get_assertion_command;
@@ -35,7 +34,7 @@ pub fn get_assertion(
     // pin token
     let pin_token = {
         if let Some(pin) = pin {
-            Some(client_pin::get_pin_token(&device, &cid, pin)?)
+            Some(device.get_pin_token(&cid, pin)?)
         } else {
             None
         }

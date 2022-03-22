@@ -1,5 +1,6 @@
 use ctap_hid_fido2::Cfg;
 use ctap_hid_fido2::Key;
+use ctap_hid_fido2::FidoKeyHid;
 
 fn main() {
     ctap_hid_fido2::hello();
@@ -28,25 +29,27 @@ fn main() {
     println!("get_fidokey_devices()");
     let devs = ctap_hid_fido2::get_fidokey_devices();
     for (info, dev) in devs {
+        println!("\n\n---------------------------------------------");
         println!(
             "- vid=0x{:04x} , pid=0x{:04x} , info={:?}",
             dev.vid, dev.pid, info
         );
+        let dev = FidoKeyHid::new(&vec![dev], &cfg).unwrap();
 
         println!("get_info()");
-        match ctap_hid_fido2::get_info::get_info(&dev) {
+        match dev.get_info() {
             Ok(info) => println!("{}", info),
             Err(e) => println!("error: {:?}", e),
         }
     
         println!("get_pin_retries()");
-        match ctap_hid_fido2::get_pin_retries(&cfg) {
+        match dev.get_pin_retries() {
             Ok(info) => println!("{}", info),
             Err(e) => println!("error: {:?}", e),
         }
     
         println!("get_info_u2f()");
-        match ctap_hid_fido2::get_info_u2f(&cfg) {
+        match dev.get_info_u2f() {
             Ok(info) => println!("{}", info),
             Err(e) => println!("error: {:?}", e),
         }

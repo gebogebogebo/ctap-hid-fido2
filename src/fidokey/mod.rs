@@ -3,6 +3,9 @@ use hidapi::HidApi;
 
 use std::ffi::CString;
 
+mod get_info;
+pub mod pin;
+
 pub struct FidoKeyHid {
     device_internal: hidapi::HidDevice,
     pub enable_log: bool,

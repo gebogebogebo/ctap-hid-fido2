@@ -1,12 +1,14 @@
-use crate::client_pin;
-use crate::client_pin_command::Permission;
 use crate::credential_management_command;
 use crate::credential_management_params;
 use crate::credential_management_response;
 use crate::ctaphid;
 use crate::public_key_credential_descriptor::PublicKeyCredentialDescriptor;
 use crate::public_key_credential_user_entity::PublicKeyCredentialUserEntity;
-use crate::FidoKeyHid;
+use crate::{
+    FidoKeyHid,
+    fidokey::pin::Permission,
+};
+
 
 #[allow(unused_imports)]
 use crate::util;
@@ -26,10 +28,9 @@ pub(crate) fn credential_management(
     let pin_token = {
         if let Some(pin) = pin {
             if device.use_pre_credential_management {
-                Some(client_pin::get_pin_token(device, &cid, pin)?)
+                Some(device.get_pin_token(&cid, pin)?)
             } else {
-                Some(client_pin::get_pinuv_auth_token_with_permission(
-                    device,
+                Some(device.get_pinuv_auth_token_with_permission(
                     &cid,
                     pin,
                     Permission::Cm,

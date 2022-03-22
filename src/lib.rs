@@ -10,9 +10,6 @@ mod bio_enrollment;
 mod bio_enrollment_command;
 pub mod bio_enrollment_params;
 mod bio_enrollment_response;
-mod client_pin;
-mod client_pin_command;
-mod client_pin_response;
 mod config_command;
 mod cose;
 mod credential_management;
@@ -28,10 +25,6 @@ mod get_assertion;
 mod get_assertion_command;
 pub mod get_assertion_params;
 mod get_assertion_response;
-mod get_info;
-mod get_info_command;
-pub mod get_info_params;
-mod get_info_response;
 mod get_next_assertion_command;
 mod hmac;
 mod make_credential;
@@ -54,7 +47,6 @@ pub mod verifier;
 //
 use crate::bio_enrollment_command::SubCommand as BioCmd;
 use crate::bio_enrollment_params::{BioSensorInfo, EnrollStatus1, EnrollStatus2, TemplateInfo};
-use crate::client_pin_command::SubCommand as PinCmd;
 use crate::get_assertion_params::Assertion;
 use crate::get_assertion_params::Extension as Gext;
 use crate::make_credential_params::Attestation;
@@ -65,11 +57,9 @@ use crate::public_key_credential_user_entity::PublicKeyCredentialUserEntity;
 use anyhow::{anyhow, Error, Result};
 
 mod fidokey;
+pub use fidokey::FidoKeyHid;
 
 mod hid_common;
-
-use crate::fidokey::*;
-
 
 pub type Key = HidParam;
 pub type Cfg = LibCfg;
@@ -227,66 +217,6 @@ pub fn wink(cfg: &LibCfg) -> Result<()> {
     let device = get_device(cfg)?;
     let cid = ctaphid::ctaphid_init(&device).map_err(Error::msg)?;
     ctaphid::ctaphid_wink(&device, &cid).map_err(Error::msg)
-}
-
-/// Get FIDO key information
-pub fn get_info(cfg: &LibCfg) -> Result<get_info_params::Info> {
-    let device = get_device(cfg)?;
-    get_info::get_info(&device)
-}
-
-/// Get FIDO key information (CTAP 1.0)
-pub fn get_info_u2f(cfg: &LibCfg) -> Result<String> {
-    let device = get_device(cfg)?;
-    get_info::get_info_u2f(&device)
-}
-
-/// Get UV retry count
-pub fn get_uv_retries(cfg: &LibCfg) -> Result<i32> {
-    let device = get_device(cfg)?;
-    let cid = ctaphid::ctaphid_init(&device).map_err(Error::msg)?;
-
-    let send_payload =
-        client_pin_command::create_payload(PinCmd::GetUVRetries).map_err(Error::msg)?;
-
-    let response_cbor = ctaphid::ctaphid_cbor(&device, &cid, &send_payload).map_err(Error::msg)?;
-
-    let pin = client_pin_response::parse_cbor_client_pin_get_retries(&response_cbor)
-        .map_err(Error::msg)?;
-
-    Ok(pin.uv_retries)
-}
-
-/// Get PIN retry count
-pub fn get_pin_retries(cfg: &LibCfg) -> Result<i32> {
-    let device = get_device(cfg)?;
-    let cid = ctaphid::ctaphid_init(&device).map_err(Error::msg)?;
-
-    let send_payload =
-        client_pin_command::create_payload(PinCmd::GetRetries).map_err(Error::msg)?;
-
-    let response_cbor = ctaphid::ctaphid_cbor(&device, &cid, &send_payload).map_err(Error::msg)?;
-
-    let pin = client_pin_response::parse_cbor_client_pin_get_retries(&response_cbor)
-        .map_err(Error::msg)?;
-
-    Ok(pin.retries)
-}
-
-/// Set New PIN
-pub fn set_new_pin(cfg: &LibCfg, pin: &str) -> Result<()> {
-    let device = get_device(cfg)?;
-    let cid = ctaphid::ctaphid_init(&device).map_err(Error::msg)?;
-    client_pin::set_pin(&device, &cid, pin)?;
-    Ok(())
-}
-
-/// Change PIN
-pub fn change_pin(cfg: &LibCfg, current_pin: &str, new_pin: &str) -> Result<()> {
-    let device = get_device(cfg)?;
-    let cid = ctaphid::ctaphid_init(&device).map_err(Error::msg)?;
-    client_pin::change_pin(&device, &cid, current_pin, new_pin)?;
-    Ok(())
 }
 
 /// Registration command.Generate credentials(with PIN,non Resident Key)
@@ -585,81 +515,6 @@ pub fn get_assertion_with_args(cfg: &LibCfg, args: &GetAssertionArgs) -> Result<
     )?;
 
     Ok(asss)
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub enum InfoParam {
-    VersionsU2Fv2,
-    VersionsFido20,
-    VersionsFido21Pre,
-    VersionsFido21,
-    ExtensionsCredProtect,
-    ExtensionsCredBlob,
-    ExtensionsLargeBlobKey,
-    ExtensionsMinPinLength,
-    ExtensionsHmacSecret,
-}
-
-pub fn enable_info_param(cfg: &LibCfg, info_param: &InfoParam) -> Result<bool> {
-    let device = get_device(cfg)?;
-    let info = get_info::get_info(&device)?;
-    let find = match info_param {
-        InfoParam::VersionsU2Fv2 => "U2F_V2",
-        InfoParam::VersionsFido20 => "FIDO_2_0",
-        InfoParam::VersionsFido21Pre => "FIDO_2_1_PRE",
-        InfoParam::VersionsFido21 => "FIDO_2_1",
-        InfoParam::ExtensionsCredProtect => Mext::CredProtect(None).as_ref(),
-        InfoParam::ExtensionsCredBlob => "credBlob",
-        InfoParam::ExtensionsLargeBlobKey => "credBlobKey",
-        InfoParam::ExtensionsMinPinLength => "minPinLength",
-        InfoParam::ExtensionsHmacSecret => Mext::HmacSecret(None).as_ref(),
-    };
-    let ret = info.versions.iter().find(|v| *v == find);
-    if ret.is_some() {
-        return Ok(true);
-    }
-    let ret = info.extensions.iter().find(|v| *v == find);
-    if ret.is_some() {
-        return Ok(true);
-    }
-    Ok(false)
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub enum InfoOption {
-    Rk,
-    Up,
-    Uv,
-    Plat,
-    ClinetPin,
-    CredentialMgmtPreview,
-    CredMgmt,
-    UserVerificationMgmtPreview,
-    BioEnroll,
-}
-pub fn enable_info_option(cfg: &LibCfg, info_option: &InfoOption) -> Result<Option<bool>> {
-    let device = get_device(cfg)?;
-    let info = get_info::get_info(&device)?;
-    let find = match info_option {
-        InfoOption::Rk => "rk",
-        InfoOption::Up => "up",
-        InfoOption::Uv => "uv",
-        InfoOption::Plat => "plat",
-        InfoOption::ClinetPin => "clientPin",
-        InfoOption::CredentialMgmtPreview => "credentialMgmtPreview",
-        InfoOption::CredMgmt => "credMgmt",
-        InfoOption::UserVerificationMgmtPreview => "userVerificationMgmtPreview",
-        InfoOption::BioEnroll => "bioEnroll",
-    };
-    let ret = info.options.iter().find(|v| (*v).0 == find);
-    if let Some(v) = ret {
-        // v.1 == true or false
-        // - present and set to true.
-        // - present and set to false.
-        return Ok(Some(v.1));
-    }
-    // absent.
-    Ok(None)
 }
 
 /// BioEnrollment - getFingerprintSensorInfo (CTAP 2.1-PRE)
@@ -999,6 +854,7 @@ pub fn config(cfg: &LibCfg) -> Result<String> {
 mod tests {
     use super::*;
 
+    /*
     #[test]
     fn test_client_pin_get_keyagreement() {
         let hid_params = HidParam::get();
@@ -1014,7 +870,7 @@ mod tests {
         println!("{}", key_agreement);
 
         assert!(true);
-    }
+    } */
 
     #[test]
     fn test_make_credential_with_pin_non_rk_command() {

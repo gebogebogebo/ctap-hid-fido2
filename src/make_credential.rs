@@ -1,4 +1,3 @@
-use crate::client_pin;
 use crate::ctaphid;
 use crate::enc_hmac_sha_256;
 use crate::make_credential_command;
@@ -58,7 +57,7 @@ pub fn make_credential(
         // get pintoken & create pin auth
         if let Some(pin) = pin {
             if !pin.is_empty() {
-                let pin_token = client_pin::get_pin_token(device, &cid, pin)?;
+                let pin_token = device.get_pin_token(&cid, pin)?;
                 let sig = enc_hmac_sha_256::authenticate(&pin_token.key, &params.client_data_hash);
                 params.pin_auth = sig[0..16].to_vec();
             }
