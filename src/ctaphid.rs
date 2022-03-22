@@ -25,7 +25,7 @@ const CTAPHID_WINK: u8 = CTAP_FRAME_INIT | 0x08;
 const CTAPHID_CBOR: u8 = CTAP_FRAME_INIT | 0x10;
 //This command code is used in response messages only.
 const CTAPHID_ERROR: u8 = CTAP_FRAME_INIT | 0x3F;
-const CTAPHID_KEEPALIVE: u8 = CTAP_FRAME_INIT | 0x3B;
+pub const CTAPHID_KEEPALIVE: u8 = CTAP_FRAME_INIT | 0x3B;
 
 //const CTAPHID_KEEPALIVE_STATUS_PROCESSING = 1;     // The authenticator is still processing the current request.
 //const CTAPHID_KEEPALIVE_STATUS_UPNEEDED = 2;       // The authenticator is waiting for user presence.
@@ -69,7 +69,7 @@ pub fn ctaphid_init(device: &FidoKeyHid) -> Result<[u8; 4], String> {
     Ok([buf[15], buf[16], buf[17], buf[18]])
 }
 
-fn get_responce_status(packet: &[u8]) -> Result<(u8, u16, u8), String> {
+pub fn get_responce_status(packet: &[u8]) -> Result<(u8, u16, u8), String> {
     // cid
     //println!("- cid: {:?}", &packet[0..4]);
     // cmd
@@ -246,6 +246,41 @@ pub fn ctaphid_wink(device: &FidoKeyHid, cid: &[u8]) -> Result<(), String> {
     Ok(())
 }
 
+fn ctaphid_cbormsg_write(
+    device: &FidoKeyHid,
+    cid: &[u8],
+    command: u8,
+    payload: &[u8],
+) -> Result<(), String> {
+    if device.enable_log {
+        println!();
+        println!("-- send cbor({:02})", payload.len());
+        println!("{}", util::to_hex_str(payload));
+        println!("--");
+    }
+
+    // initialization_packet
+    let res = create_initialization_packet(cid, command, payload);
+    //println!("CTAPHID_CBOR(0) = {}", util::to_hex_str(&res.0));
+
+    // Write data to device
+    let _res = device.write(&res.0)?;
+    //println!("Wrote: {:?} byte", res);
+
+    // next
+    if res.1 {
+        for seqno in 0..100 {
+            let res = create_continuation_packet(seqno, cid, payload);
+            //println!("CTAPHID_CBOR(1) = {}", util::to_hex_str(&res.0));
+            let _res = device.write(&res.0)?;
+            if !res.1 {
+                break;
+            }
+        }
+    }
+    Ok(())
+}
+
 fn ctaphid_cbormsg(
     device: &FidoKeyHid,
     cid: &[u8],
@@ -368,6 +403,10 @@ fn ctaphid_cbormsg(
 
         Ok(data)
     }
+}
+
+pub fn ctaphid_cbor_write(device: &FidoKeyHid, cid: &[u8], payload: &[u8]) -> Result<(), String> {
+    ctaphid_cbormsg_write(device, cid, CTAPHID_CBOR, payload)
 }
 
 pub fn ctaphid_cbor(device: &FidoKeyHid, cid: &[u8], payload: &[u8]) -> Result<Vec<u8>, String> {

@@ -86,6 +86,7 @@ use crate::fidokey_pi::*;
 pub type Key = HidParam;
 pub type Cfg = LibCfg;
 
+#[derive(Clone)]
 pub struct LibCfg {
     pub hid_params: Vec<HidParam>,
     pub enable_log: bool,
@@ -106,12 +107,26 @@ impl LibCfg {
 }
 
 /// HID device vendor ID , product ID
+#[derive(Clone)]
 pub struct HidParam {
     /// vendor ID
     pub vid: u16,
     /// product ID
     pub pid: u16,
+    /// Optional path, if known
+    pub path: Option<String>,
 }
+
+// Consider converting the above to an enum
+/*
+/// HID device vendor ID , product ID
+#[derive(Clone)]
+pub enum HidParam {
+    /// Specified when looking for any FIDO device of a certain kind
+    VidPid {vid: u16, pid: u16},
+    Path(String),
+}
+ */
 
 impl HidParam {
     /// Generate HID parameters for FIDO key devices
@@ -127,38 +142,47 @@ impl HidParam {
             HidParam {
                 vid: 0x1050,
                 pid: 0x0402,
+                path: None,
             }, // yubikey 4/5 u2f
             HidParam {
                 vid: 0x1050,
                 pid: 0x0407,
+                path: None,
             }, // yubikey 4/5 otp+u2f+ccid
             HidParam {
                 vid: 0x1050,
                 pid: 0x0120,
+                path: None,
             }, // yubikey touch u2f
             HidParam {
                 vid: 0x096E,
                 pid: 0x085D,
+                path: None,
             }, // biopass
             HidParam {
                 vid: 0x096E,
                 pid: 0x0866,
+                path: None,
             }, // all in pass
             HidParam {
                 vid: 0x0483,
                 pid: 0xa2ca,
+                path: None,
             }, // solokey
             HidParam {
                 vid: 0x096e,
                 pid: 0x0858,
+                path: None,
             }, // ePass FIDO(A4B)
             HidParam {
                 vid: 0x20a0,
                 pid: 0x42b1,
+                path: None,
             }, // Nitrokey FIDO2 2.0.0
             HidParam {
                 vid: 0x32a3,
                 pid: 0x3201,
+                path: None,
             }, // Idem Key
         ]
     }
@@ -197,18 +221,21 @@ fn get_device(cfg: &LibCfg) -> Result<FidoKeyHid> {
     let device = if cfg.hid_params.len() > 0 {
         FidoKeyHid::new(&cfg.hid_params, cfg).map_err(Error::msg)?
     } else {
-        let devs = get_fidokey_devices();
+        let mut devs = get_fidokey_devices();
         if devs.is_empty() {
             return Err(anyhow!("FIDO device not found."));
         }
 
-        let params = vec![HidParam {
-            vid: devs[0].1.vid,
-            pid: devs[0].1.pid,
-        }];
+        let device = devs.pop().unwrap().1;
+
+        let params = vec![device];
         FidoKeyHid::new(&params, cfg).map_err(Error::msg)?
     };
     Ok(device)
+}
+
+pub fn get_device_from_tap(cfg: &LibCfg) -> Result<FidoKeyHid> {
+    FidoKeyHid::new_fido_device_from_tap(cfg, 15_000).map_err(Error::msg)
 }
 
 /// Lights the LED on the FIDO key
