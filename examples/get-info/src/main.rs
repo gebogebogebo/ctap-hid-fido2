@@ -34,7 +34,7 @@ fn main() {
         );
 
         println!("get_info()");
-        match ctap_hid_fido2::get_info(&cfg) {
+        match ctap_hid_fido2::get_info::get_info(&dev) {
             Ok(info) => println!("{}", info),
             Err(e) => println!("error: {:?}", e),
         }
