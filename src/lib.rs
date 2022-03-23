@@ -150,12 +150,12 @@ pub fn hello() {
 
 /// Get HID devices
 pub fn get_hid_devices() -> Vec<HidInfo> {
-    FidoKeyHid::get_hid_devices(None)
+    hid_common::get_hid_devices(None)
 }
 
 /// Get HID FIDO devices
 pub fn get_fidokey_devices() -> Vec<HidInfo> {
-    FidoKeyHid::get_hid_devices(Some(0xf1d0))
+    hid_common::get_hid_devices(Some(0xf1d0))
 }
 
 fn get_device(cfg: &LibCfg) -> Result<FidoKeyHid> {

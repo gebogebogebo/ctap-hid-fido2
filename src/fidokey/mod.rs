@@ -1,8 +1,4 @@
-use crate::{
-    HidInfo,
-    HidParam
-};
-use crate::str_buf::StrBuf;
+use crate::HidParam;
 use hidapi::HidApi;
 
 use std::ffi::CString;
@@ -19,7 +15,7 @@ pub struct FidoKeyHid {
 }
 
 impl FidoKeyHid {
-    pub fn new(params: &[crate::HidParam], cfg: &crate::LibCfg) -> Result<FidoKeyHid, String> {
+    pub fn new(params: &[crate::HidParam], cfg: &crate::LibCfg) -> Result<Self, String> {
         let api = HidApi::new().expect("Failed to create HidApi instance");
         for param in params {
             let path = get_path(&api, &param);
@@ -39,49 +35,6 @@ impl FidoKeyHid {
             }
         }
         Err("Failed to open device.".into())
-    }
-
-    pub fn get_hid_devices(usage_page: Option<u16>) -> Vec<HidInfo> {
-        let api = HidApi::new().expect("Failed to create HidAPI instance");
-        let mut res = vec![];
-
-        let devices = api.device_list();
-        for dev in devices {
-            if usage_page == None || dev.usage_page() == usage_page.unwrap() {
-                let mut memo = StrBuf::new(0);
-
-                if let Some(n) = dev.product_string() {
-                    memo.add("product=");
-                    memo.add(n);
-                }
-                memo.add(" usage_page=");
-                memo.add(&dev.usage_page().to_string());
-
-                memo.add(" usage=");
-                memo.add(&dev.usage().to_string());
-
-                if let Some(n) = dev.serial_number() {
-                    memo.add(" serial_number=");
-                    memo.add(n);
-                }
-
-                memo.add(format!(" path={:?}", dev.path()).as_str());
-
-                let param = match dev.path().to_str() {
-                    Ok(s) => HidParam::Path(s.to_string()),
-                    _ => HidParam::VidPid { vid: dev.vendor_id(), pid: dev.product_id() },
-                };
-
-                res.push(HidInfo {
-                    pid: dev.product_id(),
-                    vid: dev.vendor_id(),
-                    product_string: dev.product_string().unwrap_or_default().to_string(),
-                    info: memo.build().to_string(),
-                    param,
-                });
-            }
-        }
-        res
     }
 
     pub fn write(&self, cmd: &[u8]) -> Result<usize, String> {
