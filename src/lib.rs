@@ -59,7 +59,7 @@ use anyhow::{anyhow, Error, Result};
 mod fidokey;
 pub use fidokey::FidoKeyHid;
 
-mod hid_common;
+mod hid;
 
 pub type Key = HidParam;
 pub type Cfg = LibCfg;
@@ -150,12 +150,12 @@ pub fn hello() {
 
 /// Get HID devices
 pub fn get_hid_devices() -> Vec<HidInfo> {
-    hid_common::get_hid_devices(None)
+    hid::get_hid_devices(None)
 }
 
 /// Get HID FIDO devices
 pub fn get_fidokey_devices() -> Vec<HidInfo> {
-    hid_common::get_hid_devices(Some(0xf1d0))
+    hid::get_hid_devices(Some(0xf1d0))
 }
 
 fn get_device(cfg: &LibCfg) -> Result<FidoKeyHid> {

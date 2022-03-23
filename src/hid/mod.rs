@@ -20,6 +20,7 @@ pub struct DeviceInfo {
     pub report_size: u16,
 }
 
+
 pub fn get_hid_devices(usage_page: Option<u16>) -> Vec<HidInfo> {
     let api = HidApi::new().expect("Failed to create HidAPI instance");
     let mut res = vec![];
