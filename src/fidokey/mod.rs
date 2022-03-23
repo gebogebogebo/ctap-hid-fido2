@@ -105,26 +105,22 @@ fn get_path(
     api: &hidapi::HidApi,
     param: &crate::HidParam,
 ) -> Option<CString> {
-    let devices = api.device_list();
-    for x in devices.cloned() {
-        match param {
-            HidParam::Path(s) => {
-                let c_path = CString::new(s.as_bytes());
-                if c_path.is_err() {
-                    return None
-                }
-                let c_path = c_path.unwrap();
-                if c_path.as_c_str() == x.path() {
-                    return Some(c_path)
-                }
-            },
-            HidParam::VidPid { vid, pid } =>  {
+    match param {
+        HidParam::Path(s) => {
+            if let Ok(p) = CString::new(s.as_bytes()) {
+                return Some(p)
+            }
+        },
+        HidParam::VidPid { vid, pid } =>  {
+            let devices = api.device_list();
+            for x in devices.cloned() {
                 if x.vendor_id() == *vid && x.product_id() == *pid {
                     return Some(x.path().to_owned());
                 }
-            },
-        };
-    }
+            }
+        },
+    };
+
     None
 }
 
