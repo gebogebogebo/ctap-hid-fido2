@@ -19,22 +19,22 @@ fn main() {
 
     println!("get_hid_devices()");
     let devs = ctap_hid_fido2::get_hid_devices();
-    for (info, dev) in devs {
+    for info in devs {
         println!(
             "- vid=0x{:04x} , pid=0x{:04x} , info={:?}",
-            dev.vid, dev.pid, info
+            info.vid, info.pid, info.info
         );
     }
      
     println!("get_fidokey_devices()");
     let devs = ctap_hid_fido2::get_fidokey_devices();
-    for (info, dev) in devs {
+    for info in devs {
         println!("\n\n---------------------------------------------");
         println!(
             "- vid=0x{:04x} , pid=0x{:04x} , info={:?}",
-            dev.vid, dev.pid, info
+            info.vid, info.pid, info.info
         );
-        let dev = FidoKeyHid::new(&vec![dev], &cfg).unwrap();
+        let dev = FidoKeyHid::new(&vec![info.param], &cfg).unwrap();
 
         println!("get_info()");
         match dev.get_info() {

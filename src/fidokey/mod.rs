@@ -1,3 +1,7 @@
+use crate::{
+    HidInfo,
+    HidParam
+};
 use crate::str_buf::StrBuf;
 use hidapi::HidApi;
 
@@ -18,18 +22,12 @@ impl FidoKeyHid {
     pub fn new(params: &[crate::HidParam], cfg: &crate::LibCfg) -> Result<FidoKeyHid, String> {
         let api = HidApi::new().expect("Failed to create HidApi instance");
         for param in params {
-            let path = match &param.path {
-                Some(p) => CString::new(p.as_bytes()).map_err(|_| format!("Path cannot contain null bytes"))?,
-                None => {
-                    if let Some(dev_info) = FidoKeyHid::get_path(&api, param, 0xf1d0) {
-                        dev_info.path().to_owned()
-                    } else {
-                        continue;
-                    }
-                },
-            };
+            let path = get_path(&api, &param);
+            if path.is_none() {
+                continue;
+            }
 
-            if let Ok(dev) = api.open_path(&path) {
+            if let Ok(dev) = api.open_path(&path.unwrap()) {
                 let result = FidoKeyHid {
                     device_internal: dev,
                     enable_log: cfg.enable_log,
@@ -43,24 +41,7 @@ impl FidoKeyHid {
         Err("Failed to open device.".into())
     }
 
-    fn get_path(
-        api: &hidapi::HidApi,
-        param: &crate::HidParam,
-        usage_page: u16,
-    ) -> Option<hidapi::DeviceInfo> {
-        let devices = api.device_list();
-        for x in devices.cloned() {
-            if x.vendor_id() == param.vid
-                && x.product_id() == param.pid
-                && x.usage_page() == usage_page
-            {
-                return Some(x);
-            }
-        }
-        None
-    }
-
-    pub fn get_hid_devices(usage_page: Option<u16>) -> Vec<(String, crate::HidParam)> {
+    pub fn get_hid_devices(usage_page: Option<u16>) -> Vec<HidInfo> {
         let api = HidApi::new().expect("Failed to create HidAPI instance");
         let mut res = vec![];
 
@@ -86,19 +67,17 @@ impl FidoKeyHid {
 
                 memo.add(format!(" path={:?}", dev.path()).as_str());
 
-                let path = match dev.path().to_str() {
-                    Ok(s) => Some(s.to_owned()),
-                    _ => None,
+                let param = match dev.path().to_str() {
+                    Ok(s) => HidParam::Path(s.to_string()),
+                    _ => HidParam::VidPid { vid: dev.vendor_id(), pid: dev.product_id() },
                 };
 
-                res.push((
-                    memo.build().to_string(),
-                    crate::HidParam {
-                        vid: dev.vendor_id(),
-                        pid: dev.product_id(),
-                        path,
-                    },
-                ));
+                res.push(HidInfo {
+                    pid: dev.product_id(),
+                    vid: dev.vendor_id(),
+                    info: memo.build().to_string(),
+                    param,
+                });
             }
         }
         res
@@ -136,3 +115,33 @@ impl FidoKeyHid {
         }
     }
 }
+
+/// Abstraction for getting a path from a provided HidParam
+fn get_path(
+    api: &hidapi::HidApi,
+    param: &crate::HidParam,
+) -> Option<CString> {
+    let devices = api.device_list();
+    for x in devices.cloned() {
+        match param {
+            HidParam::Path(s) => {
+                let c_path = CString::new(s.as_bytes());
+                if c_path.is_err() {
+                    return None
+                }
+                let c_path = c_path.unwrap();
+                if c_path.as_c_str() == x.path() {
+                    return Some(c_path)
+                }
+            },
+            HidParam::VidPid { vid, pid } =>  {
+                if x.vendor_id() == *vid && x.product_id() == *pid {
+                    return Some(x.path().to_owned());
+                }
+            },
+        };
+    }
+    None
+}
+
+

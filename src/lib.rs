@@ -86,25 +86,23 @@ impl LibCfg {
 
 /// HID device vendor ID , product ID
 #[derive(Clone)]
-pub struct HidParam {
-    /// vendor ID
-    pub vid: u16,
-    /// product ID
-    pub pid: u16,
-    /// Optional path, if known
-    pub path: Option<String>,
-}
-
-// Consider converting the above to an enum
-/*
-/// HID device vendor ID , product ID
-#[derive(Clone)]
 pub enum HidParam {
     /// Specified when looking for any FIDO device of a certain kind
     VidPid {vid: u16, pid: u16},
     Path(String),
 }
- */
+
+/// Struct that contains information about found HID devices. Also
+/// contains a HidParam which can be used to lookup the device
+/// later.
+#[derive(Clone)]
+pub struct HidInfo {
+    pub pid: u16,
+    pub vid: u16,
+    pub info: String,
+    pub param: HidParam,
+}
+
 
 impl HidParam {
     /// Generate HID parameters for FIDO key devices
@@ -117,51 +115,15 @@ impl HidParam {
     /// - Nitrokey = vid:0x20a0 , pid:0x42b1
     pub fn get() -> Vec<HidParam> {
         vec![
-            HidParam {
-                vid: 0x1050,
-                pid: 0x0402,
-                path: None,
-            }, // yubikey 4/5 u2f
-            HidParam {
-                vid: 0x1050,
-                pid: 0x0407,
-                path: None,
-            }, // yubikey 4/5 otp+u2f+ccid
-            HidParam {
-                vid: 0x1050,
-                pid: 0x0120,
-                path: None,
-            }, // yubikey touch u2f
-            HidParam {
-                vid: 0x096E,
-                pid: 0x085D,
-                path: None,
-            }, // biopass
-            HidParam {
-                vid: 0x096E,
-                pid: 0x0866,
-                path: None,
-            }, // all in pass
-            HidParam {
-                vid: 0x0483,
-                pid: 0xa2ca,
-                path: None,
-            }, // solokey
-            HidParam {
-                vid: 0x096e,
-                pid: 0x0858,
-                path: None,
-            }, // ePass FIDO(A4B)
-            HidParam {
-                vid: 0x20a0,
-                pid: 0x42b1,
-                path: None,
-            }, // Nitrokey FIDO2 2.0.0
-            HidParam {
-                vid: 0x32a3,
-                pid: 0x3201,
-                path: None,
-            }, // Idem Key
+            HidParam::VidPid { vid: 0x1050, pid: 0x0402 },  // Yubikey 4/5 U2F
+            HidParam::VidPid { vid: 0x1050, pid: 0x0407 },  // Yubikey 4/5 OTP+U2F+CCID
+            HidParam::VidPid { vid: 0x1050, pid: 0x0120 },  // Yubikey Touch U2F
+            HidParam::VidPid { vid: 0x096E, pid: 0x085D },  // Biopass
+            HidParam::VidPid { vid: 0x096E, pid: 0x0866 },  // All in pass
+            HidParam::VidPid { vid: 0x0483, pid: 0xA2CA },  // Solokey 
+            HidParam::VidPid { vid: 0x096E, pid: 0x0858 },  // ePass FIDO(A4B)
+            HidParam::VidPid { vid: 0x20a0, pid: 0x42b1 },  // Nitrokey FIDO2 2.0.0
+            HidParam::VidPid { vid: 0x32a3, pid: 0x3201 },  // Idem Key
         ]
     }
     pub fn auto() -> Vec<HidParam> {
@@ -186,12 +148,12 @@ pub fn hello() {
 }
 
 /// Get HID devices
-pub fn get_hid_devices() -> Vec<(String, HidParam)> {
+pub fn get_hid_devices() -> Vec<HidInfo> {
     FidoKeyHid::get_hid_devices(None)
 }
 
 /// Get HID FIDO devices
-pub fn get_fidokey_devices() -> Vec<(String, HidParam)> {
+pub fn get_fidokey_devices() -> Vec<HidInfo> {
     FidoKeyHid::get_hid_devices(Some(0xf1d0))
 }
 
@@ -204,7 +166,7 @@ fn get_device(cfg: &LibCfg) -> Result<FidoKeyHid> {
             return Err(anyhow!("FIDO device not found."));
         }
 
-        let device = devs.pop().unwrap().1;
+        let device = devs.pop().unwrap().param;
 
         let params = vec![device];
         FidoKeyHid::new(&params, cfg).map_err(Error::msg)?
