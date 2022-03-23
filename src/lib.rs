@@ -84,11 +84,14 @@ impl LibCfg {
     }
 }
 
-/// HID device vendor ID , product ID
+/// Specification for a HID device to connect to
 #[derive(Clone)]
 pub enum HidParam {
     /// Specified when looking for any FIDO device of a certain kind
+    /// (Ambiguous when multiple of the same device connected)
     VidPid {vid: u16, pid: u16},
+    /// Specified when looking for a specific device (non-ambiguous when
+    /// multiple of the same device connected)
     Path(String),
 }
 
@@ -106,14 +109,6 @@ pub struct HidInfo {
 
 
 impl HidParam {
-    /// Generate HID parameters for FIDO key devices
-    /// - yubikey 4/5 u2f = vid:0x1050 , pid:0x0402
-    /// - yubikey 4/5 otp+u2f+ccid = vid:0x1050, pid:0x0407
-    /// - yubikey touch u2f = vid:0x1050 , pid:0x0120
-    /// - biopass = vid:0x096E , pid:0x085D
-    /// - all in pass = vid:0x096E , pid:0x0866
-    /// - solokey = vid:0x0483 , pid:0xa2ca
-    /// - Nitrokey = vid:0x20a0 , pid:0x42b1
     pub fn get() -> Vec<HidParam> {
         vec![
             HidParam::VidPid { vid: 0x1050, pid: 0x0402 },  // Yubikey 4/5 U2F
