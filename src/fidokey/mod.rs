@@ -75,6 +75,7 @@ impl FidoKeyHid {
                 res.push(HidInfo {
                     pid: dev.product_id(),
                     vid: dev.vendor_id(),
+                    product_string: dev.product_string().unwrap_or_default().to_string(),
                     info: memo.build().to_string(),
                     param,
                 });
@@ -88,23 +89,6 @@ impl FidoKeyHid {
             Ok(size) => Ok(size),
             Err(_) => Err("write error".into()),
         }
-    }
-
-    /// We assume the reading mode will be blocking, so we just change it to non blocking
-    /// and set it back to blocking after. This is technically incorrect because it will 
-    /// change the state if it was already non-blocking, but if that's the case, you
-    /// could just use the read api.
-    pub fn read_non_blocking(&self) -> Result<Vec<u8>, String> {
-        self.device_internal.set_blocking_mode(false).map_err(|_| format!("Could not set non blocking mode"))?;
-        let mut buf: Vec<u8> = vec![0; 64];
-        let res = match self.device_internal.read(&mut buf[..]) {
-            Ok(0) => Ok(vec![]),
-            Ok(n) => Ok(buf),
-            Err(_) => Err("read error".into()),
-        };
-
-        self.device_internal.set_blocking_mode(true).map_err(|_| format!("Could not set non blocking mode"))?;
-        res
     }
 
     pub fn read(&self) -> Result<Vec<u8>, String> {

@@ -99,6 +99,7 @@ pub enum HidParam {
 pub struct HidInfo {
     pub pid: u16,
     pub vid: u16,
+    pub product_string: String,
     pub info: String,
     pub param: HidParam,
 }
