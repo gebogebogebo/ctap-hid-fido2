@@ -854,24 +854,6 @@ pub fn config(cfg: &LibCfg) -> Result<String> {
 mod tests {
     use super::*;
 
-    /*
-    #[test]
-    fn test_client_pin_get_keyagreement() {
-        let hid_params = HidParam::get();
-        let device = FidoKeyHid::new(&hid_params, &Cfg::init()).unwrap();
-        let cid = ctaphid::ctaphid_init(&device).unwrap();
-
-        let send_payload = client_pin_command::create_payload(PinCmd::GetKeyAgreement).unwrap();
-        let response_cbor = ctaphid::ctaphid_cbor(&device, &cid, &send_payload).unwrap();
-
-        let key_agreement =
-            client_pin_response::parse_cbor_client_pin_get_keyagreement(&response_cbor).unwrap();
-        println!("authenticatorClientPIN (0x06) - getKeyAgreement");
-        println!("{}", key_agreement);
-
-        assert!(true);
-    } */
-
     #[test]
     fn test_make_credential_with_pin_non_rk_command() {
         let rpid = "test.com";
