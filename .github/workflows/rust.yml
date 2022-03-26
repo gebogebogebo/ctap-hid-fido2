@@ -16,7 +16,7 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: Build
-      run: cargo build --examples --verbose
+      run: cargo build --verbose
   
   ubuntu-build:
     runs-on: ubuntu-latest
@@ -24,4 +24,4 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: Build
-      run: cargo build --examples --verbose
+      run: cargo build --verbose
