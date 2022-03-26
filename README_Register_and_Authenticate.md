@@ -28,8 +28,8 @@
   - **For security reasons, this feature is deprecated**
   - Use `without_pin_and_uv` to run with an Authenticator that does not have a PIN set.
   - Using `without_pin_and_uv` on an Authenticator with a PIN set may result in an error (behavior depends on Authenticator type).
-
-
+  - Get whether PIN is set in Authenticator with `enable_info_option()`
+    - [Example](https://github.com/gebogebogebo/ctap-hid-fido2/blob/9f3c8bb0c9a343978bc929f682350644d9273c44/examples/get-info/src/main.rs#L52-L56)
 
 
 
