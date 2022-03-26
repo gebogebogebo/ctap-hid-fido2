@@ -1,14 +1,11 @@
-use ctap_hid_fido2::{Cfg, Key, InfoOption};
+use ctap_hid_fido2::{Cfg, InfoOption, Key};
 
 fn main() {
     ctap_hid_fido2::hello();
 
     let key_auto = true;
 
-    println!(
-        "----- get-info start : key_auto = {:?} -----",
-        key_auto
-    );
+    println!("----- get-info start : key_auto = {:?} -----", key_auto);
     let mut cfg = Cfg::init();
     //cfg.enable_log = true;
     cfg.hid_params = if key_auto { Key::auto() } else { Key::get() };
