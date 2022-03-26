@@ -24,7 +24,7 @@ Rust FIDO2 CTAP library
   - [OpenSK](https://github.com/google/OpenSK)
   - Idem Key
 - Rust Version
-  - cargo 1.55.0 , rustc 1.55.0 , rustup 1.24.3
+  - cargo 1.59.0 , rustc 1.59.0 , rustup 1.24.3
 - for Mac
   - macOS Monterey
 - for Windows
@@ -58,7 +58,18 @@ $ cargo run
 
 
 #### raspberry Pi
-- **Cargo.toml modified and build**
+
+(The same may be true for Linux, such as Ubuntu)
+
+Unable to build with the following error in libusb-1.0 dependencies, you can solve the problem by doing one of the following.
+
+- **a) installing the libusb-1.0-0-dev package**
+
+```sh
+sudo apt-get install libusb-1.0-0-dev
+```
+
+- **b) comment out hidapi from Cargo.toml**
 
 ```toml
 [dependencies]
@@ -68,9 +79,13 @@ serde_cbor = "0.11.1"
 
 
 
-
-
 ## Examples
+
+**PIN has to be set**
+
+Unless noted in the following samples, a PIN must be set in the Authenticator.
+
+
 
 ### Register and Authenticate
 

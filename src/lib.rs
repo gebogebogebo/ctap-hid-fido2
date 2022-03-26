@@ -278,6 +278,13 @@ pub fn change_pin(cfg: &LibCfg, current_pin: &str, new_pin: &str) -> Result<()> 
     Ok(())
 }
 
+fn should_uv(pin: Option<&str>) -> Option<bool> {
+    match pin {
+        Some(_) => None,
+        None => Some(true),
+    }
+}
+
 /// Registration command.Generate credentials(with PIN,non Resident Key)
 pub fn make_credential(
     cfg: &LibCfg,
@@ -286,7 +293,17 @@ pub fn make_credential(
     pin: Option<&str>,
 ) -> Result<Attestation> {
     let device = get_device(cfg)?;
-    make_credential::make_credential(&device, rpid, challenge, pin, false, None, None, None)
+    make_credential::make_credential(
+        &device,
+        rpid,
+        challenge,
+        pin,
+        false,
+        None,
+        should_uv(pin),
+        None,
+        None,
+    )
 }
 
 /// Registration command. Generate credentials (with PIN, non Resident Key) while also
@@ -299,7 +316,17 @@ pub fn make_credential_with_key_type(
     key_type: Option<CredentialSupportedKeyType>,
 ) -> Result<Attestation> {
     let device = get_device(cfg)?;
-    make_credential::make_credential(&device, rpid, challenge, pin, false, None, None, key_type)
+    make_credential::make_credential(
+        &device,
+        rpid,
+        challenge,
+        pin,
+        false,
+        None,
+        should_uv(pin),
+        None,
+        key_type,
+    )
 }
 
 pub fn make_credential_with_extensions(
@@ -310,7 +337,17 @@ pub fn make_credential_with_extensions(
     extensions: Option<&Vec<Mext>>,
 ) -> Result<Attestation> {
     let device = get_device(cfg)?;
-    make_credential::make_credential(&device, rpid, challenge, pin, false, None, extensions, None)
+    make_credential::make_credential(
+        &device,
+        rpid,
+        challenge,
+        pin,
+        false,
+        None,
+        should_uv(pin),
+        extensions,
+        None,
+    )
 }
 
 /// Registration command.Generate credentials(with PIN ,Resident Key)
@@ -329,20 +366,10 @@ pub fn make_credential_rk(
         pin,
         true,
         Some(rkparam),
-        //None,
+        should_uv(pin),
         None,
         None,
     )
-}
-
-/// Registration command.Generate credentials(without PIN ,non Resident Key)
-pub fn make_credential_without_pin(
-    cfg: &LibCfg,
-    rpid: &str,
-    challenge: &[u8],
-) -> Result<Attestation> {
-    let device = get_device(cfg)?;
-    make_credential::make_credential(&device, rpid, challenge, None, false, None, None, None)
 }
 
 pub fn make_credential_with_args(cfg: &LibCfg, args: &MakeCredentialArgs) -> Result<Attestation> {
@@ -367,6 +394,7 @@ pub fn make_credential_with_args(cfg: &LibCfg, args: &MakeCredentialArgs) -> Res
         args.pin,
         rk,
         rk_param,
+        args.uv,
         extensions,
         args.key_type,
     )
@@ -378,8 +406,9 @@ pub struct MakeCredentialArgs<'a> {
     challenge: Vec<u8>,
     pin: Option<&'a str>,
     key_type: Option<CredentialSupportedKeyType>,
-    extensions: Option<Vec<Mext>>,
+    uv: Option<bool>,
     rkparam: Option<PublicKeyCredentialUserEntity>,
+    extensions: Option<Vec<Mext>>,
 }
 impl<'a> MakeCredentialArgs<'a> {
     pub fn builder() -> MakeCredentialArgsBuilder<'a> {
@@ -393,19 +422,29 @@ pub struct MakeCredentialArgsBuilder<'a> {
     challenge: Vec<u8>,
     pin: Option<&'a str>,
     key_type: Option<CredentialSupportedKeyType>,
-    extensions: Option<Vec<Mext>>,
+    uv: Option<bool>,
     rkparam: Option<PublicKeyCredentialUserEntity>,
+    extensions: Option<Vec<Mext>>,
 }
 impl<'a> MakeCredentialArgsBuilder<'a> {
     pub fn new(rpid: &str, challenge: &[u8]) -> MakeCredentialArgsBuilder<'a> {
         let mut result = MakeCredentialArgsBuilder::default();
+        result.uv = Some(true);
         result.rpid = String::from(rpid);
         result.challenge = challenge.to_vec();
         result
     }
 
-    pub fn pin(mut self, pin: &'a str) -> MakeCredentialArgsBuilder {
+    pub fn pin(mut self, pin: &'a str) -> MakeCredentialArgsBuilder<'a> {
         self.pin = Some(pin);
+        //self.uv = Some(false);
+        self.uv = None;
+        self
+    }
+
+    pub fn without_pin_and_uv(mut self) -> MakeCredentialArgsBuilder<'a> {
+        self.pin = None;
+        self.uv = None;
         self
     }
 
@@ -436,8 +475,9 @@ impl<'a> MakeCredentialArgsBuilder<'a> {
             challenge: self.challenge,
             pin: self.pin,
             key_type: self.key_type,
-            extensions: self.extensions,
+            uv: self.uv,
             rkparam: self.rkparam,
+            extensions: self.extensions,
         }
     }
 }
@@ -452,8 +492,16 @@ pub fn get_assertion(
 ) -> Result<Assertion> {
     let device = get_device(cfg)?;
 
-    let asss =
-        get_assertion::get_assertion(&device, rpid, challenge, credential_id, pin, true, None)?;
+    let asss = get_assertion::get_assertion(
+        &device,
+        rpid,
+        challenge,
+        credential_id,
+        pin,
+        true,
+        should_uv(pin),
+        None,
+    )?;
     Ok(asss[0].clone())
 }
 
@@ -474,7 +522,7 @@ pub fn get_assertion_with_extensios(
         credential_id,
         pin,
         true,
-        //None,
+        should_uv(pin),
         extensions,
     )?;
     Ok(asss[0].clone())
@@ -489,7 +537,16 @@ pub fn get_assertions_rk(
 ) -> Result<Vec<Assertion>> {
     let device = get_device(cfg)?;
     let dmy: [u8; 0] = [];
-    get_assertion::get_assertion(&device, rpid, challenge, &dmy, pin, true, None)
+    get_assertion::get_assertion(
+        &device,
+        rpid,
+        challenge,
+        &dmy,
+        pin,
+        true,
+        should_uv(pin),
+        None,
+    )
 }
 
 #[derive(Debug)]
@@ -498,6 +555,7 @@ pub struct GetAssertionArgs<'a> {
     challenge: Vec<u8>,
     pin: Option<&'a str>,
     credential_id: Option<Vec<u8>>,
+    uv: Option<bool>,
     extensions: Option<Vec<Gext>>,
 }
 impl<'a> GetAssertionArgs<'a> {
@@ -512,18 +570,28 @@ pub struct GetAssertionArgsBuilder<'a> {
     challenge: Vec<u8>,
     pin: Option<&'a str>,
     credential_id: Option<Vec<u8>>,
+    uv: Option<bool>,
     extensions: Option<Vec<Gext>>,
 }
 impl<'a> GetAssertionArgsBuilder<'a> {
     pub fn new(rpid: &str, challenge: &[u8]) -> GetAssertionArgsBuilder<'a> {
         let mut result = GetAssertionArgsBuilder::default();
+        result.uv = Some(true);
         result.rpid = String::from(rpid);
         result.challenge = challenge.to_vec();
         result
     }
 
-    pub fn pin(mut self, pin: &'a str) -> GetAssertionArgsBuilder {
+    pub fn pin(mut self, pin: &'a str) -> GetAssertionArgsBuilder<'a> {
         self.pin = Some(pin);
+        //self.uv = Some(false);
+        self.uv = None;
+        self
+    }
+
+    pub fn without_pin_and_uv(mut self) -> GetAssertionArgsBuilder<'a> {
+        self.pin = None;
+        self.uv = None;
         self
     }
 
@@ -543,6 +611,7 @@ impl<'a> GetAssertionArgsBuilder<'a> {
             challenge: self.challenge,
             pin: self.pin,
             credential_id: self.credential_id,
+            uv: self.uv,
             extensions: self.extensions,
         }
     }
@@ -570,6 +639,7 @@ pub fn get_assertion_with_args(cfg: &LibCfg, args: &GetAssertionArgs) -> Result<
         &credential_id,
         args.pin,
         true,
+        args.uv,
         extensions,
     )?;
 
@@ -963,7 +1033,7 @@ pub fn credential_management_update_user_information(
     Ok(())
 }
 
-/// Selection (CTAP 2.1-PRE)
+/// Selection (CTAP 2.1)
 pub fn selection(cfg: &LibCfg) -> Result<String> {
     let device = get_device(cfg)?;
     let cid = ctaphid::ctaphid_init(&device).map_err(Error::msg)?;
@@ -972,7 +1042,7 @@ pub fn selection(cfg: &LibCfg) -> Result<String> {
     Ok("".to_string())
 }
 
-/// Get Config (CTAP 2.1-PRE)
+/// Get Config (CTAP 2.1)
 pub fn config(cfg: &LibCfg) -> Result<String> {
     let device = get_device(cfg)?;
     let cid = ctaphid::ctaphid_init(&device).map_err(Error::msg)?;

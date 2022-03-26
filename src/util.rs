@@ -3,8 +3,8 @@ Utility API
 */
 
 use crate::str_buf::StrBuf;
-use ring::digest;
 use num::NumCast;
+use ring::digest;
 use serde_cbor::Value;
 use std::collections::BTreeMap;
 
