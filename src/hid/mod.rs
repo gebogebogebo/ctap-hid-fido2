@@ -8,7 +8,7 @@ use std::path::PathBuf;
 
 use hidapi::HidApi;
 
-use crate::HidParam;
+use crate::{HidInfo, HidParam};
 use crate::str_buf::StrBuf;
 
 #[derive(Debug, Clone)]
@@ -21,8 +21,8 @@ pub struct DeviceInfo {
 }
 
 
-pub fn get_hid_devices(usage_page: Option<u16>) -> Vec<(String, HidParam)> {
-    let api = HidApi::new().expect("Failed to create AcaPI instance");
+pub fn get_hid_devices(usage_page: Option<u16>) -> Vec<HidInfo> {
+    let api = HidApi::new().expect("Failed to create HidAPI instance");
     let mut res = vec![];
 
     let devices = api.device_list();
@@ -45,13 +45,20 @@ pub fn get_hid_devices(usage_page: Option<u16>) -> Vec<(String, HidParam)> {
                 memo.add(n);
             }
 
-            res.push((
-                memo.build().to_string(),
-                crate::HidParam {
-                    vid: dev.vendor_id(),
-                    pid: dev.product_id(),
-                },
-            ));
+            memo.add(format!(" path={:?}", dev.path()).as_str());
+
+            let param = match dev.path().to_str() {
+                Ok(s) => HidParam::Path(s.to_string()),
+                _ => HidParam::VidPid { vid: dev.vendor_id(), pid: dev.product_id() },
+            };
+
+            res.push(HidInfo {
+                pid: dev.product_id(),
+                vid: dev.vendor_id(),
+                product_string: dev.product_string().unwrap_or_default().to_string(),
+                info: memo.build().to_string(),
+                param,
+            });
         }
     }
     res

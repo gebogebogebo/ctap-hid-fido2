@@ -1,11 +1,12 @@
 use crate::bio_enrollment_command;
 use crate::bio_enrollment_params::{BioEnrollmentData, TemplateInfo};
 use crate::bio_enrollment_response;
-use crate::client_pin;
-use crate::client_pin_command::Permission;
 use crate::ctaphid;
 use crate::pintoken::PinToken;
-use crate::FidoKeyHid;
+use crate::{
+    FidoKeyHid,
+    fidokey::pin::Permission,
+};
 
 #[allow(unused_imports)]
 use crate::util;
@@ -52,10 +53,9 @@ pub fn bio_enrollment_init(
     let pin_token = {
         if let Some(pin) = pin {
             if device.use_pre_bio_enrollment {
-                Some(client_pin::get_pin_token(device, &cid, pin)?)
+                Some(device.get_pin_token(&cid, pin)?)
             } else {
-                Some(client_pin::get_pinuv_auth_token_with_permission(
-                    device,
+                Some(device.get_pinuv_auth_token_with_permission(
                     &cid,
                     pin,
                     Permission::Be,

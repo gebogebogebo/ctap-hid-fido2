@@ -1,4 +1,4 @@
-use crate::get_info_params;
+use super::get_info_params;
 use crate::util;
 use serde_cbor::Value;
 
