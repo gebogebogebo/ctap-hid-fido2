@@ -58,15 +58,24 @@ $ cargo run
 
 
 #### raspberry Pi
-- **Cargo.toml modified and build**
+
+(The same may be true for Linux, such as Ubuntu)
+
+Unable to build with the following error in libusb-1.0 dependencies, you can solve the problem by doing one of the following.
+
+- **a) installing the libusb-1.0-0-dev package**
+
+```sh
+sudo apt-get install libusb-1.0-0-dev
+```
+
+- **b) comment out hidapi from Cargo.toml**
 
 ```toml
 [dependencies]
 # hidapi = "1.2.3"    <- comment out
 serde_cbor = "0.11.1"
 ```
-
-
 
 
 
