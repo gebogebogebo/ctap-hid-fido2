@@ -963,7 +963,7 @@ pub fn credential_management_update_user_information(
     Ok(())
 }
 
-/// Selection (CTAP 2.1-PRE)
+/// Selection (CTAP 2.1)
 pub fn selection(cfg: &LibCfg) -> Result<String> {
     let device = get_device(cfg)?;
     let cid = ctaphid::ctaphid_init(&device).map_err(Error::msg)?;
@@ -972,7 +972,7 @@ pub fn selection(cfg: &LibCfg) -> Result<String> {
     Ok("".to_string())
 }
 
-/// Get Config (CTAP 2.1-PRE)
+/// Get Config (CTAP 2.1)
 pub fn config(cfg: &LibCfg) -> Result<String> {
     let device = get_device(cfg)?;
     let cid = ctaphid::ctaphid_init(&device).map_err(Error::msg)?;
