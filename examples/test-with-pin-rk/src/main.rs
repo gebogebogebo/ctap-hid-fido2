@@ -29,7 +29,7 @@ fn main() -> Result<()> {
 // Builder Pattern Sample
 //
 fn builder_pattern_sample(cfg: &Cfg, rpid: &str, pin: &str) -> Result<()> {
-    discoverable_credentials(cfg, rpid, pin).unwrap_or_else(|err| eprintln!("Error => {}", err));
+    discoverable_credentials(cfg, rpid, pin).unwrap_or_else(|err| eprintln!("Error => {}\n", err));
 
     Ok(())
 }
@@ -106,7 +106,7 @@ fn discoverable_credentials(cfg: &Cfg, rpid: &str, pin: &str) -> Result<()> {
 //
 fn legacy_pattern_sample(cfg: &Cfg, rpid: &str, pin: &str) -> Result<()> {
     legacy_discoverable_credentials(cfg, rpid, pin)
-        .unwrap_or_else(|err| eprintln!("Error => {}", err));
+        .unwrap_or_else(|err| eprintln!("Error => {}\n", err));
 
     Ok(())
 }

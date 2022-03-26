@@ -72,6 +72,12 @@ serde_cbor = "0.11.1"
 
 ## Examples
 
+**PIN has to be set**
+
+Unless noted in the following samples, a PIN must be set in the Authenticator.
+
+
+
 ### Register and Authenticate
 
 [Register and Authenticate Examples](README_Register_and_Authenticate.md)

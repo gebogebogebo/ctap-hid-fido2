@@ -17,18 +17,11 @@ pub fn get_assertion(
     credential_id: &[u8],
     pin: Option<&str>,
     up: bool,
-    //uv: Option<bool>,
+    uv: Option<bool>,
     extensions: Option<&Vec<Gext>>,
 ) -> Result<Vec<Assertion>> {
     // init
     let cid = ctaphid::ctaphid_init(&device).map_err(Error::msg)?;
-
-    let uv = {
-        match pin {
-            Some(_) => None,
-            None => Some(true),
-        }
-    };
 
     let hmac_ext = create_hmacext(&device, &cid, extensions)?;
 
