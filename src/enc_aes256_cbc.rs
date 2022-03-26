@@ -1,6 +1,6 @@
 use aes::Aes256;
-use block_modes::{BlockMode, Cbc};
 use block_modes::block_padding::NoPadding;
+use block_modes::{BlockMode, Cbc};
 
 // AES256-CBC(key,IV=0,message)
 type Aes256Cbc = Cbc<Aes256, NoPadding>;

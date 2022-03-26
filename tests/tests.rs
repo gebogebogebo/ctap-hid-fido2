@@ -2,10 +2,10 @@
 // cargo test -- --test-threads=1
 //
 
-use ring::digest;
 use ctap_hid_fido2::str_buf::StrBuf;
 use ctap_hid_fido2::util;
 use ctap_hid_fido2::*;
+use ring::digest;
 use std::convert::TryFrom;
 
 #[test]

@@ -87,7 +87,7 @@ impl CoseKey {
             }
         }
         Ok(cose)
-    }    
+    }
 
     pub fn to_value(&self) -> Result<Value> {
         let mut map = BTreeMap::new();

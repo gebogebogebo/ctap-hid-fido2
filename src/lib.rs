@@ -293,7 +293,17 @@ pub fn make_credential(
     pin: Option<&str>,
 ) -> Result<Attestation> {
     let device = get_device(cfg)?;
-    make_credential::make_credential(&device, rpid, challenge, pin, false, None, should_uv(pin), None, None)
+    make_credential::make_credential(
+        &device,
+        rpid,
+        challenge,
+        pin,
+        false,
+        None,
+        should_uv(pin),
+        None,
+        None,
+    )
 }
 
 /// Registration command. Generate credentials (with PIN, non Resident Key) while also
@@ -306,7 +316,17 @@ pub fn make_credential_with_key_type(
     key_type: Option<CredentialSupportedKeyType>,
 ) -> Result<Attestation> {
     let device = get_device(cfg)?;
-    make_credential::make_credential(&device, rpid, challenge, pin, false, None, should_uv(pin), None, key_type)
+    make_credential::make_credential(
+        &device,
+        rpid,
+        challenge,
+        pin,
+        false,
+        None,
+        should_uv(pin),
+        None,
+        key_type,
+    )
 }
 
 pub fn make_credential_with_extensions(
@@ -317,7 +337,17 @@ pub fn make_credential_with_extensions(
     extensions: Option<&Vec<Mext>>,
 ) -> Result<Attestation> {
     let device = get_device(cfg)?;
-    make_credential::make_credential(&device, rpid, challenge, pin, false, None, should_uv(pin), extensions, None)
+    make_credential::make_credential(
+        &device,
+        rpid,
+        challenge,
+        pin,
+        false,
+        None,
+        should_uv(pin),
+        extensions,
+        None,
+    )
 }
 
 /// Registration command.Generate credentials(with PIN ,Resident Key)
@@ -462,8 +492,16 @@ pub fn get_assertion(
 ) -> Result<Assertion> {
     let device = get_device(cfg)?;
 
-    let asss =
-        get_assertion::get_assertion(&device, rpid, challenge, credential_id, pin, true, should_uv(pin), None)?;
+    let asss = get_assertion::get_assertion(
+        &device,
+        rpid,
+        challenge,
+        credential_id,
+        pin,
+        true,
+        should_uv(pin),
+        None,
+    )?;
     Ok(asss[0].clone())
 }
 
@@ -499,7 +537,16 @@ pub fn get_assertions_rk(
 ) -> Result<Vec<Assertion>> {
     let device = get_device(cfg)?;
     let dmy: [u8; 0] = [];
-    get_assertion::get_assertion(&device, rpid, challenge, &dmy, pin, true, should_uv(pin), None)
+    get_assertion::get_assertion(
+        &device,
+        rpid,
+        challenge,
+        &dmy,
+        pin,
+        true,
+        should_uv(pin),
+        None,
+    )
 }
 
 #[derive(Debug)]
