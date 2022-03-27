@@ -64,7 +64,7 @@ pub fn ctaphid_init(device: &FidoKeyHid) -> Result<[u8; 4], String> {
     Ok([buf[15], buf[16], buf[17], buf[18]])
 }
 
-pub fn get_responce_status(packet: &[u8]) -> Result<(u8, u16, u8), String> {
+fn get_responce_status(packet: &[u8]) -> Result<(u8, u16, u8), String> {
     // cid
     //println!("- cid: {:?}", &packet[0..4]);
     // cmd

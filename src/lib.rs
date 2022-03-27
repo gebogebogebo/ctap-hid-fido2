@@ -56,7 +56,7 @@ use crate::public_key_credential_descriptor::PublicKeyCredentialDescriptor;
 use crate::public_key_credential_user_entity::PublicKeyCredentialUserEntity;
 use anyhow::{anyhow, Error, Result};
 
-mod fidokey;
+pub mod fidokey;
 pub use fidokey::FidoKeyHid;
 
 mod hid;

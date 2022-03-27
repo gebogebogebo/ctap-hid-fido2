@@ -1,5 +1,8 @@
-use ctap_hid_fido2::{Cfg, InfoOption, Key};
-use ctap_hid_fido2::FidoKeyHid;
+use ctap_hid_fido2::{Cfg, Key};
+use ctap_hid_fido2::{
+    FidoKeyHid,
+    fidokey::get_info::InfoOption,
+};
 
 fn main() {
     ctap_hid_fido2::hello();
@@ -51,7 +54,7 @@ fn main() {
         }
 
         println!("enable_info_option() - ClinetPin");
-        match ctap_hid_fido2::enable_info_option(&cfg, &InfoOption::ClinetPin) {
+        match dev.enable_info_option(&InfoOption::ClientPin) {
             Ok(result) => println!("PIN = {:?}", result),
             Err(e) => println!("- error: {:?}", e),
         }

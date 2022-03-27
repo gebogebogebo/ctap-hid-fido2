@@ -3,7 +3,7 @@ use hidapi::HidApi;
 
 use std::ffi::CString;
 
-mod get_info;
+pub mod get_info;
 pub mod pin;
 
 pub struct FidoKeyHid {
