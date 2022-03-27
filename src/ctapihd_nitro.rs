@@ -1,12 +1,7 @@
 use crate::ctaphid;
 use crate::util;
 
-#[cfg(not(target_os = "linux"))]
 use crate::fidokey::*;
-
-// for pi
-#[cfg(target_os = "linux")]
-use crate::fidokey_pi::*;
 
 // Nitrokey Custom commands between 0x40-0x7f
 const CTAPHID_BOOT: u8 = ctaphid::CTAP_FRAME_INIT | 0x50;

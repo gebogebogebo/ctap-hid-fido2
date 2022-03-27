@@ -64,24 +64,10 @@ use crate::public_key_credential_descriptor::PublicKeyCredentialDescriptor;
 use crate::public_key_credential_user_entity::PublicKeyCredentialUserEntity;
 use anyhow::{anyhow, Error, Result};
 
-#[cfg(not(target_os = "linux"))]
 mod fidokey;
+pub use fidokey::FidoKeyHid;
 
-// for pi
-#[cfg(target_os = "linux")]
-mod fidokey_pi;
-
-#[cfg(target_os = "linux")]
-mod hid_common;
-#[cfg(target_os = "linux")]
-mod hid_linux;
-
-#[cfg(not(target_os = "linux"))]
-use crate::fidokey::*;
-
-// for pi
-#[cfg(target_os = "linux")]
-use crate::fidokey_pi::*;
+mod hid;
 
 pub type Key = HidParam;
 pub type Cfg = LibCfg;
@@ -185,12 +171,12 @@ pub fn hello() {
 
 /// Get HID devices
 pub fn get_hid_devices() -> Vec<(String, HidParam)> {
-    FidoKeyHid::get_hid_devices(None)
+    hid::get_hid_devices(None)
 }
 
 /// Get HID FIDO devices
 pub fn get_fidokey_devices() -> Vec<(String, HidParam)> {
-    FidoKeyHid::get_hid_devices(Some(0xf1d0))
+    hid::get_hid_devices(Some(0xf1d0))
 }
 
 fn get_device(cfg: &LibCfg) -> Result<FidoKeyHid> {
