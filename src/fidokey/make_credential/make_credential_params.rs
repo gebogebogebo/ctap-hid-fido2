@@ -5,7 +5,11 @@ make_credential API parameters
 use crate::credential_management_params::CredentialProtectionPolicy;
 use crate::public_key::PublicKey;
 use crate::public_key_credential_descriptor::PublicKeyCredentialDescriptor;
+use crate::public_key_credential_user_entity::PublicKeyCredentialUserEntity;
 use crate::str_buf::StrBuf;
+
+use super::make_credential_params::Extension as Mext;
+
 use std::fmt;
 use strum_macros::AsRefStr;
 
@@ -85,5 +89,88 @@ pub enum CredentialSupportedKeyType {
 impl std::default::Default for CredentialSupportedKeyType {
     fn default() -> Self {
         Self::Ecdsa256
+    }
+}
+
+#[derive(Debug)]
+pub struct MakeCredentialArgs<'a> {
+    pub rpid: String,
+    pub challenge: Vec<u8>,
+    pub pin: Option<&'a str>,
+    pub key_type: Option<CredentialSupportedKeyType>,
+    pub uv: Option<bool>,
+    pub rkparam: Option<PublicKeyCredentialUserEntity>,
+    pub extensions: Option<Vec<Mext>>,
+}
+impl<'a> MakeCredentialArgs<'a> {
+    pub fn builder() -> MakeCredentialArgsBuilder<'a> {
+        MakeCredentialArgsBuilder::default()
+    }
+}
+
+#[derive(Default)]
+pub struct MakeCredentialArgsBuilder<'a> {
+    rpid: String,
+    challenge: Vec<u8>,
+    pin: Option<&'a str>,
+    key_type: Option<CredentialSupportedKeyType>,
+    uv: Option<bool>,
+    rkparam: Option<PublicKeyCredentialUserEntity>,
+    extensions: Option<Vec<Mext>>,
+}
+
+impl<'a> MakeCredentialArgsBuilder<'a> {
+    pub fn new(rpid: &str, challenge: &[u8]) -> MakeCredentialArgsBuilder<'a> {
+        let mut result = MakeCredentialArgsBuilder::default();
+        result.uv = Some(true);
+        result.rpid = String::from(rpid);
+        result.challenge = challenge.to_vec();
+        result
+    }
+
+    pub fn pin(mut self, pin: &'a str) -> MakeCredentialArgsBuilder<'a> {
+        self.pin = Some(pin);
+        //self.uv = Some(false);
+        self.uv = None;
+        self
+    }
+
+    pub fn without_pin_and_uv(mut self) -> MakeCredentialArgsBuilder<'a> {
+        self.pin = None;
+        self.uv = None;
+        self
+    }
+
+    pub fn key_type(
+        mut self,
+        key_type: CredentialSupportedKeyType,
+    ) -> MakeCredentialArgsBuilder<'a> {
+        self.key_type = Some(key_type);
+        self
+    }
+
+    pub fn extensions(mut self, extensions: &[Mext]) -> MakeCredentialArgsBuilder<'a> {
+        self.extensions = Some(extensions.to_vec());
+        self
+    }
+
+    pub fn rkparam(
+        mut self,
+        rkparam: &PublicKeyCredentialUserEntity,
+    ) -> MakeCredentialArgsBuilder<'a> {
+        self.rkparam = Some(rkparam.clone());
+        self
+    }
+
+    pub fn build(self) -> MakeCredentialArgs<'a> {
+        MakeCredentialArgs {
+            rpid: self.rpid,
+            challenge: self.challenge,
+            pin: self.pin,
+            key_type: self.key_type,
+            uv: self.uv,
+            rkparam: self.rkparam,
+            extensions: self.extensions,
+        }
     }
 }

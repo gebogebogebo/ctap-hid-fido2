@@ -23,10 +23,6 @@ pub mod get_assertion_params;
 mod get_assertion_response;
 mod get_next_assertion_command;
 mod hmac;
-mod make_credential;
-mod make_credential_command;
-pub mod make_credential_params;
-mod make_credential_response;
 pub mod nitrokey;
 mod p256;
 mod pintoken;
@@ -45,12 +41,9 @@ pub mod verifier;
 //use crate::bio_enrollment_params::{BioSensorInfo, EnrollStatus1, EnrollStatus2, TemplateInfo};
 use crate::get_assertion_params::Assertion;
 use crate::get_assertion_params::Extension as Gext;
-use crate::make_credential_params::Attestation;
-use crate::make_credential_params::CredentialSupportedKeyType;
-use crate::make_credential_params::Extension as Mext;
 use crate::public_key_credential_descriptor::PublicKeyCredentialDescriptor;
-use crate::public_key_credential_user_entity::PublicKeyCredentialUserEntity;
 use anyhow::{anyhow, Error, Result};
+use util::should_uv;
 
 pub mod fidokey;
 pub use fidokey::FidoKeyHid;
@@ -176,210 +169,6 @@ pub fn wink(cfg: &LibCfg) -> Result<()> {
     let device = get_device(cfg)?;
     let cid = ctaphid::ctaphid_init(&device).map_err(Error::msg)?;
     ctaphid::ctaphid_wink(&device, &cid).map_err(Error::msg)
-}
-
-fn should_uv(pin: Option<&str>) -> Option<bool> {
-    match pin {
-        Some(_) => None,
-        None => Some(true),
-    }
-}
-
-/// Registration command.Generate credentials(with PIN,non Resident Key)
-pub fn make_credential(
-    cfg: &LibCfg,
-    rpid: &str,
-    challenge: &[u8],
-    pin: Option<&str>,
-) -> Result<Attestation> {
-    let device = get_device(cfg)?;
-    make_credential::make_credential(
-        &device,
-        rpid,
-        challenge,
-        pin,
-        false,
-        None,
-        should_uv(pin),
-        None,
-        None,
-    )
-}
-
-/// Registration command. Generate credentials (with PIN, non Resident Key) while also
-/// specifying the type of key you'd like to create.
-pub fn make_credential_with_key_type(
-    cfg: &LibCfg,
-    rpid: &str,
-    challenge: &[u8],
-    pin: Option<&str>,
-    key_type: Option<CredentialSupportedKeyType>,
-) -> Result<Attestation> {
-    let device = get_device(cfg)?;
-    make_credential::make_credential(
-        &device,
-        rpid,
-        challenge,
-        pin,
-        false,
-        None,
-        should_uv(pin),
-        None,
-        key_type,
-    )
-}
-
-pub fn make_credential_with_extensions(
-    cfg: &LibCfg,
-    rpid: &str,
-    challenge: &[u8],
-    pin: Option<&str>,
-    extensions: Option<&Vec<Mext>>,
-) -> Result<Attestation> {
-    let device = get_device(cfg)?;
-    make_credential::make_credential(
-        &device,
-        rpid,
-        challenge,
-        pin,
-        false,
-        None,
-        should_uv(pin),
-        extensions,
-        None,
-    )
-}
-
-/// Registration command.Generate credentials(with PIN ,Resident Key)
-pub fn make_credential_rk(
-    cfg: &LibCfg,
-    rpid: &str,
-    challenge: &[u8],
-    pin: Option<&str>,
-    rkparam: &PublicKeyCredentialUserEntity,
-) -> Result<Attestation> {
-    let device = get_device(cfg)?;
-    make_credential::make_credential(
-        &device,
-        rpid,
-        challenge,
-        pin,
-        true,
-        Some(rkparam),
-        should_uv(pin),
-        None,
-        None,
-    )
-}
-
-pub fn make_credential_with_args(cfg: &LibCfg, args: &MakeCredentialArgs) -> Result<Attestation> {
-    let device = get_device(cfg)?;
-
-    let extensions = if args.extensions.is_some() {
-        Some(args.extensions.as_ref().unwrap())
-    } else {
-        None
-    };
-
-    let (rk, rk_param) = if args.rkparam.is_some() {
-        (true, Some(args.rkparam.as_ref().unwrap()))
-    } else {
-        (false, None)
-    };
-
-    make_credential::make_credential(
-        &device,
-        &args.rpid,
-        &args.challenge,
-        args.pin,
-        rk,
-        rk_param,
-        args.uv,
-        extensions,
-        args.key_type,
-    )
-}
-
-#[derive(Debug)]
-pub struct MakeCredentialArgs<'a> {
-    rpid: String,
-    challenge: Vec<u8>,
-    pin: Option<&'a str>,
-    key_type: Option<CredentialSupportedKeyType>,
-    uv: Option<bool>,
-    rkparam: Option<PublicKeyCredentialUserEntity>,
-    extensions: Option<Vec<Mext>>,
-}
-impl<'a> MakeCredentialArgs<'a> {
-    pub fn builder() -> MakeCredentialArgsBuilder<'a> {
-        MakeCredentialArgsBuilder::default()
-    }
-}
-
-#[derive(Default)]
-pub struct MakeCredentialArgsBuilder<'a> {
-    rpid: String,
-    challenge: Vec<u8>,
-    pin: Option<&'a str>,
-    key_type: Option<CredentialSupportedKeyType>,
-    uv: Option<bool>,
-    rkparam: Option<PublicKeyCredentialUserEntity>,
-    extensions: Option<Vec<Mext>>,
-}
-impl<'a> MakeCredentialArgsBuilder<'a> {
-    pub fn new(rpid: &str, challenge: &[u8]) -> MakeCredentialArgsBuilder<'a> {
-        let mut result = MakeCredentialArgsBuilder::default();
-        result.uv = Some(true);
-        result.rpid = String::from(rpid);
-        result.challenge = challenge.to_vec();
-        result
-    }
-
-    pub fn pin(mut self, pin: &'a str) -> MakeCredentialArgsBuilder<'a> {
-        self.pin = Some(pin);
-        //self.uv = Some(false);
-        self.uv = None;
-        self
-    }
-
-    pub fn without_pin_and_uv(mut self) -> MakeCredentialArgsBuilder<'a> {
-        self.pin = None;
-        self.uv = None;
-        self
-    }
-
-    pub fn key_type(
-        mut self,
-        key_type: CredentialSupportedKeyType,
-    ) -> MakeCredentialArgsBuilder<'a> {
-        self.key_type = Some(key_type);
-        self
-    }
-
-    pub fn extensions(mut self, extensions: &[Mext]) -> MakeCredentialArgsBuilder<'a> {
-        self.extensions = Some(extensions.to_vec());
-        self
-    }
-
-    pub fn rkparam(
-        mut self,
-        rkparam: &PublicKeyCredentialUserEntity,
-    ) -> MakeCredentialArgsBuilder<'a> {
-        self.rkparam = Some(rkparam.clone());
-        self
-    }
-
-    pub fn build(self) -> MakeCredentialArgs<'a> {
-        MakeCredentialArgs {
-            rpid: self.rpid,
-            challenge: self.challenge,
-            pin: self.pin,
-            key_type: self.key_type,
-            uv: self.uv,
-            rkparam: self.rkparam,
-            extensions: self.extensions,
-        }
-    }
 }
 
 /// Authentication command(with PIN , non Resident Key)
@@ -692,42 +481,6 @@ pub fn config(cfg: &LibCfg) -> Result<String> {
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    #[test]
-    fn test_make_credential_with_pin_non_rk_command() {
-        let rpid = "test.com";
-        let challenge = b"this is challenge".to_vec();
-        // create windows
-        let pin_auth = hex::decode("6F79FB322D74972ACAA844C10C183BF7").unwrap();
-        let check = "01A7015820E61E2BD6C4612662960B159CD54CF8EFF1A998C89B3742519D11F85E0F5E787602A262696468746573742E636F6D646E616D656003A36269644100646E616D6561206B646973706C61794E616D6561200481A263616C672664747970656A7075626C69632D6B657907A162726BF408506F79FB322D74972ACAA844C10C183BF70901".to_string();
-
-        // create cmmand
-        let send_payload = {
-            let mut params =
-                make_credential_command::Params::new(rpid, challenge.to_vec(), [].to_vec());
-            params.option_rk = false; // non rk
-                                      //params.option_uv = true;
-
-            println!(
-                "- client_data_hash({:02})    = {:?}",
-                params.client_data_hash.len(),
-                util::to_hex_str(&params.client_data_hash)
-            );
-
-            params.pin_auth = pin_auth.to_vec();
-
-            make_credential_command::create_payload(params, None)
-        };
-
-        //println!(
-        //    "- make_credential({:02})    = {:?}",
-        //    send_payload.len(),
-        //    util::to_hex_str(&send_payload)
-        //);
-
-        let command = hex::encode(send_payload).to_uppercase();
-        assert_eq!(command, check);
-    }
 
     #[test]
     fn test_create_pin_auth() {

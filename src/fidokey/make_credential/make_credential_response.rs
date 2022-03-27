@@ -1,5 +1,5 @@
 use crate::credential_management_params::CredentialProtectionPolicy;
-use crate::make_credential_params::{Attestation, Extension};
+use super::make_credential_params::{Attestation, Extension};
 use crate::public_key::PublicKey;
 use crate::util;
 

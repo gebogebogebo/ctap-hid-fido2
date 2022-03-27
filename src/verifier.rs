@@ -3,7 +3,7 @@ Verify Attestation Assertion API
 */
 
 use crate::get_assertion_params;
-use crate::make_credential_params;
+use crate::fidokey::make_credential::make_credential_params;
 use crate::util;
 use ring::digest;
 use ring::rand::SecureRandom;

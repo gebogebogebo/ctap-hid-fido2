@@ -3,7 +3,7 @@ mod get_info_command;
 mod get_info_params;
 mod get_info_response;
 
-use crate::make_credential_params::Extension as Mext;
+use super::make_credential::make_credential_params::Extension as Mext;
 
 use anyhow::{anyhow, Error, Result};
 

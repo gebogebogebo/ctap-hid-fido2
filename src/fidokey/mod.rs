@@ -5,6 +5,7 @@ use std::ffi::CString;
 
 pub mod bio;
 pub mod get_info;
+pub mod make_credential;
 pub mod pin;
 
 pub struct FidoKeyHid {
