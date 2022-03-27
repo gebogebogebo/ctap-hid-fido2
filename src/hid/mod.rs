@@ -8,7 +8,6 @@ use std::path::PathBuf;
 
 use hidapi::HidApi;
 
-use crate::{HidInfo, HidParam};
 use crate::str_buf::StrBuf;
 
 #[derive(Debug, Clone)]
@@ -18,6 +17,54 @@ pub struct DeviceInfo {
     pub usage_page: u16,
     pub usage: u16,
     pub report_size: u16,
+}
+
+/// HID device vendor ID , product ID
+#[derive(Clone)]
+pub enum HidParam {
+    /// Specified when looking for any FIDO device of a certain kind
+    VidPid {vid: u16, pid: u16},
+    /// Specified when looking to open a specific device. This is non-ambiguous
+    /// when multiple devices of the same kind are connected.
+    Path(String),
+}
+
+/// Struct that contains information about found HID devices. Also
+/// contains a HidParam which can be used to lookup the device
+/// later.
+#[derive(Clone)]
+pub struct HidInfo {
+    /// Product ID
+    pub pid: u16,
+    /// Vendor ID
+    pub vid: u16,
+    /// A string describing the device provided by the device
+    pub product_string: String,
+    /// A generic information string build by this crate
+    pub info: String,
+    /// An parameter structure to be used to open this device
+    /// later. This is almost always HidParam::Path.
+    pub param: HidParam,
+}
+
+impl HidParam {
+    /// Generate HID parameters for FIDO key devices
+    pub fn get() -> Vec<HidParam> {
+        vec![
+            HidParam::VidPid { vid: 0x1050, pid: 0x0402 },  // Yubikey 4/5 U2F
+            HidParam::VidPid { vid: 0x1050, pid: 0x0407 },  // Yubikey 4/5 OTP+U2F+CCID
+            HidParam::VidPid { vid: 0x1050, pid: 0x0120 },  // Yubikey Touch U2F
+            HidParam::VidPid { vid: 0x096E, pid: 0x085D },  // Biopass
+            HidParam::VidPid { vid: 0x096E, pid: 0x0866 },  // All in pass
+            HidParam::VidPid { vid: 0x0483, pid: 0xA2CA },  // Solokey 
+            HidParam::VidPid { vid: 0x096E, pid: 0x0858 },  // ePass FIDO(A4B)
+            HidParam::VidPid { vid: 0x20a0, pid: 0x42b1 },  // Nitrokey FIDO2 2.0.0
+            HidParam::VidPid { vid: 0x32a3, pid: 0x3201 },  // Idem Key
+        ]
+    }
+    pub fn auto() -> Vec<HidParam> {
+        vec![]
+    }
 }
 
 
