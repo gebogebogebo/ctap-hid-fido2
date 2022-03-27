@@ -15,6 +15,7 @@ use crate::public_key_credential_user_entity::PublicKeyCredentialUserEntity;
 use crate::util::should_uv;
 
 use super::FidoKeyHid;
+use super::credential_management::credential_management_params::CredentialProtectionPolicy;
 
 use anyhow::{Error, Result};
 

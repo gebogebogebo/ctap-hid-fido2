@@ -8,10 +8,6 @@
 pub mod auth_data;
 mod config_command;
 mod cose;
-mod credential_management;
-mod credential_management_command;
-pub mod credential_management_params;
-mod credential_management_response;
 mod ctapdef;
 mod ctaphid;
 mod ctapihd_nitro;
@@ -38,7 +34,6 @@ pub mod verifier;
 
 use crate::get_assertion_params::Assertion;
 use crate::get_assertion_params::Extension as Gext;
-use crate::public_key_credential_descriptor::PublicKeyCredentialDescriptor;
 use anyhow::{anyhow, Error, Result};
 use util::should_uv;
 
@@ -331,128 +326,6 @@ pub fn get_assertion_with_args(cfg: &LibCfg, args: &GetAssertionArgs) -> Result<
     )?;
 
     Ok(asss)
-}
-
-/// CredentialManagement - getCredsMetadata (CTAP 2.1-PRE)
-pub fn credential_management_get_creds_metadata(
-    cfg: &LibCfg,
-    pin: Option<&str>,
-) -> Result<credential_management_params::CredentialsCount> {
-    let device = get_device(cfg)?;
-    let meta = credential_management::credential_management(
-        &device,
-        pin,
-        credential_management_command::SubCommand::GetCredsMetadata,
-        None,
-        None,
-        None,
-    )?;
-    Ok(credential_management_params::CredentialsCount::new(&meta))
-}
-
-/// CredentialManagement - enumerateRPsBegin & enumerateRPsNext (CTAP 2.1-PRE)
-pub fn credential_management_enumerate_rps(
-    cfg: &LibCfg,
-    pin: Option<&str>,
-) -> Result<Vec<credential_management_params::Rp>> {
-    let device = get_device(cfg)?;
-    let mut datas: Vec<credential_management_params::Rp> = Vec::new();
-    let data = credential_management::credential_management(
-        &device,
-        pin,
-        credential_management_command::SubCommand::EnumerateRPsBegin,
-        None,
-        None,
-        None,
-    )?;
-    if data.total_rps > 0 {
-        datas.push(credential_management_params::Rp::new(&data));
-        let roop_n = data.total_rps - 1;
-        for _ in 0..roop_n {
-            let data = credential_management::credential_management(
-                &device,
-                pin,
-                credential_management_command::SubCommand::EnumerateRPsGetNextRp,
-                None,
-                None,
-                None,
-            )?;
-            datas.push(credential_management_params::Rp::new(&data));
-        }
-    }
-    Ok(datas)
-}
-
-/// CredentialManagement - enumerateCredentialsBegin & enumerateCredentialsNext (CTAP 2.1-PRE)
-pub fn credential_management_enumerate_credentials(
-    cfg: &LibCfg,
-    pin: Option<&str>,
-    rpid_hash: &[u8],
-) -> Result<Vec<credential_management_params::Credential>> {
-    let device = get_device(cfg)?;
-    let mut datas: Vec<credential_management_params::Credential> = Vec::new();
-
-    let data = credential_management::credential_management(
-        &device,
-        pin,
-        credential_management_command::SubCommand::EnumerateCredentialsBegin,
-        Some(rpid_hash.to_vec()),
-        None,
-        None,
-    )?;
-    datas.push(credential_management_params::Credential::new(&data));
-    if data.total_credentials > 0 {
-        let roop_n = data.total_credentials - 1;
-        for _ in 0..roop_n {
-            let data = credential_management::credential_management(
-                &device,
-                pin,
-                credential_management_command::SubCommand::EnumerateCredentialsGetNextCredential,
-                Some(rpid_hash.to_vec()),
-                None,
-                None,
-            )?;
-            datas.push(credential_management_params::Credential::new(&data));
-        }
-    }
-    Ok(datas)
-}
-
-/// CredentialManagement - deleteCredential (CTAP 2.1-PRE)
-pub fn credential_management_delete_credential(
-    cfg: &LibCfg,
-    pin: Option<&str>,
-    pkcd: Option<PublicKeyCredentialDescriptor>,
-) -> Result<()> {
-    let device = get_device(cfg)?;
-    credential_management::credential_management(
-        &device,
-        pin,
-        credential_management_command::SubCommand::DeleteCredential,
-        None,
-        pkcd,
-        None,
-    )?;
-    Ok(())
-}
-
-/// CredentialManagement - updateUserInformation (CTAP 2.1-PRE)
-pub fn credential_management_update_user_information(
-    cfg: &LibCfg,
-    pin: Option<&str>,
-    pkcd: Option<PublicKeyCredentialDescriptor>,
-    pkcue: Option<public_key_credential_user_entity::PublicKeyCredentialUserEntity>,
-) -> Result<()> {
-    let device = get_device(cfg)?;
-    credential_management::credential_management(
-        &device,
-        pin,
-        credential_management_command::SubCommand::UpdateUserInformation,
-        None,
-        pkcd,
-        pkcue,
-    )?;
-    Ok(())
 }
 
 /// Selection (CTAP 2.1)

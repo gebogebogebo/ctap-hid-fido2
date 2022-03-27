@@ -4,6 +4,7 @@ use hidapi::HidApi;
 use std::ffi::CString;
 
 pub mod bio;
+pub mod credential_management;
 pub mod get_info;
 pub mod make_credential;
 pub mod pin;

@@ -1,4 +1,4 @@
-use crate::credential_management_params;
+use super::credential_management_params;
 use crate::public_key::PublicKey;
 use crate::public_key_credential_descriptor::PublicKeyCredentialDescriptor;
 use crate::public_key_credential_rp_entity::PublicKeyCredentialRpEntity;
