@@ -6,7 +6,6 @@
 */
 
 pub mod auth_data;
-mod config_command;
 mod cose;
 mod ctapdef;
 mod ctaphid;
@@ -26,7 +25,6 @@ pub mod public_key;
 pub mod public_key_credential_descriptor;
 pub mod public_key_credential_rp_entity;
 pub mod public_key_credential_user_entity;
-mod selection_command;
 mod ss;
 pub mod str_buf;
 pub mod util;
@@ -155,24 +153,6 @@ fn get_device(cfg: &LibCfg) -> Result<FidoKeyHid> {
         FidoKeyHid::new(&params, cfg).map_err(Error::msg)?
     };
     Ok(device)
-}
-
-/// Selection (CTAP 2.1)
-pub fn selection(cfg: &LibCfg) -> Result<String> {
-    let device = get_device(cfg)?;
-    let cid = ctaphid::ctaphid_init(&device).map_err(Error::msg)?;
-    let send_payload = selection_command::create_payload();
-    let _response_cbor = ctaphid::ctaphid_cbor(&device, &cid, &send_payload).map_err(Error::msg)?;
-    Ok("".to_string())
-}
-
-/// Get Config (CTAP 2.1)
-pub fn config(cfg: &LibCfg) -> Result<String> {
-    let device = get_device(cfg)?;
-    let cid = ctaphid::ctaphid_init(&device).map_err(Error::msg)?;
-    let send_payload = config_command::create_payload_enable_enterprise_attestation();
-    let _response_cbor = ctaphid::ctaphid_cbor(&device, &cid, &send_payload).map_err(Error::msg)?;
-    Ok("".to_string())
 }
 
 //
