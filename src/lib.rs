@@ -36,9 +36,6 @@ pub mod str_buf;
 pub mod util;
 pub mod verifier;
 
-//
-//use crate::bio_enrollment_command::SubCommand as BioCmd;
-//use crate::bio_enrollment_params::{BioSensorInfo, EnrollStatus1, EnrollStatus2, TemplateInfo};
 use crate::get_assertion_params::Assertion;
 use crate::get_assertion_params::Extension as Gext;
 use crate::public_key_credential_descriptor::PublicKeyCredentialDescriptor;
@@ -61,6 +58,7 @@ pub struct LibCfg {
     pub use_pre_credential_management: bool,
     pub keep_alive_msg: String,
 }
+
 impl LibCfg {
     pub fn init() -> Self {
         LibCfg {
@@ -78,6 +76,8 @@ impl LibCfg {
 pub enum HidParam {
     /// Specified when looking for any FIDO device of a certain kind
     VidPid {vid: u16, pid: u16},
+    /// Specified when looking to open a specific device. This is non-ambiguous
+    /// when multiple devices of the same kind are connected.
     Path(String),
 }
 
@@ -86,23 +86,21 @@ pub enum HidParam {
 /// later.
 #[derive(Clone)]
 pub struct HidInfo {
+    /// Product ID
     pub pid: u16,
+    /// Vendor ID
     pub vid: u16,
+    /// A string describing the device provided by the device
     pub product_string: String,
+    /// A generic information string build by this crate
     pub info: String,
+    /// An parameter structure to be used to open this device
+    /// later. This is almost always HidParam::Path.
     pub param: HidParam,
 }
 
-
 impl HidParam {
     /// Generate HID parameters for FIDO key devices
-    /// - yubikey 4/5 u2f = vid:0x1050 , pid:0x0402
-    /// - yubikey 4/5 otp+u2f+ccid = vid:0x1050, pid:0x0407
-    /// - yubikey touch u2f = vid:0x1050 , pid:0x0120
-    /// - biopass = vid:0x096E , pid:0x085D
-    /// - all in pass = vid:0x096E , pid:0x0866
-    /// - solokey = vid:0x0483 , pid:0xa2ca
-    /// - Nitrokey = vid:0x20a0 , pid:0x42b1
     pub fn get() -> Vec<HidParam> {
         vec![
             HidParam::VidPid { vid: 0x1050, pid: 0x0402 },  // Yubikey 4/5 U2F
