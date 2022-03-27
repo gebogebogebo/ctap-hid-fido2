@@ -6,10 +6,6 @@
 */
 
 pub mod auth_data;
-mod bio_enrollment;
-mod bio_enrollment_command;
-pub mod bio_enrollment_params;
-mod bio_enrollment_response;
 mod config_command;
 mod cose;
 mod credential_management;
@@ -45,8 +41,8 @@ pub mod util;
 pub mod verifier;
 
 //
-use crate::bio_enrollment_command::SubCommand as BioCmd;
-use crate::bio_enrollment_params::{BioSensorInfo, EnrollStatus1, EnrollStatus2, TemplateInfo};
+//use crate::bio_enrollment_command::SubCommand as BioCmd;
+//use crate::bio_enrollment_params::{BioSensorInfo, EnrollStatus1, EnrollStatus2, TemplateInfo};
 use crate::get_assertion_params::Assertion;
 use crate::get_assertion_params::Extension as Gext;
 use crate::make_credential_params::Attestation;
@@ -548,196 +544,6 @@ pub fn get_assertion_with_args(cfg: &LibCfg, args: &GetAssertionArgs) -> Result<
     )?;
 
     Ok(asss)
-}
-
-/// BioEnrollment - getFingerprintSensorInfo (CTAP 2.1-PRE)
-pub fn bio_enrollment_get_fingerprint_sensor_info(cfg: &LibCfg) -> Result<BioSensorInfo> {
-    let device = get_device(cfg)?;
-    let init = bio_enrollment::bio_enrollment_init(&device, None).map_err(Error::msg)?;
-
-    // 6.7.2. Get bio modality
-    let data1 = bio_enrollment::bio_enrollment(&device, &init.0, None, None, None, None)
-        .map_err(Error::msg)?;
-    if cfg.enable_log {
-        println!("{}", data1);
-    }
-
-    // 6.7.3. Get fingerprint sensor info
-    let data2 = bio_enrollment::bio_enrollment(
-        &device,
-        &init.0,
-        None,
-        Some(BioCmd::GetFingerprintSensorInfo),
-        None,
-        None,
-    )
-    .map_err(Error::msg)?;
-
-    if cfg.enable_log {
-        println!("{}", data2);
-    }
-
-    Ok(BioSensorInfo {
-        modality: data1.modality.into(),
-        fingerprint_kind: data2.fingerprint_kind.into(),
-        max_capture_samples_required_for_enroll: data2.max_capture_samples_required_for_enroll,
-        max_template_friendly_name: data2.max_template_friendly_name,
-    })
-}
-
-/// BioEnrollment - EnrollBegin
-pub fn bio_enrollment_begin(
-    cfg: &LibCfg,
-    pin: &str,
-    timeout_milliseconds: Option<u16>,
-) -> Result<(EnrollStatus1, EnrollStatus2)> {
-    let device = get_device(cfg)?;
-    let init = bio_enrollment::bio_enrollment_init(&device, Some(pin))?;
-
-    let data = bio_enrollment::bio_enrollment(
-        &device,
-        &init.0,
-        init.1.as_ref(),
-        Some(BioCmd::EnrollBegin),
-        None,
-        timeout_milliseconds,
-    )?;
-    if cfg.enable_log {
-        println!("{}", data);
-    }
-    let result1 = EnrollStatus1 {
-        device: device,
-        cid: init.0,
-        pin_token: init.1,
-        template_id: data.template_id.to_vec(),
-    };
-    let finish = data.last_enroll_sample_status == 0x00 && data.remaining_samples == 0;
-    let result2 = EnrollStatus2 {
-        status: data.last_enroll_sample_status as u8,
-        message: ctapdef::get_ctap_last_enroll_sample_status_message(
-            data.last_enroll_sample_status as u8,
-        ),
-        remaining_samples: data.remaining_samples,
-        is_finish: finish,
-    };
-    Ok((result1, result2))
-}
-
-/// BioEnrollment - CaptureNext
-pub fn bio_enrollment_next(
-    cfg: &LibCfg,
-    enroll_status: &EnrollStatus1,
-    timeout_milliseconds: Option<u16>,
-) -> Result<EnrollStatus2> {
-    let template_info = TemplateInfo::new(&enroll_status.template_id, None);
-    let data = bio_enrollment::bio_enrollment(
-        &enroll_status.device,
-        &enroll_status.cid,
-        enroll_status.pin_token.as_ref(),
-        Some(BioCmd::EnrollCaptureNextSample),
-        Some(template_info),
-        timeout_milliseconds,
-    )?;
-    if cfg.enable_log {
-        println!("{}", data);
-    }
-    let finish = data.last_enroll_sample_status == 0x00 && data.remaining_samples == 0;
-    let result = EnrollStatus2 {
-        status: data.last_enroll_sample_status as u8,
-        message: ctapdef::get_ctap_last_enroll_sample_status_message(
-            data.last_enroll_sample_status as u8,
-        ),
-        remaining_samples: data.remaining_samples,
-        is_finish: finish,
-    };
-    Ok(result)
-}
-
-/// BioEnrollment - Cancel current enrollment
-pub fn bio_enrollment_cancel(cfg: &LibCfg, enroll_status: &EnrollStatus1) -> Result<()> {
-    let data = bio_enrollment::bio_enrollment(
-        &enroll_status.device,
-        &enroll_status.cid,
-        enroll_status.pin_token.as_ref(),
-        Some(BioCmd::CancelCurrentEnrollment),
-        None,
-        None,
-    )?;
-    if cfg.enable_log {
-        println!("{}", data);
-    }
-    Ok(())
-}
-
-/// BioEnrollment - enumerateEnrollments (CTAP 2.1-PRE)
-/// 6.7.6. Enumerate enrollments
-pub fn bio_enrollment_enumerate_enrollments(cfg: &LibCfg, pin: &str) -> Result<Vec<TemplateInfo>> {
-    let device = get_device(cfg)?;
-    let init = bio_enrollment::bio_enrollment_init(&device, Some(pin))?;
-    let pin_token = init.1.unwrap();
-
-    let data = bio_enrollment::bio_enrollment(
-        &device,
-        &init.0,
-        Some(&pin_token),
-        Some(BioCmd::EnumerateEnrollments),
-        None,
-        None,
-    )?;
-    if cfg.enable_log {
-        println!("{}", data);
-    }
-
-    Ok(data.template_infos)
-}
-
-/// BioEnrollment - Rename/Set FriendlyName
-/// 6.7.7. Rename/Set FriendlyName
-pub fn bio_enrollment_set_friendly_name(
-    cfg: &LibCfg,
-    pin: &str,
-    template_id: &[u8],
-    template_name: &str,
-) -> Result<()> {
-    let template_info = TemplateInfo::new(template_id, Some(template_name));
-
-    let device = get_device(cfg)?;
-    let init = bio_enrollment::bio_enrollment_init(&device, Some(pin))?;
-    let pin_token = init.1.unwrap();
-
-    let data = bio_enrollment::bio_enrollment(
-        &device,
-        &init.0,
-        Some(&pin_token),
-        Some(BioCmd::SetFriendlyName),
-        Some(template_info),
-        None,
-    )?;
-    if cfg.enable_log {
-        println!("{}", data);
-    }
-    Ok(())
-}
-
-/// 6.7.8. Remove enrollment
-pub fn bio_enrollment_remove(cfg: &LibCfg, pin: &str, template_id: &[u8]) -> Result<()> {
-    let device = get_device(cfg)?;
-    let init = bio_enrollment::bio_enrollment_init(&device, Some(pin))?;
-    let pin_token = init.1.unwrap();
-
-    let template_info = TemplateInfo::new(template_id, None);
-    let data = bio_enrollment::bio_enrollment(
-        &device,
-        &init.0,
-        Some(&pin_token),
-        Some(BioCmd::RemoveEnrollment),
-        Some(template_info),
-        None,
-    )?;
-    if cfg.enable_log {
-        println!("{}", data);
-    }
-    Ok(())
 }
 
 /// CredentialManagement - getCredsMetadata (CTAP 2.1-PRE)

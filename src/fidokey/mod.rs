@@ -3,6 +3,7 @@ use hidapi::HidApi;
 
 use std::ffi::CString;
 
+pub mod bio;
 pub mod get_info;
 pub mod pin;
 

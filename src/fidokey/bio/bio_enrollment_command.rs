@@ -1,7 +1,7 @@
 #[allow(unused_imports)]
 use crate::util;
 
-use crate::bio_enrollment_params::TemplateInfo;
+use super::bio_enrollment_params::TemplateInfo;
 use crate::ctapdef;
 use crate::enc_hmac_sha_256;
 use crate::pintoken;
