@@ -1,7 +1,9 @@
 use crate::auth_data::Flags;
+use crate::enc_aes256_cbc;
 use crate::get_assertion_params;
 use crate::get_assertion_params::Extension;
 use crate::public_key_credential_user_entity::PublicKeyCredentialUserEntity;
+use crate::ss::SharedSecret;
 use crate::util;
 use byteorder::{BigEndian, ReadBytesExt};
 use serde_cbor::Value;
@@ -10,6 +12,7 @@ use std::io::Cursor;
 fn parse_cbor_authdata(
     authdata: Vec<u8>,
     ass: &mut get_assertion_params::Assertion,
+    shared_secret: Option<&SharedSecret>,
 ) -> Result<(), String> {
     // copy
     ass.auth_data = authdata.to_vec();
@@ -52,12 +55,17 @@ fn parse_cbor_authdata(
     if ass.flags.extension_data_included {
         //println!("{:02} - {:?}", slice.len(), util::to_hex_str(&slice));
         let maps = util::cbor_bytes_to_map(&slice)?;
+        let shared_secret = shared_secret.map(|secret| secret);
         for (key, val) in &maps {
             if let Value::Text(member) = key {
                 if *member == Extension::HmacSecret(None).to_string() {
                     let v = util::cbor_value_to_vec_u8(val)?;
                     let mut hmac_secret_0 = [0u8; 32];
-                    hmac_secret_0.copy_from_slice(&v[0..32]);
+                    let decrypted_secret = enc_aes256_cbc::decrypt_message(
+                        &shared_secret.as_ref().unwrap().secret,
+                        &v[0..32],
+                    );
+                    hmac_secret_0.copy_from_slice(&decrypted_secret[0..32]);
                     ass.extensions
                         .push(Extension::HmacSecret(Some(hmac_secret_0)));
                 }
@@ -67,7 +75,10 @@ fn parse_cbor_authdata(
     Ok(())
 }
 
-pub fn parse_cbor(bytes: &[u8]) -> Result<get_assertion_params::Assertion, String> {
+pub fn parse_cbor(
+    bytes: &[u8],
+    shared_secret: Option<SharedSecret>,
+) -> Result<get_assertion_params::Assertion, String> {
     let mut ass = get_assertion_params::Assertion::default();
     let maps = util::cbor_bytes_to_map(bytes)?;
     for (key, val) in &maps {
@@ -76,7 +87,7 @@ pub fn parse_cbor(bytes: &[u8]) -> Result<get_assertion_params::Assertion, Strin
                 0x01 => ass.credential_id = util::cbor_get_bytes_from_map(val, "id")?,
                 0x02 => {
                     if let Value::Bytes(xs) = val {
-                        parse_cbor_authdata(xs.to_vec(), &mut ass)?;
+                        parse_cbor_authdata(xs.to_vec(), &mut ass, shared_secret.as_ref())?;
                     }
                 }
                 0x03 => ass.signature = util::cbor_value_to_vec_u8(val)?,

@@ -47,13 +47,15 @@ pub fn get_assertion(
             params.pin_auth = sig[0..16].to_vec();
         }
 
-        get_assertion_command::create_payload(params, hmac_ext)
+        get_assertion_command::create_payload(params, hmac_ext.clone())
     };
 
     // send & response
     let response_cbor = ctaphid::ctaphid_cbor(&device, &cid, &send_payload).map_err(Error::msg)?;
 
-    let ass = get_assertion_response::parse_cbor(&response_cbor).map_err(Error::msg)?;
+    let ass =
+        get_assertion_response::parse_cbor(&response_cbor, hmac_ext.map(|ext| ext.shared_secret))
+            .map_err(Error::msg)?;
 
     let mut asss = vec![ass];
     for _ in 0..(asss[0].number_of_credentials - 1) {
@@ -67,7 +69,7 @@ pub fn get_assertion(
 fn get_next_assertion(device: &FidoKeyHid, cid: &[u8]) -> Result<Assertion, String> {
     let send_payload = get_next_assertion_command::create_payload();
     let response_cbor = ctaphid::ctaphid_cbor(device, cid, &send_payload)?;
-    get_assertion_response::parse_cbor(&response_cbor)
+    get_assertion_response::parse_cbor(&response_cbor, None)
 }
 
 fn create_hmacext(
