@@ -8,6 +8,7 @@ pub mod credential_management;
 pub mod get_info;
 pub mod make_credential;
 pub mod pin;
+mod wink;
 
 pub struct FidoKeyHid {
     device_internal: hidapi::HidDevice,
