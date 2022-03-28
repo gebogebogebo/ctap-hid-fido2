@@ -1,10 +1,6 @@
 {
-    // IntelliSense を使用して利用可能な属性を学べます。
-    // 既存の属性の説明をホバーして表示します。
-    // 詳細情報は次を確認してください: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
-    "configurations": [
-        
+    "configurations": [    
         {
             "type": "lldb",
             "request": "launch",
@@ -23,7 +19,142 @@
             },
             "args": [],
             "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug Example: wink",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--example=wink"
+                ],
+                "filter": {
+                    "name": "wink",
+                    "kind": "example"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug Example: get-info",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--example=get-info"
+                ],
+                "filter": {
+                    "name": "get-info",
+                    "kind": "example"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug Example: credential-management",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--example=credential-management"
+                ],
+                "filter": {
+                    "name": "credential-management",
+                    "kind": "example"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug Example: ctapcli",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--example=ctapcli"
+                ],
+                "filter": {
+                    "name": "ctapcli",
+                    "kind": "example"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug Example: nitro",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--example=nitro"
+                ],
+                "filter": {
+                    "name": "nitro",
+                    "kind": "example"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug Example: nitro-update",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--example=nitro-update"
+                ],
+                "filter": {
+                    "name": "nitro-update",
+                    "kind": "example"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug Example: test-with-pin-non-rk",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--example=test-with-pin-non-rk"
+                ],
+                "filter": {
+                    "name": "test-with-pin-non-rk",
+                    "kind": "example"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug Example: test-with-pin-rk",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--example=test-with-pin-rk"
+                ],
+                "filter": {
+                    "name": "test-with-pin-rk",
+                    "kind": "example"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
         }
-        
     ]
 }
