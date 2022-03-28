@@ -55,7 +55,6 @@ fn parse_cbor_authdata(
     if ass.flags.extension_data_included {
         //println!("{:02} - {:?}", slice.len(), util::to_hex_str(&slice));
         let maps = util::cbor_bytes_to_map(&slice)?;
-        let shared_secret = shared_secret.map(|secret| secret);
         for (key, val) in &maps {
             if let Value::Text(member) = key {
                 if *member == Extension::HmacSecret(None).to_string() {
