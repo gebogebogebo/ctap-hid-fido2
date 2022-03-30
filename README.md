@@ -61,20 +61,12 @@ $ cargo run
 
 (The same may be true for Linux, such as Ubuntu)
 
-Unable to build with the following error in libusb-1.0 dependencies, you can solve the problem by doing one of the following.
+If you get the following error with the libusb-1.0 dependency and cannot build, you can solve the problem by doing the following.
 
-- **a) installing the libusb-1.0-0-dev package**
+- installing `libusb` and `libudev` package
 
 ```sh
-sudo apt-get install libusb-1.0-0-dev
-```
-
-- **b) comment out hidapi from Cargo.toml**
-
-```toml
-[dependencies]
-# hidapi = "1.2.3"    <- comment out
-serde_cbor = "0.11.1"
+sudo apt install -y libusb-1.0-0-dev libudev-dev
 ```
 
 

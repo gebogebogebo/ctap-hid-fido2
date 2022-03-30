@@ -58,13 +58,25 @@ fn parse_cbor_authdata(
         for (key, val) in &maps {
             if let Value::Text(member) = key {
                 if *member == Extension::HmacSecret(None).to_string() {
-                    let v = util::cbor_value_to_vec_u8(val)?;
-                    let mut hmac_secret_0 = [0u8; 32];
-                    let decrypted_secret = enc_aes256_cbc::decrypt_message(
+                    // 12.5. HMAC Secret Extension (hmac-secret)
+                    // https://fidoalliance.org/specs/fido-v2.1-ps-20210615/fido-client-to-authenticator-protocol-v2.1-ps-20210615.html#sctn-hmac-secret-extension
+
+                    // The hmac-secret is created in Authenticator as follows.
+                    // > One salt case: "hmac-secret": encrypt(shared secret, output1)
+                    let hmac_secret = util::cbor_value_to_vec_u8(val)?;
+
+                    // decrypt hmac_secret -> output1
+                    let output1 = enc_aes256_cbc::decrypt_message(
                         &shared_secret.as_ref().unwrap().secret,
-                        &v[0..32],
+                        &hmac_secret[0..32],
                     );
-                    hmac_secret_0.copy_from_slice(&decrypted_secret[0..32]);
+
+                    // The output1 is created in Authenticator as follows.
+                    // >output1: HMAC-SHA-256(CredRandom, salt1)
+                    // Can't access CredRandom since that is the secret the authenticator uses to derive credential specific private/public keys
+
+                    let mut hmac_secret_0 = [0u8; 32];
+                    hmac_secret_0.copy_from_slice(&output1[0..32]);
                     ass.extensions
                         .push(Extension::HmacSecret(Some(hmac_secret_0)));
                 }

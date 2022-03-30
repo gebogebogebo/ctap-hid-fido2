@@ -1,4 +1,3 @@
-use crate::str_buf::StrBuf;
 use hidapi::HidApi;
 
 pub struct FidoKeyHid {
@@ -44,42 +43,6 @@ impl FidoKeyHid {
             }
         }
         None
-    }
-
-    pub fn get_hid_devices(usage_page: Option<u16>) -> Vec<(String, crate::HidParam)> {
-        let api = HidApi::new().expect("Failed to create AcaPI instance");
-        let mut res = vec![];
-
-        let devices = api.device_list();
-        for dev in devices {
-            if usage_page == None || dev.usage_page() == usage_page.unwrap() {
-                let mut memo = StrBuf::new(0);
-
-                if let Some(n) = dev.product_string() {
-                    memo.add("product=");
-                    memo.add(n);
-                }
-                memo.add(" usage_page=");
-                memo.add(&dev.usage_page().to_string());
-
-                memo.add(" usage=");
-                memo.add(&dev.usage().to_string());
-
-                if let Some(n) = dev.serial_number() {
-                    memo.add(" serial_number=");
-                    memo.add(n);
-                }
-
-                res.push((
-                    memo.build().to_string(),
-                    crate::HidParam {
-                        vid: dev.vendor_id(),
-                        pid: dev.product_id(),
-                    },
-                ));
-            }
-        }
-        res
     }
 
     pub fn write(&self, cmd: &[u8]) -> Result<usize, String> {

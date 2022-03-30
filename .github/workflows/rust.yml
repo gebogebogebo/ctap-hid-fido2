@@ -1,4 +1,4 @@
-name: macOS + Ubuntu
+name: macOS + Ubuntu + Windows
 
 on:
   push:
@@ -16,8 +16,8 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: Build
-      run: cargo build --verbose
-  
+      run: cargo build --examples --verbose
+
   ubuntu-build:
     runs-on: ubuntu-latest
 
@@ -26,4 +26,12 @@ jobs:
     - name: Install dependencies
       run: sudo apt install -y libusb-1.0-0-dev libudev-dev
     - name: Build
-      run: cargo build --verbose
+      run: cargo build --examples --verbose
+
+  windows-build:
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Build
+      run: cargo build --examples --verbose

@@ -2,12 +2,7 @@ use crate::ctapdef;
 #[allow(unused_imports)]
 use crate::util;
 
-#[cfg(not(target_os = "linux"))]
 use crate::fidokey::*;
-
-// for pi
-#[cfg(target_os = "linux")]
-use crate::fidokey_pi::*;
 
 use std::{thread, time};
 
