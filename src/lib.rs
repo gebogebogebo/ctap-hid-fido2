@@ -31,7 +31,7 @@ pub mod fidokey;
 pub use fidokey::FidoKeyHid;
 
 mod hid;
-use hid::{
+pub use hid::{
     HidInfo,
     HidParam
 };
