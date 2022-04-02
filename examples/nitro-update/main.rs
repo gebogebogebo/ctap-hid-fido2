@@ -195,8 +195,6 @@ fn main() -> Result<()> {
     }
 
     // Start
-    ctap_hid_fido2::hello();
-    println!("");
 
     if matches.is_present("info") {
         println!("Get Firmware Information.");
