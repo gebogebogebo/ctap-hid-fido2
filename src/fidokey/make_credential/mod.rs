@@ -4,7 +4,6 @@ pub mod make_credential_response;
 
 use make_credential_params::{
     Attestation,
-    CredentialSupportedKeyType,
     Extension as Mext,
     MakeCredentialArgs,
 };
@@ -17,7 +16,11 @@ use crate::util::should_uv;
 use super::FidoKeyHid;
 use super::credential_management::credential_management_params::CredentialProtectionPolicy;
 
-pub use make_credential_params::MakeCredentialArgsBuilder;
+pub use make_credential_params::{
+    CredentialSupportedKeyType,
+    Extension,
+    MakeCredentialArgsBuilder
+};
 
 use anyhow::{Error, Result};
 

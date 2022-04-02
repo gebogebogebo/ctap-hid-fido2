@@ -16,8 +16,16 @@ mod config;
 mod selection;
 mod wink;
 
-pub use get_assertion::GetAssertionArgsBuilder;
-pub use make_credential::MakeCredentialArgsBuilder;
+pub use get_assertion::{
+    Extension as AssertionExtension,
+    GetAssertionArgsBuilder
+};
+
+pub use make_credential::{
+    CredentialSupportedKeyType,
+    Extension as CredentialExtension,
+    MakeCredentialArgsBuilder,
+};
 
 pub struct FidoKeyHid {
     device_internal: hidapi::HidDevice,

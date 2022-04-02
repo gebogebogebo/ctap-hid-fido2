@@ -31,7 +31,7 @@ fn main() -> Result<()> {
     let mut devices = get_fidokey_devices();
 
     if devices.is_empty() {
-        println!("Could not find any devices to test key creation with pin on!");
+        println!("Could not find any devices to test resident key creation with pin on!");
 
         // This should be an error
         return Ok(());

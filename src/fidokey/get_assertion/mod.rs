@@ -17,7 +17,10 @@ use crate::util::should_uv;
 
 use anyhow::{Error, Result};
 
-pub use get_assertion_params::GetAssertionArgsBuilder;
+pub use get_assertion_params::{
+    GetAssertionArgsBuilder,
+    Extension,
+};
 
 impl FidoKeyHid {
     /// Authentication command(with PIN , non Resident Key)
