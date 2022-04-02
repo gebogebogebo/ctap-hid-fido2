@@ -1,20 +1,11 @@
-use ctap_hid_fido2::{Cfg, Key};
+use ctap_hid_fido2::Cfg;
 use ctap_hid_fido2::{
     FidoKeyHid,
     fidokey::get_info::InfoOption,
 };
 
 fn main() {
-    ctap_hid_fido2::hello();
-
-    let key_auto = true;
-
-    println!("----- get-info start : key_auto = {:?} -----", key_auto);
-    let mut cfg = Cfg::init();
-
-    
-    //cfg.enable_log = true;
-    cfg.hid_params = if key_auto { Key::auto() } else { Key::get() };
+    println!("----- get-info start -----");
 
     println!("get_hid_devices()");
     let devs = ctap_hid_fido2::get_hid_devices();
@@ -33,7 +24,7 @@ fn main() {
             "- vid=0x{:04x} , pid=0x{:04x} , info={:?}",
             info.vid, info.pid, info.info
         );
-        let dev = FidoKeyHid::new(&vec![info.param], &cfg).unwrap();
+        let dev = FidoKeyHid::new(&vec![info.param], &Cfg::init()).unwrap();
 
         println!("get_info()");
         match dev.get_info() {
