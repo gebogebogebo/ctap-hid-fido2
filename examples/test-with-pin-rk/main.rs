@@ -1,25 +1,48 @@
 use anyhow::Result;
-use ctap_hid_fido2;
+use log::{
+    Level,
+    debug,
+    log_enabled,
+};
+
+use ctap_hid_fido2::{
+    FidoKeyHid,
+    get_fidokey_devices,
+    fidokey::{
+        GetAssertionArgsBuilder,
+        MakeCredentialArgsBuilder
+    },
+};
 use ctap_hid_fido2::public_key_credential_user_entity::PublicKeyCredentialUserEntity;
 use ctap_hid_fido2::str_buf::StrBuf;
-use ctap_hid_fido2::{verifier, Cfg, Key};
+use ctap_hid_fido2::{verifier, Cfg};
 
 fn main() -> Result<()> {
-    let key_auto = true;
-    println!(
-        "----- test-with-pin-rk start : key_auto = {:?} -----",
-        key_auto
-    );
+    env_logger::init();
+    println!("----- test-with-pin-rk start -----");
     let mut cfg = Cfg::init();
-    //cfg.enable_log = true;
-    cfg.hid_params = if key_auto { Key::auto() } else { Key::get() };
+    if log_enabled!(Level::Debug) {
+        cfg.enable_log = true;
+    }
 
     let rpid = "test-rk.com";
-    let pin = "1234";
+    let pin = "123456";
 
-    builder_pattern_sample(&cfg, rpid, pin)?;
+    let mut devices = get_fidokey_devices();
 
-    legacy_pattern_sample(&cfg, rpid, pin)?;
+    if devices.is_empty() {
+        println!("Could not find any devices to test key creation with pin on!");
+
+        // This should be an error
+        return Ok(());
+    }
+
+    let device_descriptor = devices.pop().unwrap();
+    let device = FidoKeyHid::new(&vec![device_descriptor.param], &cfg).unwrap();
+
+    builder_pattern_sample(&device, rpid, pin)?;
+
+    legacy_pattern_sample(&device, rpid, pin)?;
 
     println!("----- test-with-pin-rk end -----");
     Ok(())
@@ -28,20 +51,19 @@ fn main() -> Result<()> {
 //
 // Builder Pattern Sample
 //
-fn builder_pattern_sample(cfg: &Cfg, rpid: &str, pin: &str) -> Result<()> {
-    discoverable_credentials(cfg, rpid, pin).unwrap_or_else(|err| eprintln!("Error => {}\n", err));
+fn builder_pattern_sample(device: &FidoKeyHid, rpid: &str, pin: &str) -> Result<()> {
+    discoverable_credentials(device, rpid, pin).unwrap_or_else(|err| eprintln!("Error => {}\n", err));
 
     Ok(())
 }
 
-fn discoverable_credentials(cfg: &Cfg, rpid: &str, pin: &str) -> Result<()> {
+fn discoverable_credentials(device: &FidoKeyHid, rpid: &str, pin: &str) -> Result<()> {
     println!("----- discoverable_credentials -----");
 
     println!("- Register");
     let challenge = verifier::create_challenge();
     let rkparam =
         PublicKeyCredentialUserEntity::new(Some(b"1111"), Some("gebo"), Some("GEBO GEBO"));
-    //let rkparam = PublicKeyCredentialUserEntity::new(Some(b"2222"),Some("gebo-2"),Some("GEBO GEBO-2"));
 
     let mut strbuf = StrBuf::new(20);
     println!(
@@ -53,15 +75,15 @@ fn discoverable_credentials(cfg: &Cfg, rpid: &str, pin: &str) -> Result<()> {
             .build()
     );
 
-    let make_credential_args = ctap_hid_fido2::MakeCredentialArgsBuilder::new(&rpid, &challenge)
+    let make_credential_args = MakeCredentialArgsBuilder::new(&rpid, &challenge)
         .pin(pin)
         .rkparam(&rkparam)
         .build();
 
-    let attestation = ctap_hid_fido2::make_credential_with_args(&cfg, &make_credential_args)?;
+    let attestation = device.make_credential_with_args(&make_credential_args)?;
     println!("-- Register Success");
-    //println!("Attestation");
-    //println!("{}", attestation);
+    debug!("Attestation");
+    debug!("{}", attestation);
 
     println!("-- Verify Attestation");
     let verify_result = verifier::verify_attestation(rpid, &challenge, &attestation);
@@ -73,15 +95,15 @@ fn discoverable_credentials(cfg: &Cfg, rpid: &str, pin: &str) -> Result<()> {
 
     println!("- Authenticate");
     let challenge = verifier::create_challenge();
-    let get_assertion_args = ctap_hid_fido2::GetAssertionArgsBuilder::new(&rpid, &challenge)
+    let get_assertion_args = GetAssertionArgsBuilder::new(&rpid, &challenge)
         .pin(pin)
         .build();
 
-    let assertions = ctap_hid_fido2::get_assertion_with_args(cfg, &get_assertion_args)?;
+    let assertions = device.get_assertion_with_args(&get_assertion_args)?;
     println!("-- Authenticate Success");
     println!("-- Assertion Num = {:?}", assertions.len());
     for assertion in &assertions {
-        //println!("- assertion = {}", assertion);
+        debug!("- assertion = {}", assertion);
         println!("- user = {}", assertion.user);
     }
 
@@ -104,14 +126,14 @@ fn discoverable_credentials(cfg: &Cfg, rpid: &str, pin: &str) -> Result<()> {
 //
 // Legacy Pattern Sample
 //
-fn legacy_pattern_sample(cfg: &Cfg, rpid: &str, pin: &str) -> Result<()> {
-    legacy_discoverable_credentials(cfg, rpid, pin)
+fn legacy_pattern_sample(device: &FidoKeyHid, rpid: &str, pin: &str) -> Result<()> {
+    legacy_discoverable_credentials(device, rpid, pin)
         .unwrap_or_else(|err| eprintln!("Error => {}\n", err));
 
     Ok(())
 }
 
-fn legacy_discoverable_credentials(cfg: &Cfg, rpid: &str, pin: &str) -> Result<()> {
+fn legacy_discoverable_credentials(device: &FidoKeyHid, rpid: &str, pin: &str) -> Result<()> {
     println!("----- legacy_discoverable_credentials -----");
 
     println!("- Register");
@@ -130,12 +152,11 @@ fn legacy_discoverable_credentials(cfg: &Cfg, rpid: &str, pin: &str) -> Result<(
             .build()
     );
 
-    let attestation =
-        ctap_hid_fido2::make_credential_rk(&cfg, rpid, &challenge, Some(pin), &rkparam)?;
+    let attestation = device.make_credential_rk(rpid, &challenge, Some(pin), &rkparam)?;
 
     println!("-- Register Success");
-    //println!("Attestation");
-    //println!("{}", attestation);
+    debug!("Attestation");
+    debug!("{}", attestation);
 
     println!("-- Verify Attestation");
     let verify_result = verifier::verify_attestation(rpid, &challenge, &attestation);
@@ -147,7 +168,7 @@ fn legacy_discoverable_credentials(cfg: &Cfg, rpid: &str, pin: &str) -> Result<(
 
     println!("- Authenticate");
     let challenge = verifier::create_challenge();
-    let assertions = ctap_hid_fido2::get_assertions_rk(&cfg, rpid, &challenge, Some(pin))?;
+    let assertions = device.get_assertions_rk(rpid, &challenge, Some(pin))?;
 
     println!("-- Authenticate Success");
     println!("-- Assertion Num = {:?}", assertions.len());

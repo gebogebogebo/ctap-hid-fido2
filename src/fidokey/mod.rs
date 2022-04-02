@@ -6,6 +6,7 @@ use std::ffi::CString;
 // Complex Submodules
 pub mod bio;
 pub mod credential_management;
+pub mod get_assertion;
 pub mod get_info;
 pub mod make_credential;
 pub mod pin;
@@ -14,6 +15,9 @@ pub mod pin;
 mod config;
 mod selection;
 mod wink;
+
+pub use get_assertion::GetAssertionArgsBuilder;
+pub use make_credential::MakeCredentialArgsBuilder;
 
 pub struct FidoKeyHid {
     device_internal: hidapi::HidDevice,

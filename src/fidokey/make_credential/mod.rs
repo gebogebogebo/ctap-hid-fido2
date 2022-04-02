@@ -17,6 +17,8 @@ use crate::util::should_uv;
 use super::FidoKeyHid;
 use super::credential_management::credential_management_params::CredentialProtectionPolicy;
 
+pub use make_credential_params::MakeCredentialArgsBuilder;
+
 use anyhow::{Error, Result};
 
 

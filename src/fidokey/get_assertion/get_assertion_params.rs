@@ -64,3 +64,71 @@ impl Extension {
         Extension::HmacSecret(Some(<[u8; 32]>::try_from(hasher.as_ref()).unwrap()))
     }
 }
+
+#[derive(Debug)]
+pub struct GetAssertionArgs<'a> {
+    pub rpid: String,
+    pub challenge: Vec<u8>,
+    pub pin: Option<&'a str>,
+    pub credential_id: Option<Vec<u8>>,
+    pub uv: Option<bool>,
+    pub extensions: Option<Vec<Extension>>,
+}
+impl<'a> GetAssertionArgs<'a> {
+    pub fn builder() -> GetAssertionArgsBuilder<'a> {
+        GetAssertionArgsBuilder::default()
+    }
+}
+
+#[derive(Default)]
+pub struct GetAssertionArgsBuilder<'a> {
+    rpid: String,
+    challenge: Vec<u8>,
+    pin: Option<&'a str>,
+    credential_id: Option<Vec<u8>>,
+    uv: Option<bool>,
+    extensions: Option<Vec<Extension>>,
+}
+impl<'a> GetAssertionArgsBuilder<'a> {
+    pub fn new(rpid: &str, challenge: &[u8]) -> GetAssertionArgsBuilder<'a> {
+        let mut result = GetAssertionArgsBuilder::default();
+        result.uv = Some(true);
+        result.rpid = String::from(rpid);
+        result.challenge = challenge.to_vec();
+        result
+    }
+
+    pub fn pin(mut self, pin: &'a str) -> GetAssertionArgsBuilder<'a> {
+        self.pin = Some(pin);
+        //self.uv = Some(false);
+        self.uv = None;
+        self
+    }
+
+    pub fn without_pin_and_uv(mut self) -> GetAssertionArgsBuilder<'a> {
+        self.pin = None;
+        self.uv = None;
+        self
+    }
+
+    pub fn extensions(mut self, extensions: &[Extension]) -> GetAssertionArgsBuilder<'a> {
+        self.extensions = Some(extensions.to_vec());
+        self
+    }
+
+    pub fn credential_id(mut self, credential_id: &[u8]) -> GetAssertionArgsBuilder<'a> {
+        self.credential_id = Some(credential_id.to_vec());
+        self
+    }
+
+    pub fn build(self) -> GetAssertionArgs<'a> {
+        GetAssertionArgs {
+            rpid: self.rpid,
+            challenge: self.challenge,
+            pin: self.pin,
+            credential_id: self.credential_id,
+            uv: self.uv,
+            extensions: self.extensions,
+        }
+    }
+}

@@ -12,11 +12,6 @@ mod ctaphid;
 mod ctapihd_nitro;
 pub mod enc_aes256_cbc;
 pub mod enc_hmac_sha_256;
-mod get_assertion;
-mod get_assertion_command;
-pub mod get_assertion_params;
-mod get_assertion_response;
-mod get_next_assertion_command;
 mod hmac;
 pub mod nitrokey;
 mod p256;
@@ -30,10 +25,7 @@ pub mod str_buf;
 pub mod util;
 pub mod verifier;
 
-use crate::get_assertion_params::Assertion;
-use crate::get_assertion_params::Extension as Gext;
 use anyhow::{anyhow, Error, Result};
-use util::should_uv;
 
 pub mod fidokey;
 pub use fidokey::FidoKeyHid;
