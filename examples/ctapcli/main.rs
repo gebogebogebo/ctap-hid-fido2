@@ -10,7 +10,9 @@ extern crate rpassword;
 
 #[allow(unused_imports)]
 use ctap_hid_fido2::util;
-use ctap_hid_fido2::{str_buf, Cfg, InfoParam};
+use ctap_hid_fido2::{str_buf, Cfg, FidoKeyHid};
+
+use ctap_hid_fido2::fidokey::get_info::InfoParam;
 
 mod bio;
 mod common;
@@ -31,9 +33,8 @@ fn load_cfg() -> ctap_hid_fido2::Cfg {
 }
 
 fn main() -> Result<()> {
-
     let app = App::new("ctapcli")
-        .version("0.0.8")
+        .version(env!("CARGO_PKG_VERSION"))
         .author("gebo")
         .about("This tool implements CTAP HID and can communicate with FIDO Authenticator.\n\nabout CTAP(Client to Authenticator Protocol)\nhttps://fidoalliance.org/specs/fido-v2.1-ps-20210615/fido-client-to-authenticator-protocol-v2.1-ps-20210615.html")
         .arg(
@@ -177,68 +178,78 @@ fn main() -> Result<()> {
                 )
         );
 
+    let mut cfg = Cfg::init();
+    cfg.enable_log = false;
+    cfg.use_pre_bio_enrollment = true;
+    cfg.use_pre_credential_management = true;
+
     // Parse arguments
     let matches = app.get_matches();
-
-    // Start
-    //ctap_hid_fido2::hello();
 
     if matches.is_present("device") {
         println!("Enumerate HID devices.");
         let devs = ctap_hid_fido2::get_hid_devices();
-        for (info, dev) in devs {
+        for info in devs {
             println!(
-                "- vid=0x{:04x} , pid=0x{:04x} , {:?}",
-                dev.vid, dev.pid, info
+                "- vid=0x{:04x} , pid=0x{:04x} , info={:?}",
+                info.vid, info.pid, info.info
             );
         }
     }
 
     if matches.is_present("fidokey") {
-        println!("Enumerate FIDO key.");
+        println!("Enumerate FIDO keys.");
         let devs = ctap_hid_fido2::get_fidokey_devices();
-        for (info, dev) in devs {
+        for info in devs {
             println!(
-                "- vid=0x{:04x} , pid=0x{:04x} , {:?}",
-                dev.vid, dev.pid, info
+                "- vid=0x{:04x} , pid=0x{:04x} , info={:?}",
+                info.vid, info.pid, info.info
             );
         }
     }
 
+    let device = match FidoKeyHid::new(&vec![], &cfg) {
+        Ok(d) => d,
+        Err(_) => {
+            println!("Could not find a FIDO device to open.");
+            return Ok(())
+        }
+    };
+
     if matches.is_present("user-presence") {
         println!("User Presence Test.\n");
-        up()?;
+        up(&device)?;
     }
 
     if matches.is_present("wink") {
         println!("Blink LED on FIDO key.\n");
-        ctap_hid_fido2::wink(&CFG)?;
+        device.wink()?;
         println!("Do you see that wink? ;-)\n");
     }
 
     if let Some(matches) = matches.subcommand_matches("info") {
         println!("Get the Authenticator infomation.\n");
-        info::info(matches)?;
+        info::info(&device, matches)?;
     }
 
     if let Some(matches) = matches.subcommand_matches("pin") {
         println!("PIN Management.\n");
-        pin::pin(matches)?;
+        pin::pin(&device, matches)?;
     }
 
     if let Some(matches) = matches.subcommand_matches("memo") {
         println!("Record some short texts in Authenticator.\n");
-        memo::memo(matches)?;
+        memo::memo(&device, matches)?;
     }
 
     if let Some(matches) = matches.subcommand_matches("bio") {
         println!("Bio Management.\n");
-        bio::bio(matches)?;
+        bio::bio(&device, matches)?;
     }
 
     if let Some(ref matches) = matches.subcommand_matches("cred") {
         println!("Credential Management.\n");
-        cred::cred(&matches)?;
+        cred::cred(&device, &matches)?;
     }
 
     /*
@@ -252,12 +263,12 @@ fn main() -> Result<()> {
     Ok(())
 }
 
-pub fn up() -> Result<()> {
-    if !ctap_hid_fido2::enable_info_param(&CFG, &InfoParam::VersionsFido21)? {
+pub fn up(device: &FidoKeyHid) -> Result<()> {
+    if !device.enable_info_param(&InfoParam::VersionsFido21)? {
         return Err(anyhow!(
             "This authenticator is not supported for this functions."
         ));
     }
-    ctap_hid_fido2::selection(&CFG)?;
+    device.selection()?;
     Ok(())
 }
