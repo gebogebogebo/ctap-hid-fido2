@@ -1,4 +1,4 @@
-use crate::bio_enrollment_params::{BioEnrollmentData, TemplateInfo};
+use super::bio_enrollment_params::{BioEnrollmentData, TemplateInfo};
 #[allow(unused_imports)]
 use crate::util;
 use serde_cbor::Value;

@@ -1,8 +1,14 @@
 use crate::pintoken::PinToken;
 use crate::str_buf::StrBuf;
 use crate::util;
-use crate::FidoKeyHid;
 use std::fmt;
+
+
+pub struct EnrollStatus1 {
+    pub cid: [u8; 4],
+    pub pin_token: Option<PinToken>,
+    pub template_id: Vec<u8>,
+}
 
 #[derive(Debug, Default, Clone)]
 pub struct BioSensorInfo {
@@ -11,6 +17,7 @@ pub struct BioSensorInfo {
     pub max_capture_samples_required_for_enroll: u32,
     pub max_template_friendly_name: u32,
 }
+
 impl fmt::Display for BioSensorInfo {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let mut strbuf = StrBuf::new(0);
@@ -162,13 +169,6 @@ impl fmt::Display for TemplateInfo {
         strbuf.add(&name);
         write!(f, "{}", strbuf.build())
     }
-}
-
-pub struct EnrollStatus1 {
-    pub device: FidoKeyHid,
-    pub cid: [u8; 4],
-    pub pin_token: Option<PinToken>,
-    pub template_id: Vec<u8>,
 }
 
 pub struct EnrollStatus2 {

@@ -1,13 +1,18 @@
 use anyhow::{anyhow, Result};
-use ctap_hid_fido2::InfoOption;
+use ctap_hid_fido2::fidokey::{
+    FidoKeyHid,
+    get_info::{
+        InfoOption,
+    },
+};
+
 use crate::str_buf::StrBuf;
-use crate::CFG;
 use crate::common;
 
-pub fn cred(matches: &clap::ArgMatches) -> Result<()> {
+pub fn cred(device: &FidoKeyHid, matches: &clap::ArgMatches) -> Result<()> {
     // check
-    if ctap_hid_fido2::enable_info_option(&CFG, &InfoOption::CredMgmt)?.is_none()
-        && ctap_hid_fido2::enable_info_option(&CFG, &InfoOption::CredentialMgmtPreview)?
+    if device.enable_info_option(&InfoOption::CredMgmt)?.is_none()
+        && device.enable_info_option(&InfoOption::CredentialMgmtPreview)?
             .is_none()
     {
         return Err(anyhow!(
@@ -19,14 +24,13 @@ pub fn cred(matches: &clap::ArgMatches) -> Result<()> {
 
     if matches.is_present("metadata") {
         println!("# credential_management_get_creds_metadata()");
-        metadata(&pin);
+        metadata(device, &pin);
         return Ok(());
     }
 
     println!("Enumerate discoverable credentials.");
 
-    let credentials_count =
-        ctap_hid_fido2::credential_management_get_creds_metadata(&CFG, Some(&pin))?;
+    let credentials_count = device.credential_management_get_creds_metadata(Some(&pin))?;
 
     let mut strbuf = StrBuf::new(0);
     strbuf.addln(&format!(
@@ -47,13 +51,12 @@ pub fn cred(matches: &clap::ArgMatches) -> Result<()> {
     }
 
     // Vec<credential_management_params::Rp>
-    let rps = ctap_hid_fido2::credential_management_enumerate_rps(&CFG, Some(&pin))?;
+    let rps = device.credential_management_enumerate_rps(Some(&pin))?;
 
     for r in rps {
         println!("## rps\n{}", r);
 
-        let creds = ctap_hid_fido2::credential_management_enumerate_credentials(
-            &CFG,
+        let creds = device.credential_management_enumerate_credentials(
             Some(&pin),
             &r.rpid_hash,
         )?;
@@ -66,9 +69,8 @@ pub fn cred(matches: &clap::ArgMatches) -> Result<()> {
     Ok(())
 }
 
-fn metadata(pin: &str) {
-    match ctap_hid_fido2::credential_management_get_creds_metadata(
-        &CFG,
+fn metadata(device: &FidoKeyHid, pin: &str) {
+    match device.credential_management_get_creds_metadata(
         Some(pin),
     ) {
         Ok(result) => println!("{}", result),
