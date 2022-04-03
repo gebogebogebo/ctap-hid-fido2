@@ -196,8 +196,8 @@ fn get(device: &FidoKeyHid, tag: &str, pin: &str, rpid: &str) -> Result<()> {
 
 // for pi
 #[cfg(target_os = "linux")]
-fn get(tag: &str, pin: &str, rpid: &str) -> Result<()> {
-    if let Some(cred) = search_cred(pin, rpid, tag.as_bytes())? {
+fn get(device: &FidoKeyHid, tag: &str, pin: &str, rpid: &str) -> Result<()> {
+    if let Some(cred) = search_cred(device, pin, rpid, tag.as_bytes())? {
         let data = cred.public_key_credential_user_entity.name;
         println!("tag found :) :) :) !");
         println!("{:?}",data);
