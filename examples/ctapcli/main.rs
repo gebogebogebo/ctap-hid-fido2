@@ -22,17 +22,8 @@ mod memo;
 mod pin;
 
 
-use once_cell::sync::Lazy;
-static CFG: Lazy<Cfg> = Lazy::new(|| load_cfg());
-fn load_cfg() -> ctap_hid_fido2::Cfg {
-    let mut cfg = Cfg::init();
-    cfg.enable_log = false;
-    cfg.use_pre_bio_enrollment = true;
-    cfg.use_pre_credential_management = true;
-    cfg
-}
-
 fn main() -> Result<()> {
+    env_logger::init();
     let app = App::new("ctapcli")
         .version(env!("CARGO_PKG_VERSION"))
         .author("gebo")
