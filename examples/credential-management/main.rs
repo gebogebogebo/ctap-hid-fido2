@@ -1,28 +1,17 @@
 extern crate clap;
 
-use ctap_hid_fido2::{
-    FidoKeyHid,
-    HidParam,
-    fidokey::get_info::{
-        InfoParam,
-    },
-};
+use ctap_hid_fido2::{fidokey::get_info::InfoParam, FidoKeyHid, HidParam};
 
+use clap::{App, Arg};
 use ctap_hid_fido2::public_key_credential_descriptor::PublicKeyCredentialDescriptor;
 use ctap_hid_fido2::public_key_credential_user_entity::PublicKeyCredentialUserEntity;
 use ctap_hid_fido2::{util, Cfg};
-use clap::{App, Arg};
 
-use log::{
-    Level,
-    log_enabled,
-};
-
+use log::{log_enabled, Level};
 
 fn rps(device: &FidoKeyHid, pin: Option<&str>) {
     println!("# credential_management_enumerate_rps()");
-    match device.credential_management_enumerate_rps(pin)
-    {
+    match device.credential_management_enumerate_rps(pin) {
         Ok(results) => {
             for r in results {
                 println!("## rps\n{}", r);
@@ -39,10 +28,7 @@ fn credentials(device: &FidoKeyHid, pin: Option<&str>, rpid_hash: Option<&str>) 
 
     let rpid_hash_bytes: Vec<u8> = util::to_str_hex(rpid_hash.unwrap());
 
-    match device.credential_management_enumerate_credentials(
-        pin,
-        &rpid_hash_bytes,
-    ) {
+    match device.credential_management_enumerate_credentials(pin, &rpid_hash_bytes) {
         Ok(results) => {
             for c in results {
                 println!("## credentials\n{}", c);
@@ -61,12 +47,9 @@ fn delete(device: &FidoKeyHid, pin: Option<&str>, credential_id: Option<&str>) {
     pkcd.id = util::to_str_hex(credential_id.unwrap());
     pkcd.ctype = "public_key".to_string();
 
-    match device.credential_management_delete_credential(
-        pin,
-        Some(pkcd),
-    ) {
+    match device.credential_management_delete_credential(pin, Some(pkcd)) {
         Ok(_) => println!("- success"),
-        Err(e) => println!("- error: {:?}",e),
+        Err(e) => println!("- error: {:?}", e),
     }
 }
 
@@ -84,11 +67,7 @@ fn update(device: &FidoKeyHid, pin: Option<&str>, credential_id: Option<&str>) {
     pkcue.name = "test-name".to_string();
     pkcue.display_name = "test-display".to_string();
 
-    match device.credential_management_update_user_information(
-        pin,
-        Some(pkcd),
-        Some(pkcue),
-    ) {
+    match device.credential_management_update_user_information(pin, Some(pkcd), Some(pkcue)) {
         Ok(_) => println!("- credential_management_update_user_information Success"),
         Err(error) => println!(
             "- credential_management_update_user_information error: {:?}",
@@ -106,7 +85,11 @@ fn main() {
     if log_enabled!(Level::Debug) {
         cfg.enable_log = true;
     }
-    cfg.hid_params = if key_auto { HidParam::auto() } else { HidParam::get() };
+    cfg.hid_params = if key_auto {
+        HidParam::auto()
+    } else {
+        HidParam::get()
+    };
 
     let app = App::new("credential-management")
         .version("0.1.0")

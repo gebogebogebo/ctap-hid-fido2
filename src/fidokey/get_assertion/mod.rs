@@ -3,24 +3,17 @@ pub mod get_assertion_params;
 pub mod get_assertion_response;
 pub mod get_next_assertion_command;
 
-use get_assertion_params::{
-    Assertion,
-    Extension as Gext,
-    GetAssertionArgs,
-};
+use get_assertion_params::{Assertion, Extension as Gext, GetAssertionArgs};
 
 use crate::ctaphid;
 use crate::enc_hmac_sha_256;
 use crate::hmac::HmacExt;
-use crate::FidoKeyHid;
 use crate::util::should_uv;
+use crate::FidoKeyHid;
 
 use anyhow::{Error, Result};
 
-pub use get_assertion_params::{
-    GetAssertionArgsBuilder,
-    Extension,
-};
+pub use get_assertion_params::{Extension, GetAssertionArgsBuilder};
 
 impl FidoKeyHid {
     /// Authentication command(with PIN , non Resident Key)
@@ -28,13 +21,13 @@ impl FidoKeyHid {
         &self,
         rpid: &str,
         challenge: &[u8],
-        credential_id: &[u8],
+        credential_ids: &[Vec<u8>],
         pin: Option<&str>,
     ) -> Result<Assertion> {
         let asss = self.get_assertion_internal(
             rpid,
             challenge,
-            credential_id,
+            credential_ids,
             pin,
             true,
             should_uv(pin),
@@ -48,14 +41,14 @@ impl FidoKeyHid {
         &self,
         rpid: &str,
         challenge: &[u8],
-        credential_id: &[u8],
+        credential_ids: &[Vec<u8>],
         pin: Option<&str>,
         extensions: Option<&Vec<Gext>>,
     ) -> Result<Assertion> {
         let asss = self.get_assertion_internal(
             rpid,
             challenge,
-            credential_id,
+            credential_ids,
             pin,
             true,
             should_uv(pin),
@@ -71,25 +64,18 @@ impl FidoKeyHid {
         challenge: &[u8],
         pin: Option<&str>,
     ) -> Result<Vec<Assertion>> {
-        let dmy: [u8; 0] = [];
-        self.get_assertion_internal(
-            rpid,
-            challenge,
-            &dmy,
-            pin,
-            true,
-            should_uv(pin),
-            None,
-        )
+        let dmy: Vec<u8> = vec![];
+        self.get_assertion_internal(rpid, challenge, &[dmy], pin, true, should_uv(pin), None)
     }
 
     /// Create a new assertion manually specifying the args using GetAssertionArgs
     pub fn get_assertion_with_args(&self, args: &GetAssertionArgs) -> Result<Vec<Assertion>> {
-        let credential_id = if args.credential_id.is_some() {
-            args.credential_id.as_ref().unwrap().to_vec()
+        let dummy_credentials;
+        let credential_ids = if args.credential_ids.len() > 0 {
+            &args.credential_ids
         } else {
-            let dmy: [u8; 0] = [];
-            dmy.to_vec()
+            dummy_credentials = vec![];
+            &dummy_credentials
         };
 
         let extensions = if args.extensions.is_some() {
@@ -101,7 +87,7 @@ impl FidoKeyHid {
         let asss = self.get_assertion_internal(
             &args.rpid,
             &args.challenge,
-            &credential_id,
+            credential_ids,
             args.pin,
             true,
             args.uv,
@@ -115,7 +101,7 @@ impl FidoKeyHid {
         &self,
         rpid: &str,
         challenge: &[u8],
-        credential_id: &[u8],
+        credential_ids: &[Vec<u8>],
         pin: Option<&str>,
         up: bool,
         uv: Option<bool>,
@@ -137,8 +123,11 @@ impl FidoKeyHid {
 
         // create cmmand
         let send_payload = {
-            let mut params =
-                get_assertion_command::Params::new(rpid, challenge.to_vec(), credential_id.to_vec());
+            let mut params = get_assertion_command::Params::new(
+                rpid,
+                challenge.to_vec(),
+                credential_ids.to_vec(),
+            );
             params.option_up = up;
             params.option_uv = uv;
 
@@ -152,11 +141,14 @@ impl FidoKeyHid {
         };
 
         // send & response
-        let response_cbor = ctaphid::ctaphid_cbor(&self, &cid, &send_payload).map_err(Error::msg)?;
+        let response_cbor =
+            ctaphid::ctaphid_cbor(&self, &cid, &send_payload).map_err(Error::msg)?;
 
-        let ass =
-            get_assertion_response::parse_cbor(&response_cbor, hmac_ext.map(|ext| ext.shared_secret))
-                .map_err(Error::msg)?;
+        let ass = get_assertion_response::parse_cbor(
+            &response_cbor,
+            hmac_ext.map(|ext| ext.shared_secret),
+        )
+        .map_err(Error::msg)?;
 
         let mut asss = vec![ass];
         for _ in 0..(asss[0].number_of_credentials - 1) {
