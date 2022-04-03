@@ -199,13 +199,7 @@ fn main() -> Result<()> {
         }
     }
 
-    let device = match FidoKeyHid::new(&vec![], &cfg) {
-        Ok(d) => d,
-        Err(_) => {
-            println!("Could not find a FIDO device to open.");
-            return Ok(())
-        }
-    };
+    let device = FidoKeyHid::new(&vec![], &cfg)?;
 
     if matches.is_present("user-presence") {
         println!("User Presence Test.\n");

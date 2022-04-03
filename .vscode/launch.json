@@ -85,7 +85,7 @@
                     "kind": "example"
                 }
             },
-            "args": [],
+            "args": ["info"],
             "cwd": "${workspaceFolder}"
         },
         {

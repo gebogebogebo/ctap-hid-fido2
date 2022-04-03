@@ -2,6 +2,7 @@ use crate::HidParam;
 use hidapi::HidApi;
 
 use std::ffi::CString;
+use anyhow::{anyhow, Result};
 
 // Complex Submodules
 pub mod bio;
@@ -36,7 +37,7 @@ pub struct FidoKeyHid {
 }
 
 impl FidoKeyHid {
-    pub fn new(params: &[crate::HidParam], cfg: &crate::LibCfg) -> Result<Self, String> {
+    pub fn new(params: &[crate::HidParam], cfg: &crate::LibCfg) -> Result<Self> {
         let api = HidApi::new().expect("Failed to create HidApi instance");
         for param in params {
             let path = get_path(&api, &param);
@@ -55,7 +56,7 @@ impl FidoKeyHid {
                 return Ok(result);
             }
         }
-        Err("Failed to open device.".into())
+        Err(anyhow!("Failed to open device."))
     }
 
     pub fn write(&self, cmd: &[u8]) -> Result<usize, String> {
