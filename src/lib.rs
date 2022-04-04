@@ -25,7 +25,7 @@ pub mod str_buf;
 pub mod util;
 pub mod verifier;
 
-use anyhow::{anyhow, Error, Result};
+use anyhow::{anyhow, Result};
 
 pub mod fidokey;
 pub use fidokey::FidoKeyHid;
@@ -66,9 +66,10 @@ pub fn get_fidokey_devices() -> Vec<HidInfo> {
     hid::get_hid_devices(Some(0xf1d0))
 }
 
-fn get_device(cfg: &LibCfg) -> Result<FidoKeyHid> {
+/// Get HID FIDO device
+pub fn get_fidokey_device(cfg: &LibCfg) -> Result<FidoKeyHid> {
     let device = if cfg.hid_params.len() > 0 {
-        FidoKeyHid::new(&cfg.hid_params, cfg).map_err(Error::msg)?
+        FidoKeyHid::new(&cfg.hid_params, cfg)?
     } else {
         let mut devs = get_fidokey_devices();
         if devs.is_empty() {
@@ -78,9 +79,14 @@ fn get_device(cfg: &LibCfg) -> Result<FidoKeyHid> {
         let device = devs.pop().unwrap().param;
 
         let params = vec![device];
-        FidoKeyHid::new(&params, cfg).map_err(Error::msg)?
+        FidoKeyHid::new(&params, cfg)?
     };
     Ok(device)
+}
+
+/// Get HID FIDO device
+pub fn get_fidokey_device_by_params(params: &[crate::HidParam], cfg: &LibCfg) -> Result<FidoKeyHid> {
+    FidoKeyHid::new(params, cfg)
 }
 
 //

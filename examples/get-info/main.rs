@@ -1,6 +1,5 @@
-use ctap_hid_fido2::Cfg;
 use ctap_hid_fido2::{
-    FidoKeyHid,
+    Cfg,
     fidokey::get_info::InfoOption,
 };
 
@@ -24,7 +23,7 @@ fn main() {
             "- vid=0x{:04x} , pid=0x{:04x} , info={:?}",
             info.vid, info.pid, info.info
         );
-        let dev = FidoKeyHid::new(&vec![info.param], &Cfg::init()).unwrap();
+        let dev = ctap_hid_fido2::get_fidokey_device_by_params(&vec![info.param], &Cfg::init()).unwrap();
 
         println!("get_info()");
         match dev.get_info() {
@@ -51,6 +50,5 @@ fn main() {
         }
     }
      
-    //let dev = ctap_hid_fido2::get_device_from_tap(&cfg).unwrap();
     println!("----- get-info end -----");
 }
