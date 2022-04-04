@@ -237,7 +237,7 @@ fn bio_test(device: &FidoKeyHid, matches: &clap::ArgMatches) -> Result<()> {
     let ass = device.get_assertion(
         rpid,
         &challenge,
-        &verify_result.credential_id,
+        &[verify_result.credential_id],
         pin,
     )?;
 

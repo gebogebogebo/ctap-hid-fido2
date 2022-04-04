@@ -1,27 +1,18 @@
 use anyhow::Result;
-use log::{
-    Level,
-    debug,
-    log_enabled,
-};
+use log::{debug, log_enabled, Level};
 
 use ctap_hid_fido2::{
-    FidoKeyHid,
-    get_fidokey_devices,
     fidokey::{
-        AssertionExtension as Gext,
-        CredentialExtension as Mext,
-        CredentialSupportedKeyType,
-        GetAssertionArgsBuilder,
-        MakeCredentialArgsBuilder
+        AssertionExtension as Gext, CredentialExtension as Mext, CredentialSupportedKeyType,
+        GetAssertionArgsBuilder, MakeCredentialArgsBuilder,
     },
+    get_fidokey_devices, FidoKeyHid,
 };
 use ctap_hid_fido2::{verifier, Cfg};
 
 fn main() -> Result<()> {
     env_logger::init();
-    println!(
-        "----- test-with-pin-non-rk start -----");
+    println!("----- test-with-pin-non-rk start -----");
     let mut cfg = Cfg::init();
     if log_enabled!(Level::Debug) {
         cfg.enable_log = true;
@@ -383,12 +374,8 @@ fn legacy_non_discoverable_credentials(device: &FidoKeyHid, rpid: &str, pin: &st
 
     println!("- Authenticate");
     let challenge = verifier::create_challenge();
-    let assertion = device.get_assertion(
-        rpid,
-        &challenge,
-        &verify_result.credential_id,
-        Some(pin),
-    )?;
+    let assertion =
+        device.get_assertion(rpid, &challenge, &[verify_result.credential_id], Some(pin))?;
     println!("-- Authenticate Success");
     debug!("Assertion");
     debug!("{}", assertion);
@@ -420,12 +407,8 @@ fn legacy_with_key_type(
 
     println!("- Register");
     let challenge = verifier::create_challenge();
-    let attestation = device.make_credential_with_key_type(
-        rpid,
-        &challenge,
-        Some(pin),
-        Some(key_type),
-    )?;
+    let attestation =
+        device.make_credential_with_key_type(rpid, &challenge, Some(pin), Some(key_type))?;
 
     println!("-- Register Success");
     debug!("Attestation");
@@ -441,12 +424,8 @@ fn legacy_with_key_type(
 
     println!("- Authenticate");
     let challenge = verifier::create_challenge();
-    let assertion = device.get_assertion(
-        rpid,
-        &challenge,
-        &verify_result.credential_id,
-        Some(pin),
-    )?;
+    let assertion =
+        device.get_assertion(rpid, &challenge, &[verify_result.credential_id], Some(pin))?;
     println!("-- Authenticate Success");
     debug!("Assertion");
     debug!("{}", assertion);

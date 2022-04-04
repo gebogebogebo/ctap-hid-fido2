@@ -31,10 +31,7 @@ pub mod fidokey;
 pub use fidokey::FidoKeyHid;
 
 mod hid;
-pub use hid::{
-    HidInfo,
-    HidParam
-};
+pub use hid::{HidInfo, HidParam};
 
 pub type Cfg = LibCfg;
 
