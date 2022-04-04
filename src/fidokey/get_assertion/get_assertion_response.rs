@@ -1,7 +1,7 @@
-use crate::auth_data::Flags;
-use crate::enc_aes256_cbc;
 use super::get_assertion_params;
 use super::get_assertion_params::Extension;
+use crate::auth_data::Flags;
+use crate::enc_aes256_cbc;
 use crate::public_key_credential_user_entity::PublicKeyCredentialUserEntity;
 use crate::ss::SharedSecret;
 use crate::util;
