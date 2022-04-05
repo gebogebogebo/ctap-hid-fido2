@@ -1,6 +1,6 @@
 {
     "version": "0.2.0",
-    "configurations": [    
+    "configurations": [
         {
             "type": "lldb",
             "request": "launch",
@@ -23,7 +23,7 @@
         {
             "type": "lldb",
             "request": "launch",
-            "name": "Debug Example: wink",
+            "name": "wink: Debug Example",
             "cargo": {
                 "args": [
                     "build",
@@ -40,7 +40,7 @@
         {
             "type": "lldb",
             "request": "launch",
-            "name": "Debug Example: get-info",
+            "name": "get-info: Debug Example",
             "cargo": {
                 "args": [
                     "build",
@@ -57,7 +57,7 @@
         {
             "type": "lldb",
             "request": "launch",
-            "name": "Debug Example: credential-management",
+            "name": "credential-management: Debug Example",
             "cargo": {
                 "args": [
                     "build",
@@ -74,7 +74,7 @@
         {
             "type": "lldb",
             "request": "launch",
-            "name": "Debug Example: ctapcli",
+            "name": "ctapcli: Debug Example",
             "cargo": {
                 "args": [
                     "build",
@@ -91,7 +91,7 @@
         {
             "type": "lldb",
             "request": "launch",
-            "name": "Debug Example: nitro",
+            "name": "nitro: Debug Example",
             "cargo": {
                 "args": [
                     "build",
@@ -108,7 +108,7 @@
         {
             "type": "lldb",
             "request": "launch",
-            "name": "Debug Example: nitro-update",
+            "name": "nitro-update: Debug Example",
             "cargo": {
                 "args": [
                     "build",
@@ -125,7 +125,7 @@
         {
             "type": "lldb",
             "request": "launch",
-            "name": "Debug Example: test-with-pin-non-rk",
+            "name": "test-with-pin-non-rk: Debug Example",
             "cargo": {
                 "args": [
                     "build",
@@ -142,7 +142,7 @@
         {
             "type": "lldb",
             "request": "launch",
-            "name": "Debug Example: test-with-pin-rk",
+            "name": "test-with-pin-rk: Debug Example",
             "cargo": {
                 "args": [
                     "build",

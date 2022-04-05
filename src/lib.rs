@@ -37,7 +37,7 @@ pub type Cfg = LibCfg;
 
 #[derive(Clone)]
 pub struct LibCfg {
-    pub hid_params: Vec<HidParam>,
+    pub hid_params: Vec<HidParam>,      // TODO delete
     pub enable_log: bool,
     pub use_pre_bio_enrollment: bool,
     pub use_pre_credential_management: bool,
@@ -66,14 +66,21 @@ pub fn get_fidokey_devices() -> Vec<HidInfo> {
     hid::get_hid_devices(Some(0xf1d0))
 }
 
-/// Get HID FIDO device
-pub fn get_fidokey_device(cfg: &LibCfg) -> Result<FidoKeyHid> {
+/// Simple factory to create FidoKeyHid
+pub struct FidoKeyHidFactory {
+}
+
+impl FidoKeyHidFactory {
+  pub fn create(cfg: &LibCfg) -> Result<FidoKeyHid> {
     let device = if cfg.hid_params.len() > 0 {
-        FidoKeyHid::new(&cfg.hid_params, cfg)?
+      FidoKeyHid::new(&cfg.hid_params, cfg)?
     } else {
         let mut devs = get_fidokey_devices();
         if devs.is_empty() {
             return Err(anyhow!("FIDO device not found."));
+        }
+        if devs.len() > 1 {
+            return Err(anyhow!("Multiple FIDO devices found."));
         }
 
         let device = devs.pop().unwrap().param;
@@ -82,12 +89,13 @@ pub fn get_fidokey_device(cfg: &LibCfg) -> Result<FidoKeyHid> {
         FidoKeyHid::new(&params, cfg)?
     };
     Ok(device)
+  }
+
+  pub fn create_by_params(params: &[HidParam], cfg: &LibCfg) -> Result<FidoKeyHid> {
+    FidoKeyHid::new(params, cfg)
+  }
 }
 
-/// Get HID FIDO device
-pub fn get_fidokey_device_by_params(params: &[crate::HidParam], cfg: &LibCfg) -> Result<FidoKeyHid> {
-    FidoKeyHid::new(params, cfg)
-}
 
 //
 // test
