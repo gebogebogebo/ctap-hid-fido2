@@ -1,8 +1,4 @@
-use ctap_hid_fido2::nitrokey;
-use ctap_hid_fido2::{
-    Cfg,
-    HidParam,
-};
+use ctap_hid_fido2::{Cfg, nitrokey};
 
 use log::{
     Level,
@@ -11,17 +7,11 @@ use log::{
 
 fn main() {
     env_logger::init();
-    let key_auto = true;
-    println!(
-        "----- Nitrokey : key_auto = {:?} -----",
-        key_auto
-    );
+    println!("----- Nitrokey -----");
     let mut cfg = Cfg::init();
     if log_enabled!(Level::Debug) {
         cfg.enable_log = true;
     }
-
-    cfg.hid_params = if key_auto { HidParam::auto() } else { HidParam::get() };
 
     println!("----- Nitrokey GETVERSION start -----");
     // get 4byte payload "2001" -> ver 2.0.0.1

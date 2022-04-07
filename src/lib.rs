@@ -37,7 +37,6 @@ pub type Cfg = LibCfg;
 
 #[derive(Clone)]
 pub struct LibCfg {
-    pub hid_params: Vec<HidParam>,      // TODO delete
     pub enable_log: bool,
     pub use_pre_bio_enrollment: bool,
     pub use_pre_credential_management: bool,
@@ -47,7 +46,6 @@ pub struct LibCfg {
 impl LibCfg {
     pub fn init() -> Self {
         LibCfg {
-            hid_params: HidParam::auto(),
             enable_log: false,
             use_pre_bio_enrollment: true,
             use_pre_credential_management: true,
@@ -72,9 +70,7 @@ pub struct FidoKeyHidFactory {
 
 impl FidoKeyHidFactory {
   pub fn create(cfg: &LibCfg) -> Result<FidoKeyHid> {
-    let device = if cfg.hid_params.len() > 0 {
-      FidoKeyHid::new(&cfg.hid_params, cfg)?
-    } else {
+    let device = {
         let mut devs = get_fidokey_devices();
         if devs.is_empty() {
             return Err(anyhow!("FIDO device not found."));

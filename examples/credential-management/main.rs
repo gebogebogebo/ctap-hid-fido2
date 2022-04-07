@@ -1,6 +1,6 @@
 extern crate clap;
 
-use ctap_hid_fido2::{fidokey::get_info::InfoParam, FidoKeyHid, HidParam};
+use ctap_hid_fido2::{fidokey::get_info::InfoParam, FidoKeyHid};
 
 use clap::{App, Arg};
 use ctap_hid_fido2::public_key_credential_descriptor::PublicKeyCredentialDescriptor;
@@ -80,16 +80,10 @@ fn update(device: &FidoKeyHid, pin: Option<&str>, credential_id: Option<&str>) {
 
 fn main() {
     env_logger::init();
-    let key_auto = true;
     let mut cfg = Cfg::init();
     if log_enabled!(Level::Debug) {
         cfg.enable_log = true;
     }
-    cfg.hid_params = if key_auto {
-        HidParam::auto()
-    } else {
-        HidParam::get()
-    };
 
     let app = App::new("credential-management")
         .version("0.1.0")

@@ -6,16 +6,17 @@ use log::{
 };
 
 use ctap_hid_fido2::{
-    FidoKeyHid,
+    Cfg,
+    FidoKeyHid, FidoKeyHidFactory,
     get_fidokey_devices,
     fidokey::{
         GetAssertionArgsBuilder,
         MakeCredentialArgsBuilder
     },
+    verifier,
 };
 use ctap_hid_fido2::public_key_credential_user_entity::PublicKeyCredentialUserEntity;
 use ctap_hid_fido2::str_buf::StrBuf;
-use ctap_hid_fido2::{verifier, Cfg};
 
 fn main() -> Result<()> {
     env_logger::init();
@@ -26,19 +27,16 @@ fn main() -> Result<()> {
     }
 
     let rpid = "test-rk.com";
-    let pin = "123456";
+    let pin = "1234";
 
-    let mut devices = get_fidokey_devices();
-
-    if devices.is_empty() {
+    if get_fidokey_devices().is_empty() {
         println!("Could not find any devices to test resident key creation with pin on!");
 
         // This should be an error
         return Ok(());
     }
 
-    let device_descriptor = devices.pop().unwrap();
-    let device = FidoKeyHid::new(&vec![device_descriptor.param], &cfg).unwrap();
+    let device = FidoKeyHidFactory::create(&cfg)?;
 
     builder_pattern_sample(&device, rpid, pin)?;
 
