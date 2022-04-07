@@ -64,16 +64,17 @@ impl FidoKeyHid {
         challenge: &[u8],
         pin: Option<&str>,
     ) -> Result<Vec<Assertion>> {
-        let dmy: Vec<u8> = vec![];
-        self.get_assertion_internal(rpid, challenge, &[dmy], pin, true, should_uv(pin), None)
+        let dmy: Vec<Vec<u8>> = vec![];
+        self.get_assertion_internal(rpid, challenge, &dmy, pin, true, should_uv(pin), None)
     }
 
     /// Create a new assertion manually specifying the args using GetAssertionArgs
     pub fn get_assertion_with_args(&self, args: &GetAssertionArgs) -> Result<Vec<Assertion>> {
-        let dummy_credentials;
+        let dummy_credentials;      // TODO ???
         let credential_ids = if args.credential_ids.len() > 0 {
             &args.credential_ids
         } else {
+            // TODO ???
             dummy_credentials = vec![];
             &dummy_credentials
         };
