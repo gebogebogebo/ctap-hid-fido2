@@ -12,6 +12,7 @@ pub struct Params {
     pub user_id: Vec<u8>,
     pub user_name: String,
     pub user_display_name: String,
+    pub exclude_list: Vec<Vec<u8>>,
     pub option_rk: bool,
     pub option_up: Option<bool>,
     pub option_uv: Option<bool>,
@@ -101,6 +102,24 @@ pub fn create_payload(params: Params, extensions: Option<&Vec<Extension>>) -> Ve
     let tmp = Value::Map(pub_key_cred_params_val);
     let pub_key_cred_params = Value::Array(vec![tmp]);
 
+    // 0x05 : excludeList
+    let exclude_list = Value::Array(
+        params
+            .exclude_list
+            .iter()
+            .cloned()
+            .map(|credential_id| {
+                let mut exclude_list_val = BTreeMap::new();
+                exclude_list_val.insert(Value::Text("id".to_string()), Value::Bytes(credential_id));
+                exclude_list_val.insert(
+                    Value::Text("type".to_string()),
+                    Value::Text("public-key".to_string()),
+                );
+                Value::Map(exclude_list_val)
+            })
+            .collect(),
+    );
+
     // 0x06 : extensions
     let extensions = if let Some(extensions) = extensions {
         let mut map = BTreeMap::new();
@@ -165,6 +184,9 @@ pub fn create_payload(params: Params, extensions: Option<&Vec<Extension>>) -> Ve
     make_credential.insert(Value::Integer(0x02), rp);
     make_credential.insert(Value::Integer(0x03), user);
     make_credential.insert(Value::Integer(0x04), pub_key_cred_params);
+    if params.exclude_list.len() > 0 {
+        make_credential.insert(Value::Integer(0x05), exclude_list);
+    }
     if let Some(x) = extensions {
         make_credential.insert(Value::Integer(0x06), x);
     }
