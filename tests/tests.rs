@@ -7,6 +7,7 @@ use ctap_hid_fido2::util;
 use ctap_hid_fido2::*;
 use ring::digest;
 use std::convert::TryFrom;
+use fidokey::get_info::{InfoOption, InfoParam};
 
 #[test]
 fn test_get_hid_devices() {
@@ -16,19 +17,22 @@ fn test_get_hid_devices() {
 
 #[test]
 fn test_wink() {
-    wink(&Cfg::init()).unwrap();
+    let device = FidoKeyHidFactory::create(&Cfg::init()).unwrap();
+    device.wink().unwrap();
     assert!(true);
 }
 
 #[test]
 fn test_get_info() {
-    get_info(&Cfg::init()).unwrap();
+    let device = FidoKeyHidFactory::create(&Cfg::init()).unwrap();
+    device.get_info().unwrap();
     assert!(true);
 }
 
 #[test]
 fn test_get_info_u2f() {
-    match ctap_hid_fido2::enable_info_param(&Cfg::init(), &InfoParam::VersionsU2Fv2) {
+    let device = FidoKeyHidFactory::create(&Cfg::init()).unwrap();
+    match device.enable_info_param(&InfoParam::VersionsU2Fv2) {
         Ok(result) => {
             if !result {
                 // Skip
@@ -38,13 +42,14 @@ fn test_get_info_u2f() {
         Err(_) => assert!(false),
     };
 
-    get_info_u2f(&Cfg::init()).unwrap();
+    device.get_info_u2f().unwrap();
     assert!(true);
 }
 
 #[test]
 fn test_client_pin_get_retries() {
-    let retry = get_pin_retries(&Cfg::init());
+    let device = FidoKeyHidFactory::create(&Cfg::init()).unwrap();
+    let retry = device.get_pin_retries();
     println!("- retries = {:?}", retry);
     assert!(true);
 }
@@ -56,15 +61,15 @@ fn test_make_credential_with_pin_non_rk() {
     let challenge = b"this is challenge".to_vec();
     let pin = "1234";
 
-    let att = make_credential(&Cfg::init(), rpid, &challenge, Some(pin)).unwrap();
+    let device = FidoKeyHidFactory::create(&Cfg::init()).unwrap();
+    let att = device.make_credential(rpid, &challenge, Some(pin)).unwrap();
     println!("Attestation");
     println!("{}", att);
 
-    let ass = get_assertion(
-        &Cfg::init(),
+    let ass = device.get_assertion(
         rpid,
         &challenge,
-        &att.credential_descriptor.id,
+        &[att.credential_descriptor.id],
         Some(pin),
     )
     .unwrap();
@@ -76,7 +81,8 @@ fn test_make_credential_with_pin_non_rk() {
 
 #[test]
 fn test_credential_management_get_creds_metadata() {
-    match ctap_hid_fido2::enable_info_param(&Cfg::init(), &InfoParam::VersionsFido21Pre) {
+    let device = FidoKeyHidFactory::create(&Cfg::init()).unwrap();
+    match device.enable_info_param(&InfoParam::VersionsFido21Pre) {
         Ok(result) => {
             if !result {
                 // Skip
@@ -87,7 +93,7 @@ fn test_credential_management_get_creds_metadata() {
     };
 
     let pin = "1234";
-    match ctap_hid_fido2::credential_management_get_creds_metadata(&Cfg::init(), Some(pin)) {
+    match device.credential_management_get_creds_metadata(Some(pin)) {
         Ok(_) => assert!(true),
         Err(_) => assert!(false),
     };
@@ -95,7 +101,8 @@ fn test_credential_management_get_creds_metadata() {
 
 #[test]
 fn test_credential_management_enumerate_rps() {
-    match ctap_hid_fido2::enable_info_param(&Cfg::init(), &InfoParam::VersionsFido21Pre) {
+    let device = FidoKeyHidFactory::create(&Cfg::init()).unwrap();
+    match device.enable_info_param(&InfoParam::VersionsFido21Pre) {
         Ok(result) => {
             if !result {
                 // Skip
@@ -106,7 +113,7 @@ fn test_credential_management_enumerate_rps() {
     };
 
     let pin = "1234";
-    match ctap_hid_fido2::credential_management_enumerate_rps(&Cfg::init(), Some(pin)) {
+    match device.credential_management_enumerate_rps(Some(pin)) {
         Ok(_) => assert!(true),
         Err(_) => assert!(false),
     };
@@ -115,7 +122,10 @@ fn test_credential_management_enumerate_rps() {
 #[test]
 fn test_bio_enrollment_get_fingerprint_sensor_info() {
     let mut skip = true;
-    match ctap_hid_fido2::enable_info_option(&Cfg::init(), &InfoOption::UserVerificationMgmtPreview)
+
+    let device = FidoKeyHidFactory::create(&Cfg::init()).unwrap();
+
+    match device.enable_info_option(&InfoOption::UserVerificationMgmtPreview)
     {
         Ok(result) => {
             //println!("result = {:?}", result);
@@ -134,7 +144,7 @@ fn test_bio_enrollment_get_fingerprint_sensor_info() {
         return;
     };
 
-    match ctap_hid_fido2::bio_enrollment_get_fingerprint_sensor_info(&Cfg::init()) {
+    match device.bio_enrollment_get_fingerprint_sensor_info() {
         Ok(_) => assert!(true),
         Err(_) => assert!(false),
     };
@@ -143,7 +153,10 @@ fn test_bio_enrollment_get_fingerprint_sensor_info() {
 #[test]
 fn test_bio_enrollment_enumerate_enrollments() {
     let mut skip = true;
-    match ctap_hid_fido2::enable_info_option(&Cfg::init(), &InfoOption::UserVerificationMgmtPreview)
+
+    let device = FidoKeyHidFactory::create(&Cfg::init()).unwrap();
+    
+    match device.enable_info_option(&InfoOption::UserVerificationMgmtPreview)
     {
         Ok(result) => {
             if let Some(v) = result {
@@ -160,7 +173,7 @@ fn test_bio_enrollment_enumerate_enrollments() {
     };
 
     let pin = "1234";
-    match ctap_hid_fido2::bio_enrollment_enumerate_enrollments(&Cfg::init(), pin) {
+    match device.bio_enrollment_enumerate_enrollments(pin) {
         Ok(_) => assert!(true),
         Err(_) => assert!(false),
     };
