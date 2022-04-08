@@ -1,8 +1,8 @@
 use crate::HidParam;
 use hidapi::HidApi;
 
-use std::ffi::CString;
 use anyhow::{anyhow, Result};
+use std::ffi::CString;
 
 // Complex Submodules
 pub mod bio;
@@ -17,15 +17,10 @@ mod config;
 mod selection;
 mod wink;
 
-pub use get_assertion::{
-    Extension as AssertionExtension,
-    GetAssertionArgsBuilder
-};
+pub use get_assertion::{Extension as AssertionExtension, GetAssertionArgsBuilder};
 
 pub use make_credential::{
-    CredentialSupportedKeyType,
-    Extension as CredentialExtension,
-    MakeCredentialArgsBuilder,
+    CredentialSupportedKeyType, Extension as CredentialExtension, MakeCredentialArgsBuilder,
 };
 
 pub struct FidoKeyHid {
@@ -76,24 +71,21 @@ impl FidoKeyHid {
 }
 
 /// Abstraction for getting a path from a provided HidParam
-fn get_path(
-    api: &hidapi::HidApi,
-    param: &crate::HidParam,
-) -> Option<CString> {
+fn get_path(api: &hidapi::HidApi, param: &crate::HidParam) -> Option<CString> {
     match param {
         HidParam::Path(s) => {
             if let Ok(p) = CString::new(s.as_bytes()) {
-                return Some(p)
+                return Some(p);
             }
-        },
-        HidParam::VidPid { vid, pid } =>  {
+        }
+        HidParam::VidPid { vid, pid } => {
             let devices = api.device_list();
             for x in devices.cloned() {
                 if x.vendor_id() == *vid && x.product_id() == *pid {
                     return Some(x.path().to_owned());
                 }
             }
-        },
+        }
     };
 
     None

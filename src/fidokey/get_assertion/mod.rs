@@ -70,7 +70,7 @@ impl FidoKeyHid {
 
     /// Create a new assertion manually specifying the args using GetAssertionArgs
     pub fn get_assertion_with_args(&self, args: &GetAssertionArgs) -> Result<Vec<Assertion>> {
-        let dummy_credentials;      // TODO ???
+        let dummy_credentials; // TODO ???
         let credential_ids = if args.credential_ids.len() > 0 {
             &args.credential_ids
         } else {

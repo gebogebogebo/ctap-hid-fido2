@@ -1,11 +1,6 @@
-use anyhow::{anyhow, Result};
-use ctap_hid_fido2::fidokey::{
-    FidoKeyHid,
-    get_info::{
-        InfoOption,
-    },
-};
 use crate::common;
+use anyhow::{anyhow, Result};
+use ctap_hid_fido2::fidokey::{get_info::InfoOption, FidoKeyHid};
 
 pub fn pin(device: &FidoKeyHid, matches: &clap::ArgMatches) -> Result<()> {
     if matches.args.is_empty() {
@@ -29,7 +24,9 @@ pub fn pin(device: &FidoKeyHid, matches: &clap::ArgMatches) -> Result<()> {
             println!();
 
             println!();
-            println!("PIN retry counter represents the number of attempts left before PIN is disabled.");
+            println!(
+                "PIN retry counter represents the number of attempts left before PIN is disabled."
+            );
             println!("Each correct PIN entry resets the PIN retry counters back to their maximum values.");
             println!("Each incorrect PIN entry decrements the counter by 1.");
             println!("Once the PIN retry counter reaches 0, built-in user verification are disabled and can only be enabled if authenticator is reset.");
@@ -48,7 +45,7 @@ pub fn pin(device: &FidoKeyHid, matches: &clap::ArgMatches) -> Result<()> {
             match device.get_uv_retries() {
                 Ok(v) => {
                     println!("UV retry counter = {}", v);
-    
+
                     if v > 0 {
                         println!();
                         println!("UV retries count is the number of built-in UV attempts remaining before built-in UV is disabled on the device.");
@@ -62,13 +59,10 @@ pub fn pin(device: &FidoKeyHid, matches: &clap::ArgMatches) -> Result<()> {
                 Err(err) => return Err(err),
             };
         }
-
     } else if matches.is_present("new") {
         println!("Set new PIN.\n");
 
-        if let Some(client_pin) =
-            device.enable_info_option(&InfoOption::ClientPin)?
-        {
+        if let Some(client_pin) = device.enable_info_option(&InfoOption::ClientPin)? {
             if client_pin {
                 return Err(anyhow!("PIN is already set."));
             }

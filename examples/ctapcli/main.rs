@@ -21,7 +21,6 @@ mod info;
 mod memo;
 mod pin;
 
-
 fn main() -> Result<()> {
     env_logger::init();
     let app = App::new("ctapcli")

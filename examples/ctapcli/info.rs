@@ -1,11 +1,8 @@
 use anyhow::{anyhow, Result};
 
 use ctap_hid_fido2::fidokey::{
+    get_info::{InfoOption, InfoParam},
     FidoKeyHid,
-    get_info::{
-        InfoOption,
-        InfoParam,
-    },
 };
 
 use crate::str_buf::StrBuf;
@@ -163,8 +160,7 @@ fn option_message(typ: &str, info_option: &InfoOption, val: Option<bool>) -> Res
                 strbuf.addln("The authenticatorCredentialManagement commands are NOT supported.");
             }
             strbuf.build().to_string()
-        }
-        //_ => "".to_string(),
+        } //_ => "".to_string(),
     };
     Ok(format!("{}\n\n{}", message1, message2))
 }

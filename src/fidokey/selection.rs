@@ -1,7 +1,4 @@
-use crate::{
-    ctapdef,
-    ctaphid,
-};
+use crate::{ctapdef, ctaphid};
 
 use super::FidoKeyHid;
 
@@ -17,7 +14,8 @@ impl FidoKeyHid {
     pub fn selection(&self) -> Result<String> {
         let cid = ctaphid::ctaphid_init(&self).map_err(Error::msg)?;
         let send_payload = create_payload();
-        let _response_cbor = ctaphid::ctaphid_cbor(&self, &cid, &send_payload).map_err(Error::msg)?;
+        let _response_cbor =
+            ctaphid::ctaphid_cbor(&self, &cid, &send_payload).map_err(Error::msg)?;
         Ok("".to_string())
     }
 }

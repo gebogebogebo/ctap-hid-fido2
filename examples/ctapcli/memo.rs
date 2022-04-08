@@ -1,25 +1,17 @@
 use anyhow::{anyhow, Result};
 
 #[cfg(not(target_os = "linux"))]
-use clipboard::{
-    ClipboardContext,
-    ClipboardProvider,
-};
+use clipboard::{ClipboardContext, ClipboardProvider};
 
 use ctap_hid_fido2::fidokey::{
+    credential_management::credential_management_params::{Credential, Rp},
+    get_info::InfoOption,
     FidoKeyHid,
-    get_info::{
-        InfoOption,
-    },
-    credential_management::credential_management_params::{
-        Credential,
-        Rp,
-    }
 };
 
+use crate::common;
 use ctap_hid_fido2::public_key_credential_user_entity::PublicKeyCredentialUserEntity;
 use ctap_hid_fido2::verifier;
-use crate::common;
 
 pub fn memo(device: &FidoKeyHid, matches: &clap::ArgMatches) -> Result<()> {
     if !(is_supported(device)?) {
@@ -74,12 +66,7 @@ fn add(device: &FidoKeyHid, tag: &str, pin: &str, rpid: &str) -> Result<()> {
         let challenge = verifier::create_challenge();
         let rkparam = PublicKeyCredentialUserEntity::new(Some(tag.as_bytes()), Some(&memo), None);
 
-        let _att = device.make_credential_rk(
-            rpid,
-            &challenge,
-            Some(pin),
-            &rkparam,
-        )?;
+        let _att = device.make_credential_rk(rpid, &challenge, Some(pin), &rkparam)?;
 
         println!("Add Success! :)");
     } else {
@@ -129,7 +116,8 @@ fn list(device: &FidoKeyHid, pin: &str, rpid: &str) -> Result<()> {
 }
 
 fn is_supported(device: &FidoKeyHid) -> Result<bool> {
-    if device.enable_info_option(&InfoOption::CredentialMgmtPreview)?
+    if device
+        .enable_info_option(&InfoOption::CredentialMgmtPreview)?
         .is_some()
     {
         return Ok(true);
@@ -158,7 +146,12 @@ fn get_rps(device: &FidoKeyHid, pin: Option<&str>) -> Result<Vec<Rp>> {
     //ctap_hid_fido2::credential_management_enumerate_rps(&CFG, pin)
 }
 
-fn search_cred(device: &FidoKeyHid, pin: &str, rpid: &str, user_entity_id: &[u8]) -> Result<Option<Credential>> {
+fn search_cred(
+    device: &FidoKeyHid,
+    pin: &str,
+    rpid: &str,
+    user_entity_id: &[u8],
+) -> Result<Option<Credential>> {
     let rps = get_rps(device, Some(pin))?;
 
     let mut rps = rps
@@ -200,7 +193,7 @@ fn get(device: &FidoKeyHid, tag: &str, pin: &str, rpid: &str) -> Result<()> {
     if let Some(cred) = search_cred(device, pin, rpid, tag.as_bytes())? {
         let data = cred.public_key_credential_user_entity.name;
         println!("tag found :) :) :) !");
-        println!("{:?}",data);
+        println!("{:?}", data);
     } else {
         println!("tag not found...");
     }

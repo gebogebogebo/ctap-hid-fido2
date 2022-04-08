@@ -1,9 +1,6 @@
-use ctap_hid_fido2::{Cfg, nitrokey};
+use ctap_hid_fido2::{nitrokey, Cfg};
 
-use log::{
-    Level,
-    log_enabled,
-};
+use log::{log_enabled, Level};
 
 fn main() {
     env_logger::init();

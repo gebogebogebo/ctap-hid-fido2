@@ -5,9 +5,9 @@
 use ctap_hid_fido2::str_buf::StrBuf;
 use ctap_hid_fido2::util;
 use ctap_hid_fido2::*;
+use fidokey::get_info::{InfoOption, InfoParam};
 use ring::digest;
 use std::convert::TryFrom;
-use fidokey::get_info::{InfoOption, InfoParam};
 
 #[test]
 fn test_get_hid_devices() {
@@ -66,13 +66,9 @@ fn test_make_credential_with_pin_non_rk() {
     println!("Attestation");
     println!("{}", att);
 
-    let ass = device.get_assertion(
-        rpid,
-        &challenge,
-        &[att.credential_descriptor.id],
-        Some(pin),
-    )
-    .unwrap();
+    let ass = device
+        .get_assertion(rpid, &challenge, &[att.credential_descriptor.id], Some(pin))
+        .unwrap();
     println!("Assertion");
     println!("{}", ass);
 
@@ -125,8 +121,7 @@ fn test_bio_enrollment_get_fingerprint_sensor_info() {
 
     let device = FidoKeyHidFactory::create(&Cfg::init()).unwrap();
 
-    match device.enable_info_option(&InfoOption::UserVerificationMgmtPreview)
-    {
+    match device.enable_info_option(&InfoOption::UserVerificationMgmtPreview) {
         Ok(result) => {
             //println!("result = {:?}", result);
             if let Some(v) = result {
@@ -155,9 +150,8 @@ fn test_bio_enrollment_enumerate_enrollments() {
     let mut skip = true;
 
     let device = FidoKeyHidFactory::create(&Cfg::init()).unwrap();
-    
-    match device.enable_info_option(&InfoOption::UserVerificationMgmtPreview)
-    {
+
+    match device.enable_info_option(&InfoOption::UserVerificationMgmtPreview) {
         Ok(result) => {
             if let Some(v) = result {
                 if v {

@@ -28,7 +28,8 @@ impl FidoKeyHid {
         if !pin.is_empty() {
             let authenticator_key_agreement = self.get_authenticator_key_agreement(cid)?;
 
-            let shared_secret = SharedSecret::new(&authenticator_key_agreement).map_err(Error::msg)?;
+            let shared_secret =
+                SharedSecret::new(&authenticator_key_agreement).map_err(Error::msg)?;
             let pin_hash_enc = shared_secret.encrypt_pin(pin).map_err(Error::msg)?;
 
             let send_payload = client_pin_command::create_payload_get_pin_token(
@@ -66,7 +67,8 @@ impl FidoKeyHid {
 
             // Get pinHashEnc
             // - shared_secret.public_key -> platform KeyAgreement
-            let shared_secret = SharedSecret::new(&authenticator_key_agreement).map_err(Error::msg)?;
+            let shared_secret =
+                SharedSecret::new(&authenticator_key_agreement).map_err(Error::msg)?;
             let pin_hash_enc = shared_secret.encrypt_pin(pin).map_err(Error::msg)?;
 
             // Get pin token
@@ -104,8 +106,9 @@ impl FidoKeyHid {
             client_pin_command::create_payload(PinCmd::GetKeyAgreement).map_err(Error::msg)?;
         let response_cbor = ctaphid::ctaphid_cbor(&self, cid, &send_payload).map_err(Error::msg)?;
 
-        let key_agreement = client_pin_response::parse_cbor_client_pin_get_keyagreement(&response_cbor)
-            .map_err(Error::msg)?;
+        let key_agreement =
+            client_pin_response::parse_cbor_client_pin_get_keyagreement(&response_cbor)
+                .map_err(Error::msg)?;
 
         let shared_secret = SharedSecret::new(&key_agreement).map_err(Error::msg)?;
 

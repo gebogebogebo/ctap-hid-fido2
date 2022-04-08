@@ -141,13 +141,13 @@ fn main() -> Result<()> {
             Arg::with_name("info")
                 .help("Get Firmware Information.")
                 .short("i")
-                .long("info")
+                .long("info"),
         )
         .arg(
             Arg::with_name("download")
                 .help("Download Firmware json file from Web.")
                 .short("d")
-                .long("download")
+                .long("download"),
         )
         .arg(
             Arg::with_name("checkjson")
@@ -155,13 +155,13 @@ fn main() -> Result<()> {
                 .short("j")
                 .long("json")
                 .takes_value(true)
-                .value_name("file")
+                .value_name("file"),
         )
         .arg(
             Arg::with_name("bootloader")
                 .help("Set to bootloader mode.")
                 .short("b")
-                .long("bootloader")
+                .long("bootloader"),
         )
         .arg(
             Arg::with_name("flash")
@@ -169,7 +169,7 @@ fn main() -> Result<()> {
                 .short("f")
                 .long("flash")
                 .takes_value(true)
-                .value_name("file")
+                .value_name("file"),
         );
 
     // Parse arguments
@@ -190,7 +190,7 @@ fn main() -> Result<()> {
     let mut word = String::new();
     std::io::stdin().read_line(&mut word).ok();
     let answer = word.trim().to_string();
-    if answer != "yes"{
+    if answer != "yes" {
         return Ok(());
     }
 

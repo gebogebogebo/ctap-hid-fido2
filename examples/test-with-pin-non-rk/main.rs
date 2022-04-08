@@ -6,7 +6,7 @@ use ctap_hid_fido2::{
         AssertionExtension as Gext, CredentialExtension as Mext, CredentialSupportedKeyType,
         GetAssertionArgsBuilder, MakeCredentialArgsBuilder,
     },
-    Cfg, get_fidokey_devices, FidoKeyHid, FidoKeyHidFactory, verifier
+    get_fidokey_devices, verifier, Cfg, FidoKeyHid, FidoKeyHidFactory,
 };
 
 fn main() -> Result<()> {

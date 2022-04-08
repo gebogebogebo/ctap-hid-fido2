@@ -4,8 +4,8 @@ mod client_pin_response;
 
 use client_pin_command::SubCommand as PinCmd;
 
-use crate::ctaphid;
 use super::FidoKeyHid;
+use crate::ctaphid;
 use anyhow::{Error, Result};
 
 pub use client_pin_command::*;
@@ -19,7 +19,8 @@ impl FidoKeyHid {
         let send_payload =
             client_pin_command::create_payload(PinCmd::GetRetries).map_err(Error::msg)?;
 
-        let response_cbor = ctaphid::ctaphid_cbor(&self, &cid, &send_payload).map_err(Error::msg)?;
+        let response_cbor =
+            ctaphid::ctaphid_cbor(&self, &cid, &send_payload).map_err(Error::msg)?;
 
         let pin = client_pin_response::parse_cbor_client_pin_get_retries(&response_cbor)
             .map_err(Error::msg)?;
@@ -34,7 +35,8 @@ impl FidoKeyHid {
         let send_payload =
             client_pin_command::create_payload(PinCmd::GetUVRetries).map_err(Error::msg)?;
 
-        let response_cbor = ctaphid::ctaphid_cbor(&self, &cid, &send_payload).map_err(Error::msg)?;
+        let response_cbor =
+            ctaphid::ctaphid_cbor(&self, &cid, &send_payload).map_err(Error::msg)?;
 
         let pin = client_pin_response::parse_cbor_client_pin_get_retries(&response_cbor)
             .map_err(Error::msg)?;
@@ -59,12 +61,12 @@ impl FidoKeyHid {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use crate::HidParam;
-    use crate::fidokey::FidoKeyHid;
-    use crate::ctaphid;
-    use crate::Cfg;
     use super::SubCommand as PinCmd;
+    use super::*;
+    use crate::ctaphid;
+    use crate::fidokey::FidoKeyHid;
+    use crate::Cfg;
+    use crate::HidParam;
 
     #[test]
     fn test_client_pin_get_keyagreement() {

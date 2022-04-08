@@ -37,18 +37,23 @@ pub fn create_payload(params: Params, hmac_ext: Option<HmacExt>) -> Vec<u8> {
     // 0x03 : allowList
     let allow_list = {
         if !params.allowlist_credential_ids.is_empty() {
-            let allow_list = Value::Array(params.allowlist_credential_ids.iter().cloned().map(
-                |credential_id| {
-                    let mut allow_list_val = BTreeMap::new();
-                    allow_list_val
-                        .insert(Value::Text("id".to_string()), Value::Bytes(credential_id));
-                    allow_list_val.insert(
-                        Value::Text("type".to_string()),
-                        Value::Text("public-key".to_string()),
-                    );
-                    Value::Map(allow_list_val)
-                },
-            ).collect());
+            let allow_list = Value::Array(
+                params
+                    .allowlist_credential_ids
+                    .iter()
+                    .cloned()
+                    .map(|credential_id| {
+                        let mut allow_list_val = BTreeMap::new();
+                        allow_list_val
+                            .insert(Value::Text("id".to_string()), Value::Bytes(credential_id));
+                        allow_list_val.insert(
+                            Value::Text("type".to_string()),
+                            Value::Text("public-key".to_string()),
+                        );
+                        Value::Map(allow_list_val)
+                    })
+                    .collect(),
+            );
             Some(allow_list)
         } else {
             None

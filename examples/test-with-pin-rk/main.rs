@@ -1,22 +1,12 @@
 use anyhow::Result;
-use log::{
-    Level,
-    debug,
-    log_enabled,
-};
+use log::{debug, log_enabled, Level};
 
-use ctap_hid_fido2::{
-    Cfg,
-    FidoKeyHid, FidoKeyHidFactory,
-    get_fidokey_devices,
-    fidokey::{
-        GetAssertionArgsBuilder,
-        MakeCredentialArgsBuilder
-    },
-    verifier,
-};
 use ctap_hid_fido2::public_key_credential_user_entity::PublicKeyCredentialUserEntity;
 use ctap_hid_fido2::str_buf::StrBuf;
+use ctap_hid_fido2::{
+    fidokey::{GetAssertionArgsBuilder, MakeCredentialArgsBuilder},
+    get_fidokey_devices, verifier, Cfg, FidoKeyHid, FidoKeyHidFactory,
+};
 
 fn main() -> Result<()> {
     env_logger::init();
@@ -50,7 +40,8 @@ fn main() -> Result<()> {
 // Builder Pattern Sample
 //
 fn builder_pattern_sample(device: &FidoKeyHid, rpid: &str, pin: &str) -> Result<()> {
-    discoverable_credentials(device, rpid, pin).unwrap_or_else(|err| eprintln!("Error => {}\n", err));
+    discoverable_credentials(device, rpid, pin)
+        .unwrap_or_else(|err| eprintln!("Error => {}\n", err));
 
     Ok(())
 }

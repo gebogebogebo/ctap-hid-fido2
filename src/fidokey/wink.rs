@@ -10,5 +10,4 @@ impl FidoKeyHid {
         let cid = ctaphid::ctaphid_init(&self).map_err(Error::msg)?;
         ctaphid::ctaphid_wink(&self, &cid).map_err(Error::msg)
     }
-
 }

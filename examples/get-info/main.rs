@@ -1,8 +1,4 @@
-use ctap_hid_fido2::{
-    Cfg,
-    FidoKeyHidFactory,
-    fidokey::get_info::InfoOption,
-};
+use ctap_hid_fido2::{fidokey::get_info::InfoOption, Cfg, FidoKeyHidFactory};
 
 fn main() {
     println!("----- get-info start -----");

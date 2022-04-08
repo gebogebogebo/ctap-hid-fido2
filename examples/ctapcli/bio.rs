@@ -1,29 +1,17 @@
 extern crate clap;
 use anyhow::{anyhow, Result};
 
-use log::{
-    Level,
-    debug,
-    log_enabled,
-};
+use log::{debug, log_enabled, Level};
 
-use ctap_hid_fido2::util;
-use ctap_hid_fido2::verifier;
 use crate::common;
 use crate::str_buf::StrBuf;
+use ctap_hid_fido2::util;
+use ctap_hid_fido2::verifier;
 
-
-use ctap_hid_fido2::fidokey::{
-    FidoKeyHid,
-    bio::{
-        EnrollStatus1
-    },
-    get_info::InfoOption,
-};
+use ctap_hid_fido2::fidokey::{bio::EnrollStatus1, get_info::InfoOption, FidoKeyHid};
 
 #[allow(dead_code)]
 pub fn bio(device: &FidoKeyHid, matches: &clap::ArgMatches) -> Result<()> {
-
     if !(is_supported(device)?) {
         return Err(anyhow!(
             "This authenticator is not supported for this functions."
@@ -71,11 +59,7 @@ fn rename(device: &FidoKeyHid, pin: &str, template_id: &[u8]) -> Result<()> {
     let template_name = common::get_input();
     println!();
 
-    device.bio_enrollment_set_friendly_name(
-        pin,
-        template_id,
-        &template_name,
-    )?;
+    device.bio_enrollment_set_friendly_name(pin, template_id, &template_name)?;
     println!("- Success\n");
     Ok(())
 }
@@ -99,9 +83,12 @@ fn bio_enrollment(device: &FidoKeyHid, pin: &str) -> Result<Vec<u8>> {
     let (enroll_status1, enroll_status2) = device.bio_enrollment_begin(pin, Some(10000))?;
     println!();
     println!("{}", enroll_status2.message);
-    println!("- Number of samples required = {:?}", enroll_status2.remaining_samples);
+    println!(
+        "- Number of samples required = {:?}",
+        enroll_status2.remaining_samples
+    );
     println!();
-    
+
     for _counter in 0..10 {
         if bio_enrollment_next(device, &enroll_status1)? {
             break;
@@ -115,7 +102,10 @@ fn bio_enrollment_next(device: &FidoKeyHid, enroll_status1: &EnrollStatus1) -> R
     let enroll_status2 = device.bio_enrollment_next(enroll_status1, Some(10000))?;
     println!();
     println!("{}", enroll_status2.message);
-    println!("- Number of samples required = {:?}", enroll_status2.remaining_samples);
+    println!(
+        "- Number of samples required = {:?}",
+        enroll_status2.remaining_samples
+    );
     println!();
     Ok(enroll_status2.is_finish)
 }
@@ -125,7 +115,8 @@ fn is_supported(device: &FidoKeyHid) -> Result<bool> {
         return Ok(true);
     }
 
-    if device.enable_info_option(&&InfoOption::UserVerificationMgmtPreview)?
+    if device
+        .enable_info_option(&&InfoOption::UserVerificationMgmtPreview)?
         .is_some()
     {
         Ok(true)
@@ -234,12 +225,7 @@ fn bio_test(device: &FidoKeyHid, matches: &clap::ArgMatches) -> Result<()> {
         );
     }
 
-    let ass = device.get_assertion(
-        rpid,
-        &challenge,
-        &[verify_result.credential_id],
-        pin,
-    )?;
+    let ass = device.get_assertion(rpid, &challenge, &[verify_result.credential_id], pin)?;
 
     if log {
         println!("Assertion");
