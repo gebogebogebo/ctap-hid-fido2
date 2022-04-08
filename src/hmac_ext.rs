@@ -1,7 +1,7 @@
 use crate::ctaphid;
 use crate::enc_aes256_cbc;
 use crate::enc_hmac_sha_256;
-use crate::ss::SharedSecret;
+use crate::shared_secret::SharedSecret;
 use crate::FidoKeyHid;
 use anyhow::{Error, Result};
 

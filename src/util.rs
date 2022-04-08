@@ -27,14 +27,6 @@ pub fn print_typename<T>(_: T) {
 // pub crate
 //
 
-/*
-// for debug
-#[allow(dead_code)]
-pub(crate) fn is_debug() -> bool {
-    false
-}
-*/
-
 #[allow(dead_code)]
 pub(crate) fn debugp(title: &str, bytes: &[u8]) {
     println!("{}", StrBuf::bufh(title, bytes));

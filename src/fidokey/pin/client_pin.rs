@@ -11,7 +11,7 @@ use crate::ctaphid;
 use crate::enc_aes256_cbc;
 use crate::enc_hmac_sha_256;
 use crate::pintoken::PinToken;
-use crate::ss::SharedSecret;
+use crate::shared_secret::SharedSecret;
 
 impl FidoKeyHid {
     pub fn get_authenticator_key_agreement(&self, cid: &[u8]) -> Result<cose::CoseKey> {

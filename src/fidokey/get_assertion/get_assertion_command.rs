@@ -1,6 +1,6 @@
 use super::get_assertion_params::Extension;
 use crate::ctapdef;
-use crate::hmac::HmacExt;
+use crate::hmac_ext::HmacExt;
 use crate::util;
 use serde_cbor::to_vec;
 use serde_cbor::Value;
