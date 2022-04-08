@@ -2,30 +2,6 @@
 	"folders": [
 		{
 			"path": "."
-		},
-		{
-			"path": "examples/get-info"
-		},
-		{
-			"path": "examples/wink"
-		},
-		{
-			"path": "examples/test-with-pin-non-rk"
-		},
-		{
-			"path": "examples/test-with-pin-rk"
-		},
-		{
-			"path": "examples/nitro"
-		},
-		{
-			"path": "examples/nitro-update"
-		},
-		{
-			"path": "examples/credential-management"
-		},
-		{
-			"path": "examples/ctapcli"
 		}
 	],
 	"settings": {}
