@@ -37,7 +37,7 @@ pub struct FidoKeyHid {
 }
 
 impl FidoKeyHid {
-    pub fn new(params: &[crate::HidParam], cfg: &crate::LibCfg) -> Result<Self> {
+    pub(crate) fn new(params: &[crate::HidParam], cfg: &crate::LibCfg) -> Result<Self> {
         let api = HidApi::new().expect("Failed to create HidApi instance");
         for param in params {
             let path = get_path(&api, &param);
@@ -59,14 +59,14 @@ impl FidoKeyHid {
         Err(anyhow!("Failed to open device."))
     }
 
-    pub fn write(&self, cmd: &[u8]) -> Result<usize, String> {
+    pub(crate) fn write(&self, cmd: &[u8]) -> Result<usize, String> {
         match self.device_internal.write(cmd) {
             Ok(size) => Ok(size),
             Err(_) => Err("write error".into()),
         }
     }
 
-    pub fn read(&self) -> Result<Vec<u8>, String> {
+    pub(crate) fn read(&self) -> Result<Vec<u8>, String> {
         let mut buf: Vec<u8> = vec![0; 64];
         match self.device_internal.read(&mut buf[..]) {
             Ok(_) => Ok(buf),

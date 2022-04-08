@@ -10,7 +10,7 @@ extern crate rpassword;
 
 #[allow(unused_imports)]
 use ctap_hid_fido2::util;
-use ctap_hid_fido2::{str_buf, Cfg, FidoKeyHid};
+use ctap_hid_fido2::{str_buf, Cfg, FidoKeyHid, FidoKeyHidFactory};
 
 use ctap_hid_fido2::fidokey::get_info::InfoParam;
 
@@ -199,7 +199,7 @@ fn main() -> Result<()> {
         }
     }
 
-    let device = FidoKeyHid::new(&vec![], &cfg)?;
+    let device = FidoKeyHidFactory::create(&cfg)?;
 
     if matches.is_present("user-presence") {
         println!("User Presence Test.\n");
