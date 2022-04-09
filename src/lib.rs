@@ -6,21 +6,23 @@
 */
 
 pub mod auth_data;
-mod cose;
 mod ctapdef;
 mod ctaphid;
 mod ctapihd_nitro;
-pub mod enc_aes256_cbc;
-pub mod enc_hmac_sha_256;
+mod encrypt {
+    pub mod cose;
+    pub mod enc_aes256_cbc;
+    pub mod enc_hmac_sha_256;
+    pub mod p256;
+    pub mod shared_secret;
+}
 mod hmac_ext;
 pub mod nitrokey;
-mod p256;
 mod pintoken;
 pub mod public_key;
 pub mod public_key_credential_descriptor;
 pub mod public_key_credential_rp_entity;
 pub mod public_key_credential_user_entity;
-mod shared_secret;
 pub mod str_buf;
 pub mod util;
 pub mod verifier;
@@ -97,6 +99,9 @@ impl FidoKeyHidFactory {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use ring::digest;
+    use std::convert::TryFrom;
+    use str_buf::StrBuf;
 
     #[test]
     fn test_create_pin_auth() {
@@ -105,7 +110,7 @@ mod tests {
             hex::decode("E61E2BD6C4612662960B159CD54CF8EFF1A998C89B3742519D11F85E0F5E7876")
                 .unwrap();
         let check = "F0AC99D6AAD2E199AF9CF25F6568A6F5".to_string();
-        let sig = enc_hmac_sha_256::authenticate(&out_bytes, &client_data_hash);
+        let sig = encrypt::enc_hmac_sha_256::authenticate(&out_bytes, &client_data_hash);
         let pin_auth = sig[0..16].to_vec();
         assert_eq!(check, hex::encode(pin_auth).to_uppercase());
     }
@@ -115,9 +120,43 @@ mod tests {
         let key = b"this is key".to_vec();
         let message = b"this is message".to_vec();
 
-        let sig = enc_hmac_sha_256::authenticate(&key, &message);
+        let sig = encrypt::enc_hmac_sha_256::authenticate(&key, &message);
 
         let check = "1BCF27BDA4891AFA5F53CC027B8835564E35A8E3B631AA0F0563299296AD5909".to_string();
         assert_eq!(check, hex::encode(sig).to_uppercase());
+    }
+
+    #[test]
+    fn test_enc_hmac_sha_256() {
+        let key_str = "this is key.";
+        let hasher = digest::digest(&digest::SHA256, &key_str.as_bytes());
+        let key = <[u8; 32]>::try_from(hasher.as_ref()).unwrap();
+
+        let message = "this is message.";
+        let sig = encrypt::enc_hmac_sha_256::authenticate(&key, message.as_bytes());
+        print!("{}", StrBuf::bufh("- hmac signature", &sig));
+        assert_eq!(
+            sig,
+            util::to_str_hex("BF3D3FCFC4462CDCBEBBBC8AF82EA38B7B5ED4259B2061322C57B5CA696D6080")
+        );
+    }
+
+    #[test]
+    fn test_enc_aes256_cbc() {
+        let key_str = "this is key.";
+        let hasher = digest::digest(&digest::SHA256, &key_str.as_bytes());
+        let key = <[u8; 32]>::try_from(hasher.as_ref()).unwrap();
+
+        let message = "this is message.";
+        let enc_data = encrypt::enc_aes256_cbc::encrypt_message_str(&key, message);
+        print!("{}", StrBuf::bufh("- enc_data", &enc_data));
+        assert_eq!(
+            enc_data,
+            util::to_str_hex("37455A8392187439EFAA249617AAB5C2")
+        );
+
+        let dec_data = encrypt::enc_aes256_cbc::decrypt_message_str(&key, &enc_data);
+        print!("- dec_data = {}", dec_data);
+        assert_eq!(dec_data, message);
     }
 }

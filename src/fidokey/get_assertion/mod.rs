@@ -6,7 +6,7 @@ pub mod get_next_assertion_command;
 use get_assertion_params::{Assertion, Extension as Gext, GetAssertionArgs};
 
 use crate::ctaphid;
-use crate::enc_hmac_sha_256;
+use crate::encrypt::enc_hmac_sha_256;
 use crate::hmac_ext::HmacExt;
 use crate::util::should_uv;
 use crate::FidoKeyHid;

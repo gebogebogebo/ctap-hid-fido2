@@ -1,4 +1,4 @@
-use crate::cose;
+use crate::encrypt::cose;
 use serde_cbor::Value;
 
 #[derive(Debug, Default)]

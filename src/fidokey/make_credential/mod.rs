@@ -5,7 +5,7 @@ pub mod make_credential_response;
 use make_credential_params::{Attestation, Extension as Mext, MakeCredentialArgs};
 
 use crate::ctaphid;
-use crate::enc_hmac_sha_256;
+use crate::encrypt::enc_hmac_sha_256;
 use crate::public_key_credential_user_entity::PublicKeyCredentialUserEntity;
 use crate::util::should_uv;
 

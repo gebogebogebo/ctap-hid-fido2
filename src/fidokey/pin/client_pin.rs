@@ -6,12 +6,12 @@ use super::client_pin_command::SubCommand as PinCmd;
 use super::client_pin_response;
 use super::FidoKeyHid;
 
-use crate::cose;
 use crate::ctaphid;
-use crate::enc_aes256_cbc;
-use crate::enc_hmac_sha_256;
+use crate::encrypt::cose;
+use crate::encrypt::enc_aes256_cbc;
+use crate::encrypt::enc_hmac_sha_256;
+use crate::encrypt::shared_secret::SharedSecret;
 use crate::pintoken::PinToken;
-use crate::shared_secret::SharedSecret;
 
 impl FidoKeyHid {
     pub fn get_authenticator_key_agreement(&self, cid: &[u8]) -> Result<cose::CoseKey> {

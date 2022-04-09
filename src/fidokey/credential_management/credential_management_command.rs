@@ -2,7 +2,7 @@
 use crate::util;
 
 use crate::ctapdef;
-use crate::enc_hmac_sha_256;
+use crate::encrypt::enc_hmac_sha_256;
 use crate::pintoken;
 use crate::public_key_credential_descriptor::PublicKeyCredentialDescriptor;
 use crate::public_key_credential_user_entity::PublicKeyCredentialUserEntity;
