@@ -1,10 +1,9 @@
-use cose::CoseKey;
 use ring::error::Unspecified;
 use ring::{agreement, digest, rand};
 
-use crate::cose;
-use crate::enc_aes256_cbc;
-use crate::p256;
+use crate::encrypt::cose::CoseKey;
+use crate::encrypt::enc_aes256_cbc;
+use crate::encrypt::p256;
 use crate::pintoken::PinToken;
 
 #[derive(Debug, Default, Clone)]

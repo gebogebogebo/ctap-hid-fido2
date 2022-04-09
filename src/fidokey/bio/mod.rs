@@ -2,19 +2,13 @@ mod bio_enrollment_command;
 mod bio_enrollment_params;
 mod bio_enrollment_response;
 
-pub use bio_enrollment_params::*;
 pub use bio_enrollment_command::SubCommand as BioCmd;
+pub use bio_enrollment_params::*;
 
-use bio_enrollment_params::{BioEnrollmentData, TemplateInfo};
-use crate::{
-    ctaphid,
-    ctapdef,
-};
 use crate::pintoken::PinToken;
-use crate::{
-    FidoKeyHid,
-    fidokey::pin::Permission,
-};
+use crate::{ctapdef, ctaphid};
+use crate::{fidokey::pin::Permission, FidoKeyHid};
+use bio_enrollment_params::{BioEnrollmentData, TemplateInfo};
 
 #[allow(unused_imports)]
 use crate::util;
@@ -27,20 +21,23 @@ impl FidoKeyHid {
         let init = self.bio_enrollment_init(None).map_err(Error::msg)?;
 
         // 6.7.2. Get bio modality
-        let data1 = self.bio_enrollment(&init.0, None, None, None, None).map_err(Error::msg)?;
+        let data1 = self
+            .bio_enrollment(&init.0, None, None, None, None)
+            .map_err(Error::msg)?;
         if self.enable_log {
             println!("{}", data1);
         }
 
         // 6.7.3. Get fingerprint sensor info
-        let data2 = self.bio_enrollment(
-            &init.0,
-            None,
-            Some(BioCmd::GetFingerprintSensorInfo),
-            None,
-            None,
-        )
-        .map_err(Error::msg)?;
+        let data2 = self
+            .bio_enrollment(
+                &init.0,
+                None,
+                Some(BioCmd::GetFingerprintSensorInfo),
+                None,
+                None,
+            )
+            .map_err(Error::msg)?;
 
         if self.enable_log {
             println!("{}", data2);
@@ -55,7 +52,11 @@ impl FidoKeyHid {
     }
 
     /// BioEnrollment - EnrollBegin
-    pub fn bio_enrollment_begin(&self, pin: &str, timeout_milliseconds: Option<u16>) -> Result<(EnrollStatus1, EnrollStatus2)> {
+    pub fn bio_enrollment_begin(
+        &self,
+        pin: &str,
+        timeout_milliseconds: Option<u16>,
+    ) -> Result<(EnrollStatus1, EnrollStatus2)> {
         let init = self.bio_enrollment_init(Some(pin))?;
 
         let data = self.bio_enrollment(
@@ -202,7 +203,7 @@ impl FidoKeyHid {
         if self.enable_log {
             println!("{}", data);
         }
-        
+
         Ok(())
     }
 
@@ -235,12 +236,9 @@ impl FidoKeyHid {
         Ok(ret)
     }
 
-    fn bio_enrollment_init(
-        &self,
-        pin: Option<&str>,
-    ) -> Result<([u8; 4], Option<PinToken>)> {
+    fn bio_enrollment_init(&self, pin: Option<&str>) -> Result<([u8; 4], Option<PinToken>)> {
         // init
-        let cid = ctaphid::ctaphid_init(&self).map_err(Error::msg)?;
+        let cid = ctaphid::ctaphid_init(self).map_err(Error::msg)?;
 
         // pin token
         let pin_token = {
@@ -248,11 +246,7 @@ impl FidoKeyHid {
                 if self.use_pre_bio_enrollment {
                     Some(self.get_pin_token(&cid, pin)?)
                 } else {
-                    Some(self.get_pinuv_auth_token_with_permission(
-                        &cid,
-                        pin,
-                        Permission::Be,
-                    )?)
+                    Some(self.get_pinuv_auth_token_with_permission(&cid, pin, Permission::Be)?)
                 }
             } else {
                 None

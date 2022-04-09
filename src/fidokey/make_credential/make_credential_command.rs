@@ -1,5 +1,5 @@
-use crate::ctapdef;
 use super::make_credential_params::{CredentialSupportedKeyType, Extension};
+use crate::ctapdef;
 use crate::util;
 use serde_cbor::to_vec;
 use serde_cbor::Value;

@@ -1,21 +1,12 @@
 use anyhow::Result;
-use log::{
-    Level,
-    debug,
-    log_enabled,
-};
+use log::{debug, log_enabled, Level};
 
-use ctap_hid_fido2::{
-    FidoKeyHid,
-    get_fidokey_devices,
-    fidokey::{
-        GetAssertionArgsBuilder,
-        MakeCredentialArgsBuilder
-    },
-};
 use ctap_hid_fido2::public_key_credential_user_entity::PublicKeyCredentialUserEntity;
 use ctap_hid_fido2::str_buf::StrBuf;
-use ctap_hid_fido2::{verifier, Cfg};
+use ctap_hid_fido2::{
+    fidokey::{GetAssertionArgsBuilder, MakeCredentialArgsBuilder},
+    get_fidokey_devices, verifier, Cfg, FidoKeyHid, FidoKeyHidFactory,
+};
 
 fn main() -> Result<()> {
     env_logger::init();
@@ -26,19 +17,16 @@ fn main() -> Result<()> {
     }
 
     let rpid = "test-rk.com";
-    let pin = "123456";
+    let pin = "1234";
 
-    let mut devices = get_fidokey_devices();
-
-    if devices.is_empty() {
+    if get_fidokey_devices().is_empty() {
         println!("Could not find any devices to test resident key creation with pin on!");
 
         // This should be an error
         return Ok(());
     }
 
-    let device_descriptor = devices.pop().unwrap();
-    let device = FidoKeyHid::new(&vec![device_descriptor.param], &cfg).unwrap();
+    let device = FidoKeyHidFactory::create(&cfg)?;
 
     builder_pattern_sample(&device, rpid, pin)?;
 
@@ -52,7 +40,8 @@ fn main() -> Result<()> {
 // Builder Pattern Sample
 //
 fn builder_pattern_sample(device: &FidoKeyHid, rpid: &str, pin: &str) -> Result<()> {
-    discoverable_credentials(device, rpid, pin).unwrap_or_else(|err| eprintln!("Error => {}\n", err));
+    discoverable_credentials(device, rpid, pin)
+        .unwrap_or_else(|err| eprintln!("Error => {}\n", err));
 
     Ok(())
 }

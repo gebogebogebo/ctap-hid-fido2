@@ -1,5 +1,5 @@
-use crate::cose;
 use crate::ctapdef;
+use crate::encrypt::cose;
 use serde_cbor::Value;
 use std::collections::BTreeMap;
 

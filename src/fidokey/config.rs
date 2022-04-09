@@ -1,7 +1,4 @@
-use crate::{
-    ctapdef,
-    ctaphid,
-};
+use crate::{ctapdef, ctaphid};
 
 use super::FidoKeyHid;
 
@@ -10,7 +7,7 @@ use serde_cbor::to_vec;
 use serde_cbor::Value;
 use std::collections::BTreeMap;
 
-/// The subcommand for setting configurations on a hardware token. 
+/// The subcommand for setting configurations on a hardware token.
 #[allow(dead_code)]
 pub enum SubCommand {
     EnableEnterpriseAttestation = 0x01,
@@ -33,14 +30,13 @@ fn create_payload_enable_enterprise_attestation() -> Vec<u8> {
     payload
 }
 
-
 impl FidoKeyHid {
     /// Get Config (CTAP 2.1)
     pub fn config(&self) -> Result<String> {
-        let cid = ctaphid::ctaphid_init(&self).map_err(Error::msg)?;
+        let cid = ctaphid::ctaphid_init(self).map_err(Error::msg)?;
         let send_payload = create_payload_enable_enterprise_attestation();
-        let _response_cbor = ctaphid::ctaphid_cbor(&self, &cid, &send_payload).map_err(Error::msg)?;
+        let _response_cbor =
+            ctaphid::ctaphid_cbor(self, &cid, &send_payload).map_err(Error::msg)?;
         Ok("".to_string())
     }
 }
-

@@ -82,7 +82,7 @@ impl FidoKeyHid {
         }
         Ok(false)
     }
-    
+
     pub fn enable_info_option(&self, info_option: &InfoOption) -> Result<Option<bool>> {
         let info = self.get_info()?;
         let find = match info_option {

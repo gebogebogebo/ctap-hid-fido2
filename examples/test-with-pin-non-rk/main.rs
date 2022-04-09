@@ -6,9 +6,8 @@ use ctap_hid_fido2::{
         AssertionExtension as Gext, CredentialExtension as Mext, CredentialSupportedKeyType,
         GetAssertionArgsBuilder, MakeCredentialArgsBuilder,
     },
-    get_fidokey_devices, FidoKeyHid,
+    get_fidokey_devices, verifier, Cfg, FidoKeyHid, FidoKeyHidFactory,
 };
-use ctap_hid_fido2::{verifier, Cfg};
 
 fn main() -> Result<()> {
     env_logger::init();
@@ -19,19 +18,16 @@ fn main() -> Result<()> {
     }
 
     let rpid = "test.com";
-    let pin = "123456";
+    let pin = "1234";
 
-    let mut devices = get_fidokey_devices();
-
-    if devices.is_empty() {
+    if get_fidokey_devices().is_empty() {
         println!("Could not find any devices to test non-resident key creation with pin on!");
 
         // This should be an error
         return Ok(());
     }
 
-    let device_descriptor = devices.pop().unwrap();
-    let device = FidoKeyHid::new(&vec![device_descriptor.param], &cfg).unwrap();
+    let device = FidoKeyHidFactory::create(&cfg)?;
 
     builder_pattern_sample(&device, rpid, pin)?;
 

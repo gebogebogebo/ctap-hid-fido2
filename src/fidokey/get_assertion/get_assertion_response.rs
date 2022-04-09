@@ -1,9 +1,9 @@
 use super::get_assertion_params;
 use super::get_assertion_params::Extension;
 use crate::auth_data::Flags;
-use crate::enc_aes256_cbc;
+use crate::encrypt::enc_aes256_cbc;
+use crate::encrypt::shared_secret::SharedSecret;
 use crate::public_key_credential_user_entity::PublicKeyCredentialUserEntity;
-use crate::ss::SharedSecret;
 use crate::util;
 use byteorder::{BigEndian, ReadBytesExt};
 use serde_cbor::Value;

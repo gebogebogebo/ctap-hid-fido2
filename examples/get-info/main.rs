@@ -1,8 +1,4 @@
-use ctap_hid_fido2::Cfg;
-use ctap_hid_fido2::{
-    FidoKeyHid,
-    fidokey::get_info::InfoOption,
-};
+use ctap_hid_fido2::{fidokey::get_info::InfoOption, Cfg, FidoKeyHidFactory};
 
 fn main() {
     println!("----- get-info start -----");
@@ -15,7 +11,7 @@ fn main() {
             info.vid, info.pid, info.info
         );
     }
-     
+
     println!("get_fidokey_devices()");
     let devs = ctap_hid_fido2::get_fidokey_devices();
     for info in devs {
@@ -24,20 +20,21 @@ fn main() {
             "- vid=0x{:04x} , pid=0x{:04x} , info={:?}",
             info.vid, info.pid, info.info
         );
-        let dev = FidoKeyHid::new(&vec![info.param], &Cfg::init()).unwrap();
+
+        let dev = FidoKeyHidFactory::create_by_params(&vec![info.param], &Cfg::init()).unwrap();
 
         println!("get_info()");
         match dev.get_info() {
             Ok(info) => println!("{}", info),
             Err(e) => println!("error: {:?}", e),
         }
-    
+
         println!("get_pin_retries()");
         match dev.get_pin_retries() {
             Ok(info) => println!("{}", info),
             Err(e) => println!("error: {:?}", e),
         }
-    
+
         println!("get_info_u2f()");
         match dev.get_info_u2f() {
             Ok(info) => println!("{}", info),
@@ -50,7 +47,6 @@ fn main() {
             Err(e) => println!("- error: {:?}", e),
         }
     }
-     
-    //let dev = ctap_hid_fido2::get_device_from_tap(&cfg).unwrap();
+
     println!("----- get-info end -----");
 }

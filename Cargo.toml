@@ -56,12 +56,6 @@ name = "ctapcli"
 name = "get-info"
 
 [[example]]
-name = "nitro"
-
-[[example]]
-name = "nitro-update"
-
-[[example]]
 name = "test-with-pin-non-rk"
 
 [[example]]

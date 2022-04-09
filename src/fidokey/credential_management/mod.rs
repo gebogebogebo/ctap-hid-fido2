@@ -8,15 +8,11 @@ use crate::public_key_credential_user_entity::PublicKeyCredentialUserEntity;
 
 use crate::util;
 
-use super::{
-    FidoKeyHid,
-    pin::Permission,
-};
+use super::{pin::Permission, FidoKeyHid};
 
 use anyhow::{Error, Result};
 
 impl FidoKeyHid {
-
     /// CredentialManagement - getCredsMetadata (CTAP 2.1-PRE)
     pub fn credential_management_get_creds_metadata(
         &self,
@@ -137,7 +133,7 @@ impl FidoKeyHid {
         pkcd: Option<PublicKeyCredentialDescriptor>,
         pkcue: Option<PublicKeyCredentialUserEntity>,
     ) -> Result<credential_management_params::CredentialManagementData> {
-        let cid = ctaphid::ctaphid_init(&self).map_err(Error::msg)?;
+        let cid = ctaphid::ctaphid_init(self).map_err(Error::msg)?;
 
         // pin token
         let pin_token = {
@@ -145,11 +141,7 @@ impl FidoKeyHid {
                 if self.use_pre_credential_management {
                     Some(self.get_pin_token(&cid, pin)?)
                 } else {
-                    Some(self.get_pinuv_auth_token_with_permission(
-                        &cid,
-                        pin,
-                        Permission::Cm,
-                    )?)
+                    Some(self.get_pinuv_auth_token_with_permission(&cid, pin, Permission::Cm)?)
                 }
             } else {
                 None
@@ -169,12 +161,12 @@ impl FidoKeyHid {
             println!("send(cbor) = {}", util::to_hex_str(&send_payload));
         }
 
-        let response_cbor = ctaphid::ctaphid_cbor(&self, &cid, &send_payload).map_err(Error::msg)?;
+        let response_cbor = ctaphid::ctaphid_cbor(self, &cid, &send_payload).map_err(Error::msg)?;
 
         if self.enable_log {
             println!("response(cbor) = {}", util::to_hex_str(&response_cbor));
         }
 
-        Ok(credential_management_response::parse_cbor(&response_cbor).map_err(Error::msg)?)
+        credential_management_response::parse_cbor(&response_cbor).map_err(Error::msg)
     }
 }

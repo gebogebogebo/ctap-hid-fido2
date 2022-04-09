@@ -1,4 +1,4 @@
-use crate::cose::CoseKey;
+use crate::encrypt::cose::CoseKey;
 use crate::util;
 use serde_cbor::Value;
 

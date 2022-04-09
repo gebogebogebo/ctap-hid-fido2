@@ -1,6 +1,6 @@
 extern crate clap;
 
-use ctap_hid_fido2::{fidokey::get_info::InfoParam, FidoKeyHid, HidParam};
+use ctap_hid_fido2::{fidokey::get_info::InfoParam, FidoKeyHid, FidoKeyHidFactory};
 
 use clap::{App, Arg};
 use ctap_hid_fido2::public_key_credential_descriptor::PublicKeyCredentialDescriptor;
@@ -80,16 +80,10 @@ fn update(device: &FidoKeyHid, pin: Option<&str>, credential_id: Option<&str>) {
 
 fn main() {
     env_logger::init();
-    let key_auto = true;
     let mut cfg = Cfg::init();
     if log_enabled!(Level::Debug) {
         cfg.enable_log = true;
     }
-    cfg.hid_params = if key_auto {
-        HidParam::auto()
-    } else {
-        HidParam::get()
-    };
 
     let app = App::new("credential-management")
         .version("0.1.0")
@@ -143,15 +137,13 @@ fn main() {
     // Parse arguments
     let matches = app.get_matches();
 
-    let mut devices = ctap_hid_fido2::get_fidokey_devices();
-
-    if devices.is_empty() {
-        println!("Could not find any devices to test resident key creation with pin on!");
-        return;
-    }
-
-    let device_descriptor = devices.pop().unwrap();
-    let device = FidoKeyHid::new(&vec![device_descriptor.param], &cfg).unwrap();
+    let device = match FidoKeyHidFactory::create(&cfg) {
+        Ok(d) => d,
+        Err(e) => {
+            println!("error: {:?}", e);
+            return;
+        }
+    };
 
     match device.enable_info_param(&InfoParam::VersionsFido21Pre) {
         Ok(result) => println!("Enable CTAP 2.1 PRE = {:?}", result),

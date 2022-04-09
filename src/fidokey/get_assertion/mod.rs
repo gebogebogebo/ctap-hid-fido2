@@ -6,8 +6,8 @@ pub mod get_next_assertion_command;
 use get_assertion_params::{Assertion, Extension as Gext, GetAssertionArgs};
 
 use crate::ctaphid;
-use crate::enc_hmac_sha_256;
-use crate::hmac::HmacExt;
+use crate::encrypt::enc_hmac_sha_256;
+use crate::hmac_ext::HmacExt;
 use crate::util::should_uv;
 use crate::FidoKeyHid;
 
@@ -64,14 +64,14 @@ impl FidoKeyHid {
         challenge: &[u8],
         pin: Option<&str>,
     ) -> Result<Vec<Assertion>> {
-        let dmy: Vec<u8> = vec![];
-        self.get_assertion_internal(rpid, challenge, &[dmy], pin, true, should_uv(pin), None)
+        let dmy: Vec<Vec<u8>> = vec![];
+        self.get_assertion_internal(rpid, challenge, &dmy, pin, true, should_uv(pin), None)
     }
 
     /// Create a new assertion manually specifying the args using GetAssertionArgs
     pub fn get_assertion_with_args(&self, args: &GetAssertionArgs) -> Result<Vec<Assertion>> {
         let dummy_credentials;
-        let credential_ids = if args.credential_ids.len() > 0 {
+        let credential_ids = if !args.credential_ids.is_empty() {
             &args.credential_ids
         } else {
             dummy_credentials = vec![];
@@ -108,9 +108,9 @@ impl FidoKeyHid {
         extensions: Option<&Vec<Gext>>,
     ) -> Result<Vec<Assertion>> {
         // init
-        let cid = ctaphid::ctaphid_init(&self).map_err(Error::msg)?;
+        let cid = ctaphid::ctaphid_init(self).map_err(Error::msg)?;
 
-        let hmac_ext = create_hmacext(&self, &cid, extensions)?;
+        let hmac_ext = create_hmacext(self, &cid, extensions)?;
 
         // pin token
         let pin_token = {
@@ -141,8 +141,7 @@ impl FidoKeyHid {
         };
 
         // send & response
-        let response_cbor =
-            ctaphid::ctaphid_cbor(&self, &cid, &send_payload).map_err(Error::msg)?;
+        let response_cbor = ctaphid::ctaphid_cbor(self, &cid, &send_payload).map_err(Error::msg)?;
 
         let ass = get_assertion_response::parse_cbor(
             &response_cbor,
@@ -152,7 +151,7 @@ impl FidoKeyHid {
 
         let mut asss = vec![ass];
         for _ in 0..(asss[0].number_of_credentials - 1) {
-            let ass = get_next_assertion(&self, &cid).map_err(Error::msg)?;
+            let ass = get_next_assertion(self, &cid).map_err(Error::msg)?;
             asss.push(ass);
         }
 
@@ -172,7 +171,7 @@ fn create_hmacext(
     extensions: Option<&Vec<Gext>>,
 ) -> Result<Option<HmacExt>> {
     if let Some(extensions) = extensions {
-        for ext in extensions {
+        if let Some(ext) = extensions.into_iter().next() {
             match ext {
                 Gext::HmacSecret(n) => {
                     let mut hmac_ext = HmacExt::default();

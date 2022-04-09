@@ -1,8 +1,8 @@
 use crate::public_key::PublicKey;
 use crate::util;
 
-use super::CredentialProtectionPolicy;
 use super::make_credential_params::{Attestation, Extension};
+use super::CredentialProtectionPolicy;
 
 use byteorder::{BigEndian, ReadBytesExt};
 use serde_cbor::Value;

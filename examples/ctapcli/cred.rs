@@ -1,18 +1,14 @@
 use anyhow::{anyhow, Result};
-use ctap_hid_fido2::fidokey::{
-    FidoKeyHid,
-    get_info::{
-        InfoOption,
-    },
-};
+use ctap_hid_fido2::fidokey::{get_info::InfoOption, FidoKeyHid};
 
-use crate::str_buf::StrBuf;
 use crate::common;
+use crate::str_buf::StrBuf;
 
 pub fn cred(device: &FidoKeyHid, matches: &clap::ArgMatches) -> Result<()> {
     // check
     if device.enable_info_option(&InfoOption::CredMgmt)?.is_none()
-        && device.enable_info_option(&InfoOption::CredentialMgmtPreview)?
+        && device
+            .enable_info_option(&InfoOption::CredentialMgmtPreview)?
             .is_none()
     {
         return Err(anyhow!(
@@ -56,10 +52,7 @@ pub fn cred(device: &FidoKeyHid, matches: &clap::ArgMatches) -> Result<()> {
     for r in rps {
         println!("## rps\n{}", r);
 
-        let creds = device.credential_management_enumerate_credentials(
-            Some(&pin),
-            &r.rpid_hash,
-        )?;
+        let creds = device.credential_management_enumerate_credentials(Some(&pin), &r.rpid_hash)?;
 
         for c in creds {
             println!("### credentials\n{}", c);
@@ -70,11 +63,8 @@ pub fn cred(device: &FidoKeyHid, matches: &clap::ArgMatches) -> Result<()> {
 }
 
 fn metadata(device: &FidoKeyHid, pin: &str) {
-    match device.credential_management_get_creds_metadata(
-        Some(pin),
-    ) {
+    match device.credential_management_get_creds_metadata(Some(pin)) {
         Ok(result) => println!("{}", result),
         Err(e) => println!("- error: {:?}", e),
     }
 }
-

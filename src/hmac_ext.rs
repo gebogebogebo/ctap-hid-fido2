@@ -1,14 +1,12 @@
 use crate::ctaphid;
-use crate::enc_aes256_cbc;
-use crate::enc_hmac_sha_256;
-use crate::ss::SharedSecret;
+use crate::encrypt::enc_aes256_cbc;
+use crate::encrypt::enc_hmac_sha_256;
+use crate::encrypt::shared_secret::SharedSecret;
 use crate::FidoKeyHid;
 use anyhow::{Error, Result};
 
 use crate::fidokey::pin::{
-    create_payload,
-    SubCommand as PinCmd,
-    parse_cbor_client_pin_get_keyagreement,
+    create_payload, parse_cbor_client_pin_get_keyagreement, SubCommand as PinCmd,
 };
 
 #[derive(Debug, Default, Clone)]
@@ -33,8 +31,8 @@ impl HmacExt {
         let response_cbor =
             ctaphid::ctaphid_cbor(device, cid, &send_payload).map_err(Error::msg)?;
 
-        let key_agreement = parse_cbor_client_pin_get_keyagreement(&response_cbor)
-                .map_err(Error::msg)?;
+        let key_agreement =
+            parse_cbor_client_pin_get_keyagreement(&response_cbor).map_err(Error::msg)?;
 
         //println!("key_agreement");
         //println!("{}", self.key_agreement);

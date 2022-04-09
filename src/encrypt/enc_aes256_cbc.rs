@@ -5,6 +5,7 @@ use block_modes::{BlockMode, Cbc};
 // AES256-CBC(key,IV=0,message)
 type Aes256Cbc = Cbc<Aes256, NoPadding>;
 
+#[allow(dead_code)]
 pub fn encrypt_message_str(key: &[u8; 32], message: &str) -> Vec<u8> {
     encrypt_message(key, message.as_bytes())
 }
@@ -21,6 +22,7 @@ pub fn encrypt_message(key: &[u8; 32], message: &[u8]) -> Vec<u8> {
     ciphertext.to_vec()
 }
 
+#[allow(dead_code)]
 pub fn decrypt_message_str(key: &[u8; 32], message: &[u8]) -> String {
     let bytes = decrypt_message(key, message);
     String::from_utf8(bytes.to_vec()).unwrap()

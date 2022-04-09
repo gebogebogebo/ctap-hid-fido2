@@ -27,14 +27,6 @@ pub fn print_typename<T>(_: T) {
 // pub crate
 //
 
-/*
-// for debug
-#[allow(dead_code)]
-pub(crate) fn is_debug() -> bool {
-    false
-}
-*/
-
 #[allow(dead_code)]
 pub(crate) fn debugp(title: &str, bytes: &[u8]) {
     println!("{}", StrBuf::bufh(title, bytes));
@@ -187,7 +179,7 @@ pub(crate) fn create_clientdata_hash(challenge: Vec<u8>) -> Vec<u8> {
 pub(crate) fn convert_to_publickey_pem(public_key_der: &[u8]) -> String {
     let mut tmp = vec![];
 
-    if public_key_der.len() == 0 {
+    if public_key_der.is_empty() {
         return "".to_string();
     }
 

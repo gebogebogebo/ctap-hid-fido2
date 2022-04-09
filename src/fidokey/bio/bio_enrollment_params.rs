@@ -3,7 +3,6 @@ use crate::str_buf::StrBuf;
 use crate::util;
 use std::fmt;
 
-
 pub struct EnrollStatus1 {
     pub cid: [u8; 4],
     pub pin_token: Option<PinToken>,
