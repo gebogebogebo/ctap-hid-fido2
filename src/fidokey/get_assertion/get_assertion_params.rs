@@ -91,11 +91,13 @@ pub struct GetAssertionArgsBuilder<'a> {
 }
 impl<'a> GetAssertionArgsBuilder<'a> {
     pub fn new(rpid: &str, challenge: &[u8]) -> GetAssertionArgsBuilder<'a> {
-        let mut result = GetAssertionArgsBuilder::default();
-        result.uv = Some(true);
-        result.rpid = String::from(rpid);
-        result.challenge = challenge.to_vec();
-        result
+
+        GetAssertionArgsBuilder::<'_> {
+            uv: Some(true),
+            rpid: String::from(rpid),
+            challenge: challenge.to_vec(),
+            ..Default::default()
+        }
     }
 
     pub fn pin(mut self, pin: &'a str) -> GetAssertionArgsBuilder<'a> {

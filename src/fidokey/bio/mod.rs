@@ -238,7 +238,7 @@ impl FidoKeyHid {
 
     fn bio_enrollment_init(&self, pin: Option<&str>) -> Result<([u8; 4], Option<PinToken>)> {
         // init
-        let cid = ctaphid::ctaphid_init(&self).map_err(Error::msg)?;
+        let cid = ctaphid::ctaphid_init(self).map_err(Error::msg)?;
 
         // pin token
         let pin_token = {

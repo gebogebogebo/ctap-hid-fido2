@@ -133,7 +133,7 @@ impl FidoKeyHid {
         pkcd: Option<PublicKeyCredentialDescriptor>,
         pkcue: Option<PublicKeyCredentialUserEntity>,
     ) -> Result<credential_management_params::CredentialManagementData> {
-        let cid = ctaphid::ctaphid_init(&self).map_err(Error::msg)?;
+        let cid = ctaphid::ctaphid_init(self).map_err(Error::msg)?;
 
         // pin token
         let pin_token = {
@@ -162,12 +162,12 @@ impl FidoKeyHid {
         }
 
         let response_cbor =
-            ctaphid::ctaphid_cbor(&self, &cid, &send_payload).map_err(Error::msg)?;
+            ctaphid::ctaphid_cbor(self, &cid, &send_payload).map_err(Error::msg)?;
 
         if self.enable_log {
             println!("response(cbor) = {}", util::to_hex_str(&response_cbor));
         }
 
-        Ok(credential_management_response::parse_cbor(&response_cbor).map_err(Error::msg)?)
+        credential_management_response::parse_cbor(&response_cbor).map_err(Error::msg)
     }
 }

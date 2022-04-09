@@ -179,7 +179,7 @@ pub(crate) fn create_clientdata_hash(challenge: Vec<u8>) -> Vec<u8> {
 pub(crate) fn convert_to_publickey_pem(public_key_der: &[u8]) -> String {
     let mut tmp = vec![];
 
-    if public_key_der.len() == 0 {
+    if public_key_der.is_empty() {
         return "".to_string();
     }
 
