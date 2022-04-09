@@ -8,7 +8,6 @@
 pub mod auth_data;
 mod ctapdef;
 mod ctaphid;
-mod ctapihd_nitro;
 mod encrypt {
     pub mod cose;
     pub mod enc_aes256_cbc;
@@ -17,7 +16,6 @@ mod encrypt {
     pub mod shared_secret;
 }
 mod hmac_ext;
-pub mod nitrokey;
 mod pintoken;
 pub mod public_key;
 pub mod public_key_credential_descriptor;

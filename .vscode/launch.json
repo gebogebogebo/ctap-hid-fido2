@@ -91,40 +91,6 @@
         {
             "type": "lldb",
             "request": "launch",
-            "name": "nitro: Debug Example",
-            "cargo": {
-                "args": [
-                    "build",
-                    "--example=nitro"
-                ],
-                "filter": {
-                    "name": "nitro",
-                    "kind": "example"
-                }
-            },
-            "args": [],
-            "cwd": "${workspaceFolder}"
-        },
-        {
-            "type": "lldb",
-            "request": "launch",
-            "name": "nitro-update: Debug Example",
-            "cargo": {
-                "args": [
-                    "build",
-                    "--example=nitro-update"
-                ],
-                "filter": {
-                    "name": "nitro-update",
-                    "kind": "example"
-                }
-            },
-            "args": [],
-            "cwd": "${workspaceFolder}"
-        },
-        {
-            "type": "lldb",
-            "request": "launch",
             "name": "test-with-pin-non-rk: Debug Example",
             "cargo": {
                 "args": [

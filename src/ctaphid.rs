@@ -373,15 +373,6 @@ pub fn ctaphid_msg(device: &FidoKeyHid, cid: &[u8], payload: &[u8]) -> Result<Ve
     ctaphid_cbormsg(device, cid, CTAPHID_MSG, payload)
 }
 
-pub fn ctaphid_xxx(
-    device: &FidoKeyHid,
-    cid: &[u8],
-    xxx: u8,
-    payload: &[u8],
-) -> Result<Vec<u8>, String> {
-    ctaphid_cbormsg(device, cid, xxx, payload)
-}
-
 pub fn send_apdu(
     device: &FidoKeyHid,
     cid: &[u8],
