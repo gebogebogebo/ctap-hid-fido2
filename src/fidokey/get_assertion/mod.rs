@@ -141,8 +141,7 @@ impl FidoKeyHid {
         };
 
         // send & response
-        let response_cbor =
-            ctaphid::ctaphid_cbor(self, &cid, &send_payload).map_err(Error::msg)?;
+        let response_cbor = ctaphid::ctaphid_cbor(self, &cid, &send_payload).map_err(Error::msg)?;
 
         let ass = get_assertion_response::parse_cbor(
             &response_cbor,
@@ -172,7 +171,7 @@ fn create_hmacext(
     extensions: Option<&Vec<Gext>>,
 ) -> Result<Option<HmacExt>> {
     if let Some(extensions) = extensions {
-        for ext in extensions {
+        if let Some(ext) = extensions.into_iter().next() {
             match ext {
                 Gext::HmacSecret(n) => {
                     let mut hmac_ext = HmacExt::default();

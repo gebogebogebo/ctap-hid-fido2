@@ -19,8 +19,7 @@ impl FidoKeyHid {
         let send_payload =
             client_pin_command::create_payload(PinCmd::GetRetries).map_err(Error::msg)?;
 
-        let response_cbor =
-            ctaphid::ctaphid_cbor(self, &cid, &send_payload).map_err(Error::msg)?;
+        let response_cbor = ctaphid::ctaphid_cbor(self, &cid, &send_payload).map_err(Error::msg)?;
 
         let pin = client_pin_response::parse_cbor_client_pin_get_retries(&response_cbor)
             .map_err(Error::msg)?;
@@ -35,8 +34,7 @@ impl FidoKeyHid {
         let send_payload =
             client_pin_command::create_payload(PinCmd::GetUVRetries).map_err(Error::msg)?;
 
-        let response_cbor =
-            ctaphid::ctaphid_cbor(self, &cid, &send_payload).map_err(Error::msg)?;
+        let response_cbor = ctaphid::ctaphid_cbor(self, &cid, &send_payload).map_err(Error::msg)?;
 
         let pin = client_pin_response::parse_cbor_client_pin_get_retries(&response_cbor)
             .map_err(Error::msg)?;

@@ -30,7 +30,7 @@ impl Flags {
             ret |= 0x04;
         }
         if self.attested_credential_data_included {
-            ret |=  0x40;
+            ret |= 0x40;
         }
         if self.extension_data_included {
             ret |= 0x80;

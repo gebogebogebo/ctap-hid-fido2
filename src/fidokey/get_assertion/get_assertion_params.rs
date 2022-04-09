@@ -91,7 +91,6 @@ pub struct GetAssertionArgsBuilder<'a> {
 }
 impl<'a> GetAssertionArgsBuilder<'a> {
     pub fn new(rpid: &str, challenge: &[u8]) -> GetAssertionArgsBuilder<'a> {
-
         GetAssertionArgsBuilder::<'_> {
             uv: Some(true),
             rpid: String::from(rpid),
