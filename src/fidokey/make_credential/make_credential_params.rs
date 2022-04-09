@@ -121,11 +121,12 @@ pub struct MakeCredentialArgsBuilder<'a> {
 
 impl<'a> MakeCredentialArgsBuilder<'a> {
     pub fn new(rpid: &str, challenge: &[u8]) -> MakeCredentialArgsBuilder<'a> {
-        let mut result = MakeCredentialArgsBuilder::default();
-        result.uv = Some(true);
-        result.rpid = String::from(rpid);
-        result.challenge = challenge.to_vec();
-        result
+        MakeCredentialArgsBuilder::<'_> {
+            uv: Some(true),
+            rpid: String::from(rpid),
+            challenge: challenge.to_vec(),
+            ..Default::default()
+        }
     }
 
     pub fn pin(mut self, pin: &'a str) -> MakeCredentialArgsBuilder<'a> {

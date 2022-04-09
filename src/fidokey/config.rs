@@ -33,10 +33,10 @@ fn create_payload_enable_enterprise_attestation() -> Vec<u8> {
 impl FidoKeyHid {
     /// Get Config (CTAP 2.1)
     pub fn config(&self) -> Result<String> {
-        let cid = ctaphid::ctaphid_init(&self).map_err(Error::msg)?;
+        let cid = ctaphid::ctaphid_init(self).map_err(Error::msg)?;
         let send_payload = create_payload_enable_enterprise_attestation();
         let _response_cbor =
-            ctaphid::ctaphid_cbor(&self, &cid, &send_payload).map_err(Error::msg)?;
+            ctaphid::ctaphid_cbor(self, &cid, &send_payload).map_err(Error::msg)?;
         Ok("".to_string())
     }
 }

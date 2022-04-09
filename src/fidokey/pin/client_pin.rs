@@ -17,7 +17,7 @@ impl FidoKeyHid {
     pub fn get_authenticator_key_agreement(&self, cid: &[u8]) -> Result<cose::CoseKey> {
         let send_payload =
             client_pin_command::create_payload(PinCmd::GetKeyAgreement).map_err(Error::msg)?;
-        let response_cbor = ctaphid::ctaphid_cbor(self, &cid, &send_payload).map_err(Error::msg)?;
+        let response_cbor = ctaphid::ctaphid_cbor(self, cid, &send_payload).map_err(Error::msg)?;
         let authenticator_key_agreement =
             client_pin_response::parse_cbor_client_pin_get_keyagreement(&response_cbor)
                 .map_err(Error::msg)?;
@@ -38,7 +38,7 @@ impl FidoKeyHid {
             );
 
             let response_cbor =
-                ctaphid::ctaphid_cbor(&self, cid, &send_payload).map_err(Error::msg)?;
+                ctaphid::ctaphid_cbor(self, cid, &send_payload).map_err(Error::msg)?;
 
             // get pin_token (enc)
             let mut pin_token_enc =
@@ -63,7 +63,7 @@ impl FidoKeyHid {
         permission: Permission,
     ) -> Result<PinToken> {
         if !pin.is_empty() {
-            let authenticator_key_agreement = self.get_authenticator_key_agreement(&cid)?;
+            let authenticator_key_agreement = self.get_authenticator_key_agreement(cid)?;
 
             // Get pinHashEnc
             // - shared_secret.public_key -> platform KeyAgreement
@@ -79,7 +79,7 @@ impl FidoKeyHid {
                     permission,
                 );
             let response_cbor =
-                ctaphid::ctaphid_cbor(&self, &cid, &send_payload).map_err(Error::msg)?;
+                ctaphid::ctaphid_cbor(self, cid, &send_payload).map_err(Error::msg)?;
 
             // get pin_token (enc)
             let mut pin_token_enc =
@@ -104,7 +104,7 @@ impl FidoKeyHid {
 
         let send_payload =
             client_pin_command::create_payload(PinCmd::GetKeyAgreement).map_err(Error::msg)?;
-        let response_cbor = ctaphid::ctaphid_cbor(&self, cid, &send_payload).map_err(Error::msg)?;
+        let response_cbor = ctaphid::ctaphid_cbor(self, cid, &send_payload).map_err(Error::msg)?;
 
         let key_agreement =
             client_pin_response::parse_cbor_client_pin_get_keyagreement(&response_cbor)
@@ -122,7 +122,7 @@ impl FidoKeyHid {
             &new_pin_enc,
         );
 
-        ctaphid::ctaphid_cbor(&self, cid, &send_payload).map_err(Error::msg)?;
+        ctaphid::ctaphid_cbor(self, cid, &send_payload).map_err(Error::msg)?;
 
         Ok(())
     }

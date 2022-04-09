@@ -135,7 +135,7 @@ impl FidoKeyHid {
         key_type: Option<CredentialSupportedKeyType>,
     ) -> Result<make_credential_params::Attestation> {
         // init
-        let cid = ctaphid::ctaphid_init(&self).map_err(Error::msg)?;
+        let cid = ctaphid::ctaphid_init(self).map_err(Error::msg)?;
 
         let user_id = {
             if let Some(rkp) = rkparam {
