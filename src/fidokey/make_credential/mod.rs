@@ -33,6 +33,7 @@ impl FidoKeyHid {
             false,
             None,
             should_uv(pin),
+            &[],
             None,
             None,
         )
@@ -54,6 +55,7 @@ impl FidoKeyHid {
             false,
             None,
             should_uv(pin),
+            &[],
             None,
             key_type,
         )
@@ -73,6 +75,7 @@ impl FidoKeyHid {
             false,
             None,
             should_uv(pin),
+            &[],
             extensions,
             None,
         )
@@ -93,6 +96,7 @@ impl FidoKeyHid {
             true,
             Some(rkparam),
             should_uv(pin),
+            &[],
             None,
             None,
         )
@@ -118,6 +122,7 @@ impl FidoKeyHid {
             rk,
             rk_param,
             args.uv,
+            &args.exclude_list,
             extensions,
             args.key_type,
         )
@@ -131,6 +136,7 @@ impl FidoKeyHid {
         rk: bool,
         rkparam: Option<&PublicKeyCredentialUserEntity>,
         uv: Option<bool>,
+        exclude_list: &[Vec<u8>],
         extensions: Option<&Vec<Mext>>,
         key_type: Option<CredentialSupportedKeyType>,
     ) -> Result<make_credential_params::Attestation> {
@@ -151,6 +157,7 @@ impl FidoKeyHid {
                 make_credential_command::Params::new(rpid, challenge.to_vec(), user_id);
             params.option_rk = rk;
             params.option_uv = uv;
+            params.exclude_list = exclude_list.to_vec();
             params.key_type = key_type.unwrap_or(CredentialSupportedKeyType::Ecdsa256);
 
             if let Some(rkp) = rkparam {

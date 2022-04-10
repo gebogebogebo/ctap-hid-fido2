@@ -99,6 +99,7 @@ pub struct MakeCredentialArgs<'a> {
     pub pin: Option<&'a str>,
     pub key_type: Option<CredentialSupportedKeyType>,
     pub uv: Option<bool>,
+    pub exclude_list: Vec<Vec<u8>>,
     pub rkparam: Option<PublicKeyCredentialUserEntity>,
     pub extensions: Option<Vec<Mext>>,
 }
@@ -115,6 +116,7 @@ pub struct MakeCredentialArgsBuilder<'a> {
     pin: Option<&'a str>,
     key_type: Option<CredentialSupportedKeyType>,
     uv: Option<bool>,
+    exclude_list: Vec<Vec<u8>>,
     rkparam: Option<PublicKeyCredentialUserEntity>,
     extensions: Option<Vec<Mext>>,
 }
@@ -139,6 +141,13 @@ impl<'a> MakeCredentialArgsBuilder<'a> {
     pub fn without_pin_and_uv(mut self) -> MakeCredentialArgsBuilder<'a> {
         self.pin = None;
         self.uv = None;
+        self
+    }
+
+    /// Adds an credential_id to the excludeList, preventing further credentials being created on
+    /// the same authenticator
+    pub fn exclude_authenticator(mut self, credential_id: &[u8]) -> MakeCredentialArgsBuilder<'a> {
+        self.exclude_list.push(credential_id.to_vec());
         self
     }
 
@@ -170,6 +179,7 @@ impl<'a> MakeCredentialArgsBuilder<'a> {
             pin: self.pin,
             key_type: self.key_type,
             uv: self.uv,
+            exclude_list: self.exclude_list,
             rkparam: self.rkparam,
             extensions: self.extensions,
         }
