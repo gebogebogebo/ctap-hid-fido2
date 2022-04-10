@@ -150,7 +150,7 @@ for dev in devs {
 
 ## Examples
 
-- [Retrieve Authenticator information](README_Get_Info.md)
+- [Get Authenticator information Examples](README_Get_Info.md)
 - [Register and Authenticate Examples](README_Register_and_Authenticate.md)
 - [Credential management (CTAP 2.1)](README_Credential_management.md)
 - [Biometric management (CTAP 2.1)](README_Biometric_management.md)

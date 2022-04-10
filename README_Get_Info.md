@@ -1,19 +1,17 @@
-# Get Info
+# Get Authenticator information Examples
 
 ### get_info()
 
 [6.4. authenticatorGetInfo (0x04)](https://fidoalliance.org/specs/fido-v2.1-ps-20210615/fido-client-to-authenticator-protocol-v2.1-ps-20210615.html#authenticatorGetInfo)
 
 ```rust
-use ctap_hid_fido2;
-use ctap_hid_fido2::Cfg;
+use ctap_hid_fido2::{Cfg, FidoKeyHidFactory};
 
 fn main() {
     println!("get_info()");
-    match ctap_hid_fido2::get_info(&Cfg::init()) {
-        Ok(info) => println!("{}", info),
-        Err(e) => println!("error: {:?}", e),
-    }
+    let device = FidoKeyHidFactory::create(&Cfg::init()).unwrap();
+    let info = device.get_info().unwrap();
+    println!("{}", info);
 }
 ```
 
@@ -21,34 +19,39 @@ fn main() {
 
 ```sh
 get_info()
-- versions                      = ["U2F_V2", "FIDO_2_0", "FIDO_2_1_PRE"]
-- extensions                    = ["credProtect", "hmac-secret"]
-- aaguid(16)                    = EE882879721C491397753DFCCE97072A
-- options                       = [("rk", true), ("up", true), ("plat", false), ("clientPin", true), ("credentialMgmtPreview", true)]
-- max_msg_size                  = 1200
-- pin_uv_auth_protocols         = [1]
-- max_credential_count_in_list  = 8
-- max_credential_id_length      = 128
-- transports                    = ["usb"]
-- algorithms                    = [("alg", "-7"), ("type", "public-key"), ("alg", "-8"), ("type", "public-key")]
+- versions                           = ["U2F_V2", "FIDO_2_0", "FIDO_2_1_PRE", "FIDO_2_1"]
+- extensions                         = ["credProtect", "hmac-secret", "largeBlobKey", "credBlob", "minPinLength"]
+- aaguid(16)                         = D8522D9F575B486688A9BA99FA02F35B
+- options                            = [("rk", true), ("up", true), ("uv", true), ("plat", false), ("uvToken", true), ("alwaysUv", true), ("credMgmt", true), ("authnrCfg", true), ("bioEnroll", true), ("clientPin", true), ("largeBlobs", true), ("pinUvAuthToken", true), ("setMinPINLength", true), ("makeCredUvNotRqd", false), ("credentialMgmtPreview", true), ("userVerificationMgmtPreview", true)]
+- max_msg_size                       = 1200
+- pin_uv_auth_protocols              = [2, 1]
+- max_credential_count_in_list       = 8
+- max_credential_id_length           = 128
+- transports                         = ["usb"]
+- algorithms                         = [("alg", "-7"), ("type", "public-key"), ("alg", "-8"), ("type", "public-key")]
+- max_serialized_large_blob_array    = 1024
+- force_pin_change                   = false
+- min_pin_length                     = 4
+- firmware_version                   = 328966
+- max_cred_blob_length               = 32
+- max_rpids_for_set_min_pin_length   = 1
+- preferred_platform_uv_attempts     = 3
+- uv_modality                        = 2
+- remaining_discoverable_credentials = 22
 ```
 
 
 
 ### get_info_u2f()
 
-Created to test [CTAPHID_MSG](https://fidoalliance.org/specs/fido-v2.1-ps-20210615/fido-client-to-authenticator-protocol-v2.1-ps-20210615.html#usb-hid-msg).
-
 ```rust
-use ctap_hid_fido2;
-use ctap_hid_fido2::Cfg;
+use ctap_hid_fido2::{Cfg, FidoKeyHidFactory};
 
 fn main() {
     println!("get_info_u2f()");
-    match ctap_hid_fido2::get_info_u2f(&Cfg::init()) {
-        Ok(result) => println!("{:?}", result),
-        Err(e) => println!("error: {:?}", e),
-    }
+    let device = FidoKeyHidFactory::create(&Cfg::init()).unwrap();
+    let info = device.get_info_u2f().unwrap();
+    println!("{}", info);
 }
 ```
 
@@ -68,15 +71,13 @@ get_info_u2f()
 pinRetries counter represents the number of attempts left before PIN is disabled.
 
 ```Rust
-use ctap_hid_fido2;
-use ctap_hid_fido2::Cfg;
+use ctap_hid_fido2::{Cfg, FidoKeyHidFactory};
 
 fn main() {
     println!("get_pin_retries()");
-    match ctap_hid_fido2::get_pin_retries(&Cfg::init()) {
-        Ok(retry) => println!("{}", retry),
-        Err(e) => println!("error: {:?}", e),
-    };
+    let device = FidoKeyHidFactory::create(&Cfg::init()).unwrap();
+    let info = device.get_pin_retries().unwrap();
+    println!("{}", info);
 }
 ```
 
@@ -98,16 +99,21 @@ get_pin_retries()
 UV retries count is the number of built-in UV attempts remaining before built-in UV is disabled on the device.
 
 ```rust
-use ctap_hid_fido2;
-use ctap_hid_fido2::Cfg;
+use ctap_hid_fido2::{Cfg, FidoKeyHidFactory};
 
 fn main() {
     println!("get_uv_retries()");
-    match ctap_hid_fido2::get_uv_retries(&Cfg::init()) {
-        Ok(retry) => println!("{}", retry),
-        Err(e) => println!("error: {:?}", e),
-    };
+    let device = FidoKeyHidFactory::create(&Cfg::init()).unwrap();
+    let info = device.get_uv_retries().unwrap();
+    println!("{}", info);
 }
+```
+
+**console**
+
+```sh
+get_uv_retries()
+3
 ```
 
 
@@ -117,10 +123,21 @@ fn main() {
 Same as get_info(), but checks if it has a specific feature/version.<br>It is specified by the enum of InfoParam.
 
 ```rust
-match ctap_hid_fido2::enable_info_param(&Cfg::init(),InfoParam::VersionsFIDO21PRE) {
-    Ok(result) => println!("FIDO 2.1 PRE = {:?}", result),
-    Err(e) => println!("- error: {:?}", e),
-};
+use ctap_hid_fido2::{Cfg, FidoKeyHidFactory, fidokey::get_info::InfoParam};
+
+fn main() {
+    println!("enable_info_param()");
+    let device = FidoKeyHidFactory::create(&Cfg::init()).unwrap();
+    let info = device.enable_info_param(&InfoParam::VersionsFido21Pre).unwrap();
+    println!("VersionsFido21Pre = {}", info);
+}
+```
+
+**console**
+
+```sh
+enable_info_param()
+VersionsFido21Pre = true
 ```
 
 
@@ -135,26 +152,38 @@ Same as get_info(), but checks if it has a specific option.<br>It is specified b
   - `None` : option is absent
 
 ```rust
-match ctap_hid_fido2::enable_info_option(&Cfg::init(),InfoOption::BioEnroll) {
-    Ok(result) => println!("BioEnroll = {:?}", result),
-    Err(e) => println!("- error: {:?}", e),
-};
+use ctap_hid_fido2::{Cfg, FidoKeyHidFactory, fidokey::get_info::InfoOption};
+
+fn main() {
+    println!("enable_info_option()");
+    let device = FidoKeyHidFactory::create(&Cfg::init()).unwrap();
+    let info = device.enable_info_option(&InfoOption::BioEnroll).unwrap();
+    println!("BioEnroll = {:?}", info);
+}
+```
+
+**console**
+
+```sh
+enable_info_option()
+BioEnroll = Some(true)
 ```
 
 
 
 ### wink()
 
+[11.2.9.2.1. CTAPHID_WINK (0x08)](https://fidoalliance.org/specs/fido-v2.1-ps-20210615/fido-client-to-authenticator-protocol-v2.1-ps-20210615.html#usb-hid-wink)
+
 Just blink the LED on the FIDO key.
 
 ```Rust
-use ctap_hid_fido2;
-use ctap_hid_fido2::Cfg;
+use ctap_hid_fido2::{Cfg, FidoKeyHidFactory};
 
 fn main() {
-    if let Err(msg) = ctap_hid_fido2::wink(&Cfg::init()){
-        println!("error: {:?}", msg);
-    }
+    println!("wink()");
+    let device = FidoKeyHidFactory::create(&Cfg::init()).unwrap();
+    device.wink().unwrap();
 }
 ```
 
