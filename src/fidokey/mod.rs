@@ -80,7 +80,7 @@ fn get_path(api: &hidapi::HidApi, param: &crate::HidParam) -> Option<CString> {
         }
         HidParam::VidPid { vid, pid } => {
             let devices = api.device_list();
-            for x in devices.cloned() {
+            for x in devices {
                 if x.vendor_id() == *vid && x.product_id() == *pid {
                     return Some(x.path().to_owned());
                 }

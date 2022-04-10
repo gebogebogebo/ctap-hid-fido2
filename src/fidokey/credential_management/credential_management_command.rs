@@ -84,14 +84,12 @@ pub fn create_payload(
                 Some(param)
             }
             SubCommand::DeleteCredential | SubCommand::UpdateUserInformation => {
-                let param;
-                if sub_command == SubCommand::UpdateUserInformation {
-                    param =
-                        create_public_key_credential_descriptor_pend(pkcd.unwrap(), pkcue.unwrap());
+                let param = if sub_command == SubCommand::UpdateUserInformation {
+                    create_public_key_credential_descriptor_pend(pkcd.unwrap(), pkcue.unwrap())
                 } else {
                     // credentialId (0x02): PublicKeyCredentialDescriptor of the credential to be deleted or updated.
-                    param = create_public_key_credential_descriptor(pkcd.unwrap());
-                }
+                    create_public_key_credential_descriptor(pkcd.unwrap())
+                };
 
                 map.insert(Value::Integer(0x02), param.clone());
                 Some(param)

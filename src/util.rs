@@ -199,17 +199,17 @@ pub(crate) fn convert_to_publickey_pem(public_key_der: &[u8]) -> String {
         for c in base64_str.chars() {
             pem_base = pem_base + &c.to_string();
             if counter == 64 - 1 {
-                pem_base = pem_base + &"\n".to_string();
+                pem_base += "\n";
                 counter = 0;
             } else {
                 counter += 1;
             }
         }
-        pem_base + &"\n".to_string()
+        pem_base + "\n"
     };
 
     // 3. Header and footer
-    "-----BEGIN PUBLIC KEY-----\n".to_string() + &pem_base + &"-----END PUBLIC KEY-----".to_string()
+    "-----BEGIN PUBLIC KEY-----\n".to_string() + &pem_base + "-----END PUBLIC KEY-----"
 }
 
 /// Determine if we should use User Verification or not

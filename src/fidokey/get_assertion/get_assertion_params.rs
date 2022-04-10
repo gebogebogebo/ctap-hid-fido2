@@ -41,8 +41,8 @@ impl fmt::Display for Assertion {
             match e {
                 Extension::HmacSecret(d) => {
                     if let Some(output1_enc) = d {
-                        let tmp = format!("- {}", Extension::HmacSecret(None).to_string());
-                        strbuf.appenh(&tmp, &output1_enc.to_vec());
+                        let tmp = format!("- {}", Extension::HmacSecret(None));
+                        strbuf.appenh(&tmp, output1_enc.as_ref());
                     }
                 }
             }

@@ -171,7 +171,7 @@ fn create_hmacext(
     extensions: Option<&Vec<Gext>>,
 ) -> Result<Option<HmacExt>> {
     if let Some(extensions) = extensions {
-        if let Some(ext) = extensions.into_iter().next() {
+        if let Some(ext) = extensions.iter().next() {
             match ext {
                 Gext::HmacSecret(n) => {
                     let mut hmac_ext = HmacExt::default();

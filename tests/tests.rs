@@ -84,8 +84,10 @@ fn test_make_credential_with_pin_non_rk_exclude_authenticator() {
     let make_credential_args = MakeCredentialArgsBuilder::new(&rpid, &challenge)
         .pin(pin)
         .build();
-    
-    let att = device.make_credential_with_args(&make_credential_args).unwrap();
+
+    let att = device
+        .make_credential_with_args(&make_credential_args)
+        .unwrap();
 
     let verify_result = verifier::verify_attestation(rpid, &challenge, &att);
     assert!(verify_result.is_success);

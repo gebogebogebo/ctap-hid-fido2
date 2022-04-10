@@ -184,7 +184,7 @@ pub fn create_payload(params: Params, extensions: Option<&Vec<Extension>>) -> Ve
     make_credential.insert(Value::Integer(0x02), rp);
     make_credential.insert(Value::Integer(0x03), user);
     make_credential.insert(Value::Integer(0x04), pub_key_cred_params);
-    if params.exclude_list.len() > 0 {
+    if !params.exclude_list.is_empty() {
         make_credential.insert(Value::Integer(0x05), exclude_list);
     }
     if let Some(x) = extensions {
