@@ -14,7 +14,7 @@ use ctap_hid_fido2::fidokey::{bio::EnrollStatus1, get_info::InfoOption, FidoKeyH
 pub fn bio(device: &FidoKeyHid, matches: &clap::ArgMatches) -> Result<()> {
     if !(is_supported(device)?) {
         return Err(anyhow!(
-            "This authenticator is not supported for this functions."
+            "This authenticator is not Supported Bio management."
         ));
     }
 

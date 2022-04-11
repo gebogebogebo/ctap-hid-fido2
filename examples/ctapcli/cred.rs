@@ -5,16 +5,11 @@ use crate::common;
 use crate::str_buf::StrBuf;
 
 pub fn cred(device: &FidoKeyHid, matches: &clap::ArgMatches) -> Result<()> {
-    // check
-    if device.enable_info_option(&InfoOption::CredMgmt)?.is_none()
-        && device
-            .enable_info_option(&InfoOption::CredentialMgmtPreview)?
-            .is_none()
-    {
+    if !(is_supported(device)?) {
         return Err(anyhow!(
             "This authenticator is not Supported Credential management."
         ));
-    };
+    }
 
     let pin = common::get_pin();
 
@@ -66,5 +61,20 @@ fn metadata(device: &FidoKeyHid, pin: &str) {
     match device.credential_management_get_creds_metadata(Some(pin)) {
         Ok(result) => println!("{}", result),
         Err(e) => println!("- error: {:?}", e),
+    }
+}
+
+fn is_supported(device: &FidoKeyHid) -> Result<bool> {
+    if device.enable_info_option(&InfoOption::CredMgmt)?.is_some() {
+        return Ok(true);
+    }
+
+    if device
+        .enable_info_option(&&InfoOption::CredentialMgmtPreview)?
+        .is_some()
+    {
+        Ok(true)
+    } else {
+        Ok(false)
     }
 }
