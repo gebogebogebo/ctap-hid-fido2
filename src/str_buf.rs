@@ -23,7 +23,7 @@ impl StrBuf {
 
     // add str + ¥n and return StrBuf
     pub fn addln(&mut self, val: &str) -> &mut Self {
-        self.buf = format!("{}{}\n", self.buf.to_string(), val);
+        self.buf = format!("{}{}\n", self.buf, val);
         self
     }
 

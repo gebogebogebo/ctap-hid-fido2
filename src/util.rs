@@ -27,14 +27,6 @@ pub fn print_typename<T>(_: T) {
 // pub crate
 //
 
-/*
-// for debug
-#[allow(dead_code)]
-pub(crate) fn is_debug() -> bool {
-    false
-}
-*/
-
 #[allow(dead_code)]
 pub(crate) fn debugp(title: &str, bytes: &[u8]) {
     println!("{}", StrBuf::bufh(title, bytes));
@@ -187,7 +179,7 @@ pub(crate) fn create_clientdata_hash(challenge: Vec<u8>) -> Vec<u8> {
 pub(crate) fn convert_to_publickey_pem(public_key_der: &[u8]) -> String {
     let mut tmp = vec![];
 
-    if public_key_der.len() == 0 {
+    if public_key_der.is_empty() {
         return "".to_string();
     }
 
@@ -207,15 +199,23 @@ pub(crate) fn convert_to_publickey_pem(public_key_der: &[u8]) -> String {
         for c in base64_str.chars() {
             pem_base = pem_base + &c.to_string();
             if counter == 64 - 1 {
-                pem_base = pem_base + &"\n".to_string();
+                pem_base += "\n";
                 counter = 0;
             } else {
                 counter += 1;
             }
         }
-        pem_base + &"\n".to_string()
+        pem_base + "\n"
     };
 
     // 3. Header and footer
-    "-----BEGIN PUBLIC KEY-----\n".to_string() + &pem_base + &"-----END PUBLIC KEY-----".to_string()
+    "-----BEGIN PUBLIC KEY-----\n".to_string() + &pem_base + "-----END PUBLIC KEY-----"
+}
+
+/// Determine if we should use User Verification or not
+pub fn should_uv(pin: Option<&str>) -> Option<bool> {
+    match pin {
+        Some(_) => None,
+        None => Some(true),
+    }
 }

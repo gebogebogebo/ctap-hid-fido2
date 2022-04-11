@@ -1,27 +1,37 @@
 use anyhow::Result;
-use ctap_hid_fido2::get_assertion_params::Extension as Gext;
-use ctap_hid_fido2::make_credential_params::CredentialSupportedKeyType;
-use ctap_hid_fido2::make_credential_params::Extension as Mext;
-use ctap_hid_fido2::MakeCredentialArgsBuilder;
-use ctap_hid_fido2::{verifier, Cfg, Key};
-//use ctap_hid_fido2::str_buf::StrBuf;
+use log::{debug, log_enabled, Level};
+
+use ctap_hid_fido2::{
+    fidokey::{
+        AssertionExtension as Gext, CredentialExtension as Mext, CredentialSupportedKeyType,
+        GetAssertionArgsBuilder, MakeCredentialArgsBuilder,
+    },
+    get_fidokey_devices, verifier, Cfg, FidoKeyHid, FidoKeyHidFactory,
+};
 
 fn main() -> Result<()> {
-    let key_auto = true;
-    println!(
-        "----- test-with-pin-non-rk start : key_auto = {:?} -----",
-        key_auto
-    );
+    env_logger::init();
+    println!("----- test-with-pin-non-rk start -----");
     let mut cfg = Cfg::init();
-    //cfg.enable_log = true;
-    cfg.hid_params = if key_auto { Key::auto() } else { Key::get() };
+    if log_enabled!(Level::Debug) {
+        cfg.enable_log = true;
+    }
 
     let rpid = "test.com";
     let pin = "1234";
 
-    builder_pattern_sample(&cfg, rpid, pin)?;
+    if get_fidokey_devices().is_empty() {
+        println!("Could not find any devices to test non-resident key creation with pin on!");
 
-    legacy_pattern_sample(&cfg, rpid, pin)?;
+        // This should be an error
+        return Ok(());
+    }
+
+    let device = FidoKeyHidFactory::create(&cfg)?;
+
+    builder_pattern_sample(&device, rpid, pin)?;
+
+    legacy_pattern_sample(&device, rpid, pin)?;
 
     println!("----- test-with-pin-non-rk end -----");
     Ok(())
@@ -30,27 +40,27 @@ fn main() -> Result<()> {
 //
 // Builder Pattern Sample
 //
-fn builder_pattern_sample(cfg: &Cfg, rpid: &str, pin: &str) -> Result<()> {
-    non_discoverable_credentials(cfg, rpid, pin)
+fn builder_pattern_sample(device: &FidoKeyHid, rpid: &str, pin: &str) -> Result<()> {
+    non_discoverable_credentials(device, rpid, pin)
         .unwrap_or_else(|err| eprintln!("Error => {}\n", err));
 
-    with_uv(cfg, rpid).unwrap_or_else(|err| eprintln!("Error => {}\n", err));
+    with_uv(device, rpid).unwrap_or_else(|err| eprintln!("Error => {}\n", err));
 
-    with_key_type(cfg, rpid, pin, CredentialSupportedKeyType::Ecdsa256)
+    with_key_type(device, rpid, pin, CredentialSupportedKeyType::Ecdsa256)
         .unwrap_or_else(|err| eprintln!("Error => {}\n", err));
 
     // Verify Assertion in Ed25519 is always false because it is not yet implemented
-    with_key_type(cfg, rpid, pin, CredentialSupportedKeyType::Ed25519)
+    with_key_type(device, rpid, pin, CredentialSupportedKeyType::Ed25519)
         .unwrap_or_else(|err| eprintln!("Error => {}\n", err));
 
-    with_hmac(cfg, rpid, pin).unwrap_or_else(|err| eprintln!("Error => {}\n", err));
+    with_hmac(device, rpid, pin).unwrap_or_else(|err| eprintln!("Error => {}\n", err));
 
-    without_pin(cfg, rpid).unwrap_or_else(|err| eprintln!("Error => {}\n", err));
+    without_pin(device, rpid).unwrap_or_else(|err| eprintln!("Error => {}\n", err));
 
     Ok(())
 }
 
-fn non_discoverable_credentials(cfg: &Cfg, rpid: &str, pin: &str) -> Result<()> {
+fn non_discoverable_credentials(device: &FidoKeyHid, rpid: &str, pin: &str) -> Result<()> {
     println!("----- non_discoverable_credentials -----");
 
     println!("- Register");
@@ -60,10 +70,10 @@ fn non_discoverable_credentials(cfg: &Cfg, rpid: &str, pin: &str) -> Result<()> 
         .pin(pin)
         .build();
 
-    let attestation = ctap_hid_fido2::make_credential_with_args(&cfg, &make_credential_args)?;
+    let attestation = device.make_credential_with_args(&make_credential_args)?;
     println!("-- Register Success");
-    //println!("Attestation");
-    //println!("{}", attestation);
+    debug!("Attestation");
+    debug!("{}", attestation);
 
     println!("-- Verify Attestation");
     let verify_result = verifier::verify_attestation(rpid, &challenge, &attestation);
@@ -76,15 +86,15 @@ fn non_discoverable_credentials(cfg: &Cfg, rpid: &str, pin: &str) -> Result<()> 
     println!("- Authenticate");
     let challenge = verifier::create_challenge();
 
-    let get_assertion_args = ctap_hid_fido2::GetAssertionArgsBuilder::new(rpid, &challenge)
+    let get_assertion_args = GetAssertionArgsBuilder::new(rpid, &challenge)
         .pin(pin)
         .credential_id(&verify_result.credential_id)
         .build();
 
-    let assertions = ctap_hid_fido2::get_assertion_with_args(cfg, &get_assertion_args)?;
+    let assertions = device.get_assertion_with_args(&get_assertion_args)?;
     println!("-- Authenticate Success");
-    //println!("Assertion");
-    //println!("{}", assertions[0]);
+    debug!("Assertion");
+    debug!("{}", assertions[0]);
 
     println!("-- Verify Assertion");
     let is_success = verifier::verify_assertion(
@@ -103,7 +113,7 @@ fn non_discoverable_credentials(cfg: &Cfg, rpid: &str, pin: &str) -> Result<()> 
     Ok(())
 }
 
-fn with_uv(cfg: &Cfg, rpid: &str) -> Result<()> {
+fn with_uv(device: &FidoKeyHid, rpid: &str) -> Result<()> {
     println!("----- with_uv -----");
 
     println!("- Register");
@@ -111,10 +121,10 @@ fn with_uv(cfg: &Cfg, rpid: &str) -> Result<()> {
 
     let make_credential_args = MakeCredentialArgsBuilder::new(&rpid, &challenge).build();
 
-    let attestation = ctap_hid_fido2::make_credential_with_args(&cfg, &make_credential_args)?;
+    let attestation = device.make_credential_with_args(&make_credential_args)?;
     println!("-- Register Success");
-    //println!("Attestation");
-    //println!("{}", attestation);
+    debug!("Attestation");
+    debug!("{}", attestation);
 
     println!("-- Verify Attestation");
     let verify_result = verifier::verify_attestation(rpid, &challenge, &attestation);
@@ -127,14 +137,14 @@ fn with_uv(cfg: &Cfg, rpid: &str) -> Result<()> {
     println!("- Authenticate");
     let challenge = verifier::create_challenge();
 
-    let get_assertion_args = ctap_hid_fido2::GetAssertionArgsBuilder::new(rpid, &challenge)
+    let get_assertion_args = GetAssertionArgsBuilder::new(rpid, &challenge)
         .credential_id(&verify_result.credential_id)
         .build();
 
-    let assertions = ctap_hid_fido2::get_assertion_with_args(cfg, &get_assertion_args)?;
+    let assertions = device.get_assertion_with_args(&get_assertion_args)?;
     println!("-- Authenticate Success");
-    //println!("Assertion");
-    //println!("{}", assertions[0]);
+    debug!("Assertion");
+    debug!("{}", assertions[0]);
 
     println!("-- Verify Assertion");
     let is_success = verifier::verify_assertion(
@@ -154,7 +164,7 @@ fn with_uv(cfg: &Cfg, rpid: &str) -> Result<()> {
 }
 
 fn with_key_type(
-    cfg: &Cfg,
+    device: &FidoKeyHid,
     rpid: &str,
     pin: &str,
     key_type: CredentialSupportedKeyType,
@@ -169,10 +179,10 @@ fn with_key_type(
         .key_type(key_type)
         .build();
 
-    let attestation = ctap_hid_fido2::make_credential_with_args(&cfg, &make_credential_args)?;
+    let attestation = device.make_credential_with_args(&make_credential_args)?;
     println!("-- Register Success");
-    //println!("Attestation");
-    //println!("{}", attestation);
+    debug!("Attestation");
+    debug!("{}", attestation);
 
     println!("-- Verify Attestation");
     let verify_result = verifier::verify_attestation(rpid, &challenge, &attestation);
@@ -185,15 +195,15 @@ fn with_key_type(
     println!("- Authenticate");
     let challenge = verifier::create_challenge();
 
-    let get_assertion_args = ctap_hid_fido2::GetAssertionArgsBuilder::new(rpid, &challenge)
+    let get_assertion_args = GetAssertionArgsBuilder::new(rpid, &challenge)
         .pin(pin)
         .credential_id(&verify_result.credential_id)
         .build();
 
-    let assertions = ctap_hid_fido2::get_assertion_with_args(cfg, &get_assertion_args)?;
+    let assertions = device.get_assertion_with_args(&get_assertion_args)?;
     println!("-- Authenticate Success");
-    //println!("Assertion");
-    //println!("{}", assertions[0]);
+    debug!("Assertion");
+    debug!("{}", assertions[0]);
 
     println!("-- Verify Assertion");
     let is_success = verifier::verify_assertion(
@@ -212,7 +222,7 @@ fn with_key_type(
     Ok(())
 }
 
-fn with_hmac(cfg: &Cfg, rpid: &str, pin: &str) -> Result<()> {
+fn with_hmac(device: &FidoKeyHid, rpid: &str, pin: &str) -> Result<()> {
     println!("----- with hmac -----");
 
     println!("- Register");
@@ -224,10 +234,10 @@ fn with_hmac(cfg: &Cfg, rpid: &str, pin: &str) -> Result<()> {
         .extensions(&vec![ext])
         .build();
 
-    let attestation = ctap_hid_fido2::make_credential_with_args(&cfg, &make_credential_args)?;
+    let attestation = device.make_credential_with_args(&make_credential_args)?;
     println!("-- Register Success");
-    //println!("Attestation");
-    //println!("{}", attestation);
+    debug!("Attestation");
+    debug!("{}", attestation);
 
     println!("-- Verify Attestation");
     let verify_result = verifier::verify_attestation(rpid, &challenge, &attestation);
@@ -241,16 +251,16 @@ fn with_hmac(cfg: &Cfg, rpid: &str, pin: &str) -> Result<()> {
     let challenge = verifier::create_challenge();
     let ext = Gext::create_hmac_secret_from_string("this is test");
 
-    let get_assertion_args = ctap_hid_fido2::GetAssertionArgsBuilder::new(rpid, &challenge)
+    let get_assertion_args = GetAssertionArgsBuilder::new(rpid, &challenge)
         .pin(pin)
         .credential_id(&verify_result.credential_id)
         .extensions(&vec![ext])
         .build();
 
-    let assertions = ctap_hid_fido2::get_assertion_with_args(cfg, &get_assertion_args)?;
+    let assertions = device.get_assertion_with_args(&get_assertion_args)?;
     println!("-- Authenticate Success");
-    //println!("Assertion");
-    //println!("{}", assertions[0]);
+    debug!("Assertion");
+    debug!("{}", assertions[0]);
 
     println!("-- Verify Assertion");
     let is_success = verifier::verify_assertion(
@@ -269,7 +279,7 @@ fn with_hmac(cfg: &Cfg, rpid: &str, pin: &str) -> Result<()> {
     Ok(())
 }
 
-fn without_pin(cfg: &Cfg, rpid: &str) -> Result<()> {
+fn without_pin(device: &FidoKeyHid, rpid: &str) -> Result<()> {
     println!("----- without pin -----");
 
     println!("- Register");
@@ -279,10 +289,10 @@ fn without_pin(cfg: &Cfg, rpid: &str) -> Result<()> {
         .without_pin_and_uv()
         .build();
 
-    let attestation = ctap_hid_fido2::make_credential_with_args(&cfg, &make_credential_args)?;
+    let attestation = device.make_credential_with_args(&make_credential_args)?;
     println!("-- Register Success");
-    //println!("Attestation");
-    //println!("{}", attestation);
+    debug!("Attestation");
+    debug!("{}", attestation);
 
     println!("-- Verify Attestation");
     let verify_result = verifier::verify_attestation(rpid, &challenge, &attestation);
@@ -295,15 +305,15 @@ fn without_pin(cfg: &Cfg, rpid: &str) -> Result<()> {
     println!("- Authenticate");
     let challenge = verifier::create_challenge();
 
-    let get_assertion_args = ctap_hid_fido2::GetAssertionArgsBuilder::new(rpid, &challenge)
+    let get_assertion_args = GetAssertionArgsBuilder::new(rpid, &challenge)
         .credential_id(&verify_result.credential_id)
         .without_pin_and_uv()
         .build();
 
-    let assertions = ctap_hid_fido2::get_assertion_with_args(cfg, &get_assertion_args)?;
+    let assertions = device.get_assertion_with_args(&get_assertion_args)?;
     println!("-- Authenticate Success");
-    //println!("Assertion");
-    //println!("{}", assertions[0]);
+    debug!("Assertion");
+    debug!("{}", assertions[0]);
 
     println!("-- Verify Assertion");
     let is_success = verifier::verify_assertion(
@@ -325,30 +335,30 @@ fn without_pin(cfg: &Cfg, rpid: &str) -> Result<()> {
 //
 // Legacy Pattern Sample
 //
-fn legacy_pattern_sample(cfg: &Cfg, rpid: &str, pin: &str) -> Result<()> {
-    legacy_non_discoverable_credentials(cfg, rpid, pin)
+fn legacy_pattern_sample(device: &FidoKeyHid, rpid: &str, pin: &str) -> Result<()> {
+    legacy_non_discoverable_credentials(device, rpid, pin)
         .unwrap_or_else(|err| eprintln!("Error => {}\n", err));
 
-    legacy_with_key_type(cfg, rpid, pin, CredentialSupportedKeyType::Ecdsa256)
+    legacy_with_key_type(device, rpid, pin, CredentialSupportedKeyType::Ecdsa256)
         .unwrap_or_else(|err| eprintln!("Error => {}\n", err));
 
     // Verify Assertion in Ed25519 is always false because it is not yet implemented
-    legacy_with_key_type(cfg, rpid, pin, CredentialSupportedKeyType::Ed25519)
+    legacy_with_key_type(device, rpid, pin, CredentialSupportedKeyType::Ed25519)
         .unwrap_or_else(|err| eprintln!("Error => {}\n", err));
 
     Ok(())
 }
 
-fn legacy_non_discoverable_credentials(cfg: &Cfg, rpid: &str, pin: &str) -> Result<()> {
+fn legacy_non_discoverable_credentials(device: &FidoKeyHid, rpid: &str, pin: &str) -> Result<()> {
     println!("----- legacy_non_discoverable_credentials -----");
 
     println!("- Register");
     let challenge = verifier::create_challenge();
-    let attestation = ctap_hid_fido2::make_credential(cfg, rpid, &challenge, Some(pin))?;
+    let attestation = device.make_credential(rpid, &challenge, Some(pin))?;
 
     println!("-- Register Success");
-    //println!("Attestation");
-    //println!("{}", attestation);
+    debug!("Attestation");
+    debug!("{}", attestation);
 
     println!("-- Verify Attestation");
     let verify_result = verifier::verify_attestation(rpid, &challenge, &attestation);
@@ -360,16 +370,11 @@ fn legacy_non_discoverable_credentials(cfg: &Cfg, rpid: &str, pin: &str) -> Resu
 
     println!("- Authenticate");
     let challenge = verifier::create_challenge();
-    let assertion = ctap_hid_fido2::get_assertion(
-        cfg,
-        rpid,
-        &challenge,
-        &verify_result.credential_id,
-        Some(pin),
-    )?;
+    let assertion =
+        device.get_assertion(rpid, &challenge, &[verify_result.credential_id], Some(pin))?;
     println!("-- Authenticate Success");
-    //println!("Assertion");
-    //println!("{}", assertions[0]);
+    debug!("Assertion");
+    debug!("{}", assertion);
 
     println!("-- Verify Assertion");
     let is_success = verifier::verify_assertion(
@@ -389,7 +394,7 @@ fn legacy_non_discoverable_credentials(cfg: &Cfg, rpid: &str, pin: &str) -> Resu
 }
 
 fn legacy_with_key_type(
-    cfg: &Cfg,
+    device: &FidoKeyHid,
     rpid: &str,
     pin: &str,
     key_type: CredentialSupportedKeyType,
@@ -398,17 +403,12 @@ fn legacy_with_key_type(
 
     println!("- Register");
     let challenge = verifier::create_challenge();
-    let attestation = ctap_hid_fido2::make_credential_with_key_type(
-        cfg,
-        rpid,
-        &challenge,
-        Some(pin),
-        Some(key_type),
-    )?;
+    let attestation =
+        device.make_credential_with_key_type(rpid, &challenge, Some(pin), Some(key_type))?;
 
     println!("-- Register Success");
-    //println!("Attestation");
-    //println!("{}", attestation);
+    debug!("Attestation");
+    debug!("{}", attestation);
 
     println!("-- Verify Attestation");
     let verify_result = verifier::verify_attestation(rpid, &challenge, &attestation);
@@ -420,16 +420,11 @@ fn legacy_with_key_type(
 
     println!("- Authenticate");
     let challenge = verifier::create_challenge();
-    let assertion = ctap_hid_fido2::get_assertion(
-        cfg,
-        rpid,
-        &challenge,
-        &verify_result.credential_id,
-        Some(pin),
-    )?;
+    let assertion =
+        device.get_assertion(rpid, &challenge, &[verify_result.credential_id], Some(pin))?;
     println!("-- Authenticate Success");
-    //println!("Assertion");
-    //println!("{}", assertions[0]);
+    debug!("Assertion");
+    debug!("{}", assertion);
 
     println!("-- Verify Assertion");
     let is_success = verifier::verify_assertion(

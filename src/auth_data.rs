@@ -24,16 +24,16 @@ impl Flags {
     pub fn as_u8(&self) -> u8 {
         let mut ret = 0x0;
         if self.user_present_result {
-            ret = ret | 0x01;
+            ret |= 0x01;
         }
         if self.user_verified_result {
-            ret = ret | 0x04;
+            ret |= 0x04;
         }
         if self.attested_credential_data_included {
-            ret = ret | 0x40;
+            ret |= 0x40;
         }
         if self.extension_data_included {
-            ret = ret | 0x80;
+            ret |= 0x80;
         }
 
         ret

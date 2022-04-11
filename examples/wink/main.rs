@@ -1,20 +1,25 @@
-use ctap_hid_fido2;
-use ctap_hid_fido2::Key;
-use ctap_hid_fido2::Cfg;
+use ctap_hid_fido2::{Cfg, FidoKeyHidFactory};
 
 fn main() {
-    let mut cfg = Cfg::init();
+    let device = match FidoKeyHidFactory::create(&Cfg::init()) {
+        Ok(d) => d,
+        Err(e) => {
+            println!("error: {:?}", e);
+            return;
+        }
+    };
+
+    println!("We are going to Wink this device:");
+    println!("{}", device.get_info().unwrap());
 
     println!("----- wink start -----");
-    match ctap_hid_fido2::wink(&cfg) {
-        Ok(_) => {},
-        Err(e) => println!("error: {:?}", e),
+    if let Err(e) = device.wink() {
+        println!("error: {:?}", e);
     }
 
-    cfg.hid_params = Key::get();
-    match ctap_hid_fido2::wink(&cfg) {
-        Ok(_) => {},
-        Err(e) => println!("error: {:?}", e),
+    if let Err(e) = device.wink() {
+        println!("error: {:?}", e);
     }
+
     println!("----- wink end -----");
 }

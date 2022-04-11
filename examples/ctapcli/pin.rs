@@ -1,12 +1,11 @@
-use anyhow::{anyhow, Result};
-use ctap_hid_fido2::InfoOption;
 use crate::common;
-use crate::CFG;
+use anyhow::{anyhow, Result};
+use ctap_hid_fido2::fidokey::{get_info::InfoOption, FidoKeyHid};
 
-pub fn pin(matches: &clap::ArgMatches) -> Result<()> {
+pub fn pin(device: &FidoKeyHid, matches: &clap::ArgMatches) -> Result<()> {
     if matches.args.is_empty() {
         println!("Get PIN retry counter.\n");
-        let pin_retries = ctap_hid_fido2::get_pin_retries(&CFG)?;
+        let pin_retries = device.get_pin_retries()?;
         println!("PIN retry counter = {}", pin_retries);
 
         if pin_retries > 0 {
@@ -25,7 +24,9 @@ pub fn pin(matches: &clap::ArgMatches) -> Result<()> {
             println!();
 
             println!();
-            println!("PIN retry counter represents the number of attempts left before PIN is disabled.");
+            println!(
+                "PIN retry counter represents the number of attempts left before PIN is disabled."
+            );
             println!("Each correct PIN entry resets the PIN retry counters back to their maximum values.");
             println!("Each incorrect PIN entry decrements the counter by 1.");
             println!("Once the PIN retry counter reaches 0, built-in user verification are disabled and can only be enabled if authenticator is reset.");
@@ -36,15 +37,15 @@ pub fn pin(matches: &clap::ArgMatches) -> Result<()> {
             println!();
         }
 
-        let bio_enroll = ctap_hid_fido2::enable_info_option(&CFG, &InfoOption::BioEnroll)?;
+        let bio_enroll = device.enable_info_option(&InfoOption::BioEnroll)?;
         if bio_enroll.is_some() && bio_enroll.unwrap() {
             println!();
             println!();
             println!("Get UV retry counter.\n");
-            match ctap_hid_fido2::get_uv_retries(&CFG) {
+            match device.get_uv_retries() {
                 Ok(v) => {
                     println!("UV retry counter = {}", v);
-    
+
                     if v > 0 {
                         println!();
                         println!("UV retries count is the number of built-in UV attempts remaining before built-in UV is disabled on the device.");
@@ -58,13 +59,10 @@ pub fn pin(matches: &clap::ArgMatches) -> Result<()> {
                 Err(err) => return Err(err),
             };
         }
-
     } else if matches.is_present("new") {
         println!("Set new PIN.\n");
 
-        if let Some(client_pin) =
-            ctap_hid_fido2::enable_info_option(&CFG, &InfoOption::ClinetPin)?
-        {
+        if let Some(client_pin) = device.enable_info_option(&InfoOption::ClientPin)? {
             if client_pin {
                 return Err(anyhow!("PIN is already set."));
             }
@@ -74,13 +72,13 @@ pub fn pin(matches: &clap::ArgMatches) -> Result<()> {
         let pin = common::get_input();
         println!();
 
-        ctap_hid_fido2::set_new_pin(&CFG, &pin)?;
+        device.set_new_pin(&pin)?;
 
         println!("Success! :)\n");
     } else if matches.is_present("change") {
         println!("Change PIN.\n");
 
-        if ctap_hid_fido2::enable_info_option(&CFG, &InfoOption::ClinetPin)?.is_none() {
+        if device.enable_info_option(&InfoOption::ClientPin)?.is_none() {
             return Err(anyhow!("PIN not yet set."));
         };
 
@@ -91,7 +89,7 @@ pub fn pin(matches: &clap::ArgMatches) -> Result<()> {
         let new_pin = common::get_input();
         println!();
 
-        ctap_hid_fido2::change_pin(&CFG, &current_pin, &new_pin)?;
+        device.change_pin(&current_pin, &new_pin)?;
 
         println!("Success! :)\n");
     }

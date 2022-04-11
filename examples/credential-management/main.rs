@@ -1,14 +1,17 @@
-use ctap_hid_fido2;
+extern crate clap;
+
+use ctap_hid_fido2::{fidokey::get_info::InfoParam, FidoKeyHid, FidoKeyHidFactory};
+
+use clap::{App, Arg};
 use ctap_hid_fido2::public_key_credential_descriptor::PublicKeyCredentialDescriptor;
 use ctap_hid_fido2::public_key_credential_user_entity::PublicKeyCredentialUserEntity;
-use ctap_hid_fido2::{util, Key, Cfg, InfoParam};
-extern crate clap;
-use clap::{App, Arg};
+use ctap_hid_fido2::{util, Cfg};
 
-fn rps(cfg: &Cfg, pin: Option<&str>) {
+use log::{log_enabled, Level};
+
+fn rps(device: &FidoKeyHid, pin: Option<&str>) {
     println!("# credential_management_enumerate_rps()");
-    match ctap_hid_fido2::credential_management_enumerate_rps(cfg, pin)
-    {
+    match device.credential_management_enumerate_rps(pin) {
         Ok(results) => {
             for r in results {
                 println!("## rps\n{}", r);
@@ -18,18 +21,14 @@ fn rps(cfg: &Cfg, pin: Option<&str>) {
     }
 }
 
-fn credentials(cfg: &Cfg, pin: Option<&str>, rpid_hash: Option<&str>) {
+fn credentials(device: &FidoKeyHid, pin: Option<&str>, rpid_hash: Option<&str>) {
     println!("# credential_management_enumerate_credentials()");
     println!("- value for rpid_hash: {:?}", rpid_hash);
     println!("");
 
     let rpid_hash_bytes: Vec<u8> = util::to_str_hex(rpid_hash.unwrap());
 
-    match ctap_hid_fido2::credential_management_enumerate_credentials(
-        cfg,
-        pin,
-        &rpid_hash_bytes,
-    ) {
+    match device.credential_management_enumerate_credentials(pin, &rpid_hash_bytes) {
         Ok(results) => {
             for c in results {
                 println!("## credentials\n{}", c);
@@ -39,7 +38,7 @@ fn credentials(cfg: &Cfg, pin: Option<&str>, rpid_hash: Option<&str>) {
     }
 }
 
-fn delete(cfg: &Cfg, pin: Option<&str>, credential_id: Option<&str>) {
+fn delete(device: &FidoKeyHid, pin: Option<&str>, credential_id: Option<&str>) {
     println!("# credential_management_delete_credential()");
     println!("- value for credential_id: {:?}", credential_id);
     println!("");
@@ -48,17 +47,13 @@ fn delete(cfg: &Cfg, pin: Option<&str>, credential_id: Option<&str>) {
     pkcd.id = util::to_str_hex(credential_id.unwrap());
     pkcd.ctype = "public_key".to_string();
 
-    match ctap_hid_fido2::credential_management_delete_credential(
-        cfg,
-        pin,
-        Some(pkcd),
-    ) {
+    match device.credential_management_delete_credential(pin, Some(pkcd)) {
         Ok(_) => println!("- success"),
-        Err(e) => println!("- error: {:?}",e),
+        Err(e) => println!("- error: {:?}", e),
     }
 }
 
-fn update(cfg: &Cfg, pin: Option<&str>, credential_id: Option<&str>) {
+fn update(device: &FidoKeyHid, pin: Option<&str>, credential_id: Option<&str>) {
     println!("# credential_management_update_user_information()");
     println!("- value for credential_id: {:?}", credential_id);
     println!("");
@@ -72,12 +67,7 @@ fn update(cfg: &Cfg, pin: Option<&str>, credential_id: Option<&str>) {
     pkcue.name = "test-name".to_string();
     pkcue.display_name = "test-display".to_string();
 
-    match ctap_hid_fido2::credential_management_update_user_information(
-        cfg,
-        pin,
-        Some(pkcd),
-        Some(pkcue),
-    ) {
+    match device.credential_management_update_user_information(pin, Some(pkcd), Some(pkcue)) {
         Ok(_) => println!("- credential_management_update_user_information Success"),
         Err(error) => println!(
             "- credential_management_update_user_information error: {:?}",
@@ -89,10 +79,11 @@ fn update(cfg: &Cfg, pin: Option<&str>, credential_id: Option<&str>) {
 }
 
 fn main() {
-    let key_auto = true;
+    env_logger::init();
     let mut cfg = Cfg::init();
-    //cfg.enable_log = true;
-    cfg.hid_params = if key_auto { Key::auto() } else { Key::get() };
+    if log_enabled!(Level::Debug) {
+        cfg.enable_log = true;
+    }
 
     let app = App::new("credential-management")
         .version("0.1.0")
@@ -146,20 +137,22 @@ fn main() {
     // Parse arguments
     let matches = app.get_matches();
 
-    // Start
-    ctap_hid_fido2::hello();
+    let device = match FidoKeyHidFactory::create(&cfg) {
+        Ok(d) => d,
+        Err(e) => {
+            println!("error: {:?}", e);
+            return;
+        }
+    };
 
-    match ctap_hid_fido2::enable_info_param(
-        &cfg,
-        &InfoParam::VersionsFido21Pre,
-    ) {
+    match device.enable_info_param(&InfoParam::VersionsFido21Pre) {
         Ok(result) => println!("Enable CTAP 2.1 PRE = {:?}", result),
         Err(error) => println!("- error: {:?}", error),
     };
 
     if matches.is_present("info") {
         println!("get_info()");
-        match ctap_hid_fido2::get_info(&cfg) {
+        match device.get_info() {
             Ok(info) => println!("{}", info),
             Err(error) => println!("error: {:?}", error),
         };
@@ -171,22 +164,22 @@ fn main() {
     println!("----- credential-management start -----");
 
     if matches.is_present("rps") {
-        rps(&cfg, pin);
+        rps(&device, pin);
     }
 
     if matches.is_present("credentials") {
         let rpid_hash = matches.value_of("credentials");
-        credentials(&cfg, pin, rpid_hash);
+        credentials(&device, pin, rpid_hash);
     }
 
     if matches.is_present("delete") {
         let credential_id = matches.value_of("delete");
-        delete(&cfg, pin, credential_id);
+        delete(&device, pin, credential_id);
     }
 
     if matches.is_present("update") {
         let credential_id = matches.value_of("update");
-        update(&cfg, pin, credential_id);
+        update(&device, pin, credential_id);
     }
 
     println!("----- credential-management end -----");
