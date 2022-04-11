@@ -1,6 +1,6 @@
 # Biometric management
 
-This command manages the fingerprints in the authenticator.<br>[6.7. authenticatorBioEnrollment (0x09)](https://fidoalliance.org/specs/fido-v2.1-ps-20210615/fido-client-to-authenticator-protocol-v2.1-ps-20210615.html#authenticatorBioEnrollment)
+This command manages the fingerprints in the authenticator.<br>[Spec: 6.7. authenticatorBioEnrollment (0x09)](https://fidoalliance.org/specs/fido-v2.1-ps-20210615/fido-client-to-authenticator-protocol-v2.1-ps-20210615.html#authenticatorBioEnrollment)
 
 
 
@@ -22,6 +22,8 @@ fn is_supported(device: &FidoKeyHid) -> Result<bool> {
     }
 }
 ```
+
+> [Example](https://github.com/gebogebogebo/ctap-hid-fido2/blob/7b5b70a07bd7e8f7a82023375539824c3f7343fd/examples/ctapcli/bio.rs#L113-L126)
 
 
 

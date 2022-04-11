@@ -8,15 +8,15 @@
 # ctap-hid-fido2
 Rust FIDO2 CTAP library
 
+- Ver 3.
+- The usage has changed from Ver2. Please see [How to Use](#how-to-use).
 
-
-- **This crate is not official and has nothing to do with the FIDO Alliance or security key manufacturing vendors.**
-- MIT License.
+- [MIT License](https://github.com/gebogebogebo/ctap-hid-fido2/blob/master/LICENSE).
 
 
 
 ## Description
-`ctap-hid-fido2` is a crate implementing [CTAP 2.0 and 2.1](https://fidoalliance.org/specs/fido-v2.1-ps-20210615/fido-client-to-authenticator-protocol-v2.1-ps-20210615.html), allowing direct control of FIDO2-compliant Authenticators such as Yubikey.<br>For more information on FIDO, see [FIDO Alliance Page](https://fidoalliance.org/).
+**ctap-hid-fido2** is a crate implementing [CTAP 2.0 and 2.1](https://fidoalliance.org/specs/fido-v2.1-ps-20210615/fido-client-to-authenticator-protocol-v2.1-ps-20210615.html), allowing direct control of FIDO2-compliant Authenticators such as Yubikey.<br>For more information on FIDO, see [FIDO Alliance Page](https://fidoalliance.org/).
 
 
 
@@ -89,7 +89,7 @@ Unless noted in the following Examples, a PIN must be set in the Authenticator.
 
 **create FidoKeyHid object**
 
-First, create a device object with FidoKeyHidFactory::create.
+First, create a device object with `FidoKeyHidFactory::create`.
 
 If no Authenticator can be detected on the HID device, an error will result.
 
@@ -112,13 +112,13 @@ If more than one Authenticator is detected, an error will result. See the follow
 
 **Cfg**
 
-The argument Cfg is fine with the default value you create using init(), but you can customize it to change the behavior a bit, see [Cfg definition](https://github.com/gebogebogebo/ctap-hid-fido2/blob/24df395e4ce1c3bcacdba69c63fc3a8ff5510d2c/src/lib.rs#L39-L55).
+The argument `Cfg` is fine with the default value you create using `init()`, but you can customize it to change the behavior a bit, see [Cfg definition](https://github.com/gebogebogebo/ctap-hid-fido2/blob/24df395e4ce1c3bcacdba69c63fc3a8ff5510d2c/src/lib.rs#L39-L55).
 
 
 
 **FidoKeyHid**
 
-Use Authenticator with the methods implemented in FidoKeyHid.<br>For example, get_pin_retries() can be used to obtain the number of PIN retries.
+Use Authenticator with the methods implemented in FidoKeyHid.<br>For example, `get_pin_retries()` can be used to obtain the number of PIN retries.
 
 ```rust
 match device.get_pin_retries() {
@@ -146,11 +146,9 @@ for dev in devs {
 
 
 
-
-
 ## Examples
 
-- [Get Authenticator information Examples](README_Get_Info.md)
+- [Get Authenticator info and Util Examples](README_Get_Info.md)
 - [Register and Authenticate Examples](README_Register_and_Authenticate.md)
 - [Credential management (CTAP 2.1)](README_Credential_management.md)
 - [Biometric management (CTAP 2.1)](README_Biometric_management.md)

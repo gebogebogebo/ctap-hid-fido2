@@ -2,17 +2,14 @@
 
 
 
-
-## Builder Pattern Sample
-
 - [non-discoverable credentials/non-resident-key](https://github.com/gebogebogebo/ctap-hid-fido2/blob/0791003c87b5d36392868a26247fca0b36ed9d5c/examples/test-with-pin-non-rk/main.rs#L63-L114)
   - Most common use to specify PIN.
 - [with UV](https://github.com/gebogebogebo/ctap-hid-fido2/blob/0791003c87b5d36392868a26247fca0b36ed9d5c/examples/test-with-pin-non-rk/main.rs#L116-L164)
   - to use Yubikey bio for fingerprint authentication.
 
 - [with Key Type](https://github.com/gebogebogebo/ctap-hid-fido2/blob/0791003c87b5d36392868a26247fca0b36ed9d5c/examples/test-with-pin-non-rk/main.rs#L166-L223)
-  - Ecdsa256/Ed25519.
-  - Verify Assertion in Ed25519 is always false because it is not yet implemented.
+  - Specify the algorithm(`Ecdsa256`/`Ed25519`).
+  - Verify Assertion in `Ed25519` is always false because it is not yet implemented.
 
 
 - [with HMAC Secret Extension](https://github.com/gebogebogebo/ctap-hid-fido2/blob/0791003c87b5d36392868a26247fca0b36ed9d5c/examples/test-with-pin-non-rk/main.rs#L225-L280)

@@ -1,8 +1,10 @@
-# Get Authenticator information Examples
+# Get Authenticator Info and Util Examples
 
 ### get_info()
 
-[6.4. authenticatorGetInfo (0x04)](https://fidoalliance.org/specs/fido-v2.1-ps-20210615/fido-client-to-authenticator-protocol-v2.1-ps-20210615.html#authenticatorGetInfo)
+View information about the connected Authenticator.
+
+[Spec: 6.4. authenticatorGetInfo (0x04)](https://fidoalliance.org/specs/fido-v2.1-ps-20210615/fido-client-to-authenticator-protocol-v2.1-ps-20210615.html#authenticatorGetInfo)
 
 ```rust
 use ctap_hid_fido2::{Cfg, FidoKeyHidFactory};
@@ -42,85 +44,9 @@ get_info()
 
 
 
-### get_info_u2f()
-
-```rust
-use ctap_hid_fido2::{Cfg, FidoKeyHidFactory};
-
-fn main() {
-    println!("get_info_u2f()");
-    let device = FidoKeyHidFactory::create(&Cfg::init()).unwrap();
-    let info = device.get_info_u2f().unwrap();
-    println!("{}", info);
-}
-```
-
-**console**
-
-```sh
-get_info_u2f()
-"U2F_V2"
-```
-
-
-
-### get_pin_retries()
-
-[6.5.5.2. Platform getting PIN retries from Authenticator](https://fidoalliance.org/specs/fido-v2.1-ps-20210615/fido-client-to-authenticator-protocol-v2.1-ps-20210615.html#gettingPINRetries)
-
-pinRetries counter represents the number of attempts left before PIN is disabled.
-
-```Rust
-use ctap_hid_fido2::{Cfg, FidoKeyHidFactory};
-
-fn main() {
-    println!("get_pin_retries()");
-    let device = FidoKeyHidFactory::create(&Cfg::init()).unwrap();
-    let info = device.get_pin_retries().unwrap();
-    println!("{}", info);
-}
-```
-
-**console**
-
-```sh
-get_pin_retries()
-8
-```
-
-
-
-### get_uv_retries()
-
-**Yubikey Bio Only**
-
-[6.5.5.3. Platform getting UV Retries from Authenticator](https://fidoalliance.org/specs/fido-v2.1-ps-20210615/fido-client-to-authenticator-protocol-v2.1-ps-20210615.html#gettingUVRetries)
-
-UV retries count is the number of built-in UV attempts remaining before built-in UV is disabled on the device.
-
-```rust
-use ctap_hid_fido2::{Cfg, FidoKeyHidFactory};
-
-fn main() {
-    println!("get_uv_retries()");
-    let device = FidoKeyHidFactory::create(&Cfg::init()).unwrap();
-    let info = device.get_uv_retries().unwrap();
-    println!("{}", info);
-}
-```
-
-**console**
-
-```sh
-get_uv_retries()
-3
-```
-
-
-
 ### enable_info_param()
 
-Same as get_info(), but checks if it has a specific feature/version.<br>It is specified by the enum of InfoParam.
+Same as `get_info()`, but checks if it has a specific feature/version.<br>It is specified by the enum of `InfoParam`.
 
 ```rust
 use ctap_hid_fido2::{Cfg, FidoKeyHidFactory, fidokey::get_info::InfoParam};
@@ -144,7 +70,7 @@ VersionsFido21Pre = true
 
 ### enable_info_option()
 
-Same as get_info(), but checks if it has a specific option.<br>It is specified by the enum of InfoOption.
+Same as `get_info()`, but checks if it has a specific option.<br>It is specified by the enum of `InfoOption`.
 
 - Result is `Option<bool>`
   - `Some(true)` : option is present and set to true
@@ -171,11 +97,65 @@ BioEnroll = Some(true)
 
 
 
+### get_pin_retries()
+
+pinRetries counter represents the number of attempts left before PIN is disabled.
+
+[Spec: 6.5.5.2. Platform getting PIN retries from Authenticator](https://fidoalliance.org/specs/fido-v2.1-ps-20210615/fido-client-to-authenticator-protocol-v2.1-ps-20210615.html#gettingPINRetries)
+
+```Rust
+use ctap_hid_fido2::{Cfg, FidoKeyHidFactory};
+
+fn main() {
+    println!("get_pin_retries()");
+    let device = FidoKeyHidFactory::create(&Cfg::init()).unwrap();
+    let info = device.get_pin_retries().unwrap();
+    println!("{}", info);
+}
+```
+
+**console**
+
+```sh
+get_pin_retries()
+8
+```
+
+
+
+### get_uv_retries()
+
+**Yubikey Bio Only**
+
+UV(User Verification) retries count is the number of built-in UV attempts remaining before built-in UV is disabled on the device.
+
+[Spec: 6.5.5.3. Platform getting UV Retries from Authenticator](https://fidoalliance.org/specs/fido-v2.1-ps-20210615/fido-client-to-authenticator-protocol-v2.1-ps-20210615.html#gettingUVRetries)
+
+```rust
+use ctap_hid_fido2::{Cfg, FidoKeyHidFactory};
+
+fn main() {
+    println!("get_uv_retries()");
+    let device = FidoKeyHidFactory::create(&Cfg::init()).unwrap();
+    let info = device.get_uv_retries().unwrap();
+    println!("{}", info);
+}
+```
+
+**console**
+
+```sh
+get_uv_retries()
+3
+```
+
+
+
 ### wink()
 
-[11.2.9.2.1. CTAPHID_WINK (0x08)](https://fidoalliance.org/specs/fido-v2.1-ps-20210615/fido-client-to-authenticator-protocol-v2.1-ps-20210615.html#usb-hid-wink)
-
 Just blink the LED on the FIDO key.
+
+[Spec: 11.2.9.2.1. CTAPHID_WINK (0x08)](https://fidoalliance.org/specs/fido-v2.1-ps-20210615/fido-client-to-authenticator-protocol-v2.1-ps-20210615.html#usb-hid-wink)
 
 ```Rust
 use ctap_hid_fido2::{Cfg, FidoKeyHidFactory};
@@ -187,4 +167,27 @@ fn main() {
 }
 ```
 
+
+
+### selection()
+
+**CTAP 2.1 Only**
+
+Check the touch of the Authenticator's touch sensor.
+
+[Spec: 6.9. authenticatorSelection (0x0B)](https://fidoalliance.org/specs/fido-v2.1-ps-20210615/fido-client-to-authenticator-protocol-v2.1-ps-20210615.html#authenticatorSelection)
+
+```rust
+pub fn up(device: &FidoKeyHid) -> Result<()> {
+    if !device.enable_info_param(&InfoParam::VersionsFido21)? {
+        return Err(anyhow!(
+            "This authenticator is not supported for this functions."
+        ));
+    }
+    device.selection()?;
+    Ok(())
+}
+```
+
+> [Example](https://github.com/gebogebogebo/ctap-hid-fido2/blob/c22cacad1f62a1f1aa52a7af85b0a2a94be1dcac/examples/ctapcli/main.rs#L250-L258)
 

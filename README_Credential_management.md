@@ -1,18 +1,29 @@
 # Credential management
 
-This command manages discoverable credentials(resident key) in the authenticator.<br>[6.8. authenticatorCredentialManagement (0x0A)](https://fidoalliance.org/specs/fido-v2.1-ps-20210615/fido-client-to-authenticator-protocol-v2.1-ps-20210615.html#authenticatorCredentialManagement)
+This command manages discoverable credentials(resident key) in the authenticator.<br>[Spec: 6.8. authenticatorCredentialManagement (0x0A)](https://fidoalliance.org/specs/fido-v2.1-ps-20210615/fido-client-to-authenticator-protocol-v2.1-ps-20210615.html#authenticatorCredentialManagement)
 
 
 
 To use this feature, the Authenticator must implement `CredMgmt` or `CredentialMgmtPreview`. check with `enable_info_option()`
 
 ```rust
-if device.enable_info_option(&InfoOption::CredMgmt)?.is_none()
-    && device.enable_info_option(&InfoOption::CredentialMgmtPreview)?.is_none() {
-  // This authenticator is not Supported Credential management.
-  return;
-};
+fn is_supported(device: &FidoKeyHid) -> Result<bool> {
+    if device.enable_info_option(&InfoOption::CredMgmt)?.is_some() {
+        return Ok(true);
+    }
+
+    if device
+        .enable_info_option(&&InfoOption::CredentialMgmtPreview)?
+        .is_some()
+    {
+        Ok(true)
+    } else {
+        Ok(false)
+    }
+}
 ```
+
+>  [Example](https://github.com/gebogebogebo/ctap-hid-fido2/blob/7b5b70a07bd7e8f7a82023375539824c3f7343fd/examples/ctapcli/cred.rs#L67-L80)
 
 
 
