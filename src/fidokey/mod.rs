@@ -32,7 +32,7 @@ pub struct FidoKeyHid {
 }
 
 impl FidoKeyHid {
-    pub(crate) fn new(params: &[crate::HidParam], cfg: &crate::LibCfg) -> Result<Self> {
+    pub fn new(params: &[crate::HidParam], cfg: &crate::LibCfg) -> Result<Self> {
         let api = HidApi::new().expect("Failed to create HidApi instance");
         for param in params {
             let path = get_path(&api, param);
