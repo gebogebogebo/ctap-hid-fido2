@@ -106,7 +106,7 @@ let device = match FidoKeyHidFactory::create(&Cfg::init()) {
 };
 ```
 
-If more than one Authenticator is detected, an error will result. See the following description for Multi-Authenticator support
+If more than one Authenticator is detected, an error will result. See the following description for **Multi-Authenticator support**
 
 
 
@@ -118,7 +118,7 @@ The argument `Cfg` is fine with the default value you create using `init()`, but
 
 **FidoKeyHid**
 
-Use Authenticator with the methods implemented in FidoKeyHid.<br>For example, `get_pin_retries()` can be used to obtain the number of PIN retries.
+Use Authenticator with the methods implemented in `FidoKeyHid`.<br>For example, `get_pin_retries()` can be used to obtain the number of PIN retries.
 
 ```rust
 match device.get_pin_retries() {
@@ -131,7 +131,7 @@ match device.get_pin_retries() {
 
 **Multi-Authenticator support**
 
-If you have multiple Authenticators connected to the HID and want to control each device individually, use `get_fidokey_devices()`
+If you have multiple Authenticators connected to the HID and want to control each device individually, use `get_fidokey_devices()` and `create_by_params()`.
 
 ```rust
 let devs = ctap_hid_fido2::get_fidokey_devices();
@@ -147,6 +147,8 @@ for dev in devs {
 
 
 ## Examples
+
+See the following links for examples of various patterns.
 
 - [Get Authenticator info and Util Examples](README_Get_Info.md)
 - [Register and Authenticate Examples](README_Register_and_Authenticate.md)
