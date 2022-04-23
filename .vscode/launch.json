@@ -68,7 +68,7 @@
                     "kind": "example"
                 }
             },
-            "args": ["cred","-u","5A66D23E892568B39D2BE8E50C175666613EB2902A9435D3BA15D09C59BFCCAD105B57C95BE2B5B44F0BD0C7DA3AD2D643DDF5FDD6D7FE7F9D58437DDCB5219480AF49040000"],
+            "args": ["cred"],
             "cwd": "${workspaceFolder}"
         },
         {

@@ -10,7 +10,6 @@ use ctap_hid_fido2::{
 use crate::{
     common,
     util,
-    str_buf::StrBuf,
 };
 
 pub fn cred(device: &FidoKeyHid, matches: &clap::ArgMatches) -> Result<()> {
@@ -23,62 +22,19 @@ pub fn cred(device: &FidoKeyHid, matches: &clap::ArgMatches) -> Result<()> {
     let pin = common::get_pin();
 
     if matches.is_present("metadata") {
-        println!("# credential_management_get_creds_metadata()");
-        metadata(device, &pin);
-        return Ok(());
+        println!("Getting Credentials Metadata.");
+        metadata(device, &pin)?;
     } else if matches.is_present("delete") {
         let credential_id = matches.value_of("delete");
         delete(device, &pin, credential_id.unwrap())?;
-        return Ok(());
     } else if matches.is_present("update") {
         let credential_id = matches.value_of("update");
         update(device, &pin, credential_id.unwrap())?;
-        return Ok(());
+    } else {
+        println!("Enumerate discoverable credentials.");
+        enumerate(device, &pin)?;
     }
-
-    println!("Enumerate discoverable credentials.");
-
-    let credentials_count = device.credential_management_get_creds_metadata(Some(&pin))?;
-
-    let mut strbuf = StrBuf::new(0);
-    strbuf.addln(&format!(
-        "Existing discoverable credentials {}/{}",
-        credentials_count.existing_resident_credentials_count,
-        credentials_count.max_possible_remaining_resident_credentials_count
-    ));
-    strbuf
-        .addln("")
-        .addln("Discoverable credentials")
-        .addln("https://fidoalliance.org/specs/fido-v2.1-rd-20210309/fido-client-to-authenticator-protocol-v2.1-rd-20210309.html#sctn-discoverable");
-
-    println!("{}", strbuf.build().to_string());
-
-    if credentials_count.existing_resident_credentials_count == 0 {
-        println!("\nNo discoverable credentials.");
-        return Ok(());
-    }
-
-    // Vec<credential_management_params::Rp>
-    let rps = device.credential_management_enumerate_rps(Some(&pin))?;
-
-    for r in rps {
-        println!("## rps\n{}", r);
-
-        let creds = device.credential_management_enumerate_credentials(Some(&pin), &r.rpid_hash)?;
-
-        for c in creds {
-            println!("### credentials\n{}", c);
-        }
-    }
-
     Ok(())
-}
-
-fn metadata(device: &FidoKeyHid, pin: &str) {
-    match device.credential_management_get_creds_metadata(Some(pin)) {
-        Ok(result) => println!("{}", result),
-        Err(e) => println!("- error: {:?}", e),
-    }
 }
 
 fn is_supported(device: &FidoKeyHid) -> Result<bool> {
@@ -94,6 +50,46 @@ fn is_supported(device: &FidoKeyHid) -> Result<bool> {
     } else {
         Ok(false)
     }
+}
+
+fn metadata(device: &FidoKeyHid, pin: &str) -> Result<()> {
+    device.credential_management_get_creds_metadata(Some(pin))?;
+    Ok(())
+}
+
+fn enumerate(device: &FidoKeyHid, pin: &str) -> Result<()> {
+    let credentials_count = device.credential_management_get_creds_metadata(Some(&pin))?;
+    println!("- existing discoverable credentials: {}/{}",
+        credentials_count.existing_resident_credentials_count,
+        credentials_count.max_possible_remaining_resident_credentials_count
+    );
+
+    if credentials_count.existing_resident_credentials_count == 0 {
+        println!("\nNo discoverable credentials.");
+        return Ok(());
+    }
+
+    let rps = device.credential_management_enumerate_rps(Some(&pin))?;
+
+    for rp in rps {
+        println!("- rp: (id: {}, name: {})",
+            rp.public_key_credential_rp_entity.id,
+            rp.public_key_credential_rp_entity.name
+        );
+        //println!("## rps\n{}", rp);
+
+        let creds = device.credential_management_enumerate_credentials(Some(&pin), &rp.rpid_hash)?;
+        for cred in creds {
+            println!("  - credential: (id: {}, name: {}, display_name: {})",
+                util::to_hex_str(&cred.public_key_credential_user_entity.id),
+                cred.public_key_credential_user_entity.name,
+                cred.public_key_credential_user_entity.display_name
+            );
+            //println!("### credentials\n{}", cred);
+        }
+    }
+
+    Ok(())
 }
 
 fn delete(device: &FidoKeyHid, pin: &str, credential_id: &str) -> Result<()> {

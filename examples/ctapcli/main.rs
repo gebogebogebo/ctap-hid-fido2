@@ -162,7 +162,7 @@ fn main() -> Result<()> {
                 )
                 .arg(
                     Arg::with_name("metadata")
-                        .help("credential_management_get_creds_metadata.")
+                        .help("Getting Credentials Metadata.")
                         .short("m")
                         .long("metadata"),
                 )
