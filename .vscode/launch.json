@@ -57,23 +57,6 @@
         {
             "type": "lldb",
             "request": "launch",
-            "name": "credential-management: Debug Example",
-            "cargo": {
-                "args": [
-                    "build",
-                    "--example=credential-management"
-                ],
-                "filter": {
-                    "name": "credential-management",
-                    "kind": "example"
-                }
-            },
-            "args": [],
-            "cwd": "${workspaceFolder}"
-        },
-        {
-            "type": "lldb",
-            "request": "launch",
             "name": "ctapcli: Debug Example",
             "cargo": {
                 "args": [
