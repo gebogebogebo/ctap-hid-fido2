@@ -1,8 +1,17 @@
 use anyhow::{anyhow, Result};
-use ctap_hid_fido2::fidokey::{get_info::InfoOption, FidoKeyHid};
-
-use crate::common;
-use crate::str_buf::StrBuf;
+use ctap_hid_fido2::{
+    fidokey::{
+        get_info::InfoOption,
+        FidoKeyHid,
+    },
+    public_key_credential_descriptor::PublicKeyCredentialDescriptor,
+    public_key_credential_user_entity::PublicKeyCredentialUserEntity,
+};
+use crate::{
+    common,
+    util,
+    str_buf::StrBuf,
+};
 
 pub fn cred(device: &FidoKeyHid, matches: &clap::ArgMatches) -> Result<()> {
     if !(is_supported(device)?) {
@@ -16,6 +25,14 @@ pub fn cred(device: &FidoKeyHid, matches: &clap::ArgMatches) -> Result<()> {
     if matches.is_present("metadata") {
         println!("# credential_management_get_creds_metadata()");
         metadata(device, &pin);
+        return Ok(());
+    } else if matches.is_present("delete") {
+        let credential_id = matches.value_of("delete");
+        delete(device, &pin, credential_id.unwrap())?;
+        return Ok(());
+    } else if matches.is_present("update") {
+        let credential_id = matches.value_of("update");
+        update(device, &pin, credential_id.unwrap())?;
         return Ok(());
     }
 
@@ -78,3 +95,37 @@ fn is_supported(device: &FidoKeyHid) -> Result<bool> {
         Ok(false)
     }
 }
+
+fn delete(device: &FidoKeyHid, pin: &str, credential_id: &str) -> Result<()> {
+    println!("Delete a Credential.");
+    println!("value for credential_id: {:?}", credential_id);
+    println!();
+
+    let mut pkcd = PublicKeyCredentialDescriptor::default();
+    pkcd.id = util::to_str_hex(credential_id);
+    pkcd.ctype = "public_key".to_string();
+
+    device.credential_management_delete_credential(Some(pin), Some(pkcd))?;
+    println!("- Success\n");
+    Ok(())
+}
+
+fn update(device: &FidoKeyHid, pin: &str, credential_id: &str) -> Result<()> {
+    println!("Update a Credential User Info.");
+    println!("- value for credential_id: {:?}", credential_id);
+    println!();
+
+    let mut pkcd = PublicKeyCredentialDescriptor::default();
+    pkcd.id = util::to_str_hex(credential_id);
+    pkcd.ctype = "public_key".to_string();
+
+    let mut pkcue = PublicKeyCredentialUserEntity::default();
+    pkcue.id = util::to_str_hex("7573657232");
+    pkcue.name = "test-name".to_string();
+    pkcue.display_name = "test-display".to_string();
+
+    device.credential_management_update_user_information(Some(pin), Some(pkcd), Some(pkcue))?;
+    println!("- Success\n");
+    Ok(())
+}
+

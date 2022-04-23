@@ -38,46 +38,6 @@ fn credentials(device: &FidoKeyHid, pin: Option<&str>, rpid_hash: Option<&str>) 
     }
 }
 
-fn delete(device: &FidoKeyHid, pin: Option<&str>, credential_id: Option<&str>) {
-    println!("# credential_management_delete_credential()");
-    println!("- value for credential_id: {:?}", credential_id);
-    println!("");
-
-    let mut pkcd = PublicKeyCredentialDescriptor::default();
-    pkcd.id = util::to_str_hex(credential_id.unwrap());
-    pkcd.ctype = "public_key".to_string();
-
-    match device.credential_management_delete_credential(pin, Some(pkcd)) {
-        Ok(_) => println!("- success"),
-        Err(e) => println!("- error: {:?}", e),
-    }
-}
-
-fn update(device: &FidoKeyHid, pin: Option<&str>, credential_id: Option<&str>) {
-    println!("# credential_management_update_user_information()");
-    println!("- value for credential_id: {:?}", credential_id);
-    println!("");
-
-    let mut pkcd = PublicKeyCredentialDescriptor::default();
-    pkcd.id = util::to_str_hex(credential_id.unwrap());
-    pkcd.ctype = "public_key".to_string();
-
-    let mut pkcue = PublicKeyCredentialUserEntity::default();
-    pkcue.id = util::to_str_hex("7974657374");
-    pkcue.name = "test-name".to_string();
-    pkcue.display_name = "test-display".to_string();
-
-    match device.credential_management_update_user_information(pin, Some(pkcd), Some(pkcue)) {
-        Ok(_) => println!("- credential_management_update_user_information Success"),
-        Err(error) => println!(
-            "- credential_management_update_user_information error: {:?}",
-            error
-        ),
-    };
-    println!("");
-    println!("");
-}
-
 fn main() {
     env_logger::init();
     let mut cfg = Cfg::init();
@@ -112,26 +72,12 @@ fn main() {
                 .value_name("rpid_hash"),
         )
         .arg(
-            Arg::with_name("delete")
-                .help("credential_management_delete_credential")
-                .short("d")
-                .long("delete")
-                .takes_value(true)
-                .value_name("public_key_credential_descriptor.id(credential-id)"),
-        )
-        .arg(
             Arg::with_name("update")
                 .help("credential_management_update_user_information")
                 .short("u")
                 .long("update")
                 .takes_value(true)
                 .value_name("public_key_credential_descriptor.id(credential-id)"),
-        )
-        .arg(
-            Arg::with_name("info")
-                .help("authenticatorGetInfo")
-                .short("i")
-                .long("info"),
         );
 
     // Parse arguments
@@ -150,14 +96,6 @@ fn main() {
         Err(error) => println!("- error: {:?}", error),
     };
 
-    if matches.is_present("info") {
-        println!("get_info()");
-        match device.get_info() {
-            Ok(info) => println!("{}", info),
-            Err(error) => println!("error: {:?}", error),
-        };
-    }
-
     let pin = matches.value_of("pin");
     println!("Value for pin: {:?}", pin);
 
@@ -170,16 +108,6 @@ fn main() {
     if matches.is_present("credentials") {
         let rpid_hash = matches.value_of("credentials");
         credentials(&device, pin, rpid_hash);
-    }
-
-    if matches.is_present("delete") {
-        let credential_id = matches.value_of("delete");
-        delete(&device, pin, credential_id);
-    }
-
-    if matches.is_present("update") {
-        let credential_id = matches.value_of("update");
-        update(&device, pin, credential_id);
     }
 
     println!("----- credential-management end -----");

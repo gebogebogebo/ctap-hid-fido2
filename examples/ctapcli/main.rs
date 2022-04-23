@@ -156,15 +156,31 @@ fn main() -> Result<()> {
                 .about("(alpha)Credential management\n- Enumerate discoverable credentials")
                 .arg(
                     Arg::with_name("list")
-                        .help("List cred")
+                        .help("List cred.")
                         .short("l")
                         .long("list")
                 )
                 .arg(
                     Arg::with_name("metadata")
-                        .help("credential_management_get_creds_metadata")
+                        .help("credential_management_get_creds_metadata.")
                         .short("m")
                         .long("metadata"),
+                )
+                .arg(
+                    Arg::with_name("delete")
+                        .help("Delete a discoverable credential.")
+                        .short("d")
+                        .long("delete")
+                        .takes_value(true)
+                        .value_name("public_key_credential_descriptor.id(credential-id)"),
+                )
+                .arg(
+                    Arg::with_name("update")
+                        .help("Update a discoverable credential user info.")
+                        .short("u")
+                        .long("update")
+                        .takes_value(true)
+                        .value_name("public_key_credential_descriptor.id(credential-id)"),
                 )
         );
 
