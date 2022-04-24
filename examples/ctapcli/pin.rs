@@ -2,8 +2,41 @@ use crate::common;
 use anyhow::{anyhow, Result};
 use ctap_hid_fido2::fidokey::{get_info::InfoOption, FidoKeyHid};
 
-pub fn pin(device: &FidoKeyHid, matches: &clap::ArgMatches) -> Result<()> {
-    if matches.args.is_empty() {
+pub fn pin(device: &FidoKeyHid, new: bool, change: bool) -> Result<()> {
+    if new {
+        println!("Set new PIN.\n");
+
+        if let Some(client_pin) = device.enable_info_option(&InfoOption::ClientPin)? {
+            if client_pin {
+                return Err(anyhow!("PIN is already set."));
+            }
+        };
+
+        println!("new PIN:");
+        let pin = common::get_input();
+        println!();
+
+        device.set_new_pin(&pin)?;
+
+        println!("Success! :)\n");
+    } else if change {
+        println!("Change PIN.\n");
+
+        if device.enable_info_option(&InfoOption::ClientPin)?.is_none() {
+            return Err(anyhow!("PIN not yet set."));
+        };
+
+        println!("current PIN:");
+        let current_pin = common::get_input();
+        println!();
+        println!("new PIN:");
+        let new_pin = common::get_input();
+        println!();
+
+        device.change_pin(&current_pin, &new_pin)?;
+
+        println!("Success! :)\n");
+    } else {
         println!("Get PIN retry counter.\n");
         let pin_retries = device.get_pin_retries()?;
         println!("PIN retry counter = {}", pin_retries);
@@ -59,39 +92,6 @@ pub fn pin(device: &FidoKeyHid, matches: &clap::ArgMatches) -> Result<()> {
                 Err(err) => return Err(err),
             };
         }
-    } else if matches.is_present("new") {
-        println!("Set new PIN.\n");
-
-        if let Some(client_pin) = device.enable_info_option(&InfoOption::ClientPin)? {
-            if client_pin {
-                return Err(anyhow!("PIN is already set."));
-            }
-        };
-
-        println!("new PIN:");
-        let pin = common::get_input();
-        println!();
-
-        device.set_new_pin(&pin)?;
-
-        println!("Success! :)\n");
-    } else if matches.is_present("change") {
-        println!("Change PIN.\n");
-
-        if device.enable_info_option(&InfoOption::ClientPin)?.is_none() {
-            return Err(anyhow!("PIN not yet set."));
-        };
-
-        println!("current PIN:");
-        let current_pin = common::get_input();
-        println!();
-        println!("new PIN:");
-        let new_pin = common::get_input();
-        println!();
-
-        device.change_pin(&current_pin, &new_pin)?;
-
-        println!("Success! :)\n");
     }
 
     Ok(())

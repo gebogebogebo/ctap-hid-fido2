@@ -1,7 +1,7 @@
 use anyhow::{anyhow, Result};
 
 extern crate clap;
-use clap::{App, Arg, SubCommand};
+use clap::{Parser, Subcommand};
 
 #[cfg(not(target_os = "linux"))]
 extern crate clipboard;
@@ -21,63 +21,93 @@ mod info;
 mod memo;
 mod pin;
 
+#[derive(Parser)]
+#[clap(
+    name = "ctapcli",
+    author = "gebo",
+    version = env!("CARGO_PKG_VERSION"),
+    about = "This tool implements CTAP HID and can communicate with FIDO Authenticator.\n\nabout CTAP(Client to Authenticator Protocol)\nhttps://fidoalliance.org/specs/fido-v2.1-ps-20210615/fido-client-to-authenticator-protocol-v2.1-ps-20210615.html"
+)]
+struct AppArg {
+    #[clap(
+        short = 'd',
+        long = "device",
+        takes_value = false,
+        help = "Enumerate HID devices."
+    )]
+    device: bool,
+
+    #[clap(
+        short = 'f',
+        long = "fidokey",
+        takes_value = false,
+        help = "Enumerate FIDO key."
+    )]
+    fidokey: bool,
+
+    #[clap(
+        short = 'w',
+        long = "wink",
+        takes_value = false,
+        help = "Blink the LED on the FIDO key."
+    )]
+    wink: bool,
+
+    #[clap(
+        short = 'u',
+        long = "user-presence",
+        takes_value = false,
+        help = "User Presence Test."
+    )]
+    user_presence: bool,
+
+    #[clap(subcommand)]
+    action: Action,    
+}
+
+#[derive(Subcommand)]
+enum Action {
+    Info {
+        #[clap(
+            short = 'g',
+            long = "get",
+            takes_value = true,
+            default_value = "",
+            help = "Get a item(rk/up/uv/plat/pin/mgmtp/mgmt/biop/bio/u2f_v2/fido2/fido21p/fido21/hmac)."
+        )]
+        item: String,
+    },
+
+    Pin {
+        #[clap(
+            short = 'n',
+            long = "new",
+            takes_value = false,
+            help = "Set new pin."
+        )]
+        new: bool,
+
+        #[clap(
+            short = 'c',
+            long = "change",
+            takes_value = false,
+            help = "Change pin."
+        )]
+        change: bool,        
+    },
+}
+
 fn main() -> Result<()> {
     env_logger::init();
+    /*
     let app = App::new("ctapcli")
-        .version(env!("CARGO_PKG_VERSION"))
-        .author("gebo")
-        .about("This tool implements CTAP HID and can communicate with FIDO Authenticator.\n\nabout CTAP(Client to Authenticator Protocol)\nhttps://fidoalliance.org/specs/fido-v2.1-ps-20210615/fido-client-to-authenticator-protocol-v2.1-ps-20210615.html")
-        .arg(
-            Arg::with_name("device")
-                .help("Enumerate HID devices")
-                .short("d")
-                .long("device")
-        )
-        .arg(
-            Arg::with_name("fidokey")
-                .help("Enumerate FIDO key")
-                .short("f")
-                .long("fidokey")
-        )
-        .arg(
-            Arg::with_name("wink")
-                .help("Blink the LED on the FIDO key")
-                .short("w")
-                .long("wink")
-        )
-        .arg(
-            Arg::with_name("user-presence")
-                .help("User Presence Test")
-                .short("u")
-                .long("up")
-        )
         .subcommand(
             SubCommand::with_name("pin")
                 .about("PIN management\n- Get PIN retry counter without any FLAGS and OPTIONS.")
-                .arg(
-                    Arg::with_name("new")
-                        .help("Set new pin")
-                        .short("n")
-                        .long("new")
-                )
-                .arg(
-                    Arg::with_name("change")
-                        .help("Change pin")
-                        .short("c")
-                        .long("change")
-                )
         )
         .subcommand(
             SubCommand::with_name("info")
                 .about("Get Authenticator infomation\n- List All Infomation without any FLAGS and OPTIONS.")
-                .arg(
-                    Arg::with_name("get")
-                        .help("Get a item(rk/up/uv/plat/pin/mgmtp/mgmt/biop/bio/u2f_v2/fido2/fido21p/fido21/hmac)")
-                        .short("g")
-                        .long("get")
-                        .takes_value(true)
-                        .value_name("item")
-                )
         )
         .subcommand(
             SubCommand::with_name("memo")
@@ -191,16 +221,16 @@ fn main() -> Result<()> {
                         .takes_value(true)
                 )
         );
+     */
+
+    let arg: AppArg = AppArg::parse();
 
     let mut cfg = Cfg::init();
     cfg.enable_log = false;
     cfg.use_pre_bio_enrollment = true;
     cfg.use_pre_credential_management = true;
 
-    // Parse arguments
-    let matches = app.get_matches();
-
-    if matches.is_present("device") {
+    if arg.device {
         println!("Enumerate HID devices.");
         let devs = ctap_hid_fido2::get_hid_devices();
         for info in devs {
@@ -211,7 +241,7 @@ fn main() -> Result<()> {
         }
     }
 
-    if matches.is_present("fidokey") {
+    if arg.fidokey {
         println!("Enumerate FIDO keys.");
         let devs = ctap_hid_fido2::get_fidokey_devices();
         for info in devs {
@@ -224,27 +254,29 @@ fn main() -> Result<()> {
 
     let device = FidoKeyHidFactory::create(&cfg)?;
 
-    if matches.is_present("user-presence") {
+    if arg.user_presence {
         println!("User Presence Test.\n");
         up(&device)?;
     }
 
-    if matches.is_present("wink") {
+    if arg.wink {
         println!("Blink LED on FIDO key.\n");
         device.wink()?;
         println!("Do you see that wink? ;-)\n");
     }
 
-    if let Some(matches) = matches.subcommand_matches("info") {
-        println!("Get the Authenticator infomation.\n");
-        info::info(&device, matches)?;
+    match arg.action {
+        Action::Info { item } => {
+            println!("Get the Authenticator infomation.\n");
+            info::info(&device, &item)?;
+        },
+        Action::Pin {new,change} => {
+            println!("PIN Management.\n");
+            pin::pin(&device, new, change)?;
+        }
     }
 
-    if let Some(matches) = matches.subcommand_matches("pin") {
-        println!("PIN Management.\n");
-        pin::pin(&device, matches)?;
-    }
-
+    /*
     if let Some(matches) = matches.subcommand_matches("memo") {
         println!("Record some short texts in Authenticator.\n");
         memo::memo(&device, matches)?;
@@ -259,6 +291,7 @@ fn main() -> Result<()> {
         println!("Credential Management.\n");
         cred::cred(&device, &matches)?;
     }
+     */
 
     /*
     println!("config()");

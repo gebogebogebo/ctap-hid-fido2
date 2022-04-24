@@ -7,8 +7,8 @@ use ctap_hid_fido2::fidokey::{
 
 use crate::str_buf::StrBuf;
 
-pub fn info(device: &FidoKeyHid, matches: &clap::ArgMatches) -> Result<()> {
-    if matches.args.is_empty() {
+pub fn info(device: &FidoKeyHid, item: &str) -> Result<()> {
+    if item.is_empty() {
         println!("Get all data.");
         match device.get_info() {
             Ok(info) => println!("{}", info),
@@ -16,46 +16,41 @@ pub fn info(device: &FidoKeyHid, matches: &clap::ArgMatches) -> Result<()> {
         };
     }
 
-    if matches.is_present("get") {
-        let mut values = matches.values_of("get").unwrap();
-        let item = values.next().unwrap();
+    let info_option = match item {
+        "rk" => Some(InfoOption::Rk),
+        "up" => Some(InfoOption::Up),
+        "uv" => Some(InfoOption::Uv),
+        "plat" => Some(InfoOption::Plat),
+        "pin" => Some(InfoOption::ClientPin),
+        "mgmtp" => Some(InfoOption::CredentialMgmtPreview),
+        "mgmt" => Some(InfoOption::CredMgmt),
+        "biop" => Some(InfoOption::UserVerificationMgmtPreview),
+        "bio" => Some(InfoOption::BioEnroll),
+        _ => None,
+    };
 
-        let info_option = match item {
-            "rk" => Some(InfoOption::Rk),
-            "up" => Some(InfoOption::Up),
-            "uv" => Some(InfoOption::Uv),
-            "plat" => Some(InfoOption::Plat),
-            "pin" => Some(InfoOption::ClientPin),
-            "mgmtp" => Some(InfoOption::CredentialMgmtPreview),
-            "mgmt" => Some(InfoOption::CredMgmt),
-            "biop" => Some(InfoOption::UserVerificationMgmtPreview),
-            "bio" => Some(InfoOption::BioEnroll),
+    if let Some(option) = info_option {
+        match device.enable_info_option(&option) {
+            Ok(result) => println!("{}", option_message(item, &option, result)?),
+            Err(err) => return Err(err),
+        }
+    } else {
+        let info_param = match item {
+            "u2f_v2" => Some(InfoParam::VersionsU2Fv2),
+            "fido2" => Some(InfoParam::VersionsFido20),
+            "fido21p" => Some(InfoParam::VersionsFido21Pre),
+            "fido21" => Some(InfoParam::VersionsFido21),
+            "hmac" => Some(InfoParam::ExtensionsHmacSecret),
             _ => None,
         };
 
-        if let Some(option) = info_option {
-            match device.enable_info_option(&option) {
-                Ok(result) => println!("{}", option_message(item, &option, result)?),
+        if let Some(param) = info_param {
+            match device.enable_info_param(&param) {
+                Ok(result) => println!("{}", param_message(item, &param, result)?),
                 Err(err) => return Err(err),
             }
         } else {
-            let info_param = match item {
-                "u2f_v2" => Some(InfoParam::VersionsU2Fv2),
-                "fido2" => Some(InfoParam::VersionsFido20),
-                "fido21p" => Some(InfoParam::VersionsFido21Pre),
-                "fido21" => Some(InfoParam::VersionsFido21),
-                "hmac" => Some(InfoParam::ExtensionsHmacSecret),
-                _ => None,
-            };
-
-            if let Some(param) = info_param {
-                match device.enable_info_param(&param) {
-                    Ok(result) => println!("{}", param_message(item, &param, result)?),
-                    Err(err) => return Err(err),
-                }
-            } else {
-                return Err(anyhow!("Invalid item"));
-            }
+            return Err(anyhow!("Invalid item"));
         }
     }
 
