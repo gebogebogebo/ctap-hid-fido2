@@ -68,7 +68,7 @@
                     "kind": "example"
                 }
             },
-            "args": ["cred"],
+            "args": ["cred","-u","--rpid","test-rk.com","--userid","31313131"],
             "cwd": "${workspaceFolder}"
         },
         {

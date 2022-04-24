@@ -146,7 +146,7 @@ fn get_rps(device: &FidoKeyHid, pin: Option<&str>) -> Result<Vec<Rp>> {
     //ctap_hid_fido2::credential_management_enumerate_rps(&CFG, pin)
 }
 
-fn search_cred(
+pub fn search_cred(
     device: &FidoKeyHid,
     pin: &str,
     rpid: &str,

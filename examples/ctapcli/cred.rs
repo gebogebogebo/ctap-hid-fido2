@@ -4,12 +4,12 @@ use ctap_hid_fido2::{
         get_info::InfoOption,
         FidoKeyHid,
     },
-    public_key_credential_descriptor::PublicKeyCredentialDescriptor,
     public_key_credential_user_entity::PublicKeyCredentialUserEntity,
 };
 use crate::{
     common,
     util,
+    memo,
 };
 
 pub fn cred(device: &FidoKeyHid, matches: &clap::ArgMatches) -> Result<()> {
@@ -25,11 +25,29 @@ pub fn cred(device: &FidoKeyHid, matches: &clap::ArgMatches) -> Result<()> {
         println!("Getting Credentials Metadata.");
         metadata(device, &pin)?;
     } else if matches.is_present("delete") {
-        let credential_id = matches.value_of("delete");
-        delete(device, &pin, credential_id.unwrap())?;
+        let rpid = matches.value_of("rpid").unwrap_or_else(||"");
+        let user_id = matches.value_of("user-id").unwrap_or_else(||"");
+        if rpid.is_empty() || user_id.is_empty() {
+            return Err(anyhow!("Need rpid and userid."));
+        }
+
+        println!("Delete a Credential.");
+        println!("- credential: (rpid: {}, user_id: {})", rpid, user_id);
+        println!();
+
+        delete(device, &pin, rpid, &util::to_str_hex(user_id))?;
     } else if matches.is_present("update") {
-        let credential_id = matches.value_of("update");
-        update(device, &pin, credential_id.unwrap())?;
+        let rpid = matches.value_of("rpid").unwrap_or_else(||"");
+        let user_id = matches.value_of("user-id").unwrap_or_else(||"");
+        if rpid.is_empty() || user_id.is_empty() {
+            return Err(anyhow!("Need rpid and userid."));
+        }
+
+        println!("Update a Credential.");
+        println!("- credential: (rpid: {}, user_id: {})", rpid, user_id);
+        println!();
+
+        update(device, &pin, rpid, &util::to_str_hex(user_id))?;
     } else {
         println!("Enumerate discoverable credentials.");
         enumerate(device, &pin)?;
@@ -53,7 +71,8 @@ fn is_supported(device: &FidoKeyHid) -> Result<bool> {
 }
 
 fn metadata(device: &FidoKeyHid, pin: &str) -> Result<()> {
-    device.credential_management_get_creds_metadata(Some(pin))?;
+    let metadata = device.credential_management_get_creds_metadata(Some(pin))?;
+    println!("{}",metadata);
     Ok(())
 }
 
@@ -92,36 +111,36 @@ fn enumerate(device: &FidoKeyHid, pin: &str) -> Result<()> {
     Ok(())
 }
 
-fn delete(device: &FidoKeyHid, pin: &str, credential_id: &str) -> Result<()> {
-    println!("Delete a Credential.");
-    println!("value for credential_id: {:?}", credential_id);
-    println!();
-
-    let mut pkcd = PublicKeyCredentialDescriptor::default();
-    pkcd.id = util::to_str_hex(credential_id);
-    pkcd.ctype = "public_key".to_string();
-
-    device.credential_management_delete_credential(Some(pin), Some(pkcd))?;
-    println!("- Success\n");
+fn delete(device: &FidoKeyHid, pin: &str, rpid: &str, user_id: &[u8]) -> Result<()> {
+    if let Some(cred) = memo::search_cred(device, pin, rpid, user_id)? {
+        device.credential_management_delete_credential(
+            Some(pin),
+            Some(cred.public_key_credential_descriptor),
+        )?;
+        println!("Delete Success!");
+    } else {
+        println!("Credential not found...");
+    }
     Ok(())
 }
 
-fn update(device: &FidoKeyHid, pin: &str, credential_id: &str) -> Result<()> {
-    println!("Update a Credential User Info.");
-    println!("- value for credential_id: {:?}", credential_id);
-    println!();
+fn update(device: &FidoKeyHid, pin: &str, rpid: &str, user_id: &[u8]) -> Result<()> {
+    if let Some(cred) = memo::search_cred(device, pin, rpid, user_id)? {
+        let mut pkcue = PublicKeyCredentialUserEntity::default();
+        pkcue.id = util::to_str_hex("7573657232");
+        pkcue.name = "test-name".to_string();
+        pkcue.display_name = "test-display".to_string();
 
-    let mut pkcd = PublicKeyCredentialDescriptor::default();
-    pkcd.id = util::to_str_hex(credential_id);
-    pkcd.ctype = "public_key".to_string();
+        device.credential_management_update_user_information(
+            Some(pin),
+            Some(cred.public_key_credential_descriptor),
+            Some(pkcue)
+        )?;
 
-    let mut pkcue = PublicKeyCredentialUserEntity::default();
-    pkcue.id = util::to_str_hex("7573657232");
-    pkcue.name = "test-name".to_string();
-    pkcue.display_name = "test-display".to_string();
-
-    device.credential_management_update_user_information(Some(pin), Some(pkcd), Some(pkcue))?;
-    println!("- Success\n");
+        println!("Delete Success!");
+    } else {
+        println!("Credential not found...");
+    }
     Ok(())
 }
 

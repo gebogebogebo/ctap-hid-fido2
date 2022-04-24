@@ -171,16 +171,24 @@ fn main() -> Result<()> {
                         .help("Delete a discoverable credential.")
                         .short("d")
                         .long("delete")
-                        .takes_value(true)
-                        .value_name("public_key_credential_descriptor.id(credential-id)"),
                 )
                 .arg(
                     Arg::with_name("update")
-                        .help("Update a discoverable credential user info.")
+                        .help("[Always an error?]Update a discoverable credential user info.")
                         .short("u")
                         .long("update")
+                )
+                .arg(
+                    Arg::with_name("rpid")
+                        .help("rpid to be deleted(or updated).")
+                        .long("rpid")
                         .takes_value(true)
-                        .value_name("public_key_credential_descriptor.id(credential-id)"),
+                )
+                .arg(
+                    Arg::with_name("user-id")
+                        .help("user-id to be deleted(or updated).")
+                        .long("userid")
+                        .takes_value(true)
                 )
         );
 
