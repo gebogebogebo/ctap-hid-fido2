@@ -1,15 +1,8 @@
+use crate::{common, memo, util};
 use anyhow::{anyhow, Result};
 use ctap_hid_fido2::{
-    fidokey::{
-        get_info::InfoOption,
-        FidoKeyHid,
-    },
+    fidokey::{get_info::InfoOption, FidoKeyHid},
     public_key_credential_user_entity::PublicKeyCredentialUserEntity,
-};
-use crate::{
-    common,
-    util,
-    memo,
 };
 
 pub fn cred(device: &FidoKeyHid, matches: &clap::ArgMatches) -> Result<()> {
@@ -25,8 +18,8 @@ pub fn cred(device: &FidoKeyHid, matches: &clap::ArgMatches) -> Result<()> {
         println!("Getting Credentials Metadata.");
         metadata(device, &pin)?;
     } else if matches.is_present("delete") {
-        let rpid = matches.value_of("rpid").unwrap_or_else(||"");
-        let user_id = matches.value_of("user-id").unwrap_or_else(||"");
+        let rpid = matches.value_of("rpid").unwrap_or_else(|| "");
+        let user_id = matches.value_of("user-id").unwrap_or_else(|| "");
         if rpid.is_empty() || user_id.is_empty() {
             return Err(anyhow!("Need rpid and userid."));
         }
@@ -37,8 +30,8 @@ pub fn cred(device: &FidoKeyHid, matches: &clap::ArgMatches) -> Result<()> {
 
         delete(device, &pin, rpid, &util::to_str_hex(user_id))?;
     } else if matches.is_present("update") {
-        let rpid = matches.value_of("rpid").unwrap_or_else(||"");
-        let user_id = matches.value_of("user-id").unwrap_or_else(||"");
+        let rpid = matches.value_of("rpid").unwrap_or_else(|| "");
+        let user_id = matches.value_of("user-id").unwrap_or_else(|| "");
         if rpid.is_empty() || user_id.is_empty() {
             return Err(anyhow!("Need rpid and userid."));
         }
@@ -72,13 +65,14 @@ fn is_supported(device: &FidoKeyHid) -> Result<bool> {
 
 fn metadata(device: &FidoKeyHid, pin: &str) -> Result<()> {
     let metadata = device.credential_management_get_creds_metadata(Some(pin))?;
-    println!("{}",metadata);
+    println!("{}", metadata);
     Ok(())
 }
 
 fn enumerate(device: &FidoKeyHid, pin: &str) -> Result<()> {
     let credentials_count = device.credential_management_get_creds_metadata(Some(&pin))?;
-    println!("- existing discoverable credentials: {}/{}",
+    println!(
+        "- existing discoverable credentials: {}/{}",
         credentials_count.existing_resident_credentials_count,
         credentials_count.max_possible_remaining_resident_credentials_count
     );
@@ -91,15 +85,17 @@ fn enumerate(device: &FidoKeyHid, pin: &str) -> Result<()> {
     let rps = device.credential_management_enumerate_rps(Some(&pin))?;
 
     for rp in rps {
-        println!("- rp: (id: {}, name: {})",
-            rp.public_key_credential_rp_entity.id,
-            rp.public_key_credential_rp_entity.name
+        println!(
+            "- rp: (id: {}, name: {})",
+            rp.public_key_credential_rp_entity.id, rp.public_key_credential_rp_entity.name
         );
         //println!("## rps\n{}", rp);
 
-        let creds = device.credential_management_enumerate_credentials(Some(&pin), &rp.rpid_hash)?;
+        let creds =
+            device.credential_management_enumerate_credentials(Some(&pin), &rp.rpid_hash)?;
         for cred in creds {
-            println!("  - credential: (id: {}, name: {}, display_name: {})",
+            println!(
+                "  - credential: (id: {}, name: {}, display_name: {})",
                 util::to_hex_str(&cred.public_key_credential_user_entity.id),
                 cred.public_key_credential_user_entity.name,
                 cred.public_key_credential_user_entity.display_name
@@ -134,7 +130,7 @@ fn update(device: &FidoKeyHid, pin: &str, rpid: &str, user_id: &[u8]) -> Result<
         device.credential_management_update_user_information(
             Some(pin),
             Some(cred.public_key_credential_descriptor),
-            Some(pkcue)
+            Some(pkcue),
         )?;
 
         println!("Delete Success!");
@@ -143,4 +139,3 @@ fn update(device: &FidoKeyHid, pin: &str, rpid: &str, user_id: &[u8]) -> Result<
     }
     Ok(())
 }
-
