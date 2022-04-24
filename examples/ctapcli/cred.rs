@@ -133,7 +133,7 @@ fn update(device: &FidoKeyHid, pin: &str, rpid: &str, user_id: &[u8]) -> Result<
             Some(pkcue),
         )?;
 
-        println!("Delete Success!");
+        println!("Update Success!");
     } else {
         println!("Credential not found...");
     }
