@@ -68,7 +68,7 @@
                     "kind": "example"
                 }
             },
-            "args": ["info"],
+            "args": ["memo"],
             "cwd": "${workspaceFolder}"
         },
         {

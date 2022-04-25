@@ -279,7 +279,18 @@ fn main() -> Result<()> {
             del_tag,
         } => {
             println!("Record some short texts in Authenticator.\n");
-            memo::memo(&device, add, list, &get_tag, &del_tag)?;
+
+            let command = if add {
+                memo::Command::Add
+            } else if list {
+                memo::Command::List
+            } else if !del_tag.is_empty() {
+                memo::Command::Del(del_tag)
+            } else {
+                memo::Command::Get(get_tag)
+            };
+
+            memo::memo(&device, command)?;
         }
         Action::Bio {
             list,

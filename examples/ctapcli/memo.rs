@@ -13,12 +13,16 @@ use crate::common;
 use ctap_hid_fido2::public_key_credential_user_entity::PublicKeyCredentialUserEntity;
 use ctap_hid_fido2::verifier;
 
+pub enum Command {
+    List,
+    Add,
+    Del(String),
+    Get(String),
+}
+
 pub fn memo(
     device: &FidoKeyHid,
-    add: bool,
-    list: bool,
-    get_tag: &str,
-    del_tag: &str,
+    command: Command,
 ) -> Result<()> {
     if !(is_supported(device)?) {
         return Err(anyhow!(
@@ -27,33 +31,37 @@ pub fn memo(
     }
 
     // Title
-    if add {
-        println!("Add a memo.");
-    } else if list {
-        println!("List All memos.");
-    } else if !del_tag.is_empty() {
-        println!("Delete a memo.");
-    } else if !get_tag.is_empty() {
-        println!("Get a memo.");
+    match command {
+        Command::Add => println!("Add a memo."),
+        Command::List => println!("List All memo."),
+        Command::Del(_) => println!("Delete a memo."),
+        Command::Get(_) => println!("Get a memo."),
     }
 
     let pin = common::get_pin();
     let rpid = "ctapcli";
 
     // main
-    if add {
-        let tag = common::get_input_with_message("tag:");
-        add_tag(device, &tag, &pin, rpid)?;
-    } else if !del_tag.is_empty() {
-        del(device, del_tag, &pin, rpid)?;
-    } else if list {
-        list_tag(device, &pin, rpid)?;
-    } else if !get_tag.is_empty() {
-        get(device, get_tag, &pin, rpid)?;
-    } else {
-        list_tag(device, &pin, rpid)?;
-        let tag = common::get_input_with_message("tag:");
-        get(device, &tag, &pin, rpid)?;
+    match command {
+        Command::Add => {
+            let tag = common::get_input_with_message("tag:");
+            add_tag(device, &tag, &pin, rpid)?;
+        }
+        Command::List => {
+            list_tag(device, &pin, rpid)?;
+        }
+        Command::Del(tag) => {
+            del(device, &tag, &pin, rpid)?;
+        }
+        Command::Get(tag) => {
+            if tag.is_empty() {
+                list_tag(device, &pin, rpid)?;
+                let tag = common::get_input_with_message("tag:");
+                get(device, &tag, &pin, rpid)?;
+            } else {
+                get(device, &tag, &pin, rpid)?;
+            }
+        }
     }
 
     Ok(())
