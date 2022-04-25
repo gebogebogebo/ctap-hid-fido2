@@ -82,7 +82,7 @@ enum Action {
             short = 'g',
             long = "get",
             takes_value = true,
-            help = "Get a item(rk/up/uv/plat/pin/mgmtp/mgmt/biop/bio/u2f_v2/fido2/fido21p/fido21/hmac)."
+            help = "Get a info.\n- rk/up/uv/plat/pin/mgmtp/mgmt/biop/bio/u2f_v2/fido2/fido21p/fido21/hmac."
         )]
         item: Option<String>,
     },
