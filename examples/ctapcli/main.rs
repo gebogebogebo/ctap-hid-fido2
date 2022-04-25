@@ -62,29 +62,34 @@ struct AppArg {
     user_presence: bool,
 
     #[clap(subcommand)]
-    action: Action,    
+    action: Action,
 }
 
 #[derive(Subcommand)]
 enum Action {
+    #[clap(
+        about = "Get Authenticator infomation.\n- List All Infomation without any FLAGS and OPTIONS."
+    )]
     Info {
+        #[clap(
+            short = 'l',
+            long = "list",
+            help = "List all info."
+        )]
+        list: bool,
+
         #[clap(
             short = 'g',
             long = "get",
             takes_value = true,
-            default_value = "",
             help = "Get a item(rk/up/uv/plat/pin/mgmtp/mgmt/biop/bio/u2f_v2/fido2/fido21p/fido21/hmac)."
         )]
-        item: String,
+        item: Option<String>,
     },
 
+    #[clap(about = "PIN management.\n- Get PIN retry counter without any FLAGS and OPTIONS.")]
     Pin {
-        #[clap(
-            short = 'n',
-            long = "new",
-            takes_value = false,
-            help = "Set new pin."
-        )]
+        #[clap(short = 'n', long = "new", takes_value = false, help = "Set new pin.")]
         new: bool,
 
         #[clap(
@@ -93,94 +98,99 @@ enum Action {
             takes_value = false,
             help = "Change pin."
         )]
-        change: bool,        
+        change: bool,
     },
+
+    #[clap(
+        about = "Record some short texts in Authenticator.\n- Get a Memo without any FLAGS and OPTIONS."
+    )]
+    Memo {
+        #[clap(short = 'a', long = "add", takes_value = false, help = "Add a memo.")]
+        add: bool,
+
+        #[clap(
+            short = 'g',
+            long = "get",
+            takes_value = true,
+            value_name = "tag",
+            default_value = "",
+            help = "Get a memo to Clipboard."
+        )]
+        get_tag: String,
+
+        #[clap(
+            short = 'd',
+            long = "del",
+            takes_value = true,
+            value_name = "tag",
+            default_value = "",
+            help = "Delete a memo."
+        )]
+        del_tag: String,
+
+        #[clap(
+            short = 'l',
+            long = "list",
+            takes_value = false,
+            help = "List all memos."
+        )]
+        list: bool,
+    },
+
+    #[clap(
+        about = "Bio management.\n- List registered biometric authenticate data. without any FLAGS and OPTIONS."
+    )]
+    Bio {
+        #[clap(
+            short = 'l',
+            long = "list",
+            help = "List registered bio."
+        )]
+        list: bool,
+
+        #[clap(
+            short = 'i',
+            long = "info",
+            help = "Display sensor info."
+        )]
+        info: bool,
+
+        #[clap(
+            short = 'e',
+            long = "enroll",
+            help = "Enrolling fingerprint."
+        )]
+        enroll: bool,
+
+        #[clap(
+            short = 'd',
+            long = "delete",
+            takes_value = true,
+            value_name = "template-id",
+            help = "Delete fingerprint."
+        )]
+        delete_template_id: Option<String>,
+
+        #[clap(
+            long = "test",
+            help = "Test register and authenticate."
+        )]
+        test: bool,
+
+        #[clap(
+            long = "test-with-log",
+            help = "Test register and authenticate(with log)."
+        )]
+        test_with_log: bool,
+
+    },
+
 }
 
 fn main() -> Result<()> {
     env_logger::init();
     /*
     let app = App::new("ctapcli")
-        .subcommand(
-            SubCommand::with_name("pin")
-                .about("PIN management\n- Get PIN retry counter without any FLAGS and OPTIONS.")
-        )
-        .subcommand(
-            SubCommand::with_name("info")
-                .about("Get Authenticator infomation\n- List All Infomation without any FLAGS and OPTIONS.")
-        )
-        .subcommand(
-            SubCommand::with_name("memo")
-                .about("Record some short texts in Authenticator\n- Get a Memo without any FLAGS and OPTIONS.")
-                .arg(
-                    Arg::with_name("add")
-                        .help("Add a memo")
-                        .short("a")
-                        .long("add")
-                )
-                .arg(
-                    Arg::with_name("get")
-                        .help("Get a memo to Clipboard")
-                        .short("g")
-                        .long("get")
-                        .takes_value(true)
-                        .value_name("tag")
-                )
-                .arg(
-                    Arg::with_name("del")
-                        .help("Delete a memo")
-                        .short("d")
-                        .long("del")
-                        .takes_value(true)
-                        .value_name("tag")
-                )
-                .arg(
-                    Arg::with_name("list")
-                        .help("List all memos")
-                        .short("l")
-                        .long("list")
-                )
-        )
-        .subcommand(
-            SubCommand::with_name("bio")
-                .about("Bio management\n- List registered biometric authenticate data. without any FLAGS and OPTIONS.")
-                .arg(
-                    Arg::with_name("list")
-                        .help("List bio")
-                        .short("l")
-                        .long("list")
-                )
-                .arg(
-                    Arg::with_name("info")
-                        .help("Display sensor info")
-                        .short("i")
-                        .long("info")
-                )
-                .arg(
-                    Arg::with_name("enroll")
-                        .help("Enrolling fingerprint")
-                        .short("e")
-                        .long("enroll"),
-                )
-                .arg(
-                    Arg::with_name("delete")
-                        .help("Delete fingerprint")
-                        .short("d")
-                        .long("delete")
-                        .takes_value(true)
-                        .value_name("templateId")
-                )
-                .arg(
-                    Arg::with_name("test")
-                        .help("Test register and authenticate")
-                        .long("test")
-                )
-               .arg(
-                    Arg::with_name("test-with-log")
-                        .help("Test register and authenticate(with log)")
-                        .long("test-log")
-                )
-        )
         .subcommand(
             SubCommand::with_name("cred")
                 .about("(alpha)Credential management\n- Enumerate discoverable credentials")
@@ -266,27 +276,36 @@ fn main() -> Result<()> {
     }
 
     match arg.action {
-        Action::Info { item } => {
+        Action::Info { item, list } => {
             println!("Get the Authenticator infomation.\n");
-            info::info(&device, &item)?;
-        },
-        Action::Pin {new,change} => {
+            let item_val = if list {
+                "".to_string()
+            } else {
+                item.unwrap_or("".to_string())
+            };
+
+            info::info(&device, &item_val)?;
+        }
+        Action::Pin { new, change } => {
             println!("PIN Management.\n");
             pin::pin(&device, new, change)?;
+        }
+        Action::Memo {
+            add,
+            list,
+            get_tag,
+            del_tag,
+        } => {
+            println!("Record some short texts in Authenticator.\n");
+            memo::memo(&device, add, list, &get_tag, &del_tag)?;
+        }
+        Action::Bio { list, info, enroll, delete_template_id, test, test_with_log } => {
+            println!("Bio Management.\n");
+            //bio::bio(&device, matches)?;
         }
     }
 
     /*
-    if let Some(matches) = matches.subcommand_matches("memo") {
-        println!("Record some short texts in Authenticator.\n");
-        memo::memo(&device, matches)?;
-    }
-
-    if let Some(matches) = matches.subcommand_matches("bio") {
-        println!("Bio Management.\n");
-        bio::bio(&device, matches)?;
-    }
-
     if let Some(ref matches) = matches.subcommand_matches("cred") {
         println!("Credential Management.\n");
         cred::cred(&device, &matches)?;
