@@ -13,7 +13,13 @@ use crate::common;
 use ctap_hid_fido2::public_key_credential_user_entity::PublicKeyCredentialUserEntity;
 use ctap_hid_fido2::verifier;
 
-pub fn memo(device: &FidoKeyHid, add: bool, list: bool, get_tag: &str, del_tag: &str) -> Result<()> {
+pub fn memo(
+    device: &FidoKeyHid,
+    add: bool,
+    list: bool,
+    get_tag: &str,
+    del_tag: &str,
+) -> Result<()> {
     if !(is_supported(device)?) {
         return Err(anyhow!(
             "This authenticator is not supported for this functions."
@@ -27,7 +33,7 @@ pub fn memo(device: &FidoKeyHid, add: bool, list: bool, get_tag: &str, del_tag: 
         println!("List All memos.");
     } else if !del_tag.is_empty() {
         println!("Delete a memo.");
-    } else if !get_tag.is_empty(){
+    } else if !get_tag.is_empty() {
         println!("Get a memo.");
     }
 

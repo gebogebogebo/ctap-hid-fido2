@@ -71,11 +71,7 @@ enum Action {
         about = "Get Authenticator infomation.\n- List All Infomation without any FLAGS and OPTIONS."
     )]
     Info {
-        #[clap(
-            short = 'l',
-            long = "list",
-            help = "List all info."
-        )]
+        #[clap(short = 'l', long = "list", help = "List all info.")]
         list: bool,
 
         #[clap(
@@ -89,23 +85,21 @@ enum Action {
 
     #[clap(about = "PIN management.\n- Get PIN retry counter without any FLAGS and OPTIONS.")]
     Pin {
-        #[clap(short = 'n', long = "new", takes_value = false, help = "Set new pin.")]
+        #[clap(short = 'n', long = "new", help = "Set new pin.")]
         new: bool,
 
-        #[clap(
-            short = 'c',
-            long = "change",
-            takes_value = false,
-            help = "Change pin."
-        )]
+        #[clap(short = 'c', long = "change", help = "Change pin.")]
         change: bool,
+
+        #[clap(short = 'v', long = "view", help = "View pin retry count.")]
+        view: bool,
     },
 
     #[clap(
         about = "Record some short texts in Authenticator.\n- Get a Memo without any FLAGS and OPTIONS."
     )]
     Memo {
-        #[clap(short = 'a', long = "add", takes_value = false, help = "Add a memo.")]
+        #[clap(short = 'a', long = "add", help = "Add a memo.")]
         add: bool,
 
         #[clap(
@@ -128,12 +122,7 @@ enum Action {
         )]
         del_tag: String,
 
-        #[clap(
-            short = 'l',
-            long = "list",
-            takes_value = false,
-            help = "List all memos."
-        )]
+        #[clap(short = 'l', long = "list", help = "List all memos.")]
         list: bool,
     },
 
@@ -141,25 +130,13 @@ enum Action {
         about = "Bio management.\n- List registered biometric authenticate data. without any FLAGS and OPTIONS."
     )]
     Bio {
-        #[clap(
-            short = 'l',
-            long = "list",
-            help = "List registered bio."
-        )]
+        #[clap(short = 'l', long = "list", help = "List registered bio.")]
         list: bool,
 
-        #[clap(
-            short = 'i',
-            long = "info",
-            help = "Display sensor info."
-        )]
+        #[clap(short = 'i', long = "info", help = "Display sensor info.")]
         info: bool,
 
-        #[clap(
-            short = 'e',
-            long = "enroll",
-            help = "Enrolling fingerprint."
-        )]
+        #[clap(short = 'e', long = "enroll", help = "Enrolling fingerprint.")]
         enroll: bool,
 
         #[clap(
@@ -171,10 +148,7 @@ enum Action {
         )]
         delete_template_id: Option<String>,
 
-        #[clap(
-            long = "test",
-            help = "Test register and authenticate."
-        )]
+        #[clap(long = "test", help = "Test register and authenticate.")]
         test: bool,
 
         #[clap(
@@ -182,9 +156,7 @@ enum Action {
             help = "Test register and authenticate(with log)."
         )]
         test_with_log: bool,
-
     },
-
 }
 
 fn main() -> Result<()> {
@@ -283,12 +255,22 @@ fn main() -> Result<()> {
             } else {
                 item.unwrap_or("".to_string())
             };
-
             info::info(&device, &item_val)?;
         }
-        Action::Pin { new, change } => {
+        Action::Pin {
+            new,
+            change,
+            view: _,
+        } => {
             println!("PIN Management.\n");
-            pin::pin(&device, new, change)?;
+            let command = if new {
+                pin::PinCommand::New
+            } else if change {
+                pin::PinCommand::Change
+            } else {
+                pin::PinCommand::View
+            };
+            pin::pin(&device, command)?;
         }
         Action::Memo {
             add,
@@ -299,7 +281,14 @@ fn main() -> Result<()> {
             println!("Record some short texts in Authenticator.\n");
             memo::memo(&device, add, list, &get_tag, &del_tag)?;
         }
-        Action::Bio { list, info, enroll, delete_template_id, test, test_with_log } => {
+        Action::Bio {
+            list,
+            info,
+            enroll,
+            delete_template_id,
+            test,
+            test_with_log,
+        } => {
             println!("Bio Management.\n");
             //bio::bio(&device, matches)?;
         }
