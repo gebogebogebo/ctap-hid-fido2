@@ -301,7 +301,22 @@ fn main() -> Result<()> {
             test_with_log,
         } => {
             println!("Bio Management.\n");
-            //bio::bio(&device, matches)?;
+
+            let command = if list {
+                bio::Command::List
+            } else if info {
+                bio::Command::Info
+            } else if enroll {
+                bio::Command::Enroll
+            } else if delete_template_id.is_some() {
+                bio::Command::Del(delete_template_id.unwrap())
+            } else if test {
+                bio::Command::Test(false)
+            } else {
+                bio::Command::Test(true)
+            };
+
+            bio::bio(&device, command)?;
         }
     }
 

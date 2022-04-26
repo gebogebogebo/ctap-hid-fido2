@@ -20,10 +20,7 @@ pub enum Command {
     Get(String),
 }
 
-pub fn memo(
-    device: &FidoKeyHid,
-    command: Command,
-) -> Result<()> {
+pub fn memo(device: &FidoKeyHid, command: Command) -> Result<()> {
     if !(is_supported(device)?) {
         return Err(anyhow!(
             "This authenticator is not supported for this functions."
