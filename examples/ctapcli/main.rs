@@ -127,7 +127,7 @@ enum Action {
     },
 
     #[clap(
-        about = "Bio management.\n- List registered biometric authenticate data. without any FLAGS and OPTIONS."
+        about = "Bio management.\n- List registered biometric authenticate data without any FLAGS and OPTIONS."
     )]
     Bio {
         #[clap(short = 'l', long = "list", help = "List registered bio.")]
@@ -157,54 +157,53 @@ enum Action {
         )]
         test_with_log: bool,
     },
+
+    #[clap(
+        about = "Credential management.\n- List discoverable credentials without any FLAGS and OPTIONS."
+    )]
+    Cred {
+        #[clap(short = 'l', long = "list", help = "List discoverable credentials.")]
+        list: bool,
+
+        #[clap(
+            short = 'm',
+            long = "metadata",
+            help = "Getting discoverable credentials Metadata."
+        )]
+        metadata: bool,
+
+        #[clap(
+            short = 'd',
+            long = "delete",
+            help = "Delete a discoverable credential."
+        )]
+        delete: bool,
+
+        #[clap(
+            short = 'u',
+            long = "update",
+            help = "[Always an error?]Update a discoverable credential user info."
+        )]
+        update: bool,
+
+        #[clap(
+            long = "rpid",
+            takes_value = true,
+            help = "rpid to be deleted(or updated)."
+        )]
+        rpid: Option<String>,
+
+        #[clap(
+            long = "userid",
+            takes_value = true,
+            help = "user-id to be deleted(or updated)."
+        )]
+        userid: Option<String>,
+    },
 }
 
 fn main() -> Result<()> {
     env_logger::init();
-    /*
-    let app = App::new("ctapcli")
-        .subcommand(
-            SubCommand::with_name("cred")
-                .about("(alpha)Credential management\n- Enumerate discoverable credentials")
-                .arg(
-                    Arg::with_name("list")
-                        .help("List cred.")
-                        .short("l")
-                        .long("list")
-                )
-                .arg(
-                    Arg::with_name("metadata")
-                        .help("Getting Credentials Metadata.")
-                        .short("m")
-                        .long("metadata"),
-                )
-                .arg(
-                    Arg::with_name("delete")
-                        .help("Delete a discoverable credential.")
-                        .short("d")
-                        .long("delete")
-                )
-                .arg(
-                    Arg::with_name("update")
-                        .help("[Always an error?]Update a discoverable credential user info.")
-                        .short("u")
-                        .long("update")
-                )
-                .arg(
-                    Arg::with_name("rpid")
-                        .help("rpid to be deleted(or updated).")
-                        .long("rpid")
-                        .takes_value(true)
-                )
-                .arg(
-                    Arg::with_name("user-id")
-                        .help("user-id to be deleted(or updated).")
-                        .long("userid")
-                        .takes_value(true)
-                )
-        );
-     */
-
     let arg: AppArg = AppArg::parse();
 
     let mut cfg = Cfg::init();
@@ -293,7 +292,7 @@ fn main() -> Result<()> {
             memo::memo(&device, command)?;
         }
         Action::Bio {
-            list,
+            list: _,
             info,
             enroll,
             delete_template_id,
@@ -302,9 +301,7 @@ fn main() -> Result<()> {
         } => {
             println!("Bio Management.\n");
 
-            let command = if list {
-                bio::Command::List
-            } else if info {
+            let command = if info {
                 bio::Command::Info
             } else if enroll {
                 bio::Command::Enroll
@@ -312,20 +309,35 @@ fn main() -> Result<()> {
                 bio::Command::Del(delete_template_id.unwrap())
             } else if test {
                 bio::Command::Test(false)
-            } else {
+            } else if test_with_log {
                 bio::Command::Test(true)
+            } else {
+                bio::Command::List
             };
 
             bio::bio(&device, command)?;
         }
-    }
+        Action::Cred {
+            list:_,
+            metadata,
+            delete,
+            update,
+            rpid,
+            userid,
+        } => {
+            let command = if metadata {
+                cred::Command::Metadata
+            } else if delete {
+                cred::Command::Del(("hoge".to_string(),"ho".to_string()))
+            } else if update {
+                cred::Command::Update(("hoge".to_string(),"ho".to_string()))
+            } else {
+                cred::Command::List
+            };
 
-    /*
-    if let Some(ref matches) = matches.subcommand_matches("cred") {
-        println!("Credential Management.\n");
-        cred::cred(&device, &matches)?;
+            cred::cred(&device, command)?;
+        }
     }
-     */
 
     /*
     println!("config()");

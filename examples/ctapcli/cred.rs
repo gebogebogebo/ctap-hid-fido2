@@ -5,45 +5,59 @@ use ctap_hid_fido2::{
     public_key_credential_user_entity::PublicKeyCredentialUserEntity,
 };
 
-pub fn cred(device: &FidoKeyHid, matches: &clap::ArgMatches) -> Result<()> {
+pub enum Command {
+    Metadata,
+    List,
+    Del((String,String)),
+    Update((String,String)),
+}
+
+pub fn cred(device: &FidoKeyHid, command: Command) -> Result<()> {
     if !(is_supported(device)?) {
         return Err(anyhow!(
             "This authenticator is not Supported Credential management."
         ));
     }
 
-    let pin = common::get_pin();
+    //let pin = common::get_pin();
+    let pin = "1234";
 
-    if matches.is_present("metadata") {
-        println!("Getting Credentials Metadata.");
-        metadata(device, &pin)?;
-    } else if matches.is_present("delete") {
-        let rpid = matches.value_of("rpid").unwrap_or_else(|| "");
-        let user_id = matches.value_of("user-id").unwrap_or_else(|| "");
-        if rpid.is_empty() || user_id.is_empty() {
-            return Err(anyhow!("Need rpid and userid."));
+    match command {
+        Command::List => {
+            println!("Enumerate discoverable credentials.");
+            enumerate(device, &pin)?;
         }
-
-        println!("Delete a Credential.");
-        println!("- credential: (rpid: {}, user_id: {})", rpid, user_id);
-        println!();
-
-        delete(device, &pin, rpid, &util::to_str_hex(user_id))?;
-    } else if matches.is_present("update") {
-        let rpid = matches.value_of("rpid").unwrap_or_else(|| "");
-        let user_id = matches.value_of("user-id").unwrap_or_else(|| "");
-        if rpid.is_empty() || user_id.is_empty() {
-            return Err(anyhow!("Need rpid and userid."));
+        Command::Metadata => {
+            println!("Getting Credentials Metadata.");
+            metadata(device, &pin)?;
         }
+        Command::Del((rpid,user_id)) => {
+            if rpid.is_empty() || user_id.is_empty() {
+                return Err(anyhow!("Need rpid and userid."));
+            }
 
-        println!("Update a Credential.");
-        println!("- credential: (rpid: {}, user_id: {})", rpid, user_id);
-        println!();
+            println!("Delete a Credential.");
+            println!("- credential: (rpid: {}, user_id: {})", rpid, user_id);
+            println!();
 
-        update(device, &pin, rpid, &util::to_str_hex(user_id))?;
-    } else {
-        println!("Enumerate discoverable credentials.");
-        enumerate(device, &pin)?;
+            delete(device, &pin, &rpid, &util::to_str_hex(&user_id))?;
+        }
+        Command::Update(_) => {
+    /*
+            let rpid = matches.value_of("rpid").unwrap_or_else(|| "");
+            let user_id = matches.value_of("user-id").unwrap_or_else(|| "");
+            if rpid.is_empty() || user_id.is_empty() {
+                return Err(anyhow!("Need rpid and userid."));
+            }
+
+            println!("Update a Credential.");
+            println!("- credential: (rpid: {}, user_id: {})", rpid, user_id);
+            println!();
+
+            update(device, &pin, rpid, &util::to_str_hex(user_id))?;
+
+    */
+        }
     }
     Ok(())
 }
