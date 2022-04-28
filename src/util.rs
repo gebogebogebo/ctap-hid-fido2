@@ -16,7 +16,7 @@ pub fn to_hex_str(bytes: &[u8]) -> String {
 }
 
 pub fn to_str_hex(hexstr: &str) -> Vec<u8> {
-    match hex::decode(hexstr){
+    match hex::decode(hexstr) {
         Ok(val) => val,
         Err(_) => vec![],
     }

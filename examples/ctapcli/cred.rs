@@ -8,8 +8,8 @@ use ctap_hid_fido2::{
 pub enum Command {
     Metadata,
     List,
-    Del((String,String)),
-    Update((String,String)),
+    Del((String, String)),
+    Update((String, String)),
 }
 
 pub fn cred(device: &FidoKeyHid, command: Command) -> Result<()> {
@@ -19,8 +19,7 @@ pub fn cred(device: &FidoKeyHid, command: Command) -> Result<()> {
         ));
     }
 
-    //let pin = common::get_pin();
-    let pin = "1234";
+    let pin = common::get_pin();
 
     match command {
         Command::List => {
@@ -31,32 +30,29 @@ pub fn cred(device: &FidoKeyHid, command: Command) -> Result<()> {
             println!("Getting Credentials Metadata.");
             metadata(device, &pin)?;
         }
-        Command::Del((rpid,user_id)) => {
+        Command::Del((rpid, user_id)) => {
+            println!("Delete a Credential.");
+
             if rpid.is_empty() || user_id.is_empty() {
                 return Err(anyhow!("Need rpid and userid."));
             }
 
-            println!("Delete a Credential.");
             println!("- credential: (rpid: {}, user_id: {})", rpid, user_id);
             println!();
 
             delete(device, &pin, &rpid, &util::to_str_hex(&user_id))?;
         }
-        Command::Update(_) => {
-    /*
-            let rpid = matches.value_of("rpid").unwrap_or_else(|| "");
-            let user_id = matches.value_of("user-id").unwrap_or_else(|| "");
+        Command::Update((rpid, user_id)) => {
+            println!("Update a Credential.");
+
             if rpid.is_empty() || user_id.is_empty() {
                 return Err(anyhow!("Need rpid and userid."));
             }
 
-            println!("Update a Credential.");
             println!("- credential: (rpid: {}, user_id: {})", rpid, user_id);
             println!();
 
-            update(device, &pin, rpid, &util::to_str_hex(user_id))?;
-
-    */
+            update(device, &pin, &rpid, &util::to_str_hex(&user_id))?;
         }
     }
     Ok(())

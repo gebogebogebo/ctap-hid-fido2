@@ -318,7 +318,7 @@ fn main() -> Result<()> {
             bio::bio(&device, command)?;
         }
         Action::Cred {
-            list:_,
+            list: _,
             metadata,
             delete,
             update,
@@ -328,9 +328,15 @@ fn main() -> Result<()> {
             let command = if metadata {
                 cred::Command::Metadata
             } else if delete {
-                cred::Command::Del(("hoge".to_string(),"ho".to_string()))
+                cred::Command::Del((
+                    rpid.unwrap_or("".to_string()),
+                    userid.unwrap_or("".to_string()),
+                ))
             } else if update {
-                cred::Command::Update(("hoge".to_string(),"ho".to_string()))
+                cred::Command::Update((
+                    rpid.unwrap_or("".to_string()),
+                    userid.unwrap_or("".to_string()),
+                ))
             } else {
                 cred::Command::List
             };
