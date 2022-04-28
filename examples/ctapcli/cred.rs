@@ -64,7 +64,7 @@ fn is_supported(device: &FidoKeyHid) -> Result<bool> {
     }
 
     if device
-        .enable_info_option(&&InfoOption::CredentialMgmtPreview)?
+        .enable_info_option(&InfoOption::CredentialMgmtPreview)?
         .is_some()
     {
         Ok(true)
@@ -80,7 +80,7 @@ fn metadata(device: &FidoKeyHid, pin: &str) -> Result<()> {
 }
 
 fn enumerate(device: &FidoKeyHid, pin: &str) -> Result<()> {
-    let credentials_count = device.credential_management_get_creds_metadata(Some(&pin))?;
+    let credentials_count = device.credential_management_get_creds_metadata(Some(pin))?;
     println!(
         "- existing discoverable credentials: {}/{}",
         credentials_count.existing_resident_credentials_count,
@@ -92,7 +92,7 @@ fn enumerate(device: &FidoKeyHid, pin: &str) -> Result<()> {
         return Ok(());
     }
 
-    let rps = device.credential_management_enumerate_rps(Some(&pin))?;
+    let rps = device.credential_management_enumerate_rps(Some(pin))?;
 
     for rp in rps {
         println!(
@@ -102,7 +102,7 @@ fn enumerate(device: &FidoKeyHid, pin: &str) -> Result<()> {
         //println!("## rps\n{}", rp);
 
         let creds =
-            device.credential_management_enumerate_credentials(Some(&pin), &rp.rpid_hash)?;
+            device.credential_management_enumerate_credentials(Some(pin), &rp.rpid_hash)?;
         for cred in creds {
             println!(
                 "  - credential: (id: {}, name: {}, display_name: {})",
@@ -132,10 +132,11 @@ fn delete(device: &FidoKeyHid, pin: &str, rpid: &str, user_id: &[u8]) -> Result<
 
 fn update(device: &FidoKeyHid, pin: &str, rpid: &str, user_id: &[u8]) -> Result<()> {
     if let Some(cred) = memo::search_cred(device, pin, rpid, user_id)? {
-        let mut pkcue = PublicKeyCredentialUserEntity::default();
-        pkcue.id = util::to_str_hex("7573657232");
-        pkcue.name = "test-name".to_string();
-        pkcue.display_name = "test-display".to_string();
+        let pkcue = PublicKeyCredentialUserEntity {
+            id: user_id.to_vec(),
+            name: "test-name".to_string(),
+            display_name: "test-display".to_string()
+        };
 
         device.credential_management_update_user_information(
             Some(pin),

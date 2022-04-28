@@ -252,7 +252,7 @@ fn main() -> Result<()> {
             let item_val = if list {
                 "".to_string()
             } else {
-                item.unwrap_or("".to_string())
+                item.unwrap_or_else(|| "".to_string())
             };
             info::info(&device, &item_val)?;
         }
@@ -305,7 +305,7 @@ fn main() -> Result<()> {
                 bio::Command::Info
             } else if enroll {
                 bio::Command::Enroll
-            } else if delete_template_id.is_some() {
+            } else if let Some(..) = delete_template_id {
                 bio::Command::Del(delete_template_id.unwrap())
             } else if test {
                 bio::Command::Test(false)
@@ -329,13 +329,13 @@ fn main() -> Result<()> {
                 cred::Command::Metadata
             } else if delete {
                 cred::Command::Del((
-                    rpid.unwrap_or("".to_string()),
-                    userid.unwrap_or("".to_string()),
+                    rpid.unwrap_or_else(|| "".to_string()),
+                    userid.unwrap_or_else(|| "".to_string()),
                 ))
             } else if update {
                 cred::Command::Update((
-                    rpid.unwrap_or("".to_string()),
-                    userid.unwrap_or("".to_string()),
+                    rpid.unwrap_or_else(|| "".to_string()),
+                    userid.unwrap_or_else(|| "".to_string()),
                 ))
             } else {
                 cred::Command::List

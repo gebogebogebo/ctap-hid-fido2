@@ -140,7 +140,7 @@ fn get_rps(device: &FidoKeyHid, pin: Option<&str>) -> Result<Vec<Rp>> {
         Ok(rps) => Ok(rps),
         Err(e) => {
             // 0x2E CTAP2_ERR_NO_CREDENTIALS is not error
-            if e.to_string().find("0x2E").is_some() {
+            if e.to_string().contains("0x2E") {
                 Ok(vec![])
             } else {
                 Err(e)

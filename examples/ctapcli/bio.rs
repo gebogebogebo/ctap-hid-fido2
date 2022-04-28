@@ -119,7 +119,7 @@ fn is_supported(device: &FidoKeyHid) -> Result<bool> {
     }
 
     if device
-        .enable_info_option(&&InfoOption::UserVerificationMgmtPreview)?
+        .enable_info_option(&InfoOption::UserVerificationMgmtPreview)?
         .is_some()
     {
         Ok(true)
@@ -136,7 +136,7 @@ fn list(device: &FidoKeyHid, pin: &str) -> Result<()> {
     for template_info in template_infos {
         strbuf.addln(&format!("{}", template_info));
     }
-    println!("{}", strbuf.build().to_string());
+    println!("{}", strbuf.build());
 
     Ok(())
 }
