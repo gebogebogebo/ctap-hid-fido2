@@ -68,7 +68,7 @@
                     "kind": "example"
                 }
             },
-            "args": ["cred","-u","--rpid","ctapcli","--userid","74657374"],
+            "args": ["-w"],
             "cwd": "${workspaceFolder}"
         },
         {

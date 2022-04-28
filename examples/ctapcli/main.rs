@@ -62,7 +62,7 @@ struct AppArg {
     user_presence: bool,
 
     #[clap(subcommand)]
-    action: Action,
+    action: Option<Action>,
 }
 
 #[derive(Subcommand)]
@@ -246,112 +246,112 @@ fn main() -> Result<()> {
         println!("Do you see that wink? ;-)\n");
     }
 
-    match arg.action {
-        Action::Info { item, list } => {
-            println!("Get the Authenticator infomation.\n");
-            let item_val = if list {
-                "".to_string()
-            } else {
-                item.unwrap_or_else(|| "".to_string())
-            };
-            info::info(&device, &item_val)?;
-        }
-        Action::Pin {
-            new,
-            change,
-            view: _,
-        } => {
-            println!("PIN Management.\n");
-            let command = if new {
-                pin::PinCommand::New
-            } else if change {
-                pin::PinCommand::Change
-            } else {
-                pin::PinCommand::View
-            };
-            pin::pin(&device, command)?;
-        }
-        Action::Memo {
-            add,
-            list,
-            get_tag,
-            del_tag,
-        } => {
-            println!("Record some short texts in Authenticator.\n");
+    if let Some(action) = arg.action {
+        match action {
+            Action::Info { item, list } => {
+                println!("Get the Authenticator infomation.\n");
+                let item_val = if list {
+                    "".to_string()
+                } else {
+                    item.unwrap_or_else(|| "".to_string())
+                };
+                info::info(&device, &item_val)?;
+            }
+            Action::Pin {
+                new,
+                change,
+                view: _,
+            } => {
+                println!("PIN Management.\n");
+                let command = if new {
+                    pin::PinCommand::New
+                } else if change {
+                    pin::PinCommand::Change
+                } else {
+                    pin::PinCommand::View
+                };
+                pin::pin(&device, command)?;
+            }
+            Action::Memo {
+                add,
+                list,
+                get_tag,
+                del_tag,
+            } => {
+                println!("Record some short texts in Authenticator.\n");
 
-            let command = if add {
-                memo::Command::Add
-            } else if list {
-                memo::Command::List
-            } else if !del_tag.is_empty() {
-                memo::Command::Del(del_tag)
-            } else {
-                memo::Command::Get(get_tag)
-            };
+                let command = if add {
+                    memo::Command::Add
+                } else if list {
+                    memo::Command::List
+                } else if !del_tag.is_empty() {
+                    memo::Command::Del(del_tag)
+                } else {
+                    memo::Command::Get(get_tag)
+                };
 
-            memo::memo(&device, command)?;
-        }
-        Action::Bio {
-            list: _,
-            info,
-            enroll,
-            delete_template_id,
-            test,
-            test_with_log,
-        } => {
-            println!("Bio Management.\n");
+                memo::memo(&device, command)?;
+            }
+            Action::Bio {
+                list: _,
+                info,
+                enroll,
+                delete_template_id,
+                test,
+                test_with_log,
+            } => {
+                println!("Bio Management.\n");
 
-            let command = if info {
-                bio::Command::Info
-            } else if enroll {
-                bio::Command::Enroll
-            } else if let Some(..) = delete_template_id {
-                bio::Command::Del(delete_template_id.unwrap())
-            } else if test {
-                bio::Command::Test(false)
-            } else if test_with_log {
-                bio::Command::Test(true)
-            } else {
-                bio::Command::List
-            };
+                let command = if info {
+                    bio::Command::Info
+                } else if enroll {
+                    bio::Command::Enroll
+                } else if let Some(..) = delete_template_id {
+                    bio::Command::Del(delete_template_id.unwrap())
+                } else if test {
+                    bio::Command::Test(false)
+                } else if test_with_log {
+                    bio::Command::Test(true)
+                } else {
+                    bio::Command::List
+                };
 
-            bio::bio(&device, command)?;
-        }
-        Action::Cred {
-            list: _,
-            metadata,
-            delete,
-            update,
-            rpid,
-            userid,
-        } => {
-            let command = if metadata {
-                cred::Command::Metadata
-            } else if delete {
-                cred::Command::Del((
-                    rpid.unwrap_or_else(|| "".to_string()),
-                    userid.unwrap_or_else(|| "".to_string()),
-                ))
-            } else if update {
-                cred::Command::Update((
-                    rpid.unwrap_or_else(|| "".to_string()),
-                    userid.unwrap_or_else(|| "".to_string()),
-                ))
-            } else {
-                cred::Command::List
-            };
+                bio::bio(&device, command)?;
+            }
+            Action::Cred {
+                list: _,
+                metadata,
+                delete,
+                update,
+                rpid,
+                userid,
+            } => {
+                let command = if metadata {
+                    cred::Command::Metadata
+                } else if delete {
+                    cred::Command::Del((
+                        rpid.unwrap_or_else(|| "".to_string()),
+                        userid.unwrap_or_else(|| "".to_string()),
+                    ))
+                } else if update {
+                    cred::Command::Update((
+                        rpid.unwrap_or_else(|| "".to_string()),
+                        userid.unwrap_or_else(|| "".to_string()),
+                    ))
+                } else {
+                    cred::Command::List
+                };
 
-            cred::cred(&device, command)?;
+                cred::cred(&device, command)?;
+            }
         }
     }
 
-    /*
-    println!("config()");
-    match ctap_hid_fido2::config(&HidParam::get_default_params()) {
-        Ok(result) => println!("- config : {:?}", result),
-        Err(error) => println!("- config error: {:?}", error),
-    };
-    */
+    // println!("config()");
+    // match device.config() {
+    //     Ok(result) => println!("- config : {:?}", result),
+    //     Err(error) => println!("- config error: {:?}", error),
+    // };
 
     Ok(())
 }
