@@ -42,17 +42,17 @@ fn create_payload(sub_command: SubCommand,pin_auth: &[u8]) -> Vec<u8> {
 impl FidoKeyHid {
 
     /// Get Config (CTAP 2.1)
-    pub fn config(&self) -> Result<String> {
+    pub fn config(&self, pin: Option<&str>) -> Result<String> {
         let cid = ctaphid::ctaphid_init(self).map_err(Error::msg)?;
 
         // TODO
-        let pin = Some("1234");
         let sub_command = SubCommand::ToggleAlwaysUv;
 
         // get pintoken & create pin auth
         let pin_auth = if let Some(pin) = pin {
             if !pin.is_empty() {
                 let pin_token = self.get_pin_token(&cid, pin)?;
+                // let pin_token = self.get_pinuv_auth_token_with_permission(cid, pin, super::pin::Permission::Acfg)?;
 
                 // pinUvAuthParam (0x04): the result of calling
                 // authenticate(pinUvAuthToken, 32×0xff || 0x0d || uint8(subCommand) || subCommandParams).

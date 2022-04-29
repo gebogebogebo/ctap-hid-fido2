@@ -188,7 +188,7 @@ enum Action {
         #[clap(
             short = 'u',
             long = "update",
-            help = "[Always an error?]Update a discoverable credential user info."
+            help = "[Always an error]Update a discoverable credential user info."
         )]
         update: bool,
 
@@ -205,6 +205,16 @@ enum Action {
             help = "user-id to be deleted(or updated)."
         )]
         userid: Option<String>,
+
+        #[clap(short = 'p')]
+        pin: Option<String>,
+    },
+    Config {
+        #[clap(long = "auv", help = "[Always an error]toggleAlwaysUv.")]
+        toggle_always_uv: bool,
+
+        #[clap(short = 'p')]
+        pin: String,
     },
 }
 
@@ -331,6 +341,7 @@ fn main() -> Result<()> {
                 update,
                 rpid,
                 userid,
+                pin
             } => {
                 let command = if metadata {
                     cred::Command::Metadata
@@ -348,18 +359,18 @@ fn main() -> Result<()> {
                     cred::Command::List
                 };
 
-                cred::cred(&device, command)?;
+                cred::cred(&device, command, pin)?;
+            }
+            Action::Config { toggle_always_uv, pin } => {
+                println!("config()");
+                if toggle_always_uv {
+                    match device.config(Some(&pin)) {
+                        Ok(result) => println!("- config : {:?}", result),
+                        Err(error) => println!("- config error: {:?}", error),
+                    };
+                }
             }
         }
-    }
-
-    // TODO
-    if arg.config {
-        println!("config()");
-        match device.config() {
-            Ok(result) => println!("- config : {:?}", result),
-            Err(error) => println!("- config error: {:?}", error),
-        };
     }
 
     Ok(())

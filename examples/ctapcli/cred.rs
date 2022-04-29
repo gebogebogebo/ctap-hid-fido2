@@ -12,14 +12,18 @@ pub enum Command {
     Update((String, String)),
 }
 
-pub fn cred(device: &FidoKeyHid, command: Command) -> Result<()> {
+pub fn cred(device: &FidoKeyHid, command: Command, pin: Option<String>) -> Result<()> {
     if !(is_supported(device)?) {
         return Err(anyhow!(
             "This authenticator is not Supported Credential management."
         ));
     }
 
-    let pin = common::get_pin();
+    let pin = if let Some(val) = pin {
+        val
+    } else {
+        common::get_pin()
+    };
 
     match command {
         Command::List => {
