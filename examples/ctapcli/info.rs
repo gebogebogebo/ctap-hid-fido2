@@ -17,7 +17,7 @@ pub fn info(device: &FidoKeyHid, item: &str) -> Result<()> {
     }
 
     let info_option = match item {
-        "alwaysUv" => Some(InfoOption::AlwaysUv),
+        "auv" => Some(InfoOption::AlwaysUv),
         "biop" => Some(InfoOption::UserVerificationMgmtPreview),
         "bio" => Some(InfoOption::BioEnroll),
         "ep" => Some(InfoOption::Ep),

@@ -101,8 +101,7 @@ fn enumerate(device: &FidoKeyHid, pin: &str) -> Result<()> {
         );
         //println!("## rps\n{}", rp);
 
-        let creds =
-            device.credential_management_enumerate_credentials(Some(pin), &rp.rpid_hash)?;
+        let creds = device.credential_management_enumerate_credentials(Some(pin), &rp.rpid_hash)?;
         for cred in creds {
             println!(
                 "  - credential: (id: {}, name: {}, display_name: {})",
@@ -135,7 +134,7 @@ fn update(device: &FidoKeyHid, pin: &str, rpid: &str, user_id: &[u8]) -> Result<
         let pkcue = PublicKeyCredentialUserEntity {
             id: user_id.to_vec(),
             name: "test-name".to_string(),
-            display_name: "test-display".to_string()
+            display_name: "test-display".to_string(),
         };
 
         device.credential_management_update_user_information(

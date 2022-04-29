@@ -3,54 +3,73 @@ mod get_info_command;
 mod get_info_params;
 mod get_info_response;
 
-use super::make_credential::make_credential_params::Extension as Mext;
-
 use anyhow::{anyhow, Error, Result};
 
 use super::FidoKeyHid;
 
-// TODO use strum
-// pub enum InfoOption {
-//    #[strum(serialize = "alwaysUv")]
-//     AlwaysUv,
-//    #[strum(serialize = "authnrCfg")]
-//     AuthnrCfg,
-// }
-
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, strum_macros::AsRefStr)]
 pub enum InfoOption {
+    #[strum(serialize = "alwaysUv")]
     AlwaysUv,
+    #[strum(serialize = "authnrCfg")]
     AuthnrCfg,
+    #[strum(serialize = "bioEnroll")]
     BioEnroll,
+    #[strum(serialize = "clientPin")]
     ClientPin,
+    #[strum(serialize = "credentialMgmtPreview")]
     CredentialMgmtPreview,
+    #[strum(serialize = "credMgmt")]
     CredMgmt,
+    #[strum(serialize = "ep")]
     Ep,
+    #[strum(serialize = "largeBlobs")]
     LargeBlobs,
+    #[strum(serialize = "makeCredUvNotRqd")]
     MakeCredUvNotRqd,
+    #[strum(serialize = "noMcGaPermissionsWithClientPin")]
     NoMcGaPermissionsWithClientPin,
+    #[strum(serialize = "pinUvAuthToken")]
     PinUvAuthToken,
+    #[strum(serialize = "plat")]
     Plat,
+    #[strum(serialize = "rk")]
     Rk,
+    #[strum(serialize = "setMinPINLength")]
     SetMinPINLength,
+    #[strum(serialize = "up")]
     Up,
+    #[strum(serialize = "userVerificationMgmtPreview")]
     UserVerificationMgmtPreview,
+    #[strum(serialize = "uv")]
     Uv,
+    #[strum(serialize = "uvAcfg")]
     UvAcfg,
+    #[strum(serialize = "uvBioEnroll")]
     UvBioEnroll,
+    #[strum(serialize = "uvToken")]
     UvToken,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, strum_macros::AsRefStr)]
 pub enum InfoParam {
+    #[strum(serialize = "U2F_V2")]
     VersionsU2Fv2,
+    #[strum(serialize = "FIDO_2_0")]
     VersionsFido20,
+    #[strum(serialize = "FIDO_2_1_PRE")]
     VersionsFido21Pre,
+    #[strum(serialize = "FIDO_2_1")]
     VersionsFido21,
+    #[strum(serialize = "credProtect")]
     ExtensionsCredProtect,
+    #[strum(serialize = "credBlob")]
     ExtensionsCredBlob,
+    #[strum(serialize = "credBlobKey")]
     ExtensionsLargeBlobKey,
+    #[strum(serialize = "minPinLength")]
     ExtensionsMinPinLength,
+    #[strum(serialize = "hmac-secret")]
     ExtensionsHmacSecret,
 }
 
@@ -80,22 +99,11 @@ impl FidoKeyHid {
 
     pub fn enable_info_param(&self, info_param: &InfoParam) -> Result<bool> {
         let info = self.get_info()?;
-        let find = match info_param {
-            InfoParam::VersionsU2Fv2 => "U2F_V2",
-            InfoParam::VersionsFido20 => "FIDO_2_0",
-            InfoParam::VersionsFido21Pre => "FIDO_2_1_PRE",
-            InfoParam::VersionsFido21 => "FIDO_2_1",
-            InfoParam::ExtensionsCredProtect => Mext::CredProtect(None).as_ref(),
-            InfoParam::ExtensionsCredBlob => "credBlob",
-            InfoParam::ExtensionsLargeBlobKey => "credBlobKey",
-            InfoParam::ExtensionsMinPinLength => "minPinLength",
-            InfoParam::ExtensionsHmacSecret => Mext::HmacSecret(None).as_ref(),
-        };
-        let ret = info.versions.iter().find(|v| *v == find);
+        let ret = info.versions.iter().find(|v| *v == info_param.as_ref());
         if ret.is_some() {
             return Ok(true);
         }
-        let ret = info.extensions.iter().find(|v| *v == find);
+        let ret = info.extensions.iter().find(|v| *v == info_param.as_ref());
         if ret.is_some() {
             return Ok(true);
         }
@@ -104,29 +112,7 @@ impl FidoKeyHid {
 
     pub fn enable_info_option(&self, info_option: &InfoOption) -> Result<Option<bool>> {
         let info = self.get_info()?;
-        let find = match info_option {
-            InfoOption::AlwaysUv => "alwaysUv",
-            InfoOption::AuthnrCfg => "authnrCfg",
-            InfoOption::BioEnroll => "bioEnroll",
-            InfoOption::ClientPin => "clientPin",
-            InfoOption::CredentialMgmtPreview => "credentialMgmtPreview",
-            InfoOption::CredMgmt => "credMgmt",
-            InfoOption::Ep => "ep",
-            InfoOption::LargeBlobs => "largeBlobs",
-            InfoOption::MakeCredUvNotRqd => "makeCredUvNotRqd",
-            InfoOption::NoMcGaPermissionsWithClientPin => "noMcGaPermissionsWithClientPin",
-            InfoOption::PinUvAuthToken => "pinUvAuthToken",
-            InfoOption::Plat => "plat",
-            InfoOption::Rk => "rk",
-            InfoOption::SetMinPINLength => "setMinPINLength",
-            InfoOption::Up => "up",
-            InfoOption::UserVerificationMgmtPreview => "userVerificationMgmtPreview",
-            InfoOption::Uv => "uv",
-            InfoOption::UvAcfg => "uvAcfg",
-            InfoOption::UvBioEnroll => "uvBioEnroll",
-            InfoOption::UvToken => "uvToken",
-        };
-        let ret = info.options.iter().find(|v| (*v).0 == find);
+        let ret = info.options.iter().find(|v| (*v).0 == info_option.as_ref());
         if let Some(v) = ret {
             // v.1 == true or false
             // - present and set to true.
