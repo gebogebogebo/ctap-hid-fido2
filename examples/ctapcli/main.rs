@@ -32,15 +32,13 @@ struct AppArg {
     #[clap(
         short = 'd',
         long = "device",
-        takes_value = false,
-        help = "Enumerate HID devices."
+        help = "Enumerate HID devices.",
     )]
     device: bool,
 
     #[clap(
         short = 'f',
         long = "fidokey",
-        takes_value = false,
         help = "Enumerate FIDO key."
     )]
     fidokey: bool,
@@ -48,7 +46,6 @@ struct AppArg {
     #[clap(
         short = 'w',
         long = "wink",
-        takes_value = false,
         help = "Blink the LED on the FIDO key."
     )]
     wink: bool,
@@ -56,7 +53,6 @@ struct AppArg {
     #[clap(
         short = 'u',
         long = "user-presence",
-        takes_value = false,
         help = "User Presence Test."
     )]
     user_presence: bool,
