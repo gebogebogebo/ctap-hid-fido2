@@ -18,15 +18,17 @@ pub fn info(device: &FidoKeyHid, item: &str) -> Result<()> {
 
     let info_option = match item {
         "alwaysUv" => Some(InfoOption::AlwaysUv),
+        "biop" => Some(InfoOption::UserVerificationMgmtPreview),
+        "bio" => Some(InfoOption::BioEnroll),
+        "ep" => Some(InfoOption::Ep),
+        "minpin" => Some(InfoOption::SetMinPINLength),
+        "mgmtp" => Some(InfoOption::CredentialMgmtPreview),
+        "mgmt" => Some(InfoOption::CredMgmt),
+        "plat" => Some(InfoOption::Plat),
+        "pin" => Some(InfoOption::ClientPin),
         "rk" => Some(InfoOption::Rk),
         "up" => Some(InfoOption::Up),
         "uv" => Some(InfoOption::Uv),
-        "plat" => Some(InfoOption::Plat),
-        "pin" => Some(InfoOption::ClientPin),
-        "mgmtp" => Some(InfoOption::CredentialMgmtPreview),
-        "mgmt" => Some(InfoOption::CredMgmt),
-        "biop" => Some(InfoOption::UserVerificationMgmtPreview),
-        "bio" => Some(InfoOption::BioEnroll),
         _ => None,
     };
 
@@ -130,6 +132,26 @@ fn option_message(typ: &str, info_option: &InfoOption, val: Option<bool>) -> Res
                 "",
             )?
         }
+        InfoOption::Ep => {
+            create_option_message(
+                val,
+                "Enterprise Attestation",
+                " This authenticator is enterprise attestation capable, and enterprise attestation is enabled.",
+                " This authenticator is enterprise attestation capable, and enterprise attestation is disabled.",
+                " The Enterprise Attestation feature is NOT supported.",
+                "about Enterprise Attestation.\nhttps://fidoalliance.org/specs/fido-v2.1-ps-20210615/fido-client-to-authenticator-protocol-v2.1-ps-20210615.html#sctn-feature-descriptions-enterp-attstn",
+            )?
+        }
+        InfoOption::Plat => {
+            create_option_message(
+                val,
+                "plat(platform device)",
+                " This authenticator is attached to the client and therefore can’t be removed and used on another client.",
+                " This authenticator can be removed and used on another client.",
+                " This authenticator does not support Feature.",
+                "",
+            )?
+        }
         InfoOption::Rk => {
             create_option_message(
                 val,
@@ -137,7 +159,17 @@ fn option_message(typ: &str, info_option: &InfoOption, val: Option<bool>) -> Res
                 " This authenticator can create discoverable credentials.",
                 " This authenticator can not create discoverable credentials.",
                 " This authenticator does not support Feature.",
-                "Discoverable credentials\nhttps://fidoalliance.org/specs/fido-v2.1-rd-20210309/fido-client-to-authenticator-protocol-v2.1-rd-20210309.html#sctn-discoverable",
+                "about Discoverable credentials\nhttps://fidoalliance.org/specs/fido-v2.1-rd-20210309/fido-client-to-authenticator-protocol-v2.1-rd-20210309.html#sctn-discoverable",
+            )?
+        }
+        InfoOption::SetMinPINLength => {
+            create_option_message(
+                val,
+                "Set Minimum PIN Length",
+                " the setMinPINLength subcommand is supported.",
+                " the setMinPINLength subcommand is NOT supported.",
+                " This authenticator does not support Feature.",
+                "about setMinPINLength subcommand.\nhttps://fidoalliance.org/specs/fido-v2.1-ps-20210615/fido-client-to-authenticator-protocol-v2.1-ps-20210615.html#setMinPINLength",
             )?
         }
         InfoOption::Up => {
@@ -169,18 +201,6 @@ fn option_message(typ: &str, info_option: &InfoOption, val: Option<bool>) -> Res
                 " This authenticator not supports a built-in user verification method.",
                 "For example, devices with UI, biometrics fall into this category.",
             )?
-        }
-        // TODO
-        InfoOption::Plat => {
-            let mut strbuf = StrBuf::new(0);
-            strbuf.addln("plat(platform device)");
-
-            if val.is_some() && val.unwrap() {
-                strbuf.addln("This authenticator is attached to the client and therefore can’t be removed and used on another client.");
-            } else {
-                strbuf.addln("This authenticator can be removed and used on another client.");
-            }
-            strbuf.build().to_string()
         }
         _ => "".to_string(),
     };
