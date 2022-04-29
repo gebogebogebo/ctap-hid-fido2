@@ -364,7 +364,7 @@ fn main() -> Result<()> {
             Action::Config { toggle_always_uv, pin } => {
                 println!("config()");
                 if toggle_always_uv {
-                    match device.config(Some(&pin)) {
+                    match device.toggle_always_uv(Some(&pin)) {
                         Ok(result) => println!("- config : {:?}", result),
                         Err(error) => println!("- config error: {:?}", error),
                     };

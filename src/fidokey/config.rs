@@ -18,7 +18,7 @@ pub enum SubCommand {
     VendorPrototype = 0x04,
 }
 
-fn create_payload(sub_command: SubCommand,pin_auth: &[u8]) -> Vec<u8> {
+fn create_payload(sub_command: SubCommand, pin_uv_auth_param: &[u8]) -> Vec<u8> {
 
     // create cbor
     let mut map = BTreeMap::new();
@@ -30,7 +30,7 @@ fn create_payload(sub_command: SubCommand,pin_auth: &[u8]) -> Vec<u8> {
     map.insert(Value::Integer(0x03), Value::Integer(1));
 
     // 0x04: pinUvAuthParam
-    map.insert(Value::Integer(0x04), Value::Bytes(pin_auth.to_vec()));
+    map.insert(Value::Integer(0x04), Value::Bytes(pin_uv_auth_param.to_vec()));
 
     let cbor = Value::Map(map);
 
@@ -42,20 +42,21 @@ fn create_payload(sub_command: SubCommand,pin_auth: &[u8]) -> Vec<u8> {
 impl FidoKeyHid {
 
     /// Get Config (CTAP 2.1)
-    pub fn config(&self, pin: Option<&str>) -> Result<String> {
+    pub fn toggle_always_uv(&self, pin: Option<&str>) -> Result<String> {
+        self.config(pin,SubCommand::ToggleAlwaysUv)
+    }
+
+    fn config(&self, pin: Option<&str>, sub_command: SubCommand) -> Result<String> {
         let cid = ctaphid::ctaphid_init(self).map_err(Error::msg)?;
 
-        // TODO
-        let sub_command = SubCommand::ToggleAlwaysUv;
-
         // get pintoken & create pin auth
-        let pin_auth = if let Some(pin) = pin {
+        let pin_uv_auth_param = if let Some(pin) = pin {
             if !pin.is_empty() {
-                let pin_token = self.get_pin_token(&cid, pin)?;
-                // let pin_token = self.get_pinuv_auth_token_with_permission(cid, pin, super::pin::Permission::Acfg)?;
+                let pin_token = self.get_pinuv_auth_token_with_permission(&cid, pin, super::pin::Permission::Acfg)?;
 
-                // pinUvAuthParam (0x04): the result of calling
-                // authenticate(pinUvAuthToken, 32×0xff || 0x0d || uint8(subCommand) || subCommandParams).
+                // pinUvAuthParam (0x04)
+                // - authenticate(pinUvAuthToken, 32×0xff || 0x0d || uint8(subCommand) || subCommandParams).
+                // https://fidoalliance.org/specs/fido-v2.1-ps-20210615/fido-client-to-authenticator-protocol-v2.1-ps-20210615.html#authenticatorConfig
                 let mut message = vec![0xff; 32];
                 message.append(&mut vec![0x0d]);
                 message.append(&mut vec![sub_command as u8]);
@@ -70,10 +71,8 @@ impl FidoKeyHid {
             vec![]
         };
 
-
-        let send_payload = create_payload(sub_command, &pin_auth);
-        let _response_cbor =
-            ctaphid::ctaphid_cbor(self, &cid, &send_payload).map_err(Error::msg)?;
+        let send_payload = create_payload(sub_command, &pin_uv_auth_param);
+        let _response_cbor = ctaphid::ctaphid_cbor(self, &cid, &send_payload).map_err(Error::msg)?;
         Ok("".to_string())
     }
 }
