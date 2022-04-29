@@ -68,7 +68,7 @@
                     "kind": "example"
                 }
             },
-            "args": ["info","-g","fido2"],
+            "args": ["--config"],
             "cwd": "${workspaceFolder}"
         },
         {

@@ -61,6 +61,12 @@ struct AppArg {
     )]
     user_presence: bool,
 
+    #[clap(
+        long = "config",
+        help = "Config Test."
+    )]
+    config: bool,
+
     #[clap(subcommand)]
     action: Option<Action>,
 }
@@ -347,11 +353,14 @@ fn main() -> Result<()> {
         }
     }
 
-    // println!("config()");
-    // match device.config() {
-    //     Ok(result) => println!("- config : {:?}", result),
-    //     Err(error) => println!("- config error: {:?}", error),
-    // };
+    // TODO
+    if arg.config {
+        println!("config()");
+        match device.config() {
+            Ok(result) => println!("- config : {:?}", result),
+            Err(error) => println!("- config error: {:?}", error),
+        };
+    }
 
     Ok(())
 }
