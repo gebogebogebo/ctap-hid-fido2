@@ -68,7 +68,7 @@
                     "kind": "example"
                 }
             },
-            "args": ["-w"],
+            "args": ["info","-g","alwaysUv"],
             "cwd": "${workspaceFolder}"
         },
         {

@@ -17,6 +17,7 @@ pub fn info(device: &FidoKeyHid, item: &str) -> Result<()> {
     }
 
     let info_option = match item {
+        "alwaysUv" => Some(InfoOption::AlwaysUv),
         "rk" => Some(InfoOption::Rk),
         "up" => Some(InfoOption::Up),
         "uv" => Some(InfoOption::Uv),
@@ -57,6 +58,39 @@ pub fn info(device: &FidoKeyHid, item: &str) -> Result<()> {
     Ok(())
 }
 
+fn create_option_message(
+    val: Option<bool>,
+    title: &str,
+    support_enable: &str,
+    support_disable: &str,
+    does_not_support: &str,
+    comment: &str,
+) -> Result<String> {
+    let mut strbuf = StrBuf::new(0);
+    if !title.is_empty() {
+        strbuf.addln(title);
+    }
+
+    match val {
+        Some(enable) => {
+            if enable {
+                strbuf.addln(support_enable);
+            } else {
+                strbuf.addln(support_disable);
+            }
+        }
+        None => {
+            strbuf.addln(does_not_support);
+        }
+    };
+
+    if !comment.is_empty() {
+        strbuf.addln(comment);
+    }
+
+    Ok(strbuf.build().to_string())
+}
+
 fn option_message(typ: &str, info_option: &InfoOption, val: Option<bool>) -> Result<String> {
     let value_str = match val {
         Some(v) => format!("{}", v),
@@ -65,22 +99,48 @@ fn option_message(typ: &str, info_option: &InfoOption, val: Option<bool>) -> Res
     let message1 = format!("option {} = {}", typ, value_str);
 
     let message2 = match info_option {
-        InfoOption::Rk => {
-            let mut strbuf = StrBuf::new(0);
-            strbuf.addln("rk(resident key)");
-
-            if val.is_some() && val.unwrap() {
-                strbuf.addln("This authenticator can create discoverable credentials.");
-            } else {
-                strbuf.addln("This authenticator can not create discoverable credentials.");
-            }
-
-            strbuf
-                .addln("")
-                .addln("Discoverable credentials")
-                .addln("https://fidoalliance.org/specs/fido-v2.1-rd-20210309/fido-client-to-authenticator-protocol-v2.1-rd-20210309.html#sctn-discoverable");
-            strbuf.build().to_string()
+        InfoOption::AlwaysUv => {
+            create_option_message(
+                val,
+                "alwaysUv(Always Require User Verification)",
+                " This authenticator MUST require some form of user verification.",
+                " This authenticator does not always require user verification for its operations.",
+                " This authenticator does not support the Always Require User Verification feature.",
+                "",
+            )?
         }
+        InfoOption::ClientPin => {
+            create_option_message(
+                val,
+                "",
+                "This authenticator is capable of accepting a PIN from the client and PIN has been set.",
+                "This authenticator is capable of accepting a PIN from the client and PIN has not been set yet.",
+                "This authenticator is not capable of accepting a PIN from the client.",
+                "",
+            )?
+        }
+        InfoOption::Rk => {
+            create_option_message(
+                val,
+                "rk(resident key / discoverable credentials)",
+                " This authenticator can create discoverable credentials.",
+                " This authenticator can not create discoverable credentials.",
+                " This authenticator does not support Feature.",
+                "\nDiscoverable credentials\nhttps://fidoalliance.org/specs/fido-v2.1-rd-20210309/fido-client-to-authenticator-protocol-v2.1-rd-20210309.html#sctn-discoverable",
+            )?
+        }
+        InfoOption::UserVerificationMgmtPreview | InfoOption::BioEnroll => {
+            create_option_message(
+                val,
+                "bioEnroll",
+                " This authenticator supports the authenticatorBioEnrollment commands, and has at least one bio enrollment presently provisioned.",
+                " This authenticator supports the authenticatorBioEnrollment commands, and does not yet have any bio enrollments provisioned.",
+                " The authenticatorBioEnrollment commands are NOT supported.",
+                "",
+            )?
+        }
+
+        // TODO
         InfoOption::Up => {
             let mut strbuf = StrBuf::new(0);
             strbuf.addln("up(user presence)");
@@ -108,19 +168,6 @@ fn option_message(typ: &str, info_option: &InfoOption, val: Option<bool>) -> Res
             strbuf.addln("For example, devices with UI, biometrics fall into this category.");
             strbuf.build().to_string()
         }
-        InfoOption::ClientPin => {
-            let mut strbuf = StrBuf::new(0);
-
-            if val.is_some() && val.unwrap() {
-                strbuf.addln("This authenticator is capable of accepting a PIN from the client and PIN has been set.");
-            } else if val.is_some() && !val.unwrap() {
-                strbuf.addln("This authenticator is capable of accepting a PIN from the client and PIN has not been set yet.");
-            } else {
-                strbuf
-                    .addln("This authenticator is not capable of accepting a PIN from the client.");
-            }
-            strbuf.build().to_string()
-        }
         InfoOption::Plat => {
             let mut strbuf = StrBuf::new(0);
             strbuf.addln("plat(platform device)");
@@ -129,19 +176,6 @@ fn option_message(typ: &str, info_option: &InfoOption, val: Option<bool>) -> Res
                 strbuf.addln("This authenticator is attached to the client and therefore can’t be removed and used on another client.");
             } else {
                 strbuf.addln("This authenticator can be removed and used on another client.");
-            }
-            strbuf.build().to_string()
-        }
-        InfoOption::UserVerificationMgmtPreview | InfoOption::BioEnroll => {
-            let mut strbuf = StrBuf::new(0);
-            strbuf.addln("bioEnroll");
-
-            if val.is_some() && val.unwrap() {
-                strbuf.addln("This authenticator supports the authenticatorBioEnrollment commands, and has at least one bio enrollment presently provisioned.");
-            } else if val.is_some() && !val.unwrap() {
-                strbuf.addln("This authenticator supports the authenticatorBioEnrollment commands, and does not yet have any bio enrollments provisioned.");
-            } else {
-                strbuf.addln("The authenticatorBioEnrollment commands are NOT supported.");
             }
             strbuf.build().to_string()
         }
@@ -155,7 +189,8 @@ fn option_message(typ: &str, info_option: &InfoOption, val: Option<bool>) -> Res
                 strbuf.addln("The authenticatorCredentialManagement commands are NOT supported.");
             }
             strbuf.build().to_string()
-        } //_ => "".to_string(),
+        }
+        _ => "".to_string(),
     };
     Ok(format!("{}\n\n{}", message1, message2))
 }

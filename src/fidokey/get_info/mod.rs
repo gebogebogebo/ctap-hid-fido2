@@ -9,17 +9,36 @@ use anyhow::{anyhow, Error, Result};
 
 use super::FidoKeyHid;
 
+// TODO use strum
+// pub enum InfoOption {
+//    #[strum(serialize = "alwaysUv")]
+//     AlwaysUv,
+//    #[strum(serialize = "authnrCfg")]
+//     AuthnrCfg,
+// }
+
 #[derive(Debug, Clone, PartialEq)]
 pub enum InfoOption {
-    Rk,
-    Up,
-    Uv,
-    Plat,
+    AlwaysUv,
+    AuthnrCfg,
+    BioEnroll,
     ClientPin,
     CredentialMgmtPreview,
     CredMgmt,
+    Ep,
+    LargeBlobs,
+    MakeCredUvNotRqd,
+    NoMcGaPermissionsWithClientPin,
+    PinUvAuthToken,
+    Plat,
+    Rk,
+    SetMinPINLength,
+    Up,
     UserVerificationMgmtPreview,
-    BioEnroll,
+    Uv,
+    UvAcfg,
+    UvBioEnroll,
+    UvToken,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -86,15 +105,26 @@ impl FidoKeyHid {
     pub fn enable_info_option(&self, info_option: &InfoOption) -> Result<Option<bool>> {
         let info = self.get_info()?;
         let find = match info_option {
-            InfoOption::Rk => "rk",
-            InfoOption::Up => "up",
-            InfoOption::Uv => "uv",
-            InfoOption::Plat => "plat",
+            InfoOption::AlwaysUv => "alwaysUv",
+            InfoOption::AuthnrCfg => "authnrCfg",
+            InfoOption::BioEnroll => "bioEnroll",
             InfoOption::ClientPin => "clientPin",
             InfoOption::CredentialMgmtPreview => "credentialMgmtPreview",
             InfoOption::CredMgmt => "credMgmt",
+            InfoOption::Ep => "ep",
+            InfoOption::LargeBlobs => "largeBlobs",
+            InfoOption::MakeCredUvNotRqd => "makeCredUvNotRqd",
+            InfoOption::NoMcGaPermissionsWithClientPin => "noMcGaPermissionsWithClientPin",
+            InfoOption::PinUvAuthToken => "pinUvAuthToken",
+            InfoOption::Plat => "plat",
+            InfoOption::Rk => "rk",
+            InfoOption::SetMinPINLength => "setMinPINLength",
+            InfoOption::Up => "up",
             InfoOption::UserVerificationMgmtPreview => "userVerificationMgmtPreview",
-            InfoOption::BioEnroll => "bioEnroll",
+            InfoOption::Uv => "uv",
+            InfoOption::UvAcfg => "uvAcfg",
+            InfoOption::UvBioEnroll => "uvBioEnroll",
+            InfoOption::UvToken => "uvToken",
         };
         let ret = info.options.iter().find(|v| (*v).0 == find);
         if let Some(v) = ret {
