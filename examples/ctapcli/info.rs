@@ -85,6 +85,7 @@ fn create_option_message(
     };
 
     if !comment.is_empty() {
+        strbuf.addln("");
         strbuf.addln(comment);
     }
 
@@ -119,6 +120,16 @@ fn option_message(typ: &str, info_option: &InfoOption, val: Option<bool>) -> Res
                 "",
             )?
         }
+        InfoOption::CredMgmt | InfoOption::CredentialMgmtPreview => {
+            create_option_message(
+                val,
+                "Credential management support",
+                " This authenticatorCredentialManagement command is supported.",
+                " The authenticatorCredentialManagement commands are NOT supported.",
+                " This authenticator does not support Feature.",
+                "",
+            )?
+        }
         InfoOption::Rk => {
             create_option_message(
                 val,
@@ -126,7 +137,17 @@ fn option_message(typ: &str, info_option: &InfoOption, val: Option<bool>) -> Res
                 " This authenticator can create discoverable credentials.",
                 " This authenticator can not create discoverable credentials.",
                 " This authenticator does not support Feature.",
-                "\nDiscoverable credentials\nhttps://fidoalliance.org/specs/fido-v2.1-rd-20210309/fido-client-to-authenticator-protocol-v2.1-rd-20210309.html#sctn-discoverable",
+                "Discoverable credentials\nhttps://fidoalliance.org/specs/fido-v2.1-rd-20210309/fido-client-to-authenticator-protocol-v2.1-rd-20210309.html#sctn-discoverable",
+            )?
+        }
+        InfoOption::Up => {
+            create_option_message(
+                val,
+                "up(user presence)",
+                " This authenticator is capable of testing user presence.",
+                " This authenticator is not capable of testing user presence.",
+                " The authenticatorBioEnrollment commands are NOT supported.",
+                "User presence is confirmed by a button or touch sensor.",
             )?
         }
         InfoOption::UserVerificationMgmtPreview | InfoOption::BioEnroll => {
@@ -139,35 +160,17 @@ fn option_message(typ: &str, info_option: &InfoOption, val: Option<bool>) -> Res
                 "",
             )?
         }
-
-        // TODO
-        InfoOption::Up => {
-            let mut strbuf = StrBuf::new(0);
-            strbuf.addln("up(user presence)");
-
-            if val.is_some() && val.unwrap() {
-                strbuf.addln("This authenticator is capable of testing user presence.");
-            } else {
-                strbuf.addln("This authenticator is not capable of testing user presence.");
-            }
-            strbuf.addln("User presence is confirmed by a button or touch sensor.");
-            strbuf.build().to_string()
-        }
         InfoOption::Uv => {
-            let mut strbuf = StrBuf::new(0);
-            strbuf.addln("uv(user verification)");
-
-            if val.is_some() && val.unwrap() {
-                strbuf.addln("This authenticator supports a built-in user verification method.");
-            } else if val.is_some() && !val.unwrap() {
-                strbuf.addln("This authenticator supports a built-in user verification method but its user verification feature is not presently configured.");
-            } else {
-                strbuf
-                    .addln("This authenticator not supports a built-in user verification method.");
-            }
-            strbuf.addln("For example, devices with UI, biometrics fall into this category.");
-            strbuf.build().to_string()
+            create_option_message(
+                val,
+                "uv(user verification)",
+                " This authenticator supports a built-in user verification method.",
+                " This authenticator supports a built-in user verification method but its user verification feature is not presently configured.",
+                " This authenticator not supports a built-in user verification method.",
+                "For example, devices with UI, biometrics fall into this category.",
+            )?
         }
+        // TODO
         InfoOption::Plat => {
             let mut strbuf = StrBuf::new(0);
             strbuf.addln("plat(platform device)");
@@ -176,17 +179,6 @@ fn option_message(typ: &str, info_option: &InfoOption, val: Option<bool>) -> Res
                 strbuf.addln("This authenticator is attached to the client and therefore can’t be removed and used on another client.");
             } else {
                 strbuf.addln("This authenticator can be removed and used on another client.");
-            }
-            strbuf.build().to_string()
-        }
-        InfoOption::CredMgmt | InfoOption::CredentialMgmtPreview => {
-            let mut strbuf = StrBuf::new(0);
-            strbuf.addln("Credential management support");
-
-            if val.is_some() && val.unwrap() {
-                strbuf.addln("This authenticatorCredentialManagement command is supported.");
-            } else {
-                strbuf.addln("The authenticatorCredentialManagement commands are NOT supported.");
             }
             strbuf.build().to_string()
         }
