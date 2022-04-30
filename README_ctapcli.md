@@ -8,7 +8,7 @@ FIDO2 Authenticator Tool
 
 ## Install
 
-```zsh
+```sh
 brew tap gebogebogebo/tap
 brew install ctapcli
 ```
@@ -17,7 +17,7 @@ brew install ctapcli
 
 ## Usage Example
 
-```zsh
+```sh
 % ctapcli -h
 
 ctapcli 3.1.0
@@ -56,9 +56,20 @@ SUBCOMMANDS:
 
 
 
+### Get HID FIDO key info
+
+```sh
+% ctapcli -f
+
+Enumerate FIDO keys.
+- vid=0x1050 , pid=0x0402 , info="product=YubiKey FIDO usage_page=61904 usage=1 serial_number= path=\"IOService:/AppleACPIPlatformExpert/PCI0@0/AppleACPIPCI/XHC1@14/XHC1@14000000/HS04@14400000/YubiKey FIDO@14400000/IOUSBHostInterface@0/AppleUserUSBHostHIDDevice\""
+```
+
+
+
 ### Get the Authenticator PIN infomation.
 
-```zsh
+```sh
 % ctapcli info -g pin
 Get the Authenticator infomation.
 
@@ -69,9 +80,11 @@ This authenticator is capable of accepting a PIN from the client and PIN has bee
 
 
 
-### Get PIN retry counter
+### PIN
 
-```zsh
+#### Get PIN retry counter
+
+```sh
 % ctapcli pin        
 PIN Management.
 
@@ -96,9 +109,9 @@ UV retries count is the number of built-in UV attempts remaining before built-in
 
 
 
-### Set new PIN
+#### Set new PIN
 
-```zsh
+```sh
 % ctapcli pin -n
 PIN Management.
 
@@ -112,9 +125,9 @@ Success! :)
 
 
 
-### Change PIN
+#### Change PIN
 
-```zsh
+```sh
 % ctapcli pin -c
 PIN Management.
 
@@ -131,13 +144,92 @@ Success! :)
 
 
 
-### Get HID info
+### Bio management
 
-```zsh
-% ctapcli -f
+#### list
 
-Enumerate FIDO keys.
-- vid=0x1050 , pid=0x0402 , info="product=YubiKey FIDO usage_page=61904 usage=1 serial_number= path=\"IOService:/AppleACPIPlatformExpert/PCI0@0/AppleACPIPCI/XHC1@14/XHC1@14000000/HS04@14400000/YubiKey FIDO@14400000/IOUSBHostInterface@0/AppleUserUSBHostHIDDevice\""
+```sh
+% ./ctapcli bio       
+Bio Management.
+
+List registered biometric authenticate data.
+PIN: xxxx
+
+
+Number of registrations = 2
+32C7 : finger-1
+EFFD : finger-2
+```
+
+
+
+#### Enroll
+
+```sh
+% ./ctapcli bio -e
+Bio Management.
+
+Enrolling fingerprint.
+PIN: xxxx
+
+bio enrollment
+Please follow the instructions to touch the sensor on the authenticator.
+
+Press any key to start the registration.
+[enter]
+
+- Touch the sensor on the authenticator
+
+Good fingerprint capture. 0x00: CTAP2_ENROLL_FEEDBACK_FP_GOOD
+- Number of samples required = 4
+
+- Touch the sensor on the authenticator
+
+Good fingerprint capture. 0x00: CTAP2_ENROLL_FEEDBACK_FP_GOOD
+- Number of samples required = 3
+
+- Touch the sensor on the authenticator
+
+Good fingerprint capture. 0x00: CTAP2_ENROLL_FEEDBACK_FP_GOOD
+- Number of samples required = 2
+
+- Touch the sensor on the authenticator
+
+Good fingerprint capture. 0x00: CTAP2_ENROLL_FEEDBACK_FP_GOOD
+- Number of samples required = 1
+
+- Touch the sensor on the authenticator
+
+Good fingerprint capture. 0x00: CTAP2_ENROLL_FEEDBACK_FP_GOOD
+- Number of samples required = 0
+
+- bio enrollment Success
+
+templateId: "CA57"
+
+input name:
+finger-3
+
+- Success
+```
+
+
+
+### Credential management
+
+#### Enumerate
+
+```
+% ./ctapcli cred
+PIN:xxxx 
+
+Enumerate discoverable credentials.
+- existing discoverable credentials: 3/46
+- rp: (id: ctapcli, name: G2phL$kFJ4L!L8n)
+  - credential: (id: 617070732E6E756C61622E636F6D, name: G2phL$kFJ4L!L8n, display_name:  )
+  - credential: (id: 74657374, name: hogehoge, display_name:  )
+- rp: (id: test-rk.com, name: gebo)
+  - credential: (id: 31313131, name: gebo, display_name: GEBO GEBO)
 ```
 
 
@@ -146,7 +238,7 @@ Enumerate FIDO keys.
 
 #### Add a memo.
 
-```shell
+```sh
 % ctapcli memo -a
 Record some short texts in Authenticator.
 
@@ -165,7 +257,7 @@ Add Success! :)
 
 #### Get a memo.
 
-```shell
+```sh
 % ctapcli memo   
 Record some short texts in Authenticator.
 
@@ -181,3 +273,21 @@ tag:
 
 Copied it to the clipboard :) :) :) !
 ```
+
+
+
+## Source
+
+https://github.com/gebogebogebo/ctap-hid-fido2/tree/master/examples/ctapcli
+
+
+
+### Build
+
+```sh
+% cargo build --example ctapcli --release
+```
+
+
+
+## 
