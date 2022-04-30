@@ -1,7 +1,7 @@
 use anyhow::{anyhow, Result};
 
 extern crate clap;
-use clap::{App, Arg, SubCommand};
+use clap::{Parser, Subcommand};
 
 #[cfg(not(target_os = "linux"))]
 extern crate clipboard;
@@ -16,167 +16,212 @@ use ctap_hid_fido2::fidokey::get_info::InfoParam;
 
 mod bio;
 mod common;
+mod config;
 mod cred;
 mod info;
 mod memo;
 mod pin;
 
+#[derive(Parser)]
+#[clap(
+    name = "ctapcli",
+    author = "gebo",
+    version = env!("CARGO_PKG_VERSION"),
+    about = "This tool implements CTAP HID and can communicate with FIDO Authenticator.\n\nabout CTAP(Client to Authenticator Protocol)\nhttps://fidoalliance.org/specs/fido-v2.1-ps-20210615/fido-client-to-authenticator-protocol-v2.1-ps-20210615.html"
+)]
+struct AppArg {
+    #[clap(
+        short = 'd',
+        long = "device",
+        help = "Enumerate HID devices.",
+    )]
+    device: bool,
+
+    #[clap(
+        short = 'f',
+        long = "fidokey",
+        help = "Enumerate FIDO key."
+    )]
+    fidokey: bool,
+
+    #[clap(
+        short = 'w',
+        long = "wink",
+        help = "Blink the LED on the FIDO key."
+    )]
+    wink: bool,
+
+    #[clap(
+        short = 'u',
+        long = "user-presence",
+        help = "User Presence Test."
+    )]
+    user_presence: bool,
+
+    #[clap(subcommand)]
+    action: Option<Action>,
+}
+
+#[derive(Subcommand)]
+enum Action {
+    #[clap(
+        about = "Get Authenticator infomation.\n- List All Infomation without any FLAGS and OPTIONS."
+    )]
+    Info {
+        #[clap(short = 'l', long = "list", help = "List all info.")]
+        list: bool,
+
+        #[clap(
+            short = 'g',
+            long = "get",
+            takes_value = true,
+            help = "Get a info.\n- rk/up/uv/plat/pin/mgmtp/mgmt/biop/bio/auv/ep/minpin/\n  u2f_v2/fido2/fido21p/fido21/hmac."
+        )]
+        item: Option<String>,
+    },
+
+    #[clap(about = "PIN management.\n- Get PIN retry counter without any FLAGS and OPTIONS.")]
+    Pin {
+        #[clap(short = 'n', long = "new", help = "Set new pin.")]
+        new: bool,
+
+        #[clap(short = 'c', long = "change", help = "Change pin.")]
+        change: bool,
+
+        #[clap(short = 'v', long = "view", help = "View pin retry count.")]
+        view: bool,
+    },
+
+    #[clap(
+        about = "Record some short texts in Authenticator.\n- Get a Memo without any FLAGS and OPTIONS."
+    )]
+    Memo {
+        #[clap(short = 'a', long = "add", help = "Add a memo.")]
+        add: bool,
+
+        #[clap(
+            short = 'g',
+            long = "get",
+            takes_value = true,
+            value_name = "tag",
+            default_value = "",
+            help = "Get a memo to Clipboard."
+        )]
+        get_tag: String,
+
+        #[clap(
+            short = 'd',
+            long = "del",
+            takes_value = true,
+            value_name = "tag",
+            default_value = "",
+            help = "Delete a memo."
+        )]
+        del_tag: String,
+
+        #[clap(short = 'l', long = "list", help = "List all memos.")]
+        list: bool,
+    },
+
+    #[clap(
+        about = "Bio management.\n- List registered biometric authenticate data without any FLAGS and OPTIONS."
+    )]
+    Bio {
+        #[clap(short = 'l', long = "list", help = "List registered bio.")]
+        list: bool,
+
+        #[clap(short = 'i', long = "info", help = "Display sensor info.")]
+        info: bool,
+
+        #[clap(short = 'e', long = "enroll", help = "Enrolling fingerprint.")]
+        enroll: bool,
+
+        #[clap(
+            short = 'd',
+            long = "delete",
+            takes_value = true,
+            value_name = "template-id",
+            help = "Delete fingerprint."
+        )]
+        delete_template_id: Option<String>,
+
+        #[clap(long = "test", help = "Test register and authenticate.")]
+        test: bool,
+
+        #[clap(
+            long = "test-with-log",
+            help = "Test register and authenticate(with log)."
+        )]
+        test_with_log: bool,
+    },
+
+    #[clap(
+        about = "Credential management.\n- List discoverable credentials without any FLAGS and OPTIONS."
+    )]
+    Cred {
+        #[clap(short = 'l', long = "list", help = "List discoverable credentials.")]
+        list: bool,
+
+        #[clap(
+            short = 'm',
+            long = "metadata",
+            help = "Getting discoverable credentials Metadata."
+        )]
+        metadata: bool,
+
+        #[clap(
+            short = 'd',
+            long = "delete",
+            help = "Delete a discoverable credential."
+        )]
+        delete: bool,
+
+        #[clap(
+            short = 'u',
+            long = "update",
+            help = "[Always an error]Update a discoverable credential user info."
+        )]
+        update: bool,
+
+        #[clap(
+            long = "rpid",
+            takes_value = true,
+            help = "rpid to be deleted(or updated)."
+        )]
+        rpid: Option<String>,
+
+        #[clap(
+            long = "userid",
+            takes_value = true,
+            help = "user-id to be deleted(or updated)."
+        )]
+        userid: Option<String>,
+
+        #[clap(short = 'p')]
+        pin: Option<String>,
+    },
+    #[clap(
+        about = "Authenticator Config."
+    )]
+    Config {
+        #[clap(long = "auv", help = "[Always an error]toggleAlwaysUv.")]
+        toggle_always_uv: bool,
+
+        #[clap(short = 'p')]
+        pin: Option<String>,
+    },
+}
+
 fn main() -> Result<()> {
     env_logger::init();
-    let app = App::new("ctapcli")
-        .version(env!("CARGO_PKG_VERSION"))
-        .author("gebo")
-        .about("This tool implements CTAP HID and can communicate with FIDO Authenticator.\n\nabout CTAP(Client to Authenticator Protocol)\nhttps://fidoalliance.org/specs/fido-v2.1-ps-20210615/fido-client-to-authenticator-protocol-v2.1-ps-20210615.html")
-        .arg(
-            Arg::with_name("device")
-                .help("Enumerate HID devices")
-                .short("d")
-                .long("device")
-        )
-        .arg(
-            Arg::with_name("fidokey")
-                .help("Enumerate FIDO key")
-                .short("f")
-                .long("fidokey")
-        )
-        .arg(
-            Arg::with_name("wink")
-                .help("Blink the LED on the FIDO key")
-                .short("w")
-                .long("wink")
-        )
-        .arg(
-            Arg::with_name("user-presence")
-                .help("User Presence Test")
-                .short("u")
-                .long("up")
-        )
-        .subcommand(
-            SubCommand::with_name("pin")
-                .about("PIN management\n- Get PIN retry counter without any FLAGS and OPTIONS.")
-                .arg(
-                    Arg::with_name("new")
-                        .help("Set new pin")
-                        .short("n")
-                        .long("new")
-                )
-                .arg(
-                    Arg::with_name("change")
-                        .help("Change pin")
-                        .short("c")
-                        .long("change")
-                )
-        )
-        .subcommand(
-            SubCommand::with_name("info")
-                .about("Get Authenticator infomation\n- List All Infomation without any FLAGS and OPTIONS.")
-                .arg(
-                    Arg::with_name("get")
-                        .help("Get a item(rk/up/uv/plat/pin/mgmtp/mgmt/biop/bio/u2f_v2/fido2/fido21p/fido21/hmac)")
-                        .short("g")
-                        .long("get")
-                        .takes_value(true)
-                        .value_name("item")
-                )
-        )
-        .subcommand(
-            SubCommand::with_name("memo")
-                .about("Record some short texts in Authenticator\n- Get a Memo without any FLAGS and OPTIONS.")
-                .arg(
-                    Arg::with_name("add")
-                        .help("Add a memo")
-                        .short("a")
-                        .long("add")
-                )
-                .arg(
-                    Arg::with_name("get")
-                        .help("Get a memo to Clipboard")
-                        .short("g")
-                        .long("get")
-                        .takes_value(true)
-                        .value_name("tag")
-                )
-                .arg(
-                    Arg::with_name("del")
-                        .help("Delete a memo")
-                        .short("d")
-                        .long("del")
-                        .takes_value(true)
-                        .value_name("tag")
-                )
-                .arg(
-                    Arg::with_name("list")
-                        .help("List all memos")
-                        .short("l")
-                        .long("list")
-                )
-        )
-        .subcommand(
-            SubCommand::with_name("bio")
-                .about("Bio management\n- List registered biometric authenticate data. without any FLAGS and OPTIONS.")
-                .arg(
-                    Arg::with_name("list")
-                        .help("List bio")
-                        .short("l")
-                        .long("list")
-                )
-                .arg(
-                    Arg::with_name("info")
-                        .help("Display sensor info")
-                        .short("i")
-                        .long("info")
-                )
-                .arg(
-                    Arg::with_name("enroll")
-                        .help("Enrolling fingerprint")
-                        .short("e")
-                        .long("enroll"),
-                )
-                .arg(
-                    Arg::with_name("delete")
-                        .help("Delete fingerprint")
-                        .short("d")
-                        .long("delete")
-                        .takes_value(true)
-                        .value_name("templateId")
-                )
-                .arg(
-                    Arg::with_name("test")
-                        .help("Test register and authenticate")
-                        .long("test")
-                )
-               .arg(
-                    Arg::with_name("test-with-log")
-                        .help("Test register and authenticate(with log)")
-                        .long("test-log")
-                )
-        )
-        .subcommand(
-            SubCommand::with_name("cred")
-                .about("(alpha)Credential management\n- Enumerate discoverable credentials")
-                .arg(
-                    Arg::with_name("list")
-                        .help("List cred")
-                        .short("l")
-                        .long("list")
-                )
-                .arg(
-                    Arg::with_name("metadata")
-                        .help("credential_management_get_creds_metadata")
-                        .short("m")
-                        .long("metadata"),
-                )
-        );
+    let arg: AppArg = AppArg::parse();
 
     let mut cfg = Cfg::init();
     cfg.enable_log = false;
     cfg.use_pre_bio_enrollment = true;
     cfg.use_pre_credential_management = true;
 
-    // Parse arguments
-    let matches = app.get_matches();
-
-    if matches.is_present("device") {
+    if arg.device {
         println!("Enumerate HID devices.");
         let devs = ctap_hid_fido2::get_hid_devices();
         for info in devs {
@@ -187,7 +232,7 @@ fn main() -> Result<()> {
         }
     }
 
-    if matches.is_present("fidokey") {
+    if arg.fidokey {
         println!("Enumerate FIDO keys.");
         let devs = ctap_hid_fido2::get_fidokey_devices();
         for info in devs {
@@ -200,49 +245,123 @@ fn main() -> Result<()> {
 
     let device = FidoKeyHidFactory::create(&cfg)?;
 
-    if matches.is_present("user-presence") {
+    if arg.user_presence {
         println!("User Presence Test.\n");
         up(&device)?;
     }
 
-    if matches.is_present("wink") {
+    if arg.wink {
         println!("Blink LED on FIDO key.\n");
         device.wink()?;
         println!("Do you see that wink? ;-)\n");
     }
 
-    if let Some(matches) = matches.subcommand_matches("info") {
-        println!("Get the Authenticator infomation.\n");
-        info::info(&device, matches)?;
-    }
+    if let Some(action) = arg.action {
+        match action {
+            Action::Info { item, list } => {
+                println!("Get the Authenticator infomation.\n");
+                let item_val = if list {
+                    "".to_string()
+                } else {
+                    item.unwrap_or_else(|| "".to_string())
+                };
+                info::info(&device, &item_val)?;
+            }
+            Action::Pin {
+                new,
+                change,
+                view: _,
+            } => {
+                println!("PIN Management.\n");
+                let command = if new {
+                    pin::PinCommand::New
+                } else if change {
+                    pin::PinCommand::Change
+                } else {
+                    pin::PinCommand::View
+                };
+                pin::pin(&device, command)?;
+            }
+            Action::Memo {
+                add,
+                list,
+                get_tag,
+                del_tag,
+            } => {
+                println!("Record some short texts in Authenticator.\n");
 
-    if let Some(matches) = matches.subcommand_matches("pin") {
-        println!("PIN Management.\n");
-        pin::pin(&device, matches)?;
-    }
+                let command = if add {
+                    memo::Command::Add
+                } else if list {
+                    memo::Command::List
+                } else if !del_tag.is_empty() {
+                    memo::Command::Del(del_tag)
+                } else {
+                    memo::Command::Get(get_tag)
+                };
 
-    if let Some(matches) = matches.subcommand_matches("memo") {
-        println!("Record some short texts in Authenticator.\n");
-        memo::memo(&device, matches)?;
-    }
+                memo::memo(&device, command)?;
+            }
+            Action::Bio {
+                list: _,
+                info,
+                enroll,
+                delete_template_id,
+                test,
+                test_with_log,
+            } => {
+                println!("Bio Management.\n");
 
-    if let Some(matches) = matches.subcommand_matches("bio") {
-        println!("Bio Management.\n");
-        bio::bio(&device, matches)?;
-    }
+                let command = if info {
+                    bio::Command::Info
+                } else if enroll {
+                    bio::Command::Enroll
+                } else if let Some(..) = delete_template_id {
+                    bio::Command::Del(delete_template_id.unwrap())
+                } else if test {
+                    bio::Command::Test(false)
+                } else if test_with_log {
+                    bio::Command::Test(true)
+                } else {
+                    bio::Command::List
+                };
 
-    if let Some(ref matches) = matches.subcommand_matches("cred") {
-        println!("Credential Management.\n");
-        cred::cred(&device, &matches)?;
-    }
+                bio::bio(&device, command)?;
+            }
+            Action::Cred {
+                list: _,
+                metadata,
+                delete,
+                update,
+                rpid,
+                userid,
+                pin
+            } => {
+                let command = if metadata {
+                    cred::Command::Metadata
+                } else if delete {
+                    cred::Command::Del((
+                        rpid.unwrap_or_else(|| "".to_string()),
+                        userid.unwrap_or_else(|| "".to_string()),
+                    ))
+                } else if update {
+                    cred::Command::Update((
+                        rpid.unwrap_or_else(|| "".to_string()),
+                        userid.unwrap_or_else(|| "".to_string()),
+                    ))
+                } else {
+                    cred::Command::List
+                };
 
-    /*
-    println!("config()");
-    match ctap_hid_fido2::config(&HidParam::get_default_params()) {
-        Ok(result) => println!("- config : {:?}", result),
-        Err(error) => println!("- config error: {:?}", error),
-    };
-    */
+                cred::cred(&device, command, pin)?;
+            }
+            Action::Config { toggle_always_uv, pin } => {
+                if toggle_always_uv {
+                    config::config(&device, config::Command::ToggleAlwaysUv, pin)?;
+                }
+            }
+        }
+    }
 
     Ok(())
 }

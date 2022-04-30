@@ -2,7 +2,6 @@ use crate::util;
 use pad::PadStr;
 use std::fmt::Display;
 
-//#[derive(Default)]
 pub struct StrBuf {
     buf: String,
     pad: usize,

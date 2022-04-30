@@ -16,7 +16,10 @@ pub fn to_hex_str(bytes: &[u8]) -> String {
 }
 
 pub fn to_str_hex(hexstr: &str) -> Vec<u8> {
-    hex::decode(hexstr).unwrap()
+    match hex::decode(hexstr) {
+        Ok(val) => val,
+        Err(_) => vec![],
+    }
 }
 
 pub fn print_typename<T>(_: T) {

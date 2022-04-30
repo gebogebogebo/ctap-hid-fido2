@@ -10,8 +10,15 @@ use ctap_hid_fido2::verifier;
 
 use ctap_hid_fido2::fidokey::{bio::EnrollStatus1, get_info::InfoOption, FidoKeyHid};
 
-#[allow(dead_code)]
-pub fn bio(device: &FidoKeyHid, matches: &clap::ArgMatches) -> Result<()> {
+pub enum Command {
+    List,
+    Info,
+    Enroll,
+    Del(String),
+    Test(bool),
+}
+
+pub fn bio(device: &FidoKeyHid, command: Command) -> Result<()> {
     if !(is_supported(device)?) {
         return Err(anyhow!(
             "This authenticator is not Supported Bio management."
@@ -19,32 +26,28 @@ pub fn bio(device: &FidoKeyHid, matches: &clap::ArgMatches) -> Result<()> {
     }
 
     // Title
-    if matches.is_present("enroll") {
-        println!("Enrolling fingerprint.");
-    } else if matches.is_present("delete") {
-        println!("Delete a fingerprint.");
-    } else if matches.is_present("info") {
-        println!("Display sensor info.");
-    } else if matches.is_present("test") || matches.is_present("test-with-log") {
-        println!("Test register and authenticate.");
-    } else {
-        println!("List registered biometric authenticate data.");
+    match command {
+        Command::Enroll => println!("Enrolling fingerprint."),
+        Command::Del(_) => println!("Delete a fingerprint."),
+        Command::Info => println!("Display sensor info."),
+        Command::Test(_) => println!("Test register and authenticate."),
+        Command::List => println!("List registered biometric authenticate data."),
     }
 
-    if matches.is_present("info") {
-        spec(device)?;
-    } else if matches.is_present("test") || matches.is_present("test-with-log") {
-        bio_test(device, matches)?;
-    } else {
-        let pin = common::get_pin();
+    match command {
+        Command::Info => spec(device)?,
+        Command::Test(log) => bio_test(device, log)?,
+        _ => {
+            let pin = common::get_pin();
 
-        if matches.is_present("delete") {
-            delete(device, matches, &pin)?;
-        } else if matches.is_present("enroll") {
-            let template_id = bio_enrollment(device, &pin)?;
-            rename(device, &pin, &template_id)?;
-        } else {
-            list(device, &pin)?;
+            match command {
+                Command::Del(template_id) => delete(device, &template_id, &pin)?,
+                Command::Enroll => {
+                    let template_id = bio_enrollment(device, &pin)?;
+                    rename(device, &pin, &template_id)?;
+                }
+                _ => list(device, &pin)?,
+            }
         }
     }
 
@@ -116,7 +119,7 @@ fn is_supported(device: &FidoKeyHid) -> Result<bool> {
     }
 
     if device
-        .enable_info_option(&&InfoOption::UserVerificationMgmtPreview)?
+        .enable_info_option(&InfoOption::UserVerificationMgmtPreview)?
         .is_some()
     {
         Ok(true)
@@ -133,7 +136,7 @@ fn list(device: &FidoKeyHid, pin: &str) -> Result<()> {
     for template_info in template_infos {
         strbuf.addln(&format!("{}", template_info));
     }
-    println!("{}", strbuf.build().to_string());
+    println!("{}", strbuf.build());
 
     Ok(())
 }
@@ -144,8 +147,7 @@ fn spec(device: &FidoKeyHid) -> Result<()> {
     Ok(())
 }
 
-fn delete(device: &FidoKeyHid, matches: &clap::ArgMatches, pin: &str) -> Result<()> {
-    let template_id = matches.value_of("delete").unwrap();
+fn delete(device: &FidoKeyHid, template_id: &str, pin: &str) -> Result<()> {
     println!("Delete enrollment");
     println!("value for templateId: {:?}", template_id);
     println!();
@@ -157,13 +159,7 @@ fn delete(device: &FidoKeyHid, matches: &clap::ArgMatches, pin: &str) -> Result<
     Ok(())
 }
 
-fn bio_test(device: &FidoKeyHid, matches: &clap::ArgMatches) -> Result<()> {
-    let log = if matches.is_present("test-with-log") {
-        true
-    } else {
-        false
-    };
-
+fn bio_test(device: &FidoKeyHid, log: bool) -> Result<()> {
     let rpid = "ctapcli.test";
     let pin = None;
     let challenge = verifier::create_challenge();

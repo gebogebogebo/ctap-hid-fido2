@@ -12,7 +12,7 @@ pub fn get_input_with_message(message: &str) -> String {
 }
 
 pub fn get_pin() -> String {
-    let pin = rpassword::prompt_password_stdout("PIN: ").unwrap();
+    let pin = rpassword::prompt_password("PIN: ").unwrap();
     println!();
     pin
     //println!("Your password is {}", pass);
