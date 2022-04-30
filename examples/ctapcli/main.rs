@@ -58,12 +58,6 @@ struct AppArg {
     )]
     user_presence: bool,
 
-    #[clap(
-        long = "config",
-        help = "Config Test."
-    )]
-    config: bool,
-
     #[clap(subcommand)]
     action: Option<Action>,
 }
@@ -206,6 +200,9 @@ enum Action {
         #[clap(short = 'p')]
         pin: Option<String>,
     },
+    #[clap(
+        about = "Authenticator Config."
+    )]
     Config {
         #[clap(long = "auv", help = "[Always an error]toggleAlwaysUv.")]
         toggle_always_uv: bool,
