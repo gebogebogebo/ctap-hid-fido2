@@ -1,67 +1,65 @@
+use crate::{common, memo, util};
 use anyhow::{anyhow, Result};
-use ctap_hid_fido2::fidokey::{get_info::InfoOption, FidoKeyHid};
+use ctap_hid_fido2::{
+    fidokey::{get_info::InfoOption, FidoKeyHid},
+    public_key_credential_user_entity::PublicKeyCredentialUserEntity,
+};
 
-use crate::common;
-use crate::str_buf::StrBuf;
+pub enum Command {
+    Metadata,
+    List,
+    Del((String, String)),
+    Update((String, String)),
+}
 
-pub fn cred(device: &FidoKeyHid, matches: &clap::ArgMatches) -> Result<()> {
+pub fn cred(device: &FidoKeyHid, command: Command, pin: Option<String>) -> Result<()> {
     if !(is_supported(device)?) {
         return Err(anyhow!(
             "This authenticator is not Supported Credential management."
         ));
     }
 
-    let pin = common::get_pin();
+    let pin = if let Some(val) = pin {
+        val
+    } else {
+        common::get_pin()
+    };
 
-    if matches.is_present("metadata") {
-        println!("# credential_management_get_creds_metadata()");
-        metadata(device, &pin);
-        return Ok(());
-    }
+    match command {
+        Command::List => {
+            println!("Enumerate discoverable credentials.");
+            enumerate(device, &pin)?;
+        }
+        Command::Metadata => {
+            println!("Getting Credentials Metadata.");
+            metadata(device, &pin)?;
+        }
+        Command::Del((rpid, user_id)) => {
+            println!("Delete a Credential.");
 
-    println!("Enumerate discoverable credentials.");
+            if rpid.is_empty() || user_id.is_empty() {
+                return Err(anyhow!("Need rpid and userid."));
+            }
 
-    let credentials_count = device.credential_management_get_creds_metadata(Some(&pin))?;
+            println!("- credential: (rpid: {}, user_id: {})", rpid, user_id);
+            println!();
 
-    let mut strbuf = StrBuf::new(0);
-    strbuf.addln(&format!(
-        "Existing discoverable credentials {}/{}",
-        credentials_count.existing_resident_credentials_count,
-        credentials_count.max_possible_remaining_resident_credentials_count
-    ));
-    strbuf
-        .addln("")
-        .addln("Discoverable credentials")
-        .addln("https://fidoalliance.org/specs/fido-v2.1-rd-20210309/fido-client-to-authenticator-protocol-v2.1-rd-20210309.html#sctn-discoverable");
+            delete(device, &pin, &rpid, &util::to_str_hex(&user_id))?;
+        }
+        Command::Update((rpid, user_id)) => {
+            println!("Update a Credential.");
 
-    println!("{}", strbuf.build().to_string());
+            if rpid.is_empty() || user_id.is_empty() {
+                return Err(anyhow!("Need rpid and userid."));
+            }
 
-    if credentials_count.existing_resident_credentials_count == 0 {
-        println!("\nNo discoverable credentials.");
-        return Ok(());
-    }
+            println!("- credential: (rpid: {}, user_id: {})", rpid, user_id);
+            println!();
 
-    // Vec<credential_management_params::Rp>
-    let rps = device.credential_management_enumerate_rps(Some(&pin))?;
-
-    for r in rps {
-        println!("## rps\n{}", r);
-
-        let creds = device.credential_management_enumerate_credentials(Some(&pin), &r.rpid_hash)?;
-
-        for c in creds {
-            println!("### credentials\n{}", c);
+            update(device, &pin, &rpid, &util::to_str_hex(&user_id))?;
         }
     }
-
     Ok(())
-}
-
-fn metadata(device: &FidoKeyHid, pin: &str) {
-    match device.credential_management_get_creds_metadata(Some(pin)) {
-        Ok(result) => println!("{}", result),
-        Err(e) => println!("- error: {:?}", e),
-    }
 }
 
 fn is_supported(device: &FidoKeyHid) -> Result<bool> {
@@ -70,11 +68,88 @@ fn is_supported(device: &FidoKeyHid) -> Result<bool> {
     }
 
     if device
-        .enable_info_option(&&InfoOption::CredentialMgmtPreview)?
+        .enable_info_option(&InfoOption::CredentialMgmtPreview)?
         .is_some()
     {
         Ok(true)
     } else {
         Ok(false)
     }
+}
+
+fn metadata(device: &FidoKeyHid, pin: &str) -> Result<()> {
+    let metadata = device.credential_management_get_creds_metadata(Some(pin))?;
+    println!("{}", metadata);
+    Ok(())
+}
+
+fn enumerate(device: &FidoKeyHid, pin: &str) -> Result<()> {
+    let credentials_count = device.credential_management_get_creds_metadata(Some(pin))?;
+    println!(
+        "- existing discoverable credentials: {}/{}",
+        credentials_count.existing_resident_credentials_count,
+        credentials_count.max_possible_remaining_resident_credentials_count
+    );
+
+    if credentials_count.existing_resident_credentials_count == 0 {
+        println!("\nNo discoverable credentials.");
+        return Ok(());
+    }
+
+    let rps = device.credential_management_enumerate_rps(Some(pin))?;
+
+    for rp in rps {
+        println!(
+            "- rp: (id: {}, name: {})",
+            rp.public_key_credential_rp_entity.id, rp.public_key_credential_rp_entity.name
+        );
+        //println!("## rps\n{}", rp);
+
+        let creds = device.credential_management_enumerate_credentials(Some(pin), &rp.rpid_hash)?;
+        for cred in creds {
+            println!(
+                "  - credential: (id: {}, name: {}, display_name: {})",
+                util::to_hex_str(&cred.public_key_credential_user_entity.id),
+                cred.public_key_credential_user_entity.name,
+                cred.public_key_credential_user_entity.display_name
+            );
+            //println!("### credentials\n{}", cred);
+        }
+    }
+
+    Ok(())
+}
+
+fn delete(device: &FidoKeyHid, pin: &str, rpid: &str, user_id: &[u8]) -> Result<()> {
+    if let Some(cred) = memo::search_cred(device, pin, rpid, user_id)? {
+        device.credential_management_delete_credential(
+            Some(pin),
+            Some(cred.public_key_credential_descriptor),
+        )?;
+        println!("Delete Success!");
+    } else {
+        println!("Credential not found...");
+    }
+    Ok(())
+}
+
+fn update(device: &FidoKeyHid, pin: &str, rpid: &str, user_id: &[u8]) -> Result<()> {
+    if let Some(cred) = memo::search_cred(device, pin, rpid, user_id)? {
+        let pkcue = PublicKeyCredentialUserEntity {
+            id: user_id.to_vec(),
+            name: "test-name".to_string(),
+            display_name: "test-display".to_string(),
+        };
+
+        device.credential_management_update_user_information(
+            Some(pin),
+            Some(cred.public_key_credential_descriptor),
+            Some(pkcue),
+        )?;
+
+        println!("Update Success!");
+    } else {
+        println!("Credential not found...");
+    }
+    Ok(())
 }

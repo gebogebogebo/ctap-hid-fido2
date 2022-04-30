@@ -6,9 +6,11 @@ use anyhow::{Error, Result};
 use serde_cbor::to_vec;
 use serde_cbor::Value;
 use std::collections::BTreeMap;
+use crate::encrypt::enc_hmac_sha_256;
 
 /// The subcommand for setting configurations on a hardware token.
 #[allow(dead_code)]
+#[derive(Debug, Copy, Clone)]
 pub enum SubCommand {
     EnableEnterpriseAttestation = 0x01,
     ToggleAlwaysUv = 0x02,
@@ -16,13 +18,20 @@ pub enum SubCommand {
     VendorPrototype = 0x04,
 }
 
-fn create_payload_enable_enterprise_attestation() -> Vec<u8> {
-    // 0x01 : subCommand
-    let sub_cmd = Value::Integer(SubCommand::EnableEnterpriseAttestation as i128);
+fn create_payload(sub_command: SubCommand, pin_uv_auth_param: &[u8]) -> Vec<u8> {
 
     // create cbor
     let mut map = BTreeMap::new();
-    map.insert(Value::Integer(0x01), sub_cmd);
+
+    // 0x01: subCommand
+    map.insert(Value::Integer(0x01), Value::Integer(sub_command as i128));
+
+    // 0x03: pinProtocol
+    map.insert(Value::Integer(0x03), Value::Integer(1));
+
+    // 0x04: pinUvAuthParam
+    map.insert(Value::Integer(0x04), Value::Bytes(pin_uv_auth_param.to_vec()));
+
     let cbor = Value::Map(map);
 
     let mut payload = [ctapdef::AUTHENTICATOR_CONFIG].to_vec();
@@ -31,12 +40,39 @@ fn create_payload_enable_enterprise_attestation() -> Vec<u8> {
 }
 
 impl FidoKeyHid {
+
     /// Get Config (CTAP 2.1)
-    pub fn config(&self) -> Result<String> {
+    pub fn toggle_always_uv(&self, pin: Option<&str>) -> Result<String> {
+        self.config(pin,SubCommand::ToggleAlwaysUv)
+    }
+
+    fn config(&self, pin: Option<&str>, sub_command: SubCommand) -> Result<String> {
         let cid = ctaphid::ctaphid_init(self).map_err(Error::msg)?;
-        let send_payload = create_payload_enable_enterprise_attestation();
-        let _response_cbor =
-            ctaphid::ctaphid_cbor(self, &cid, &send_payload).map_err(Error::msg)?;
+
+        // get pintoken & create pin auth
+        let pin_uv_auth_param = if let Some(pin) = pin {
+            if !pin.is_empty() {
+                let pin_token = self.get_pinuv_auth_token_with_permission(&cid, pin, super::pin::Permission::Acfg)?;
+
+                // pinUvAuthParam (0x04)
+                // - authenticate(pinUvAuthToken, 32×0xff || 0x0d || uint8(subCommand) || subCommandParams).
+                // https://fidoalliance.org/specs/fido-v2.1-ps-20210615/fido-client-to-authenticator-protocol-v2.1-ps-20210615.html#authenticatorConfig
+                let mut message = vec![0xff; 32];
+                message.append(&mut vec![0x0d]);
+                message.append(&mut vec![sub_command as u8]);
+
+                let sig = enc_hmac_sha_256::authenticate(&pin_token.key, &message);
+                let pin_auth = sig[0..16].to_vec();
+                pin_auth
+            } else {
+                vec![]
+            }
+        } else {
+            vec![]
+        };
+
+        let send_payload = create_payload(sub_command, &pin_uv_auth_param);
+        let _response_cbor = ctaphid::ctaphid_cbor(self, &cid, &send_payload).map_err(Error::msg)?;
         Ok("".to_string())
     }
 }
