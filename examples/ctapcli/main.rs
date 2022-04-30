@@ -16,6 +16,7 @@ use ctap_hid_fido2::fidokey::get_info::InfoParam;
 
 mod bio;
 mod common;
+mod config;
 mod cred;
 mod info;
 mod memo;
@@ -210,7 +211,7 @@ enum Action {
         toggle_always_uv: bool,
 
         #[clap(short = 'p')]
-        pin: String,
+        pin: Option<String>,
     },
 }
 
@@ -358,12 +359,8 @@ fn main() -> Result<()> {
                 cred::cred(&device, command, pin)?;
             }
             Action::Config { toggle_always_uv, pin } => {
-                println!("config()");
                 if toggle_always_uv {
-                    match device.toggle_always_uv(Some(&pin)) {
-                        Ok(result) => println!("- config : {:?}", result),
-                        Err(error) => println!("- config error: {:?}", error),
-                    };
+                    config::config(&device, config::Command::ToggleAlwaysUv, pin)?;
                 }
             }
         }
