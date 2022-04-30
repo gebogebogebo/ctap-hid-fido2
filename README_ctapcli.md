@@ -85,6 +85,13 @@ PIN retry counter represents the number of attempts left before PIN is disabled.
 Each correct PIN entry resets the PIN retry counters back to their maximum values.
 Each incorrect PIN entry decrements the counter by 1.
 Once the PIN retry counter reaches 0, built-in user verification are disabled and can only be enabled if authenticator is reset.
+
+
+Get UV retry counter.
+
+UV retry counter = 3
+
+UV retries count is the number of built-in UV attempts remaining before built-in UV is disabled on the device.
 ```
 
 
@@ -129,13 +136,15 @@ Success! :)
 ```zsh
 % ctapcli -f
 
-Enumerate FIDO key
-- vid=0x1050 , pid=0x0402 , "product=YubiKey FIDO usage_page=61904 usage=1 serial_number="
+Enumerate FIDO keys.
+- vid=0x1050 , pid=0x0402 , info="product=YubiKey FIDO usage_page=61904 usage=1 serial_number= path=\"IOService:/AppleACPIPlatformExpert/PCI0@0/AppleACPIPCI/XHC1@14/XHC1@14000000/HS04@14400000/YubiKey FIDO@14400000/IOUSBHostInterface@0/AppleUserUSBHostHIDDevice\""
 ```
 
 
 
 ### Record some short texts in Authenticator
+
+#### Add a memo.
 
 ```shell
 % ctapcli memo -a
@@ -153,6 +162,8 @@ hoge
 - Touch the sensor on the authenticator
 Add Success! :)
 ```
+
+#### Get a memo.
 
 ```shell
 % ctapcli memo   
