@@ -6,12 +6,19 @@
 
 
 # ctap-hid-fido2
-Rust FIDO2 CTAP library
+Rust FIDO2 CTAP library ( and cli tool [ctapcli](README_ctapcli.md))
 
-- Ver 3.
-- The usage has changed from Ver2. Please see [How to Use](#how-to-use).
+[MIT License](https://github.com/gebogebogebo/ctap-hid-fido2/blob/master/LICENSE).
 
-- [MIT License](https://github.com/gebogebogebo/ctap-hid-fido2/blob/master/LICENSE).
+
+
+- Ver 3.1.0
+  - Implemente Authenticator Config - toggle_always_uv(). -> [Authenticator Config(CTAP 2.1)](README_Authenticator_Config.md)
+  - add cli tool [ctapcli](README_ctapcli.md)
+
+- Ver 3.0.0
+  - The usage has changed from Ver2. -> [How to Use](#how-to-use).
+
 
 
 
@@ -156,3 +163,10 @@ See the following links for examples of various patterns.
 - [Biometric management (CTAP 2.1)](README_Biometric_management.md)
 - [Authenticator Config(CTAP 2.1)](README_Authenticator_Config.md)
 
+
+
+## CLI tool
+
+CLI tool can be used.
+
+- [ctapcli](README_ctapcli.md)
