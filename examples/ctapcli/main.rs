@@ -189,8 +189,12 @@ enum Action {
         #[clap(long = "auv", help = "Toggle Always Require User Verification.")]
         toggle_always_uv: bool,
 
-        #[clap(long = "gminpin", help = "Get minimum PIN Length.")]
-        get_min_pin_len: bool,
+        #[clap(
+            long = "gminpin",
+            takes_value = true,
+            value_name = "new-min-pin-length",
+            help = "Get minimum PIN Length.")]
+        new_min_pin_length: Option<u8>,
 
         #[clap(short = 'p')]
         pin: Option<String>,
@@ -202,7 +206,7 @@ fn main() -> Result<()> {
     let arg: AppArg = AppArg::parse();
 
     let mut cfg = Cfg::init();
-    cfg.enable_log = true;
+    cfg.enable_log = false;
     cfg.use_pre_bio_enrollment = true;
     cfg.use_pre_credential_management = true;
 
@@ -342,13 +346,13 @@ fn main() -> Result<()> {
             }
             Action::Config {
                 toggle_always_uv,
-                get_min_pin_len,
+                new_min_pin_length,
                 pin,
             } => {
                 if toggle_always_uv {
                     config::config(&device, config::Command::ToggleAlwaysUv, pin)?;
-                } else if get_min_pin_len {
-                    config::config(&device, config::Command::SetMinPINLength, pin)?;
+                } else if new_min_pin_length.is_some() {
+                    config::config(&device, config::Command::SetMinPINLength(new_min_pin_length.unwrap()), pin)?;
                 }
             }
         }

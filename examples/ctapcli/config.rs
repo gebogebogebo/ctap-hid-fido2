@@ -4,7 +4,7 @@ use ctap_hid_fido2::fidokey::{get_info::InfoOption, FidoKeyHid};
 
 pub enum Command {
     ToggleAlwaysUv,
-    SetMinPINLength,
+    SetMinPINLength(u8),
 }
 
 pub fn config(device: &FidoKeyHid, command: Command, pin: Option<String>) -> Result<()> {
@@ -28,9 +28,9 @@ pub fn config(device: &FidoKeyHid, command: Command, pin: Option<String>) -> Res
             let result = device.enable_info_option(&InfoOption::AlwaysUv)?;
             println!("- done. -> {:?} is {:?}", InfoOption::AlwaysUv, result);
         }
-        Command::SetMinPINLength => {
+        Command::SetMinPINLength(new_min_pin_length) => {
             println!("Authenticator Config Get the minimum PIN length.");
-            device.set_min_pin_length(Some(&pin))?;
+            device.set_min_pin_length(new_min_pin_length, Some(&pin))?;
         }
     }
 

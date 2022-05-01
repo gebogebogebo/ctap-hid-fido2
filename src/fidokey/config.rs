@@ -18,7 +18,7 @@ pub enum SubCommand {
     VendorPrototype = 0x04,
 }
 
-fn create_payload(pin_token: pintoken::PinToken, sub_command: SubCommand) -> Vec<u8> {
+fn create_payload(pin_token: pintoken::PinToken, sub_command: SubCommand, new_min_pin_length: Option<u8>) -> Vec<u8> {
     // create cbor
     let mut map = BTreeMap::new();
 
@@ -32,7 +32,7 @@ fn create_payload(pin_token: pintoken::PinToken, sub_command: SubCommand) -> Vec
             SubCommand::SetMinPinLength => {
                 let mut param = BTreeMap::new();
                 // 0x01:newMinPINLength
-                param.insert(Value::Integer(0x01), Value::Integer(4));
+                param.insert(Value::Integer(0x01), Value::Integer(new_min_pin_length.unwrap() as i128));
                 map.insert(Value::Integer(0x02), Value::Map(param.clone()));
                 Some(param)
             }
@@ -79,14 +79,14 @@ fn need_sub_command_param(sub_command: SubCommand) -> bool {
 impl FidoKeyHid {
     /// Get Config (CTAP 2.1)
     pub fn toggle_always_uv(&self, pin: Option<&str>) -> Result<String> {
-        self.config(pin, SubCommand::ToggleAlwaysUv)
+        self.config(pin, SubCommand::ToggleAlwaysUv, None)
     }
 
-    pub fn set_min_pin_length(&self, pin: Option<&str>) -> Result<String> {
-        self.config(pin, SubCommand::SetMinPinLength)
+    pub fn set_min_pin_length(&self, new_min_pin_length: u8, pin: Option<&str>) -> Result<String> {
+        self.config(pin, SubCommand::SetMinPinLength, Some(new_min_pin_length))
     }
 
-    fn config(&self, pin: Option<&str>, sub_command: SubCommand) -> Result<String> {
+    fn config(&self, pin: Option<&str>, sub_command: SubCommand, new_min_pin_length: Option<u8>) -> Result<String> {
         let pin = if let Some(v) = pin {
             v
         } else {
@@ -99,7 +99,7 @@ impl FidoKeyHid {
         let pin_token =
             self.get_pinuv_auth_token_with_permission(&cid, pin, super::pin::Permission::Acfg)?;
 
-        let send_payload = create_payload(pin_token, sub_command);
+        let send_payload = create_payload(pin_token, sub_command, new_min_pin_length);
         let _response_cbor =
             ctaphid::ctaphid_cbor(self, &cid, &send_payload).map_err(Error::msg)?;
         Ok("".to_string())
