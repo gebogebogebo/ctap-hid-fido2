@@ -68,7 +68,7 @@
                     "kind": "example"
                 }
             },
-            "args": ["config", "--auv", "-p", "1234"],
+            "args": ["config", "--gminpin", "-p", "1234567890"],
             "cwd": "${workspaceFolder}"
         },
         {

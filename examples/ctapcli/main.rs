@@ -30,32 +30,16 @@ mod pin;
     about = "This tool implements CTAP HID and can communicate with FIDO Authenticator.\n\nabout CTAP(Client to Authenticator Protocol)\nhttps://fidoalliance.org/specs/fido-v2.1-ps-20210615/fido-client-to-authenticator-protocol-v2.1-ps-20210615.html"
 )]
 struct AppArg {
-    #[clap(
-        short = 'd',
-        long = "device",
-        help = "Enumerate HID devices.",
-    )]
+    #[clap(short = 'd', long = "device", help = "Enumerate HID devices.")]
     device: bool,
 
-    #[clap(
-        short = 'f',
-        long = "fidokey",
-        help = "Enumerate FIDO key."
-    )]
+    #[clap(short = 'f', long = "fidokey", help = "Enumerate FIDO key.")]
     fidokey: bool,
 
-    #[clap(
-        short = 'w',
-        long = "wink",
-        help = "Blink the LED on the FIDO key."
-    )]
+    #[clap(short = 'w', long = "wink", help = "Blink the LED on the FIDO key.")]
     wink: bool,
 
-    #[clap(
-        short = 'u',
-        long = "user-presence",
-        help = "User Presence Test."
-    )]
+    #[clap(short = 'u', long = "user-presence", help = "User Presence Test.")]
     user_presence: bool,
 
     #[clap(subcommand)]
@@ -200,12 +184,13 @@ enum Action {
         #[clap(short = 'p')]
         pin: Option<String>,
     },
-    #[clap(
-        about = "Authenticator Config."
-    )]
+    #[clap(about = "Authenticator Config.")]
     Config {
-        #[clap(long = "auv", help = "[Always an error]toggleAlwaysUv.")]
+        #[clap(long = "auv", help = "Toggle Always Require User Verification.")]
         toggle_always_uv: bool,
+
+        #[clap(long = "gminpin", help = "Get minimum PIN Length.")]
+        get_min_pin_len: bool,
 
         #[clap(short = 'p')]
         pin: Option<String>,
@@ -217,7 +202,7 @@ fn main() -> Result<()> {
     let arg: AppArg = AppArg::parse();
 
     let mut cfg = Cfg::init();
-    cfg.enable_log = false;
+    cfg.enable_log = true;
     cfg.use_pre_bio_enrollment = true;
     cfg.use_pre_credential_management = true;
 
@@ -335,7 +320,7 @@ fn main() -> Result<()> {
                 update,
                 rpid,
                 userid,
-                pin
+                pin,
             } => {
                 let command = if metadata {
                     cred::Command::Metadata
@@ -355,9 +340,15 @@ fn main() -> Result<()> {
 
                 cred::cred(&device, command, pin)?;
             }
-            Action::Config { toggle_always_uv, pin } => {
+            Action::Config {
+                toggle_always_uv,
+                get_min_pin_len,
+                pin,
+            } => {
                 if toggle_always_uv {
                     config::config(&device, config::Command::ToggleAlwaysUv, pin)?;
+                } else if get_min_pin_len {
+                    config::config(&device, config::Command::SetMinPINLength, pin)?;
                 }
             }
         }
