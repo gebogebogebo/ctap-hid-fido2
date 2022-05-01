@@ -190,10 +190,10 @@ enum Action {
         toggle_always_uv: bool,
 
         #[clap(
-            long = "gminpin",
+            long = "minpin",
             takes_value = true,
             value_name = "new-min-pin-length",
-            help = "Get minimum PIN Length.")]
+            help = "Setting a minimum PIN Length.")]
         new_min_pin_length: Option<u8>,
 
         #[clap(short = 'p')]

@@ -23,22 +23,32 @@ pub fn config(device: &FidoKeyHid, command: Command, pin: Option<String>) -> Res
     match command {
         Command::ToggleAlwaysUv => {
             println!("Authenticator Config: Toggle Always Require User Verification.");
-
-            device.toggle_always_uv(Some(&pin))?;
-            let result = device.enable_info_option(&InfoOption::AlwaysUv)?;
-            println!("- done. -> {:?} is {:?}", InfoOption::AlwaysUv, result);
+            println!("https://fidoalliance.org/specs/fido-v2.1-ps-20210615/fido-client-to-authenticator-protocol-v2.1-ps-20210615.html#sctn-feature-descriptions-alwaysUv");
+            println!();
+            let always_uv = device.enable_info_option(&InfoOption::AlwaysUv)?.unwrap();
+            let input = common::get_input_with_message(
+                &format!("Change Require User Verification from [{}] to [{}]. (Yes/No)",always_uv,!always_uv)
+            );
+            if input == "Yes" {
+                device.toggle_always_uv(Some(&pin))?;
+                println!("- done.")
+            } else {
+                println!("- canceled.")
+            }
         }
         Command::SetMinPINLength(new_min_pin_length) => {
             println!("Authenticator Config: Setting a minimum PIN Length.");
+            println!("https://fidoalliance.org/specs/fido-v2.1-ps-20210615/fido-client-to-authenticator-protocol-v2.1-ps-20210615.html#sctn-feature-descriptions-minPinLength");
+            println!();
             let info = device.get_info()?;
             let input = common::get_input_with_message(
-                &format!("[Cannot be restored]\nChange setting from {} to {}. (Yes/No)",info.min_pin_length,new_min_pin_length)
+                &format!("[WARNING Cannot be restored]\nChange minimum PIN Length from [{}] to [{}]. (Yes/No)",info.min_pin_length,new_min_pin_length)
             );
             if input == "Yes" {
                 device.set_min_pin_length(new_min_pin_length, Some(&pin))?;
-                println!("Complete.")
+                println!("- done.")
             } else {
-                println!("Canceled.")
+                println!("- canceled.")
             }
 
         }
