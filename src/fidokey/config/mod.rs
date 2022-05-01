@@ -18,7 +18,11 @@ pub enum SubCommand {
     VendorPrototype = 0x04,
 }
 
-fn create_payload(pin_token: pintoken::PinToken, sub_command: SubCommand, new_min_pin_length: Option<u8>) -> Vec<u8> {
+fn create_payload(
+    pin_token: pintoken::PinToken,
+    sub_command: SubCommand,
+    new_min_pin_length: Option<u8>,
+) -> Vec<u8> {
     // create cbor
     let mut map = BTreeMap::new();
 
@@ -32,7 +36,10 @@ fn create_payload(pin_token: pintoken::PinToken, sub_command: SubCommand, new_mi
             SubCommand::SetMinPinLength => {
                 let mut param = BTreeMap::new();
                 // 0x01:newMinPINLength
-                param.insert(Value::Integer(0x01), Value::Integer(new_min_pin_length.unwrap() as i128));
+                param.insert(
+                    Value::Integer(0x01),
+                    Value::Integer(new_min_pin_length.unwrap() as i128),
+                );
                 map.insert(Value::Integer(0x02), Value::Map(param.clone()));
                 Some(param)
             }
@@ -86,7 +93,12 @@ impl FidoKeyHid {
         self.config(pin, SubCommand::SetMinPinLength, Some(new_min_pin_length))
     }
 
-    fn config(&self, pin: Option<&str>, sub_command: SubCommand, new_min_pin_length: Option<u8>) -> Result<String> {
+    fn config(
+        &self,
+        pin: Option<&str>,
+        sub_command: SubCommand,
+        new_min_pin_length: Option<u8>,
+    ) -> Result<String> {
         let pin = if let Some(v) = pin {
             v
         } else {

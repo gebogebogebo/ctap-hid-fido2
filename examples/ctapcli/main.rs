@@ -15,6 +15,7 @@ use ctap_hid_fido2::{str_buf, Cfg, FidoKeyHid, FidoKeyHidFactory};
 use ctap_hid_fido2::fidokey::get_info::InfoParam;
 
 mod bio;
+mod blobs;
 mod common;
 mod config;
 mod cred;
@@ -193,8 +194,20 @@ enum Action {
             long = "minpin",
             takes_value = true,
             value_name = "new-min-pin-length",
-            help = "Setting a minimum PIN Length.")]
+            help = "Setting a minimum PIN Length."
+        )]
         new_min_pin_length: Option<u8>,
+
+        #[clap(short = 'p')]
+        pin: Option<String>,
+    },
+    #[clap(about = "Large Blob Key.")]
+    Blobs {
+        #[clap(long = "get", help = "Get.")]
+        get: bool,
+
+        #[clap(long = "offset", help = "Offset.")]
+        offset: i32,
 
         #[clap(short = 'p')]
         pin: Option<String>,
@@ -352,7 +365,16 @@ fn main() -> Result<()> {
                 if toggle_always_uv {
                     config::config(&device, config::Command::ToggleAlwaysUv, pin)?;
                 } else if new_min_pin_length.is_some() {
-                    config::config(&device, config::Command::SetMinPINLength(new_min_pin_length.unwrap()), pin)?;
+                    config::config(
+                        &device,
+                        config::Command::SetMinPINLength(new_min_pin_length.unwrap()),
+                        pin,
+                    )?;
+                }
+            }
+            Action::Blobs { get, offset, pin } => {
+                if get {
+                    blobs::blobs(&device, blobs::Command::Get(offset), pin)?;
                 }
             }
         }

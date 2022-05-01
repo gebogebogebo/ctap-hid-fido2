@@ -68,7 +68,7 @@
                     "kind": "example"
                 }
             },
-            "args": ["config", "--gminpin", "4", "-p", "1234"],
+            "args": ["blobs", "--get", "--offset", "0", "-p", "1234"],
             "cwd": "${workspaceFolder}"
         },
         {
