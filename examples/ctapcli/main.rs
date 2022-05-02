@@ -219,7 +219,7 @@ fn main() -> Result<()> {
     let arg: AppArg = AppArg::parse();
 
     let mut cfg = Cfg::init();
-    cfg.enable_log = false;
+    cfg.enable_log = true;
     cfg.use_pre_bio_enrollment = true;
     cfg.use_pre_credential_management = true;
 

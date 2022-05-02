@@ -6,14 +6,15 @@ use std::ffi::CString;
 
 // Complex Submodules
 pub mod bio;
+pub mod config;
 pub mod credential_management;
 pub mod get_assertion;
 pub mod get_info;
+pub mod large_blobs;
 pub mod make_credential;
 pub mod pin;
 
 // Simple Submodules
-mod config;
 mod selection;
 mod wink;
 

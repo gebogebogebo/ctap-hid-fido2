@@ -29,8 +29,8 @@ pub fn blobs(device: &FidoKeyHid, command: Command, pin: Option<String>) -> Resu
             //     &format!("Change Require User Verification from [{}] to [{}]. (Yes/No)",always_uv,!always_uv)
             // );
             // if input == "Yes" {
-            //     device.toggle_always_uv(Some(&pin))?;
-            //     println!("- done.")
+                 device.large_blobs(Some(&pin),true,0)?;
+                 println!("- done.")
             // } else {
             //     println!("- canceled.")
             // }
