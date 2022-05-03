@@ -1,4 +1,5 @@
 pub mod large_blobs_command;
+pub mod large_blobs_params;
 pub mod large_blobs_response;
 
 use anyhow::{Error, Result};
@@ -29,7 +30,7 @@ impl FidoKeyHid {
         let response_cbor =
             ctaphid::ctaphid_cbor(self, &cid, &send_payload).map_err(Error::msg)?;
 
-        large_blobs_response::parse_cbor(&response_cbor).map_err(Error::msg)?;
+        let large_blob_data = large_blobs_response::parse_cbor(&response_cbor)?;
 
         Ok("".to_string())
     }
