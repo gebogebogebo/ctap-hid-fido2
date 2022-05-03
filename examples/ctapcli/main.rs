@@ -382,9 +382,9 @@ fn main() -> Result<()> {
                 pin,
             } => {
                 if get {
-                    blobs::blobs(&device, blobs::Command::Get((offset, 17)), pin)?;
+                    blobs::blobs(&device, blobs::Command::Get((offset, 100)), pin)?;
                 } else if set {
-                    let val = "12345678901234567890".as_bytes().to_vec();
+                    let val = "hoge".as_bytes().to_vec();
                     blobs::blobs(&device, blobs::Command::Set((offset, val)), pin)?;
                 }
             }

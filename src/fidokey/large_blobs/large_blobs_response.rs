@@ -16,7 +16,7 @@ pub(crate) fn parse_cbor(bytes: &[u8]) -> Result<LargeBlobData> {
                     println!("{:?}", util::to_hex_str(&data));
                     // let message = &hash.as_ref()[0..16];
                     large_blobs_data.large_blob_array = data[0..1].to_vec();
-                    large_blobs_data.hash = data[1..16].to_vec();
+                    large_blobs_data.hash = data[1..17].to_vec();
 
                     // TODO for Debug
                     println!(

@@ -68,7 +68,7 @@
                     "kind": "example"
                 }
             },
-            "args": ["blobs", "--set", "--offset", "0", "-p", "1234"],
+            "args": ["blobs", "--get", "--offset", "0", "-p", "1234"],
             "cwd": "${workspaceFolder}"
         },
         {
