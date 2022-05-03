@@ -1,12 +1,9 @@
-use crate::{ctapdef, ctaphid, pintoken};
+use crate::{ctapdef, ctaphid, encrypt::enc_hmac_sha_256, pintoken};
 
-use super::pin::Permission::AuthenticatorConfiguration;
-use super::FidoKeyHid;
+use super::{pin::Permission::AuthenticatorConfiguration, FidoKeyHid};
 
-use crate::encrypt::enc_hmac_sha_256;
 use anyhow::{anyhow, Error, Result};
-use serde_cbor::to_vec;
-use serde_cbor::Value;
+use serde_cbor::{to_vec, Value};
 use std::collections::BTreeMap;
 
 /// The subcommand for setting configurations on a hardware token.
@@ -85,12 +82,11 @@ fn need_sub_command_param(sub_command: SubCommand) -> bool {
 }
 
 impl FidoKeyHid {
-    /// Get Config (CTAP 2.1)
-    pub fn toggle_always_uv(&self, pin: Option<&str>) -> Result<String> {
+    pub fn toggle_always_uv(&self, pin: Option<&str>) -> Result<()> {
         self.config(pin, SubCommand::ToggleAlwaysUv, None)
     }
 
-    pub fn set_min_pin_length(&self, new_min_pin_length: u8, pin: Option<&str>) -> Result<String> {
+    pub fn set_min_pin_length(&self, new_min_pin_length: u8, pin: Option<&str>) -> Result<()> {
         self.config(pin, SubCommand::SetMinPinLength, Some(new_min_pin_length))
     }
 
@@ -99,7 +95,7 @@ impl FidoKeyHid {
         pin: Option<&str>,
         sub_command: SubCommand,
         new_min_pin_length: Option<u8>,
-    ) -> Result<String> {
+    ) -> Result<()> {
         let pin = if let Some(v) = pin {
             v
         } else {
@@ -115,6 +111,6 @@ impl FidoKeyHid {
         let send_payload = create_payload(pin_token, sub_command, new_min_pin_length);
         let _response_cbor =
             ctaphid::ctaphid_cbor(self, &cid, &send_payload).map_err(Error::msg)?;
-        Ok("".to_string())
+        Ok(())
     }
 }
