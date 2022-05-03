@@ -1,5 +1,6 @@
 use crate::{ctapdef, ctaphid, pintoken};
 
+use super::pin::Permission::AuthenticatorConfiguration;
 use super::FidoKeyHid;
 
 use crate::encrypt::enc_hmac_sha_256;
@@ -109,7 +110,7 @@ impl FidoKeyHid {
 
         // get pintoken
         let pin_token =
-            self.get_pinuv_auth_token_with_permission(&cid, pin, super::pin::Permission::Acfg)?;
+            self.get_pinuv_auth_token_with_permission(&cid, pin, AuthenticatorConfiguration)?;
 
         let send_payload = create_payload(pin_token, sub_command, new_min_pin_length);
         let _response_cbor =

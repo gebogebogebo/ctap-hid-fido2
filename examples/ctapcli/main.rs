@@ -207,7 +207,10 @@ enum Action {
         get: bool,
 
         #[clap(long = "offset", help = "Offset.")]
-        offset: i32,
+        offset: u32,
+
+        #[clap(long = "set", help = "Set.")]
+        set: bool,
 
         #[clap(short = 'p')]
         pin: Option<String>,
@@ -372,9 +375,17 @@ fn main() -> Result<()> {
                     )?;
                 }
             }
-            Action::Blobs { get, offset, pin } => {
+            Action::Blobs {
+                get,
+                set,
+                offset,
+                pin,
+            } => {
                 if get {
-                    blobs::blobs(&device, blobs::Command::Get(offset), pin)?;
+                    blobs::blobs(&device, blobs::Command::Get((offset, 17)), pin)?;
+                } else if set {
+                    let val = "12345678901234567890".as_bytes().to_vec();
+                    blobs::blobs(&device, blobs::Command::Set((offset, val)), pin)?;
                 }
             }
         }

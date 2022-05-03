@@ -8,7 +8,7 @@ use crate::public_key_credential_user_entity::PublicKeyCredentialUserEntity;
 
 use crate::util;
 
-use super::{pin::Permission, FidoKeyHid};
+use super::{pin::Permission::CredentialManagement, FidoKeyHid};
 
 use anyhow::{Error, Result};
 
@@ -141,7 +141,11 @@ impl FidoKeyHid {
                 if self.use_pre_credential_management {
                     Some(self.get_pin_token(&cid, pin)?)
                 } else {
-                    Some(self.get_pinuv_auth_token_with_permission(&cid, pin, Permission::Cm)?)
+                    Some(self.get_pinuv_auth_token_with_permission(
+                        &cid,
+                        pin,
+                        CredentialManagement,
+                    )?)
                 }
             } else {
                 None
