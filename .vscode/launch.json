@@ -74,6 +74,23 @@
         {
             "type": "lldb",
             "request": "launch",
+            "name": "reg-auth: Debug Example",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--example=reg-auth"
+                ],
+                "filter": {
+                    "name": "reg-auth",
+                    "kind": "example"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
             "name": "test-with-pin-non-rk: Debug Example",
             "cargo": {
                 "args": [

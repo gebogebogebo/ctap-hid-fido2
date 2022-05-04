@@ -53,6 +53,9 @@ name = "ctapcli"
 name = "get-info"
 
 [[example]]
+name = "reg-auth"
+
+[[example]]
 name = "test-with-pin-non-rk"
 
 [[example]]
