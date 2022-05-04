@@ -58,10 +58,7 @@ pub fn config(device: &FidoKeyHid, command: Command, pin: Option<String>) -> Res
 }
 
 fn is_supported(device: &FidoKeyHid) -> Result<bool> {
-    if device
-        .enable_info_option(&&InfoOption::AuthnrCfg)?
-        .is_some()
-    {
+    if device.enable_info_option(&InfoOption::AuthnrCfg)?.is_some() {
         Ok(true)
     } else {
         Ok(false)

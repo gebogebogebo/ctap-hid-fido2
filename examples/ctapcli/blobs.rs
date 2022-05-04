@@ -33,9 +33,9 @@ pub fn blobs(device: &FidoKeyHid, command: Command, pin: Option<String>) -> Resu
                 common::get_pin()
             };
 
-            let input = common::get_input_with_message(&format!(
-                "Would you like to rewrite the Large Blob?. (Yes/No)"
-            ));
+            let input = common::get_input_with_message(
+                "Would you like to rewrite the Large Blob?. (Yes/No)",
+            );
             if input == "Yes" {
                 device.write_large_blob(Some(&pin), write_datas)?;
                 println!("- done.")

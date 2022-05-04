@@ -62,8 +62,7 @@ fn create_payload(
         message.append(&mut sub_command_params_cbor);
 
         let sig = enc_hmac_sha_256::authenticate(&pin_token.key, &message);
-        let pin_auth = sig[0..16].to_vec();
-        pin_auth
+        sig[0..16].to_vec()
     };
     map.insert(
         Value::Integer(0x04),
