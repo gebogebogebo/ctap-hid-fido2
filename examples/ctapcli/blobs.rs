@@ -3,8 +3,8 @@ use anyhow::{anyhow, Result};
 use ctap_hid_fido2::fidokey::{get_info::InfoOption, FidoKeyHid};
 
 pub enum Command {
-    Get((u32, u32)),
-    Set((u32, Vec<u8>)),
+    Get(u32),
+    Set(Vec<u8>),
 }
 
 pub fn blobs(device: &FidoKeyHid, command: Command, pin: Option<String>) -> Result<()> {
@@ -21,24 +21,29 @@ pub fn blobs(device: &FidoKeyHid, command: Command, pin: Option<String>) -> Resu
     };
 
     match command {
-        Command::Get((offset, read_bytes)) => {
+        Command::Get(read_bytes) => {
             println!("Large Blob Key.");
             println!("https://fidoalliance.org/specs/fido-v2.1-ps-20210615/fido-client-to-authenticator-protocol-v2.1-ps-20210615.html#sctn-largeBlobKey-extension");
             println!();
+            let offset = 0;
+            let large_brob_data = device.large_blobs(Some(&pin), offset, Some(read_bytes), None)?;
+            println!("{}",large_brob_data);
+            println!("- done.")
+        }
+        Command::Set(write_datas) => {
             // let always_uv = device.enable_info_option(&InfoOption::AlwaysUv)?.unwrap();
             // let input = common::get_input_with_message(
             //     &format!("Change Require User Verification from [{}] to [{}]. (Yes/No)",always_uv,!always_uv)
             // );
             // if input == "Yes" {
-            let large_brob_data = device.large_blobs(Some(&pin), offset, Some(read_bytes), None)?;
-            println!("{}",large_brob_data);
-            println!("- done.")
+
+            let offset = 0;
+            device.large_blobs(Some(&pin), offset, None, Some(write_datas))?;
+
             // } else {
             //     println!("- canceled.")
             // }
-        }
-        Command::Set((offset, write_datas)) => {
-            device.large_blobs(Some(&pin), offset, None, Some(write_datas))?;
+
         }
     }
 

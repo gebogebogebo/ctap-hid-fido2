@@ -201,21 +201,24 @@ enum Action {
         #[clap(short = 'p')]
         pin: Option<String>,
     },
-    #[clap(about = "Large Blob Key.")]
+    #[clap(about = "Large Blob.")]
     Blobs {
         #[clap(
             long = "get",
             takes_value = true,
             value_name = "read-bytes",
-            help = "Get.",
+            help = "Get Large Blob Data.",
         )]
         get: Option<u32>,
 
         #[clap(long = "offset", help = "Offset.")]
         offset: u32,
 
-        #[clap(long = "set", help = "Set.")]
+        #[clap(long = "set", help = "Set Large Blob Data.")]
         set: bool,
+
+        #[clap(long = "str", help = "String to set to Large Blob.")]
+        str_val: Option<String>,
 
         #[clap(short = 'p')]
         pin: Option<String>,
@@ -384,13 +387,18 @@ fn main() -> Result<()> {
                 get,
                 set,
                 offset,
+                str_val,
                 pin,
             } => {
                 if let Some(read_bytes) = get {
-                    blobs::blobs(&device, blobs::Command::Get((offset, read_bytes)), pin)?;
+                    blobs::blobs(&device, blobs::Command::Get(read_bytes), pin)?;
                 } else if set {
-                    let val = "hoge".as_bytes().to_vec();
-                    blobs::blobs(&device, blobs::Command::Set((offset, val)), pin)?;
+                    if let Some(str_val) = str_val {
+                        let command = blobs::Command::Set(str_val.as_bytes().to_vec());
+                        blobs::blobs(&device, command, pin)?;
+                    } else {
+                        println!("need str");
+                    }
                 }
             }
         }
