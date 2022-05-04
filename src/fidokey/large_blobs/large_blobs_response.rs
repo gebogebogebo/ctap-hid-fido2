@@ -13,17 +13,16 @@ pub(crate) fn parse_cbor(bytes: &[u8]) -> Result<LargeBlobData> {
                     // config -> Byte String
                     let data = util::cbor_value_to_vec_u8(val).map_err(Error::msg)?;
                     // TODO for Debug
-                    println!("{:?}", util::to_hex_str(&data));
-                    // let message = &hash.as_ref()[0..16];
-                    large_blobs_data.large_blob_array = data[0..1].to_vec();
-                    large_blobs_data.hash = data[1..17].to_vec();
+                    //println!("{:?}", util::to_hex_str(&data));
 
+                    large_blobs_data.large_blob_array = data[0..(data.len()-16)].to_vec();
+                    large_blobs_data.hash = data[(data.len()-16)..(data.len())].to_vec();
                     // TODO for Debug
-                    println!(
-                        "- {:?}",
-                        util::to_hex_str(&large_blobs_data.large_blob_array)
-                    );
-                    println!("- {:?}", util::to_hex_str(&large_blobs_data.hash));
+                    // println!(
+                    //     "- {:?}",
+                    //     util::to_hex_str(&large_blobs_data.large_blob_array)
+                    // );
+                    // println!("- {:?}", util::to_hex_str(&large_blobs_data.hash));
                 }
                 _ => println!("parse_cbor_member - unknown member {:?}", member),
             }

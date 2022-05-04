@@ -8,7 +8,7 @@ use std::collections::BTreeMap;
 pub fn create_payload(
     pin_token: Option<PinToken>,
     offset: u32,
-    get: Option<i32>,
+    get: Option<u32>,
     set: Option<Vec<u8>>,
 ) -> Result<Vec<u8>> {
     // create cbor

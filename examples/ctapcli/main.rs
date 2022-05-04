@@ -203,8 +203,13 @@ enum Action {
     },
     #[clap(about = "Large Blob Key.")]
     Blobs {
-        #[clap(long = "get", help = "Get.")]
-        get: bool,
+        #[clap(
+            long = "get",
+            takes_value = true,
+            value_name = "read-bytes",
+            help = "Get.",
+        )]
+        get: Option<u32>,
 
         #[clap(long = "offset", help = "Offset.")]
         offset: u32,
@@ -381,8 +386,8 @@ fn main() -> Result<()> {
                 offset,
                 pin,
             } => {
-                if get {
-                    blobs::blobs(&device, blobs::Command::Get((offset, 100)), pin)?;
+                if let Some(read_bytes) = get {
+                    blobs::blobs(&device, blobs::Command::Get((offset, read_bytes)), pin)?;
                 } else if set {
                     let val = "hoge".as_bytes().to_vec();
                     blobs::blobs(&device, blobs::Command::Set((offset, val)), pin)?;

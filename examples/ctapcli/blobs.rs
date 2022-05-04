@@ -3,7 +3,7 @@ use anyhow::{anyhow, Result};
 use ctap_hid_fido2::fidokey::{get_info::InfoOption, FidoKeyHid};
 
 pub enum Command {
-    Get((u32, i32)),
+    Get((u32, u32)),
     Set((u32, Vec<u8>)),
 }
 
@@ -30,7 +30,8 @@ pub fn blobs(device: &FidoKeyHid, command: Command, pin: Option<String>) -> Resu
             //     &format!("Change Require User Verification from [{}] to [{}]. (Yes/No)",always_uv,!always_uv)
             // );
             // if input == "Yes" {
-            device.large_blobs(Some(&pin), offset, Some(read_bytes), None)?;
+            let large_brob_data = device.large_blobs(Some(&pin), offset, Some(read_bytes), None)?;
+            println!("{}",large_brob_data);
             println!("- done.")
             // } else {
             //     println!("- canceled.")
