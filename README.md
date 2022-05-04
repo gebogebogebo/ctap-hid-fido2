@@ -12,8 +12,12 @@ Rust FIDO2 CTAP library ( and cli tool [ctapcli](README_ctapcli.md))
 
 
 
+- Ver 3.2.0
+  - Implement Authenticator Config - set_min_pin_length(). -> [Authenticator Config(CTAP 2.1)](README_Authenticator_Config.md)
+  - Implement Large Blob -> [Large Blob(CTAP 2.1)](README_Large_Blob.md)
+
 - Ver 3.1.0
-  - Implemente Authenticator Config - toggle_always_uv(). -> [Authenticator Config(CTAP 2.1)](README_Authenticator_Config.md)
+  - Implement Authenticator Config - toggle_always_uv(). -> [Authenticator Config(CTAP 2.1)](README_Authenticator_Config.md)
   - add cli tool [ctapcli](README_ctapcli.md)
 
 - Ver 3.0.0
@@ -157,11 +161,13 @@ for dev in devs {
 
 See the following links for examples of various patterns.
 
-- [Get Authenticator info and Util Examples](README_Get_Info.md)
 - [Register and Authenticate Examples](README_Register_and_Authenticate.md)
+
+- [Get Authenticator info and Util Examples](README_Get_Info.md)
 - [Credential management (CTAP 2.1)](README_Credential_management.md)
 - [Biometric management (CTAP 2.1)](README_Biometric_management.md)
 - [Authenticator Config(CTAP 2.1)](README_Authenticator_Config.md)
+- [Large Blob(CTAP 2.1)](README_Large_Blob.md)
 
 
 
