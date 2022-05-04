@@ -7,7 +7,7 @@ pub use bio_enrollment_params::*;
 
 use crate::pintoken::PinToken;
 use crate::{ctapdef, ctaphid};
-use crate::{fidokey::pin::Permission, FidoKeyHid};
+use crate::{fidokey::pin::Permission::BioEnrollment, FidoKeyHid};
 use bio_enrollment_params::{BioEnrollmentData, TemplateInfo};
 
 #[allow(unused_imports)]
@@ -246,7 +246,7 @@ impl FidoKeyHid {
                 if self.use_pre_bio_enrollment {
                     Some(self.get_pin_token(&cid, pin)?)
                 } else {
-                    Some(self.get_pinuv_auth_token_with_permission(&cid, pin, Permission::Be)?)
+                    Some(self.get_pinuv_auth_token_with_permission(&cid, pin, BioEnrollment)?)
                 }
             } else {
                 None

@@ -17,12 +17,12 @@ pub enum SubCommand {
 
 #[allow(dead_code)]
 pub enum Permission {
-    Mc = 0x01,
-    Ga = 0x02,
-    Cm = 0x04,
-    Be = 0x08,
-    Lbw = 0x10,
-    Acfg = 0x20,
+    MakeCredential = 0x01,
+    GetAssertion = 0x02,
+    CredentialManagement = 0x04,
+    BioEnrollment = 0x08,
+    LargeBlobWrite = 0x10,
+    AuthenticatorConfiguration = 0x20,
 }
 
 fn create_payload_get_uv_retries() -> Vec<u8> {
