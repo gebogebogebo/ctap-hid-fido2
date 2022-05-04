@@ -1,8 +1,14 @@
 # Register and Authenticate
 
+To be secure, it is recommended to use a separate implementation for server and client.
+
+
+
 ## Register
 
 1. create `Challenge`
+
+Correct implementation is done on the server side.
 
 ```rust
 let challenge = verifier::create_challenge();
@@ -33,6 +39,8 @@ let attestation = device.make_credential_with_args(&make_credential_args)?;
 
 5. verify `Attestation` Object
 
+Correct implementation is done on the server side.
+
 - need `rpid(string)` and `challenge` and `Attestation`
 
 ```rust
@@ -45,6 +53,8 @@ if verify_result.is_success {
 ```
 
 6. store **Credential Id** and **Publickey**
+
+Correct implementation is done on the server side.
 
 ```rust
 let userdata.credential_id = verify_result.credential_id;
@@ -59,6 +69,8 @@ store(&userdata); <- ex.store to database
 
 1. restore **Credential Id** and **Publickey**
 
+Correct implementation is done on the server side.
+
 ```rust
 let userdata = restore(userid); <- ex.restore from database
 
@@ -67,6 +79,8 @@ userdata.credential_publickey_der;
 ```
 
 2. create `Challenge`
+
+Correct implementation is done on the server side.
 
 ```rust
 let challenge = verifier::create_challenge();
@@ -91,6 +105,8 @@ let assertions = device.get_assertion_with_args(&get_assertion_args)?;
 ```
 
 5. verify `Assertion` Object
+
+Correct implementation is done on the server side.
 
 - need `rpid(string)` and **PublicKey** and `challenge` and `Assertion`
 
