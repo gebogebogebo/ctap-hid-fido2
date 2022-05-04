@@ -12,7 +12,7 @@ Authentication using FIDO2-compliant security keys (e.g. Yubikey) is possible.
 
 - Features
   - Register and Authenticate.
-  - Enrollment and deletion of PIN.
+  - Register or change PIN.
   - Enrollment and deletion of fingerprints.
   - Management of credentials recorded in security keys.
 
