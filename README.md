@@ -40,9 +40,7 @@ fn main() {
     // create `FidoKeyHid`
     let device = FidoKeyHidFactory::create(&Cfg::init()).unwrap();
     // get `Attestation` Object
-    let attestation = device
-        .make_credential_with_args(&make_credential_args)
-        .unwrap();
+    let attestation = device.make_credential_with_args(&make_credential_args).unwrap();
     println!("- Register Success");
     // verify `Attestation` Object (Correct implementation is done on the server side)
     let verify_result = verifier::verify_attestation(rpid, &challenge, &attestation);
