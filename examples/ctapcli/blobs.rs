@@ -3,7 +3,7 @@ use anyhow::{anyhow, Result};
 use ctap_hid_fido2::fidokey::{get_info::InfoOption, FidoKeyHid};
 
 pub enum Command {
-    Get(u32),
+    Get,
     Set(Vec<u8>),
 }
 
@@ -14,36 +14,34 @@ pub fn blobs(device: &FidoKeyHid, command: Command, pin: Option<String>) -> Resu
         ));
     }
 
-    let pin = if let Some(val) = pin {
-        val
-    } else {
-        common::get_pin()
-    };
-
     match command {
-        Command::Get(read_bytes) => {
+        Command::Get => {
             println!("Large Blob Key.");
             println!("https://fidoalliance.org/specs/fido-v2.1-ps-20210615/fido-client-to-authenticator-protocol-v2.1-ps-20210615.html#sctn-largeBlobKey-extension");
             println!();
-            let offset = 0;
-            let large_brob_data = device.large_blobs(Some(&pin), offset, Some(read_bytes), None)?;
-            println!("{}",large_brob_data);
+            let large_brob_data = device.get_large_blob()?;
+            //println!("{}", large_brob_data);
+            let converted = String::from_utf8(large_brob_data.large_blob_array.to_vec())?;
+            println!("{}", converted);
+            println!();
             println!("- done.")
         }
         Command::Set(write_datas) => {
-            // let always_uv = device.enable_info_option(&InfoOption::AlwaysUv)?.unwrap();
-            // let input = common::get_input_with_message(
-            //     &format!("Change Require User Verification from [{}] to [{}]. (Yes/No)",always_uv,!always_uv)
-            // );
-            // if input == "Yes" {
+            let pin = if let Some(val) = pin {
+                val
+            } else {
+                common::get_pin()
+            };
 
-            let offset = 0;
-            device.large_blobs(Some(&pin), offset, None, Some(write_datas))?;
-
-            // } else {
-            //     println!("- canceled.")
-            // }
-
+            let input = common::get_input_with_message(&format!(
+                "Would you like to rewrite the Large Blob?. (Yes/No)"
+            ));
+            if input == "Yes" {
+                device.write_large_blob(Some(&pin), write_datas)?;
+                println!("- done.")
+            } else {
+                println!("- canceled.")
+            }
         }
     }
 

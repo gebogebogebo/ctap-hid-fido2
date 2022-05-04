@@ -203,16 +203,8 @@ enum Action {
     },
     #[clap(about = "Large Blob.")]
     Blobs {
-        #[clap(
-            long = "get",
-            takes_value = true,
-            value_name = "read-bytes",
-            help = "Get Large Blob Data.",
-        )]
-        get: Option<u32>,
-
-        #[clap(long = "offset", help = "Offset.")]
-        offset: u32,
+        #[clap(long = "get", help = "Get Large Blob Data.")]
+        get: bool,
 
         #[clap(long = "set", help = "Set Large Blob Data.")]
         set: bool,
@@ -386,18 +378,17 @@ fn main() -> Result<()> {
             Action::Blobs {
                 get,
                 set,
-                offset,
                 str_val,
                 pin,
             } => {
-                if let Some(read_bytes) = get {
-                    blobs::blobs(&device, blobs::Command::Get(read_bytes), pin)?;
+                if get {
+                    blobs::blobs(&device, blobs::Command::Get, None)?;
                 } else if set {
                     if let Some(str_val) = str_val {
                         let command = blobs::Command::Set(str_val.as_bytes().to_vec());
                         blobs::blobs(&device, command, pin)?;
                     } else {
-                        println!("need str");
+                        println!("need str.");
                     }
                 }
             }

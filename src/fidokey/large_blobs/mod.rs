@@ -2,20 +2,35 @@ pub mod large_blobs_command;
 pub mod large_blobs_params;
 pub mod large_blobs_response;
 
+use anyhow::{Error, Result};
+
 use super::FidoKeyHid;
 use crate::ctaphid;
-use anyhow::{Error, Result};
 use large_blobs_params::LargeBlobData;
 
 impl FidoKeyHid {
-    pub fn large_blobs(
+    pub fn get_large_blob(&self) -> Result<LargeBlobData> {
+        let offset = 0; // TODO
+        let read_bytes = 1024; // TODO
+        self.large_blobs(None, offset, Some(read_bytes), None)
+    }
+
+    pub fn write_large_blob(
+        &self,
+        pin: Option<&str>,
+        write_datas: Vec<u8>,
+    ) -> Result<LargeBlobData> {
+        let offset = 0; // TODO
+        self.large_blobs(pin, offset, None, Some(write_datas))
+    }
+
+    fn large_blobs(
         &self,
         pin: Option<&str>,
         offset: u32,
         get: Option<u32>,
         set: Option<Vec<u8>>,
     ) -> Result<LargeBlobData> {
-
         let cid = ctaphid::ctaphid_init(self).map_err(Error::msg)?;
 
         // get pintoken
