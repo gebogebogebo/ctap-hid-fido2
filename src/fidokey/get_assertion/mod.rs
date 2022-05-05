@@ -137,7 +137,7 @@ impl FidoKeyHid {
                 params.pin_auth = sig[0..16].to_vec();
             }
 
-            get_assertion_command::create_payload(params, hmac_ext.clone())
+            get_assertion_command::create_payload(params, extensions, hmac_ext.clone())
         };
 
         // send & response
@@ -178,6 +178,7 @@ fn create_hmacext(
                     hmac_ext.create(device, cid, &n.unwrap(), None)?;
                     return Ok(Some(hmac_ext));
                 }
+                _ => (),
             }
         }
         Ok(None)

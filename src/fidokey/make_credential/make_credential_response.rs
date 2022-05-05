@@ -117,6 +117,7 @@ pub fn parse_cbor(bytes: &[u8]) -> Result<Attestation, String> {
                 0x01 => attestation.fmt = util::cbor_value_to_str(val)?,
                 0x02 => parse_cbor_authdata(&util::cbor_value_to_vec_u8(val)?, &mut attestation)?,
                 0x03 => parse_cbor_att_stmt(val, &mut attestation)?,
+                0x05 => attestation.large_blob_bey = util::cbor_value_to_vec_u8(val)?,
                 _ => println!("- anything error"),
             }
         }

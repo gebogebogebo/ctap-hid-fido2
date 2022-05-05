@@ -27,7 +27,11 @@ impl Params {
     }
 }
 
-pub fn create_payload(params: Params, hmac_ext: Option<HmacExt>) -> Vec<u8> {
+pub fn create_payload(
+    params: Params,
+    extensions: Option<&Vec<Extension>>,
+    hmac_ext: Option<HmacExt>,
+) -> Vec<u8> {
     // 0x01 : rpid
     let rpid = Value::Text(params.rp_id.to_string());
 
@@ -60,10 +64,11 @@ pub fn create_payload(params: Params, hmac_ext: Option<HmacExt>) -> Vec<u8> {
         }
     };
 
-    // 0x04 : HMAC Secret Extension
-    let mut ext_val = BTreeMap::new();
-
+    // 0x04 : extensions
     let extensions = {
+        let mut ext_val = BTreeMap::new();
+
+        // HMAC Secret Extension
         if let Some(hmac_ext) = hmac_ext {
             let mut param = BTreeMap::new();
 
@@ -81,10 +86,22 @@ pub fn create_payload(params: Params, hmac_ext: Option<HmacExt>) -> Vec<u8> {
                 Value::Text(Extension::HmacSecret(None).to_string()),
                 Value::Map(param),
             );
+        }
 
-            Some(Value::Map(ext_val))
-        } else {
+        if let Some(extensions) = extensions {
+            for ext in extensions {
+                match *ext {
+                    Extension::HmacSecret(_) => (),
+                    Extension::LargeBlobKey(n) => {
+                        ext_val.insert(Value::Text(ext.to_string()), Value::Bool(n.unwrap()));
+                    }
+                };
+            }
+        }
+        if ext_val.is_empty() {
             None
+        } else {
+            Some(Value::Map(ext_val))
         }
     };
 

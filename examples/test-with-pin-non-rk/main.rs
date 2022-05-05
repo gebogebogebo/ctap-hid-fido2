@@ -55,6 +55,8 @@ fn builder_pattern_sample(device: &FidoKeyHid, rpid: &str, pin: &str) -> Result<
 
     with_hmac(device, rpid, pin).unwrap_or_else(|err| eprintln!("Error => {}\n", err));
 
+    with_large_blob_key(device, rpid, pin).unwrap_or_else(|err| eprintln!("Error => {}\n", err));
+
     without_pin(device, rpid).unwrap_or_else(|err| eprintln!("Error => {}\n", err));
 
     Ok(())
@@ -308,6 +310,63 @@ fn without_pin(device: &FidoKeyHid, rpid: &str) -> Result<()> {
     let get_assertion_args = GetAssertionArgsBuilder::new(rpid, &challenge)
         .credential_id(&verify_result.credential_id)
         .without_pin_and_uv()
+        .build();
+
+    let assertions = device.get_assertion_with_args(&get_assertion_args)?;
+    println!("-- Authenticate Success");
+    debug!("Assertion");
+    debug!("{}", assertions[0]);
+
+    println!("-- Verify Assertion");
+    let is_success = verifier::verify_assertion(
+        rpid,
+        &verify_result.credential_publickey_der,
+        &challenge,
+        &assertions[0],
+    );
+    if is_success {
+        println!("-- Verify Assertion Success");
+    } else {
+        println!("-- ! Verify Assertion Failed");
+    }
+
+    println!();
+    Ok(())
+}
+
+fn with_large_blob_key(device: &FidoKeyHid, rpid: &str, pin: &str) -> Result<()> {
+    println!("----- with large_blob_key -----");
+
+    println!("- Register");
+    let challenge = verifier::create_challenge();
+    let ext = Mext::LargeBlobKey(Some(true));
+
+    let make_credential_args = MakeCredentialArgsBuilder::new(&rpid, &challenge)
+        .pin(pin)
+        .extensions(&vec![ext])
+        .build();
+
+    let attestation = device.make_credential_with_args(&make_credential_args)?;
+    println!("-- Register Success");
+    debug!("Attestation");
+    debug!("{}", attestation);
+
+    println!("-- Verify Attestation");
+    let verify_result = verifier::verify_attestation(rpid, &challenge, &attestation);
+    if verify_result.is_success {
+        println!("-- Verify Attestation Success");
+    } else {
+        println!("-- ! Verify Attestation Failed");
+    }
+
+    println!("- Authenticate");
+    let challenge = verifier::create_challenge();
+    let ext = Gext::LargeBlobKey(Some(true));
+
+    let get_assertion_args = GetAssertionArgsBuilder::new(rpid, &challenge)
+        .pin(pin)
+        .credential_id(&verify_result.credential_id)
+        .extensions(&vec![ext])
         .build();
 
     let assertions = device.get_assertion_with_args(&get_assertion_args)?;

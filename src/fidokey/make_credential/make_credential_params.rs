@@ -33,6 +33,8 @@ pub struct Attestation {
     pub attstmt_alg: i32,
     pub attstmt_sig: Vec<u8>,
     pub attstmt_x5c: Vec<Vec<u8>>,
+
+    pub large_blob_bey: Vec<u8>,
 }
 
 impl fmt::Display for Attestation {
@@ -58,7 +60,8 @@ impl fmt::Display for Attestation {
             .append("- credential_publickey", &self.credential_publickey)
             .append("- attstmt_alg", &self.attstmt_alg)
             .appenh("- attstmt_sig", &self.attstmt_sig)
-            .append("- attstmt_x5c_num", &self.attstmt_x5c.len());
+            .append("- attstmt_x5c_num", &self.attstmt_x5c.len())
+            .appenh("- large_blob_key", &self.large_blob_bey);
 
         for ex in &self.extensions {
             strbuf.append("- extension", &format!("{:?}", ex));
@@ -70,14 +73,16 @@ impl fmt::Display for Attestation {
 
 #[derive(Debug, Clone, strum_macros::Display, AsRefStr)]
 pub enum Extension {
-    #[strum(serialize = "credProtect")]
-    CredProtect(Option<CredentialProtectionPolicy>),
     #[strum(serialize = "credBlob")]
     CredBlob(Option<Vec<u8>>), //  "credBlob": Byte String containing the credBlob value
-    #[strum(serialize = "minPinLength")]
-    MinPinLength(Option<bool>), // "minPinLength": true
+    #[strum(serialize = "credProtect")]
+    CredProtect(Option<CredentialProtectionPolicy>),
     #[strum(serialize = "hmac-secret")]
     HmacSecret(Option<bool>),
+    #[strum(serialize = "largeBlobKey")]
+    LargeBlobKey(Option<bool>),
+    #[strum(serialize = "minPinLength")]
+    MinPinLength(Option<bool>),
 }
 
 #[derive(Debug, Copy, Clone)]

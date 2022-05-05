@@ -1,6 +1,6 @@
 use ctap_hid_fido2::{
-  Cfg, FidoKeyHidFactory, verifier,
-  fidokey::{GetAssertionArgsBuilder, MakeCredentialArgsBuilder},
+    fidokey::{GetAssertionArgsBuilder, MakeCredentialArgsBuilder},
+    verifier, Cfg, FidoKeyHidFactory,
 };
 
 fn main() {

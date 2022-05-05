@@ -23,6 +23,8 @@ pub struct Assertion {
     pub extensions: Vec<Extension>,
     // row - audh_data
     pub auth_data: Vec<u8>,
+    pub user_selected: bool,
+    pub large_blob_bey: Vec<u8>,
 }
 
 impl fmt::Display for Assertion {
@@ -35,7 +37,8 @@ impl fmt::Display for Assertion {
             .append("- number_of_credentials", &self.number_of_credentials)
             .appenh("- signature", &self.signature)
             .append("- user", &self.user)
-            .appenh("- credential_id", &self.credential_id);
+            .appenh("- credential_id", &self.credential_id)
+            .appenh("- large_blob_bey", &self.large_blob_bey);
 
         for e in &self.extensions {
             match e {
@@ -45,6 +48,7 @@ impl fmt::Display for Assertion {
                         strbuf.appenh(&tmp, output1_enc.as_ref());
                     }
                 }
+                _ => (),
             }
         }
 
@@ -56,6 +60,8 @@ impl fmt::Display for Assertion {
 pub enum Extension {
     #[strum(serialize = "hmac-secret")]
     HmacSecret(Option<[u8; 32]>),
+    #[strum(serialize = "largeBlobKey")]
+    LargeBlobKey(Option<bool>),
 }
 
 impl Extension {
