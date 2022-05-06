@@ -16,8 +16,8 @@ use ctap_hid_fido2::fidokey::get_info::InfoParam;
 
 mod bio;
 mod blobs;
+mod cfg;
 mod common;
-mod config;
 mod cred;
 mod info;
 mod memo;
@@ -198,6 +198,9 @@ enum Action {
         )]
         new_min_pin_length: Option<u8>,
 
+        #[clap(long = "rpid", takes_value = true, help = "xxx.")]
+        rpids: Option<Vec<String>>,
+
         #[clap(short = 'p')]
         pin: Option<String>,
     },
@@ -363,14 +366,21 @@ fn main() -> Result<()> {
             Action::Config {
                 toggle_always_uv,
                 new_min_pin_length,
+                rpids,
                 pin,
             } => {
                 if toggle_always_uv {
-                    config::config(&device, config::Command::ToggleAlwaysUv, pin)?;
+                    cfg::config(&device, cfg::Command::ToggleAlwaysUv, pin)?;
                 } else if new_min_pin_length.is_some() {
-                    config::config(
+                    cfg::config(
                         &device,
-                        config::Command::SetMinPINLength(new_min_pin_length.unwrap()),
+                        cfg::Command::SetMinPINLength(new_min_pin_length.unwrap()),
+                        pin,
+                    )?;
+                } else if rpids.is_some() {
+                    cfg::config(
+                        &device,
+                        cfg::Command::SetMinPinLengthRPIDs(rpids.unwrap()),
                         pin,
                     )?;
                 }

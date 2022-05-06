@@ -5,27 +5,43 @@ use super::{pin::Permission::AuthenticatorConfiguration, FidoKeyHid};
 use anyhow::{anyhow, Error, Result};
 use serde_cbor::{to_vec, Value};
 use std::collections::BTreeMap;
+use strum::EnumProperty;
+use strum_macros::EnumProperty;
 
 /// The subcommand for setting configurations on a hardware token.
 #[allow(dead_code)]
-#[derive(Debug, Copy, Clone, PartialEq)]
+#[derive(Debug, Copy, Clone, PartialEq, EnumProperty)]
 pub enum SubCommand {
-    EnableEnterpriseAttestation = 0x01,
-    ToggleAlwaysUv = 0x02,
-    SetMinPinLength = 0x03,
-    VendorPrototype = 0x04,
+    //EnableEnterpriseAttestation = 0x01,
+    #[strum(props(SubCommandId = "2"))]
+    ToggleAlwaysUv,
+    #[strum(props(SubCommandId = "3"))]
+    SetMinPinLength,
+    //VendorPrototype = 0x04,
+}
+impl SubCommand {
+    fn id(&self) -> Result<u8> {
+        let id_str = self
+            .get_str("SubCommandId")
+            .ok_or(anyhow!("Err-SubCommandId"))?;
+        let id: u8 = String::from(id_str).parse()?;
+        Ok(id)
+    }
 }
 
 fn create_payload(
     pin_token: pintoken::PinToken,
     sub_command: SubCommand,
     new_min_pin_length: Option<u8>,
-) -> Vec<u8> {
+) -> Result<Vec<u8>> {
     // create cbor
     let mut map = BTreeMap::new();
 
     // 0x01: subCommand
-    map.insert(Value::Integer(0x01), Value::Integer(sub_command as i128));
+    map.insert(
+        Value::Integer(0x01),
+        Value::Integer(sub_command.id()? as i128),
+    );
 
     // subCommandParams (0x02): Map containing following parameters
     let mut sub_command_params_cbor = Vec::new();
@@ -44,7 +60,7 @@ fn create_payload(
             _ => (None),
         };
         if let Some(v) = value {
-            sub_command_params_cbor = to_vec(&v).unwrap();
+            sub_command_params_cbor = to_vec(&v)?;
         }
     }
 
@@ -58,7 +74,7 @@ fn create_payload(
         // https://fidoalliance.org/specs/fido-v2.1-ps-20210615/fido-client-to-authenticator-protocol-v2.1-ps-20210615.html#authenticatorConfig
         let mut message = vec![0xff; 32];
         message.append(&mut vec![0x0d]);
-        message.append(&mut vec![sub_command as u8]);
+        message.append(&mut vec![sub_command.id()?]);
         message.append(&mut sub_command_params_cbor);
 
         let sig = enc_hmac_sha_256::authenticate(&pin_token.key, &message);
@@ -72,8 +88,8 @@ fn create_payload(
     // CBOR
     let cbor = Value::Map(map);
     let mut payload = [ctapdef::AUTHENTICATOR_CONFIG].to_vec();
-    payload.append(&mut to_vec(&cbor).unwrap());
-    payload
+    payload.append(&mut to_vec(&cbor)?);
+    Ok(payload)
 }
 
 fn need_sub_command_param(sub_command: SubCommand) -> bool {
@@ -87,6 +103,10 @@ impl FidoKeyHid {
 
     pub fn set_min_pin_length(&self, new_min_pin_length: u8, pin: Option<&str>) -> Result<()> {
         self.config(pin, SubCommand::SetMinPinLength, Some(new_min_pin_length))
+    }
+
+    pub fn set_min_pin_length_rpids(&self, rpids: Vec<String>, pin: Option<&str>) -> Result<()> {
+        self.config(pin, SubCommand::SetMinPinLength, None)
     }
 
     fn config(
@@ -107,7 +127,7 @@ impl FidoKeyHid {
         let pin_token =
             self.get_pinuv_auth_token_with_permission(&cid, pin, AuthenticatorConfiguration)?;
 
-        let send_payload = create_payload(pin_token, sub_command, new_min_pin_length);
+        let send_payload = create_payload(pin_token, sub_command, new_min_pin_length)?;
         let _response_cbor =
             ctaphid::ctaphid_cbor(self, &cid, &send_payload).map_err(Error::msg)?;
         Ok(())

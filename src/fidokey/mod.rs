@@ -5,8 +5,8 @@ use anyhow::{anyhow, Result};
 use std::ffi::CString;
 
 // Complex Submodules
+pub mod authenticator_config;
 pub mod bio;
-pub mod config;
 pub mod credential_management;
 pub mod get_assertion;
 pub mod get_info;

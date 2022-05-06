@@ -68,7 +68,7 @@
                     "kind": "example"
                 }
             },
-            "args": ["blobs", "--set", "--str", "gebo", "-p", "1234"],
+            "args": ["config", "--auv", "-p", "1234"],
             "cwd": "${workspaceFolder}"
         },
         {

@@ -5,6 +5,7 @@ use ctap_hid_fido2::fidokey::{get_info::InfoOption, FidoKeyHid};
 pub enum Command {
     ToggleAlwaysUv,
     SetMinPINLength(u8),
+    SetMinPinLengthRPIDs(Vec<String>),
 }
 
 pub fn config(device: &FidoKeyHid, command: Command, pin: Option<String>) -> Result<()> {
@@ -51,6 +52,9 @@ pub fn config(device: &FidoKeyHid, command: Command, pin: Option<String>) -> Res
             } else {
                 println!("- canceled.")
             }
+        }
+        Command::SetMinPinLengthRPIDs(rpids) => {
+            // TODO
         }
     }
 
