@@ -139,7 +139,12 @@ if is_success {
 
 
 - [with HMAC Secret Extension](https://github.com/gebogebogebo/ctap-hid-fido2/blob/0791003c87b5d36392868a26247fca0b36ed9d5c/examples/test-with-pin-non-rk/main.rs#L225-L280)
-- I do not know the correct use of this option.
+  - I do not know the correct use of this option.
+- [with Large Blob Key Extension](https://github.com/gebogebogebo/ctap-hid-fido2/blob/fb00169a5936db1b5e16b2d5f218e4c9ac7040b6/examples/test-with-pin-non-rk/main.rs#L337-L400)
+
+  - Used with Large Blob Command.
+  - https://fidoalliance.org/specs/fido-v2.1-ps-20210615/fido-client-to-authenticator-protocol-v2.1-ps-20210615.html#writing-per-credential-data
+
 
 
 - [discoverable credentials/resident-key](https://github.com/gebogebogebo/ctap-hid-fido2/blob/0791003c87b5d36392868a26247fca0b36ed9d5c/examples/test-with-pin-rk/main.rs#L49-L113)

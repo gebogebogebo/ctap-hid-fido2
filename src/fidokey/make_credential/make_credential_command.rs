@@ -132,13 +132,9 @@ pub fn create_payload(params: Params, extensions: Option<&Vec<Extension>>) -> Ve
                         Value::Integer(n.unwrap() as i128),
                     );
                 }
-                Extension::HmacSecret(n) => {
+                Extension::HmacSecret(n) | Extension::LargeBlobKey(n) | Extension::MinPinLength(n) => {
                     map.insert(Value::Text(ext.to_string()), Value::Bool(n.unwrap()));
                 }
-                Extension::LargeBlobKey(n) => {
-                    map.insert(Value::Text(ext.to_string()), Value::Bool(n.unwrap()));
-                }
-                Extension::MinPinLength(_) => (),
             };
         }
         Some(Value::Map(map))

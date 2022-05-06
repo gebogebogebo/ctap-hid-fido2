@@ -98,7 +98,7 @@ pub fn get_input_with_message(message: &str) -> String {
 }
 ```
 
-See [How to use](#How to use) and [Examples](#Examples) for detailed instructions.
+- See [How to use](#How to use) and [Examples](#Examples) for detailed instructions.
 
 
 

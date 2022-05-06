@@ -100,6 +100,8 @@ fn parse_cbor_authdata(authdata: &[u8], attestation: &mut Attestation) -> Result
                     attestation.extensions.push(Extension::CredProtect(Some(
                         CredentialProtectionPolicy::from(v),
                     )));
+                } else {
+                    println!("Anything Extension!");
                 }
             }
         }
