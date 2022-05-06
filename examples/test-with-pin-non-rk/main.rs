@@ -2,11 +2,11 @@ use anyhow::Result;
 use log::{debug, log_enabled, Level};
 
 use ctap_hid_fido2::{
-    Cfg, FidoKeyHid, FidoKeyHidFactory, get_fidokey_devices, util, verifier,
     fidokey::{
         AssertionExtension as Gext, CredentialExtension as Mext, CredentialSupportedKeyType,
         GetAssertionArgsBuilder, MakeCredentialArgsBuilder,
     },
+    get_fidokey_devices, util, verifier, Cfg, FidoKeyHid, FidoKeyHidFactory,
 };
 
 fn main() -> Result<()> {
@@ -348,7 +348,10 @@ fn with_large_blob_key(device: &FidoKeyHid, rpid: &str, pin: &str) -> Result<()>
 
     let attestation = device.make_credential_with_args(&make_credential_args)?;
     println!("-- Register Success");
-    println!("--- largeBlobKey = {}", util::to_hex_str(&attestation.large_blob_bey));
+    println!(
+        "--- largeBlobKey = {}",
+        util::to_hex_str(&attestation.large_blob_bey)
+    );
     debug!("Attestation");
     debug!("{}", attestation);
 
@@ -372,7 +375,10 @@ fn with_large_blob_key(device: &FidoKeyHid, rpid: &str, pin: &str) -> Result<()>
 
     let assertions = device.get_assertion_with_args(&get_assertion_args)?;
     println!("-- Authenticate Success");
-    println!("--- largeBlobKey = {}", util::to_hex_str(&assertions[0].large_blob_bey));
+    println!(
+        "--- largeBlobKey = {}",
+        util::to_hex_str(&assertions[0].large_blob_bey)
+    );
     debug!("Assertion");
     debug!("{}", assertions[0]);
 

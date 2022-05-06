@@ -41,14 +41,9 @@ impl fmt::Display for Assertion {
             .appenh("- large_blob_bey", &self.large_blob_bey);
 
         for e in &self.extensions {
-            match e {
-                Extension::HmacSecret(d) => {
-                    if let Some(output1_enc) = d {
-                        let tmp = format!("- {}", Extension::HmacSecret(None));
-                        strbuf.appenh(&tmp, output1_enc.as_ref());
-                    }
-                }
-                _ => (),
+            if let Extension::HmacSecret(Some(output1_enc)) = e {
+                let tmp = format!("- {}", Extension::HmacSecret(None));
+                strbuf.appenh(&tmp, output1_enc.as_ref());
             }
         }
 
