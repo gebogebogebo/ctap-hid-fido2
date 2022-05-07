@@ -68,7 +68,7 @@
                     "kind": "example"
                 }
             },
-            "args": ["config", "--auv", "-p", "1234"],
+            "args": ["config", "--rpid", "test.com", "-p", "1234"],
             "cwd": "${workspaceFolder}"
         },
         {

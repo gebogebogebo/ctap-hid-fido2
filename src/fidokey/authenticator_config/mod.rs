@@ -8,16 +8,14 @@ use std::collections::BTreeMap;
 use strum::EnumProperty;
 use strum_macros::EnumProperty;
 
-/// The subcommand for setting configurations on a hardware token.
-#[allow(dead_code)]
-#[derive(Debug, Copy, Clone, PartialEq, EnumProperty)]
+#[derive(Debug, Clone, PartialEq, EnumProperty)]
 pub enum SubCommand {
-    //EnableEnterpriseAttestation = 0x01,
     #[strum(props(SubCommandId = "2"))]
     ToggleAlwaysUv,
     #[strum(props(SubCommandId = "3"))]
     SetMinPinLength,
-    //VendorPrototype = 0x04,
+    #[strum(props(SubCommandId = "3"))]
+    SetMinPinLengthRpIds(Vec<String>),
 }
 impl SubCommand {
     fn id(&self) -> Result<u8> {
@@ -26,6 +24,13 @@ impl SubCommand {
             .ok_or(anyhow!("Err-SubCommandId"))?;
         let id: u8 = String::from(id_str).parse()?;
         Ok(id)
+    }
+    fn has_param(&self) -> bool {
+        match self {
+            SubCommand::SetMinPinLength => true,
+            SubCommand::SetMinPinLengthRpIds(_) => true,
+            _ => false,
+        }
     }
 }
 
@@ -45,14 +50,30 @@ fn create_payload(
 
     // subCommandParams (0x02): Map containing following parameters
     let mut sub_command_params_cbor = Vec::new();
-    if need_sub_command_param(sub_command) {
-        let value = match sub_command {
+    if sub_command.has_param() {
+        let value = match sub_command.clone() {
             SubCommand::SetMinPinLength => {
                 let mut param = BTreeMap::new();
                 // 0x01:newMinPINLength
                 param.insert(
                     Value::Integer(0x01),
                     Value::Integer(new_min_pin_length.unwrap() as i128),
+                );
+                map.insert(Value::Integer(0x02), Value::Map(param.clone()));
+                Some(param)
+            }
+            SubCommand::SetMinPinLengthRpIds(rpids) => {
+                let mut param = BTreeMap::new();
+                // 0x02:minPinLengthRPIDs
+                param.insert(
+                    Value::Integer(0x02),
+                    Value::Array(
+                        rpids
+                            .iter()
+                            .cloned()
+                            .map(|rpid| Value::Text(rpid))
+                            .collect(),
+                    ),
                 );
                 map.insert(Value::Integer(0x02), Value::Map(param.clone()));
                 Some(param)
@@ -92,10 +113,6 @@ fn create_payload(
     Ok(payload)
 }
 
-fn need_sub_command_param(sub_command: SubCommand) -> bool {
-    sub_command == SubCommand::SetMinPinLength
-}
-
 impl FidoKeyHid {
     pub fn toggle_always_uv(&self, pin: Option<&str>) -> Result<()> {
         self.config(pin, SubCommand::ToggleAlwaysUv, None)
@@ -106,7 +123,7 @@ impl FidoKeyHid {
     }
 
     pub fn set_min_pin_length_rpids(&self, rpids: Vec<String>, pin: Option<&str>) -> Result<()> {
-        self.config(pin, SubCommand::SetMinPinLength, None)
+        self.config(pin, SubCommand::SetMinPinLengthRpIds(rpids), None)
     }
 
     fn config(
