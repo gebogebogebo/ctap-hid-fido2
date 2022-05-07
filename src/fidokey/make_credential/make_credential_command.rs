@@ -134,7 +134,7 @@ pub fn create_payload(params: Params, extensions: Option<&Vec<Extension>>) -> Ve
                 }
                 Extension::HmacSecret(n)
                 | Extension::LargeBlobKey(n)
-                | Extension::MinPinLength(n) => {
+                | Extension::MinPinLength((n,_)) => {
                     map.insert(Value::Text(ext.to_string()), Value::Bool(n.unwrap()));
                 }
             };

@@ -34,7 +34,7 @@ pub struct Attestation {
     pub attstmt_sig: Vec<u8>,
     pub attstmt_x5c: Vec<Vec<u8>>,
 
-    pub large_blob_bey: Vec<u8>,
+    pub large_blob_bey: Vec<u8>,            // TODO Delete by into extextions
 }
 
 impl fmt::Display for Attestation {
@@ -80,9 +80,9 @@ pub enum Extension {
     #[strum(serialize = "hmac-secret")]
     HmacSecret(Option<bool>),
     #[strum(serialize = "largeBlobKey")]
-    LargeBlobKey(Option<bool>),
+    LargeBlobKey(Option<bool>),             // TODO LargeBlobKey((Option<bool>, Option<Vec<u8>>))
     #[strum(serialize = "minPinLength")]
-    MinPinLength(Option<bool>),
+    MinPinLength((Option<bool>,Option<u8>)),
 }
 
 #[derive(Debug, Copy, Clone)]

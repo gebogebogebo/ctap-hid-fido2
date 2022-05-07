@@ -57,6 +57,8 @@ fn builder_pattern_sample(device: &FidoKeyHid, rpid: &str, pin: &str) -> Result<
 
     with_large_blob_key(device, rpid, pin).unwrap_or_else(|err| eprintln!("Error => {}\n", err));
 
+    with_min_pin_length_ex(device, rpid, pin).unwrap_or_else(|err| eprintln!("Error => {}\n", err));
+
     without_pin(device, rpid).unwrap_or_else(|err| eprintln!("Error => {}\n", err));
 
     Ok(())
@@ -394,6 +396,36 @@ fn with_large_blob_key(device: &FidoKeyHid, rpid: &str, pin: &str) -> Result<()>
     } else {
         println!("-- ! Verify Assertion Failed");
     }
+
+    println!();
+    Ok(())
+}
+
+fn with_min_pin_length_ex(device: &FidoKeyHid, rpid: &str, pin: &str) -> Result<()> {
+    println!("----- with Min Pin Length Extension -----");
+    println!("       - Get Current Min Pin Length");
+    println!("       - Need Set Config Min Pin Length RPIDs [{}]", rpid);
+
+    println!("- Register");
+    let challenge = verifier::create_challenge();
+    let ext = Mext::MinPinLength((Some(true),None));
+
+    let make_credential_args = MakeCredentialArgsBuilder::new(&rpid, &challenge)
+        .pin(pin)
+        .extensions(&vec![ext])
+        .build();
+
+    let attestation = device.make_credential_with_args(&make_credential_args)?;
+    println!("-- Register Success");
+    for extension in attestation.extensions.to_vec() {
+        if let Mext::MinPinLength((_,min_pin_length)) = extension {
+            println!(
+                "--- Min Pin Length = {}",min_pin_length.unwrap()
+            );
+        }
+    }
+    debug!("Attestation");
+    debug!("{}", attestation);
 
     println!();
     Ok(())

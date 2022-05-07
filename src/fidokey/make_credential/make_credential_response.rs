@@ -100,6 +100,9 @@ fn parse_cbor_authdata(authdata: &[u8], attestation: &mut Attestation) -> Result
                     attestation.extensions.push(Extension::CredProtect(Some(
                         CredentialProtectionPolicy::from(v),
                     )));
+                } else if *member == Extension::MinPinLength((None,None)).to_string() {
+                    let v: u8 = util::cbor_value_to_num(val)?;
+                    attestation.extensions.push(Extension::MinPinLength((None,Some(v))));
                 } else {
                     println!("Anything Extension!");
                 }
