@@ -110,7 +110,11 @@ pub fn parse_cbor(
                 }
                 0x05 => ass.number_of_credentials = util::cbor_value_to_num(val)?,
                 0x06 => (), // TODO userSelected
-                0x07 => ass.large_blob_bey = util::cbor_value_to_vec_u8(val)?,
+                0x07 => {
+                    let lbk = util::cbor_value_to_vec_u8(val)?;
+                    ass.extensions
+                        .push(Extension::LargeBlobKey((None, Some(lbk))));
+                }
                 _ => println!("- anything error"),
             }
         }

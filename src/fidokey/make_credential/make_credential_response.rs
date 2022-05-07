@@ -100,9 +100,11 @@ fn parse_cbor_authdata(authdata: &[u8], attestation: &mut Attestation) -> Result
                     attestation.extensions.push(Extension::CredProtect(Some(
                         CredentialProtectionPolicy::from(v),
                     )));
-                } else if *member == Extension::MinPinLength((None,None)).to_string() {
+                } else if *member == Extension::MinPinLength((None, None)).to_string() {
                     let v: u8 = util::cbor_value_to_num(val)?;
-                    attestation.extensions.push(Extension::MinPinLength((None,Some(v))));
+                    attestation
+                        .extensions
+                        .push(Extension::MinPinLength((None, Some(v))));
                 } else {
                     println!("Anything Extension!");
                 }
@@ -122,7 +124,12 @@ pub fn parse_cbor(bytes: &[u8]) -> Result<Attestation, String> {
                 0x01 => attestation.fmt = util::cbor_value_to_str(val)?,
                 0x02 => parse_cbor_authdata(&util::cbor_value_to_vec_u8(val)?, &mut attestation)?,
                 0x03 => parse_cbor_att_stmt(val, &mut attestation)?,
-                0x05 => attestation.large_blob_bey = util::cbor_value_to_vec_u8(val)?,
+                0x05 => {
+                    let lbk = util::cbor_value_to_vec_u8(val)?;
+                    attestation
+                        .extensions
+                        .push(Extension::LargeBlobKey((None, Some(lbk))));
+                }
                 _ => println!("- anything error"),
             }
         }

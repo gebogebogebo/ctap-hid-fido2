@@ -33,8 +33,6 @@ pub struct Attestation {
     pub attstmt_alg: i32,
     pub attstmt_sig: Vec<u8>,
     pub attstmt_x5c: Vec<Vec<u8>>,
-
-    pub large_blob_bey: Vec<u8>,            // TODO Delete by into extextions
 }
 
 impl fmt::Display for Attestation {
@@ -60,8 +58,7 @@ impl fmt::Display for Attestation {
             .append("- credential_publickey", &self.credential_publickey)
             .append("- attstmt_alg", &self.attstmt_alg)
             .appenh("- attstmt_sig", &self.attstmt_sig)
-            .append("- attstmt_x5c_num", &self.attstmt_x5c.len())
-            .appenh("- large_blob_key", &self.large_blob_bey);
+            .append("- attstmt_x5c_num", &self.attstmt_x5c.len());
 
         for ex in &self.extensions {
             strbuf.append("- extension", &format!("{:?}", ex));
@@ -80,9 +77,9 @@ pub enum Extension {
     #[strum(serialize = "hmac-secret")]
     HmacSecret(Option<bool>),
     #[strum(serialize = "largeBlobKey")]
-    LargeBlobKey(Option<bool>),             // TODO LargeBlobKey((Option<bool>, Option<Vec<u8>>))
+    LargeBlobKey((Option<bool>, Option<Vec<u8>>)),
     #[strum(serialize = "minPinLength")]
-    MinPinLength((Option<bool>,Option<u8>)),
+    MinPinLength((Option<bool>, Option<u8>)),
 }
 
 #[derive(Debug, Copy, Clone)]
