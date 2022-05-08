@@ -11,10 +11,31 @@ Rust FIDO2 CTAP library ( and cli tool [ctapcli](README_ctapcli.md) ).
 Authentication using FIDO2-compliant security keys (e.g. Yubikey) is possible.
 
 - Features
+
   - Register and Authenticate.
   - Register or change PIN.
   - Enrollment and deletion of fingerprints.
   - Management of credentials recorded in security keys.
+
+- Version
+
+  - Ver 3.2.0
+
+    - Implement Authenticator Config - set_min_pin_length(). → [Authenticator Config(CTAP 2.1)](README_Authenticator_Config.md)
+    - Implement Set Min Pin Length Extension. → [Register and Authenticate Examples](README_Register_and_Authenticate.md)
+
+    - Implement Large Blob → [Large Blob(CTAP 2.1)](README_Large_Blob.md)
+
+  - Ver 3.1.0
+
+    - Implement Authenticator Config - toggle_always_uv(). → [Authenticator Config(CTAP 2.1)](README_Authenticator_Config.md)
+
+    - add cli tool [ctapcli](README_ctapcli.md)
+
+
+  - Ver 3.0.0
+    - The usage has changed from Ver2. → [How to Use](#how-to-use).
+
 
 
 
@@ -99,21 +120,6 @@ pub fn get_input_with_message(message: &str) -> String {
 ```
 
 - See [How to use](#How to use) and [Examples](#Examples) for detailed instructions.
-
-
-
-## Version
-
-- Ver 3.2.0
-  - Implement Authenticator Config - set_min_pin_length(). -> [Authenticator Config(CTAP 2.1)](README_Authenticator_Config.md)
-  - Implement Large Blob -> [Large Blob(CTAP 2.1)](README_Large_Blob.md)
-
-- Ver 3.1.0
-  - Implement Authenticator Config - toggle_always_uv(). -> [Authenticator Config(CTAP 2.1)](README_Authenticator_Config.md)
-  - add cli tool [ctapcli](README_ctapcli.md)
-
-- Ver 3.0.0
-  - The usage has changed from Ver2. -> [How to Use](#how-to-use).
 
 
 

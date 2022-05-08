@@ -138,12 +138,18 @@ if is_success {
   - Verify Assertion in `Ed25519` is always false because it is not yet implemented.
 
 
-- [with HMAC Secret Extension](https://github.com/gebogebogebo/ctap-hid-fido2/blob/0791003c87b5d36392868a26247fca0b36ed9d5c/examples/test-with-pin-non-rk/main.rs#L225-L280)
+- [with HMAC Secret Extension](https://github.com/gebogebogebo/ctap-hid-fido2/blob/c75db2d8cb83f28177ddc5d8455310ada1ba03f3/examples/test-with-pin-non-rk/main.rs#L229-L312)
   - I do not know the correct use of this option.
-- [with Large Blob Key Extension](https://github.com/gebogebogebo/ctap-hid-fido2/blob/fb00169a5936db1b5e16b2d5f218e4c9ac7040b6/examples/test-with-pin-non-rk/main.rs#L337-L400)
+- [with Large Blob Key Extension](https://github.com/gebogebogebo/ctap-hid-fido2/blob/c75db2d8cb83f28177ddc5d8455310ada1ba03f3/examples/test-with-pin-non-rk/main.rs#L367-L452)
 
   - Used with Large Blob Command.
-  - https://fidoalliance.org/specs/fido-v2.1-ps-20210615/fido-client-to-authenticator-protocol-v2.1-ps-20210615.html#writing-per-credential-data
+  - [Spec: 6.10.5. Writing per-credential large-blob data for a new credential](https://fidoalliance.org/specs/fido-v2.1-ps-20210615/fido-client-to-authenticator-protocol-v2.1-ps-20210615.html#writing-per-credential-data)
+
+- [with Min Pin Length Extension](https://github.com/gebogebogebo/ctap-hid-fido2/blob/c75db2d8cb83f28177ddc5d8455310ada1ba03f3/examples/test-with-pin-non-rk/main.rs#L454-L487)
+
+  - Get Min Pin Length Policy.
+  - RPID must be set in Authenticator Config. → [Authenticator Config](README_Authenticator_Config.md)
+  - [Spec: 12.4. Minimum PIN Length Extension (minPinLength)](https://fidoalliance.org/specs/fido-v2.1-ps-20210615/fido-client-to-authenticator-protocol-v2.1-ps-20210615.html#sctn-minpinlength-extension)
 
 
 
