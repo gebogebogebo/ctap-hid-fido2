@@ -1,7 +1,6 @@
 mod bio_enrollment_command;
 mod bio_enrollment_params;
 mod bio_enrollment_response;
-
 pub use bio_enrollment_command::SubCommand as BioCmd;
 pub use bio_enrollment_params::*;
 

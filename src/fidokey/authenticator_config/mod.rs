@@ -1,11 +1,13 @@
 use crate::{ctapdef, ctaphid, encrypt::enc_hmac_sha_256, pintoken};
-
-use super::{pin::Permission::AuthenticatorConfiguration, FidoKeyHid};
+use super::{
+    FidoKeyHid,
+    pin::Permission::AuthenticatorConfiguration,
+    sub_command_base::SubCommandBase,
+};
 
 use anyhow::{anyhow, Error, Result};
 use serde_cbor::{to_vec, Value};
 use std::collections::BTreeMap;
-use strum::EnumProperty;
 use strum_macros::EnumProperty;
 
 #[derive(Debug, Clone, PartialEq, EnumProperty)]
@@ -17,14 +19,7 @@ pub enum SubCommand {
     #[strum(props(SubCommandId = "3"))]
     SetMinPinLengthRpIds(Vec<String>),
 }
-impl SubCommand {
-    fn id(&self) -> Result<u8> {
-        let id_str = self
-            .get_str("SubCommandId")
-            .ok_or(anyhow!("Err-SubCommandId"))?;
-        let id: u8 = String::from(id_str).parse()?;
-        Ok(id)
-    }
+impl SubCommandBase for SubCommand {
     fn has_param(&self) -> bool {
         match self {
             SubCommand::SetMinPinLength => true,
