@@ -1,12 +1,9 @@
+use super::super::sub_command_base::SubCommandBase;
 use super::bio_enrollment_params::TemplateInfo;
-use crate::{
-    ctapdef,
-    encrypt::enc_hmac_sha_256,
-    pintoken,
-};
+use crate::{ctapdef, encrypt::enc_hmac_sha_256, pintoken};
+use anyhow::Result;
 use serde_cbor::{to_vec, Value};
 use std::collections::BTreeMap;
-use anyhow::Result;
 
 #[allow(dead_code)]
 #[derive(Debug, Copy, Clone, PartialEq)]
