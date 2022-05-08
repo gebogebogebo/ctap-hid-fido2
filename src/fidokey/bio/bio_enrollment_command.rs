@@ -1,13 +1,12 @@
-#[allow(unused_imports)]
-use crate::util;
-
 use super::bio_enrollment_params::TemplateInfo;
-use crate::ctapdef;
-use crate::encrypt::enc_hmac_sha_256;
-use crate::pintoken;
-use serde_cbor::to_vec;
-use serde_cbor::Value;
+use crate::{
+    ctapdef,
+    encrypt::enc_hmac_sha_256,
+    pintoken,
+};
+use serde_cbor::{to_vec, Value};
 use std::collections::BTreeMap;
+use anyhow::Result;
 
 #[allow(dead_code)]
 #[derive(Debug, Copy, Clone, PartialEq)]
@@ -27,7 +26,7 @@ pub fn create_payload(
     template_info: Option<TemplateInfo>,
     timeout_milliseconds: Option<u16>,
     use_pre_bio_enrollment: bool,
-) -> Vec<u8> {
+) -> Result<Vec<u8>> {
     let mut map = BTreeMap::new();
 
     if let Some(sub_command) = sub_command {
@@ -56,7 +55,7 @@ pub fn create_payload(
             };
 
             if let Some(v) = value {
-                sub_command_params_cbor = to_vec(&v).unwrap();
+                sub_command_params_cbor = to_vec(&v)?;
             }
         }
 
@@ -91,8 +90,8 @@ pub fn create_payload(
     } else {
         [ctapdef::AUTHENTICATOR_BIO_ENROLLMENT].to_vec()
     };
-    payload.append(&mut to_vec(&cbor).unwrap());
-    payload
+    payload.append(&mut to_vec(&cbor)?);
+    Ok(payload)
 }
 
 fn need_sub_command_param(sub_command: SubCommand) -> bool {

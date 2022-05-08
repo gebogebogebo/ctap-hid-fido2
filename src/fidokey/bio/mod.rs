@@ -221,7 +221,7 @@ impl FidoKeyHid {
             template_info,
             timeout_milliseconds,
             self.use_pre_bio_enrollment,
-        );
+        )?;
 
         if self.enable_log {
             println!("send(cbor) = {}", util::to_hex_str(&send_payload));
