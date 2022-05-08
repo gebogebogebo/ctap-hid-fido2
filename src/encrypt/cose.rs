@@ -128,7 +128,7 @@ impl CoseKey {
         } else {
             // kty == 1: OKP → need x&y
 
-            // TODO
+            // TODO case of ED25519
             // ???
             vec![]
         }

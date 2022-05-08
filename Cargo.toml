@@ -1,6 +1,6 @@
 [package]
 name = "ctap-hid-fido2"
-version = "3.1.0"
+version = "3.2.0"
 authors = ["gebo <35388172+gebogebogebo@users.noreply.github.com>"]
 edition = "2018"
 
@@ -51,6 +51,9 @@ name = "ctapcli"
 
 [[example]]
 name = "get-info"
+
+[[example]]
+name = "reg-auth"
 
 [[example]]
 name = "test-with-pin-non-rk"

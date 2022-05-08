@@ -23,6 +23,7 @@ pub struct Assertion {
     pub extensions: Vec<Extension>,
     // row - audh_data
     pub auth_data: Vec<u8>,
+    pub user_selected: bool,
 }
 
 impl fmt::Display for Assertion {
@@ -38,13 +39,9 @@ impl fmt::Display for Assertion {
             .appenh("- credential_id", &self.credential_id);
 
         for e in &self.extensions {
-            match e {
-                Extension::HmacSecret(d) => {
-                    if let Some(output1_enc) = d {
-                        let tmp = format!("- {}", Extension::HmacSecret(None));
-                        strbuf.appenh(&tmp, output1_enc.as_ref());
-                    }
-                }
+            if let Extension::HmacSecret(Some(output1_enc)) = e {
+                let tmp = format!("- {}", Extension::HmacSecret(None));
+                strbuf.appenh(&tmp, output1_enc.as_ref());
             }
         }
 
@@ -56,6 +53,8 @@ impl fmt::Display for Assertion {
 pub enum Extension {
     #[strum(serialize = "hmac-secret")]
     HmacSecret(Option<[u8; 32]>),
+    #[strum(serialize = "largeBlobKey")]
+    LargeBlobKey((Option<bool>, Option<Vec<u8>>)),
 }
 
 impl Extension {

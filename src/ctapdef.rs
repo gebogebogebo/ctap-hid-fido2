@@ -17,6 +17,7 @@ pub const AUTHENTICATOR_CREDENTIAL_MANAGEMENT: u8 = 0x0A;
 pub const AUTHENTICATOR_CREDENTIAL_MANAGEMENT_P: u8 = 0x41;
 
 pub const AUTHENTICATOR_SELECTION: u8 = 0x0B;
+pub const AUTHENTICATOR_LARGEBLOBS: u8 = 0x0C;
 pub const AUTHENTICATOR_CONFIG: u8 = 0x0D;
 
 pub(crate) fn get_u2f_status_message(status: u8) -> String {

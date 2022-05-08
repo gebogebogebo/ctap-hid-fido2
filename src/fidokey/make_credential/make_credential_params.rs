@@ -11,7 +11,7 @@ use super::make_credential_params::Extension as Mext;
 use super::CredentialProtectionPolicy;
 
 use std::fmt;
-use strum_macros::AsRefStr;
+use strum_macros::{AsRefStr, Display};
 
 /// Attestation Object
 /// [https://www.w3.org/TR/webauthn/#sctn-attestation](https://www.w3.org/TR/webauthn/#sctn-attestation)
@@ -68,16 +68,18 @@ impl fmt::Display for Attestation {
     }
 }
 
-#[derive(Debug, Clone, strum_macros::Display, AsRefStr)]
+#[derive(Debug, Clone, Display, AsRefStr)]
 pub enum Extension {
-    #[strum(serialize = "credProtect")]
-    CredProtect(Option<CredentialProtectionPolicy>),
     #[strum(serialize = "credBlob")]
     CredBlob(Option<Vec<u8>>), //  "credBlob": Byte String containing the credBlob value
-    #[strum(serialize = "minPinLength")]
-    MinPinLength(Option<bool>), // "minPinLength": true
+    #[strum(serialize = "credProtect")]
+    CredProtect(Option<CredentialProtectionPolicy>),
     #[strum(serialize = "hmac-secret")]
     HmacSecret(Option<bool>),
+    #[strum(serialize = "largeBlobKey")]
+    LargeBlobKey((Option<bool>, Option<Vec<u8>>)),
+    #[strum(serialize = "minPinLength")]
+    MinPinLength((Option<bool>, Option<u8>)),
 }
 
 #[derive(Debug, Copy, Clone)]

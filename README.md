@@ -6,18 +6,120 @@
 
 
 # ctap-hid-fido2
-Rust FIDO2 CTAP library ( and cli tool [ctapcli](README_ctapcli.md))
+Rust FIDO2 CTAP library ( and cli tool [ctapcli](README_ctapcli.md) ).
 
-[MIT License](https://github.com/gebogebogebo/ctap-hid-fido2/blob/master/LICENSE).
+Authentication using FIDO2-compliant security keys (e.g. Yubikey) is possible.
+
+- Features
+
+  - Register and Authenticate.
+  - Register or change PIN.
+  - Enrollment and deletion of fingerprints.
+  - Management of credentials recorded in security keys.
+
+- Version
+
+  - Ver 3.2.0
+
+    - Implement Authenticator Config - set_min_pin_length(). → [Authenticator Config(CTAP 2.1)](README_Authenticator_Config.md)
+    - Implement Set Min Pin Length Extension. → [Register and Authenticate Examples](README_Register_and_Authenticate.md)
+
+    - Implement Large Blob → [Large Blob(CTAP 2.1)](README_Large_Blob.md)
+
+  - Ver 3.1.0
+
+    - Implement Authenticator Config - toggle_always_uv(). → [Authenticator Config(CTAP 2.1)](README_Authenticator_Config.md)
+
+    - add cli tool [ctapcli](README_ctapcli.md)
+
+
+  - Ver 3.0.0
+    - The usage has changed from Ver2. → [How to Use](#how-to-use).
 
 
 
-- Ver 3.1.0
-  - Implemente Authenticator Config - toggle_always_uv(). -> [Authenticator Config(CTAP 2.1)](README_Authenticator_Config.md)
-  - add cli tool [ctapcli](README_ctapcli.md)
 
-- Ver 3.0.0
-  - The usage has changed from Ver2. -> [How to Use](#how-to-use).
+## How to use Registration and Authentication
+
+```rust
+use ctap_hid_fido2::{
+    fidokey::{GetAssertionArgsBuilder, MakeCredentialArgsBuilder},
+    verifier, Cfg, FidoKeyHidFactory,
+};
+
+fn main() {
+    let rpid = "reg-auth-example-app";
+    let pin = get_input_with_message("input PIN:");
+
+    println!("Register");
+    // create `challenge`
+    let challenge = verifier::create_challenge();
+
+    // create `MakeCredentialArgs`
+    let make_credential_args = MakeCredentialArgsBuilder::new(rpid, &challenge)
+        .pin(&pin)
+        .build();
+
+    // create `FidoKeyHid`
+    let device = FidoKeyHidFactory::create(&Cfg::init()).unwrap();
+
+    // get `Attestation` Object
+    let attestation = device
+        .make_credential_with_args(&make_credential_args)
+        .unwrap();
+    println!("- Register Success");
+
+    // verify `Attestation` Object
+    let verify_result = verifier::verify_attestation(rpid, &challenge, &attestation);
+    if !verify_result.is_success {
+        println!("- ! Verify Failed");
+        return;
+    }
+
+    // store Credential Id and Publickey
+    let userdata_credential_id = verify_result.credential_id;
+    let userdata_credential_publickey_der = verify_result.credential_publickey_der;
+
+    println!("Authenticate");
+    // create `challenge`
+    let challenge = verifier::create_challenge();
+
+    // create `GetAssertionArgs`
+    let get_assertion_args = GetAssertionArgsBuilder::new(rpid, &challenge)
+        .pin(&pin)
+        .credential_id(&userdata_credential_id)
+        .build();
+
+    // get `Assertion` Object
+    let assertions = device.get_assertion_with_args(&get_assertion_args).unwrap();
+    println!("- Authenticate Success");
+
+    // verify `Assertion` Object
+    if !verifier::verify_assertion(
+        rpid,
+        &userdata_credential_publickey_der,
+        &challenge,
+        &assertions[0],
+    ) {
+        println!("- ! Verify Assertion Failed");
+    }
+}
+
+pub fn get_input() -> String {
+    let mut word = String::new();
+    std::io::stdin().read_line(&mut word).ok();
+    return word.trim().to_string();
+}
+
+pub fn get_input_with_message(message: &str) -> String {
+    println!("{}", message);
+    let input = get_input();
+    println!();
+    input
+}
+```
+
+- See [How to use](#How to use) and [Examples](#Examples) for detailed instructions.
 
 
 
@@ -157,11 +259,13 @@ for dev in devs {
 
 See the following links for examples of various patterns.
 
-- [Get Authenticator info and Util Examples](README_Get_Info.md)
 - [Register and Authenticate Examples](README_Register_and_Authenticate.md)
+
+- [Get Authenticator info and Util Examples](README_Get_Info.md)
 - [Credential management (CTAP 2.1)](README_Credential_management.md)
 - [Biometric management (CTAP 2.1)](README_Biometric_management.md)
 - [Authenticator Config(CTAP 2.1)](README_Authenticator_Config.md)
+- [Large Blob(CTAP 2.1)](README_Large_Blob.md)
 
 
 

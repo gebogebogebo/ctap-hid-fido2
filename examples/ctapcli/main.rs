@@ -15,8 +15,9 @@ use ctap_hid_fido2::{str_buf, Cfg, FidoKeyHid, FidoKeyHidFactory};
 use ctap_hid_fido2::fidokey::get_info::InfoParam;
 
 mod bio;
+mod blobs;
+mod cfg;
 mod common;
-mod config;
 mod cred;
 mod info;
 mod memo;
@@ -30,32 +31,16 @@ mod pin;
     about = "This tool implements CTAP HID and can communicate with FIDO Authenticator.\n\nabout CTAP(Client to Authenticator Protocol)\nhttps://fidoalliance.org/specs/fido-v2.1-ps-20210615/fido-client-to-authenticator-protocol-v2.1-ps-20210615.html"
 )]
 struct AppArg {
-    #[clap(
-        short = 'd',
-        long = "device",
-        help = "Enumerate HID devices.",
-    )]
+    #[clap(short = 'd', long = "device", help = "Enumerate HID devices.")]
     device: bool,
 
-    #[clap(
-        short = 'f',
-        long = "fidokey",
-        help = "Enumerate FIDO key."
-    )]
+    #[clap(short = 'f', long = "fidokey", help = "Enumerate FIDO key.")]
     fidokey: bool,
 
-    #[clap(
-        short = 'w',
-        long = "wink",
-        help = "Blink the LED on the FIDO key."
-    )]
+    #[clap(short = 'w', long = "wink", help = "Blink the LED on the FIDO key.")]
     wink: bool,
 
-    #[clap(
-        short = 'u',
-        long = "user-presence",
-        help = "User Presence Test."
-    )]
+    #[clap(short = 'u', long = "user-presence", help = "User Presence Test.")]
     user_presence: bool,
 
     #[clap(subcommand)]
@@ -200,12 +185,35 @@ enum Action {
         #[clap(short = 'p')]
         pin: Option<String>,
     },
-    #[clap(
-        about = "Authenticator Config."
-    )]
+    #[clap(about = "Authenticator Config.")]
     Config {
-        #[clap(long = "auv", help = "[Always an error]toggleAlwaysUv.")]
+        #[clap(long = "auv", help = "Toggle Always Require User Verification.")]
         toggle_always_uv: bool,
+
+        #[clap(
+            long = "minpin",
+            takes_value = true,
+            value_name = "new-min-pin-length",
+            help = "Setting a minimum PIN Length."
+        )]
+        new_min_pin_length: Option<u8>,
+
+        #[clap(long = "rpid", takes_value = true, help = "xxx.")]
+        rpids: Option<Vec<String>>,
+
+        #[clap(short = 'p')]
+        pin: Option<String>,
+    },
+    #[clap(about = "Large Blob.")]
+    Blobs {
+        #[clap(long = "get", help = "Get Large Blob Data.")]
+        get: bool,
+
+        #[clap(long = "set", help = "Set Large Blob Data.")]
+        set: bool,
+
+        #[clap(long = "str", help = "String to set to Large Blob.")]
+        str_val: Option<String>,
 
         #[clap(short = 'p')]
         pin: Option<String>,
@@ -335,7 +343,7 @@ fn main() -> Result<()> {
                 update,
                 rpid,
                 userid,
-                pin
+                pin,
             } => {
                 let command = if metadata {
                     cred::Command::Metadata
@@ -355,9 +363,43 @@ fn main() -> Result<()> {
 
                 cred::cred(&device, command, pin)?;
             }
-            Action::Config { toggle_always_uv, pin } => {
+            Action::Config {
+                toggle_always_uv,
+                new_min_pin_length,
+                rpids,
+                pin,
+            } => {
                 if toggle_always_uv {
-                    config::config(&device, config::Command::ToggleAlwaysUv, pin)?;
+                    cfg::config(&device, cfg::Command::ToggleAlwaysUv, pin)?;
+                } else if new_min_pin_length.is_some() {
+                    cfg::config(
+                        &device,
+                        cfg::Command::SetMinPINLength(new_min_pin_length.unwrap()),
+                        pin,
+                    )?;
+                } else if rpids.is_some() {
+                    cfg::config(
+                        &device,
+                        cfg::Command::SetMinPinLengthRPIDs(rpids.unwrap()),
+                        pin,
+                    )?;
+                }
+            }
+            Action::Blobs {
+                get,
+                set,
+                str_val,
+                pin,
+            } => {
+                if get {
+                    blobs::blobs(&device, blobs::Command::Get, None)?;
+                } else if set {
+                    if let Some(str_val) = str_val {
+                        let command = blobs::Command::Set(str_val.as_bytes().to_vec());
+                        blobs::blobs(&device, command, pin)?;
+                    } else {
+                        println!("need str.");
+                    }
                 }
             }
         }

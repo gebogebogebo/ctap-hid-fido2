@@ -68,7 +68,24 @@
                     "kind": "example"
                 }
             },
-            "args": ["config", "--auv", "-p", "1234"],
+            "args": ["config", "--rpid", "test.com", "-p", "1234"],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "reg-auth: Debug Example",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--example=reg-auth"
+                ],
+                "filter": {
+                    "name": "reg-auth",
+                    "kind": "example"
+                }
+            },
+            "args": [],
             "cwd": "${workspaceFolder}"
         },
         {

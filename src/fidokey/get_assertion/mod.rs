@@ -137,7 +137,7 @@ impl FidoKeyHid {
                 params.pin_auth = sig[0..16].to_vec();
             }
 
-            get_assertion_command::create_payload(params, hmac_ext.clone())
+            get_assertion_command::create_payload(params, extensions, hmac_ext.clone())
         };
 
         // send & response
@@ -171,14 +171,10 @@ fn create_hmacext(
     extensions: Option<&Vec<Gext>>,
 ) -> Result<Option<HmacExt>> {
     if let Some(extensions) = extensions {
-        if let Some(ext) = extensions.iter().next() {
-            match ext {
-                Gext::HmacSecret(n) => {
-                    let mut hmac_ext = HmacExt::default();
-                    hmac_ext.create(device, cid, &n.unwrap(), None)?;
-                    return Ok(Some(hmac_ext));
-                }
-            }
+        if let Some(Gext::HmacSecret(n)) = extensions.iter().next() {
+            let mut hmac_ext = HmacExt::default();
+            hmac_ext.create(device, cid, &n.unwrap(), None)?;
+            return Ok(Some(hmac_ext));
         }
         Ok(None)
     } else {
