@@ -20,7 +20,7 @@ brew install ctapcli
 ```sh
 % ctapcli -h
 
-ctapcli 3.1.0
+ctapcli 3.2.0
 gebo
 This tool implements CTAP HID and can communicate with FIDO Authenticator.
 
@@ -42,6 +42,7 @@ OPTIONS:
 SUBCOMMANDS:
     bio       Bio management.
                   - List registered biometric authenticate data without any FLAGS and OPTIONS.
+    blobs     Large Blob.
     config    Authenticator Config.
     cred      Credential management.
                   - List discoverable credentials without any FLAGS and OPTIONS.
@@ -289,5 +290,3 @@ https://github.com/gebogebogebo/ctap-hid-fido2/tree/master/examples/ctapcli
 ```
 
 
-
-## 
