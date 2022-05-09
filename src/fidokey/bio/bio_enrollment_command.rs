@@ -26,13 +26,13 @@ pub enum SubCommand {
 }
 impl SubCommandBase for SubCommand {
     fn has_param(&self) -> bool {
-        match self {
+        matches!(
+            self,
             SubCommand::EnrollBegin(_)
-            | SubCommand::EnrollCaptureNextSample(_, _)
-            | SubCommand::SetFriendlyName(_)
-            | SubCommand::RemoveEnrollment(_) => true,
-            _ => false,
-        }
+                | SubCommand::EnrollCaptureNextSample(_, _)
+                | SubCommand::SetFriendlyName(_)
+                | SubCommand::RemoveEnrollment(_)
+        )
     }
 }
 

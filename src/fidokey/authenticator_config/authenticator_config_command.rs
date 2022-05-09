@@ -17,11 +17,10 @@ pub enum SubCommand {
 }
 impl SubCommandBase for SubCommand {
     fn has_param(&self) -> bool {
-        match self {
-            SubCommand::SetMinPinLength(_) => true,
-            SubCommand::SetMinPinLengthRpIds(_) => true,
-            _ => false,
-        }
+        matches!(
+            self,
+            SubCommand::SetMinPinLength(_) | SubCommand::SetMinPinLengthRpIds(_)
+        )
     }
 }
 
@@ -54,13 +53,7 @@ pub fn create_payload(pin_token: pintoken::PinToken, sub_command: SubCommand) ->
                 // 0x02:minPinLengthRPIDs
                 param.insert(
                     Value::Integer(0x02),
-                    Value::Array(
-                        rpids
-                            .iter()
-                            .cloned()
-                            .map(|rpid| Value::Text(rpid))
-                            .collect(),
-                    ),
+                    Value::Array(rpids.iter().cloned().map(Value::Text).collect()),
                 );
                 map.insert(Value::Integer(0x02), Value::Map(param.clone()));
                 Some(param)

@@ -7,7 +7,7 @@ pub trait SubCommandBase: EnumProperty {
     fn id(&self) -> Result<u8> {
         let id_str = self
             .get_str("SubCommandId")
-            .ok_or(anyhow!("Err-SubCommandId"))?;
+            .ok_or_else(|| anyhow!("Err-SubCommandId"))?;
         let id: u8 = String::from(id_str).parse()?;
         Ok(id)
     }
