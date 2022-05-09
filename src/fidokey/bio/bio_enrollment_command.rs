@@ -10,19 +10,19 @@ use strum_macros::EnumProperty;
 #[derive(Debug, Copy, Clone, PartialEq, EnumProperty)]
 pub enum SubCommand {
     #[strum(props(SubCommandId = "1"))]
-    EnrollBegin = 0x01,
+    EnrollBegin,
     #[strum(props(SubCommandId = "2"))]
-    EnrollCaptureNextSample = 0x02,
+    EnrollCaptureNextSample,
     #[strum(props(SubCommandId = "3"))]
-    CancelCurrentEnrollment = 0x03,
+    CancelCurrentEnrollment,
     #[strum(props(SubCommandId = "4"))]
-    EnumerateEnrollments = 0x04,
+    EnumerateEnrollments,
     #[strum(props(SubCommandId = "5"))]
-    SetFriendlyName = 0x05,
+    SetFriendlyName,
     #[strum(props(SubCommandId = "6"))]
-    RemoveEnrollment = 0x06,
+    RemoveEnrollment,
     #[strum(props(SubCommandId = "7"))]
-    GetFingerprintSensorInfo = 0x07,
+    GetFingerprintSensorInfo,
 }
 impl SubCommandBase for SubCommand {
     fn has_param(&self) -> bool {
@@ -50,7 +50,7 @@ pub fn create_payload(
         map.insert(Value::Integer(0x01), Value::Integer(0x01_i128));
 
         // subCommand(0x02)
-        let sub_cmd = Value::Integer(sub_command as i128);
+        let sub_cmd = Value::Integer(sub_command.id()? as i128);
         map.insert(Value::Integer(0x02), sub_cmd);
 
         // subCommandParams (0x03): Map containing following parameters
@@ -84,7 +84,7 @@ pub fn create_payload(
             // - authenticate(pinUvAuthToken, fingerprint (0x01) || enumerateEnrollments (0x04)).
             let pin_uv_auth_param = {
                 let mut message = vec![0x01_u8];
-                message.append(&mut vec![sub_command as u8]);
+                message.append(&mut vec![sub_command.id()?]);
                 message.append(&mut sub_command_params_cbor.to_vec());
                 let sig = enc_hmac_sha_256::authenticate(&pin_token.key, &message);
                 sig[0..16].to_vec()
