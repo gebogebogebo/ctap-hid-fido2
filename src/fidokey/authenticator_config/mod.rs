@@ -9,22 +9,21 @@ use authenticator_config_command::SubCommand;
 
 impl FidoKeyHid {
     pub fn toggle_always_uv(&self, pin: Option<&str>) -> Result<()> {
-        self.config(pin, SubCommand::ToggleAlwaysUv, None)
+        self.config(pin, SubCommand::ToggleAlwaysUv)
     }
 
     pub fn set_min_pin_length(&self, new_min_pin_length: u8, pin: Option<&str>) -> Result<()> {
-        self.config(pin, SubCommand::SetMinPinLength, Some(new_min_pin_length))
+        self.config(pin, SubCommand::SetMinPinLength(new_min_pin_length))
     }
 
     pub fn set_min_pin_length_rpids(&self, rpids: Vec<String>, pin: Option<&str>) -> Result<()> {
-        self.config(pin, SubCommand::SetMinPinLengthRpIds(rpids), None)
+        self.config(pin, SubCommand::SetMinPinLengthRpIds(rpids))
     }
 
     fn config(
         &self,
         pin: Option<&str>,
         sub_command: SubCommand,
-        new_min_pin_length: Option<u8>,
     ) -> Result<()> {
         let pin = if let Some(v) = pin {
             v
@@ -41,7 +40,6 @@ impl FidoKeyHid {
         let send_payload = authenticator_config_command::create_payload(
             pin_token,
             sub_command,
-            new_min_pin_length,
         )?;
         let _response_cbor =
             ctaphid::ctaphid_cbor(self, &cid, &send_payload).map_err(Error::msg)?;

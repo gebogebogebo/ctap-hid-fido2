@@ -11,14 +11,14 @@ pub enum SubCommand {
     #[strum(props(SubCommandId = "2"))]
     ToggleAlwaysUv,
     #[strum(props(SubCommandId = "3"))]
-    SetMinPinLength,
+    SetMinPinLength(u8),
     #[strum(props(SubCommandId = "3"))]
     SetMinPinLengthRpIds(Vec<String>),
 }
 impl SubCommandBase for SubCommand {
     fn has_param(&self) -> bool {
         match self {
-            SubCommand::SetMinPinLength => true,
+            SubCommand::SetMinPinLength(_) => true,
             SubCommand::SetMinPinLengthRpIds(_) => true,
             _ => false,
         }
@@ -28,7 +28,6 @@ impl SubCommandBase for SubCommand {
 pub fn create_payload(
     pin_token: pintoken::PinToken,
     sub_command: SubCommand,
-    new_min_pin_length: Option<u8>,     // TODO include SetMinPinLength
 ) -> Result<Vec<u8>> {
     // create cbor
     let mut map = BTreeMap::new();
@@ -43,12 +42,12 @@ pub fn create_payload(
     let mut sub_command_params_cbor = Vec::new();
     if sub_command.has_param() {
         let value = match sub_command.clone() {
-            SubCommand::SetMinPinLength => {
+            SubCommand::SetMinPinLength(new_min_pin_length) => {
                 let mut param = BTreeMap::new();
                 // 0x01:newMinPINLength
                 param.insert(
                     Value::Integer(0x01),
-                    Value::Integer(new_min_pin_length.unwrap() as i128),
+                    Value::Integer(new_min_pin_length as i128),
                 );
                 map.insert(Value::Integer(0x02), Value::Map(param.clone()));
                 Some(param)
