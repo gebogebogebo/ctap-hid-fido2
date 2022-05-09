@@ -4,17 +4,36 @@ use crate::{ctapdef, encrypt::enc_hmac_sha_256, pintoken};
 use anyhow::Result;
 use serde_cbor::{to_vec, Value};
 use std::collections::BTreeMap;
+use strum_macros::EnumProperty;
 
 #[allow(dead_code)]
-#[derive(Debug, Copy, Clone, PartialEq)]
+#[derive(Debug, Copy, Clone, PartialEq, EnumProperty)]
 pub enum SubCommand {
+    #[strum(props(SubCommandId = "1"))]
     EnrollBegin = 0x01,
+    #[strum(props(SubCommandId = "2"))]
     EnrollCaptureNextSample = 0x02,
+    #[strum(props(SubCommandId = "3"))]
     CancelCurrentEnrollment = 0x03,
+    #[strum(props(SubCommandId = "4"))]
     EnumerateEnrollments = 0x04,
+    #[strum(props(SubCommandId = "5"))]
     SetFriendlyName = 0x05,
+    #[strum(props(SubCommandId = "6"))]
     RemoveEnrollment = 0x06,
+    #[strum(props(SubCommandId = "7"))]
     GetFingerprintSensorInfo = 0x07,
+}
+impl SubCommandBase for SubCommand {
+    fn has_param(&self) -> bool {
+        match self {
+            SubCommand::EnrollBegin
+            | SubCommand::EnrollCaptureNextSample
+            | SubCommand::SetFriendlyName
+            | SubCommand::RemoveEnrollment => true,
+            _ => false,
+        }
+    }
 }
 
 pub fn create_payload(
@@ -36,7 +55,7 @@ pub fn create_payload(
 
         // subCommandParams (0x03): Map containing following parameters
         let mut sub_command_params_cbor = Vec::new();
-        if need_sub_command_param(sub_command) {
+        if sub_command.has_param() {
             let value = match sub_command {
                 SubCommand::EnrollBegin | SubCommand::EnrollCaptureNextSample => {
                     let param = to_value_timeout(template_info, timeout_milliseconds);
@@ -89,13 +108,6 @@ pub fn create_payload(
     };
     payload.append(&mut to_vec(&cbor)?);
     Ok(payload)
-}
-
-fn need_sub_command_param(sub_command: SubCommand) -> bool {
-    sub_command == SubCommand::EnrollBegin
-        || sub_command == SubCommand::EnrollCaptureNextSample
-        || sub_command == SubCommand::SetFriendlyName
-        || sub_command == SubCommand::RemoveEnrollment
 }
 
 fn to_value_template_info(in_param: TemplateInfo) -> Value {

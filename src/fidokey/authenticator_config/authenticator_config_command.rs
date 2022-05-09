@@ -28,7 +28,7 @@ impl SubCommandBase for SubCommand {
 pub fn create_payload(
     pin_token: pintoken::PinToken,
     sub_command: SubCommand,
-    new_min_pin_length: Option<u8>,
+    new_min_pin_length: Option<u8>,     // TODO include SetMinPinLength
 ) -> Result<Vec<u8>> {
     // create cbor
     let mut map = BTreeMap::new();
