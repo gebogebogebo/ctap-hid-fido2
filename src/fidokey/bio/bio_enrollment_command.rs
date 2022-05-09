@@ -10,9 +10,9 @@ use strum_macros::EnumProperty;
 #[derive(Debug, Copy, Clone, PartialEq, EnumProperty)]
 pub enum SubCommand {
     #[strum(props(SubCommandId = "1"))]
-    EnrollBegin,
+    EnrollBegin(Option<u16>),
     #[strum(props(SubCommandId = "2"))]
-    EnrollCaptureNextSample,
+    EnrollCaptureNextSample(Option<u16>),
     #[strum(props(SubCommandId = "3"))]
     CancelCurrentEnrollment,
     #[strum(props(SubCommandId = "4"))]
@@ -27,8 +27,8 @@ pub enum SubCommand {
 impl SubCommandBase for SubCommand {
     fn has_param(&self) -> bool {
         match self {
-            SubCommand::EnrollBegin
-            | SubCommand::EnrollCaptureNextSample
+            SubCommand::EnrollBegin(_)
+            | SubCommand::EnrollCaptureNextSample(_)
             | SubCommand::SetFriendlyName
             | SubCommand::RemoveEnrollment => true,
             _ => false,
@@ -40,7 +40,6 @@ pub fn create_payload(
     pin_token: Option<&pintoken::PinToken>,
     sub_command: Option<SubCommand>,
     template_info: Option<TemplateInfo>,
-    timeout_milliseconds: Option<u16>,
     use_pre_bio_enrollment: bool,
 ) -> Result<Vec<u8>> {
     let mut map = BTreeMap::new();
@@ -57,7 +56,7 @@ pub fn create_payload(
         let mut sub_command_params_cbor = Vec::new();
         if sub_command.has_param() {
             let value = match sub_command {
-                SubCommand::EnrollBegin | SubCommand::EnrollCaptureNextSample => {
+                SubCommand::EnrollBegin(timeout_milliseconds) | SubCommand::EnrollCaptureNextSample(timeout_milliseconds) => {
                     let param = to_value_timeout(template_info, timeout_milliseconds);
                     map.insert(Value::Integer(0x03), param.clone());
                     Some(param)

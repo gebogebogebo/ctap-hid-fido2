@@ -21,7 +21,7 @@ impl FidoKeyHid {
 
         // 6.7.2. Get bio modality
         let data1 = self
-            .bio_enrollment(&init.0, None, None, None, None)
+            .bio_enrollment(&init.0, None, None, None)
             .map_err(Error::msg)?;
         if self.enable_log {
             println!("{}", data1);
@@ -33,7 +33,6 @@ impl FidoKeyHid {
                 &init.0,
                 None,
                 Some(BioCmd::GetFingerprintSensorInfo),
-                None,
                 None,
             )
             .map_err(Error::msg)?;
@@ -61,9 +60,8 @@ impl FidoKeyHid {
         let data = self.bio_enrollment(
             &init.0,
             init.1.as_ref(),
-            Some(BioCmd::EnrollBegin),
+            Some(BioCmd::EnrollBegin(timeout_milliseconds)),
             None,
-            timeout_milliseconds,
         )?;
 
         if self.enable_log {
@@ -98,9 +96,8 @@ impl FidoKeyHid {
         let data = self.bio_enrollment(
             &enroll_status.cid,
             enroll_status.pin_token.as_ref(),
-            Some(BioCmd::EnrollCaptureNextSample),
+            Some(BioCmd::EnrollCaptureNextSample(timeout_milliseconds)),
             Some(template_info),
-            timeout_milliseconds,
         )?;
 
         if self.enable_log {
@@ -126,7 +123,6 @@ impl FidoKeyHid {
             enroll_status.pin_token.as_ref(),
             Some(BioCmd::CancelCurrentEnrollment),
             None,
-            None,
         )?;
 
         if self.enable_log {
@@ -146,7 +142,6 @@ impl FidoKeyHid {
             &init.0,
             Some(&pin_token),
             Some(BioCmd::EnumerateEnrollments),
-            None,
             None,
         )?;
 
@@ -175,7 +170,6 @@ impl FidoKeyHid {
             Some(&pin_token),
             Some(BioCmd::SetFriendlyName),
             Some(template_info),
-            None,
         )?;
 
         if self.enable_log {
@@ -196,7 +190,6 @@ impl FidoKeyHid {
             Some(&pin_token),
             Some(BioCmd::RemoveEnrollment),
             Some(template_info),
-            None,
         )?;
 
         if self.enable_log {
@@ -212,13 +205,11 @@ impl FidoKeyHid {
         pin_token: Option<&PinToken>,
         sub_command: Option<bio_enrollment_command::SubCommand>,
         template_info: Option<TemplateInfo>,
-        timeout_milliseconds: Option<u16>,
     ) -> Result<BioEnrollmentData> {
         let send_payload = bio_enrollment_command::create_payload(
             pin_token,
             sub_command,
             template_info,
-            timeout_milliseconds,
             self.use_pre_bio_enrollment,
         )?;
 
