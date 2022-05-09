@@ -1,26 +1,26 @@
 use super::super::sub_command_base::SubCommandBase;
 use super::bio_enrollment_params::TemplateInfo;
-use crate::{ctapdef, encrypt::enc_hmac_sha_256, pintoken};
+use crate::{ctapdef, encrypt::enc_hmac_sha_256, pintoken::PinToken};
 use anyhow::Result;
 use serde_cbor::{to_vec, Value};
 use std::collections::BTreeMap;
 use strum_macros::EnumProperty;
 
 #[allow(dead_code)]
-#[derive(Debug, Copy, Clone, PartialEq, EnumProperty)]
+#[derive(Debug, Clone, EnumProperty)]
 pub enum SubCommand {
     #[strum(props(SubCommandId = "1"))]
     EnrollBegin(Option<u16>),
     #[strum(props(SubCommandId = "2"))]
-    EnrollCaptureNextSample(Option<u16>),
+    EnrollCaptureNextSample(TemplateInfo, Option<u16>),
     #[strum(props(SubCommandId = "3"))]
     CancelCurrentEnrollment,
     #[strum(props(SubCommandId = "4"))]
     EnumerateEnrollments,
     #[strum(props(SubCommandId = "5"))]
-    SetFriendlyName,
+    SetFriendlyName(TemplateInfo),
     #[strum(props(SubCommandId = "6"))]
-    RemoveEnrollment,
+    RemoveEnrollment(TemplateInfo),
     #[strum(props(SubCommandId = "7"))]
     GetFingerprintSensorInfo,
 }
@@ -28,18 +28,17 @@ impl SubCommandBase for SubCommand {
     fn has_param(&self) -> bool {
         match self {
             SubCommand::EnrollBegin(_)
-            | SubCommand::EnrollCaptureNextSample(_)
-            | SubCommand::SetFriendlyName
-            | SubCommand::RemoveEnrollment => true,
+            | SubCommand::EnrollCaptureNextSample(_, _)
+            | SubCommand::SetFriendlyName(_)
+            | SubCommand::RemoveEnrollment(_) => true,
             _ => false,
         }
     }
 }
 
 pub fn create_payload(
-    pin_token: Option<&pintoken::PinToken>,
+    pin_token: Option<&PinToken>,
     sub_command: Option<SubCommand>,
-    template_info: Option<TemplateInfo>,
     use_pre_bio_enrollment: bool,
 ) -> Result<Vec<u8>> {
     let mut map = BTreeMap::new();
@@ -56,13 +55,19 @@ pub fn create_payload(
         let mut sub_command_params_cbor = Vec::new();
         if sub_command.has_param() {
             let value = match sub_command {
-                SubCommand::EnrollBegin(timeout_milliseconds) | SubCommand::EnrollCaptureNextSample(timeout_milliseconds) => {
-                    let param = to_value_timeout(template_info, timeout_milliseconds);
+                SubCommand::EnrollBegin(timeout_milliseconds) => {
+                    let param = to_value_timeout(None, timeout_milliseconds);
                     map.insert(Value::Integer(0x03), param.clone());
                     Some(param)
                 }
-                SubCommand::SetFriendlyName | SubCommand::RemoveEnrollment => {
-                    let param = to_value_template_info(template_info.unwrap());
+                SubCommand::EnrollCaptureNextSample(ref template_info, timeout_milliseconds) => {
+                    let param = to_value_timeout(Some(template_info), timeout_milliseconds);
+                    map.insert(Value::Integer(0x03), param.clone());
+                    Some(param)
+                }
+                SubCommand::SetFriendlyName(ref template_info)
+                | SubCommand::RemoveEnrollment(ref template_info) => {
+                    let param = to_value_template_info(template_info);
                     map.insert(Value::Integer(0x03), param.clone());
                     Some(param)
                 }
@@ -109,22 +114,25 @@ pub fn create_payload(
     Ok(payload)
 }
 
-fn to_value_template_info(in_param: TemplateInfo) -> Value {
+fn to_value_template_info(in_param: &TemplateInfo) -> Value {
     let mut param = BTreeMap::new();
-    param.insert(Value::Integer(0x01), Value::Bytes(in_param.template_id));
-    if let Some(v) = in_param.template_friendly_name {
+    param.insert(
+        Value::Integer(0x01),
+        Value::Bytes(in_param.template_id.clone()),
+    );
+    if let Some(v) = in_param.template_friendly_name.clone() {
         param.insert(Value::Integer(0x02), Value::Text(v));
     }
     Value::Map(param)
 }
 
 fn to_value_timeout(
-    template_info: Option<TemplateInfo>,
+    template_info: Option<&TemplateInfo>,
     timeout_milliseconds: Option<u16>,
 ) -> Value {
     let mut param = BTreeMap::new();
     if let Some(v) = template_info {
-        param.insert(Value::Integer(0x01), Value::Bytes(v.template_id));
+        param.insert(Value::Integer(0x01), Value::Bytes(v.template_id.clone()));
     }
     if let Some(v) = timeout_milliseconds {
         param.insert(Value::Integer(0x03), Value::Integer(v as i128));

@@ -20,11 +20,7 @@ impl FidoKeyHid {
         self.config(pin, SubCommand::SetMinPinLengthRpIds(rpids))
     }
 
-    fn config(
-        &self,
-        pin: Option<&str>,
-        sub_command: SubCommand,
-    ) -> Result<()> {
+    fn config(&self, pin: Option<&str>, sub_command: SubCommand) -> Result<()> {
         let pin = if let Some(v) = pin {
             v
         } else {
@@ -37,10 +33,7 @@ impl FidoKeyHid {
         let pin_token =
             self.get_pinuv_auth_token_with_permission(&cid, pin, AuthenticatorConfiguration)?;
 
-        let send_payload = authenticator_config_command::create_payload(
-            pin_token,
-            sub_command,
-        )?;
+        let send_payload = authenticator_config_command::create_payload(pin_token, sub_command)?;
         let _response_cbor =
             ctaphid::ctaphid_cbor(self, &cid, &send_payload).map_err(Error::msg)?;
         Ok(())
