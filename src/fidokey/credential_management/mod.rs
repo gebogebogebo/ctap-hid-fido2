@@ -138,7 +138,7 @@ impl FidoKeyHid {
             pkcd,
             pkcue,
             self.use_pre_credential_management,
-        );
+        )?;
 
         if self.enable_log {
             println!("send(cbor) = {}", util::to_hex_str(&send_payload));

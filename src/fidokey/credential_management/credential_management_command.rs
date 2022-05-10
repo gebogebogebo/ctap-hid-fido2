@@ -1,60 +1,40 @@
-#[allow(unused_imports)]
-use crate::util;
-
-use crate::ctapdef;
-use crate::encrypt::enc_hmac_sha_256;
-use crate::pintoken;
+use super::super::sub_command_base::SubCommandBase;
+use crate::{ctapdef, encrypt::enc_hmac_sha_256, pintoken};
 use crate::public_key_credential_descriptor::PublicKeyCredentialDescriptor;
 use crate::public_key_credential_user_entity::PublicKeyCredentialUserEntity;
-use serde_cbor::to_vec;
-use serde_cbor::Value;
+use anyhow::Result;
+use serde_cbor::{to_vec, Value};
 use std::collections::BTreeMap;
+use strum_macros::EnumProperty;
 
-#[allow(dead_code)]
-#[derive(Debug, Copy, Clone, PartialEq)]
+#[derive(Debug, Copy, Clone, PartialEq, EnumProperty)]
 pub enum SubCommand {
-    GetCredsMetadata = 0x01,
-    EnumerateRPsBegin = 0x02,
-    EnumerateRPsGetNextRp = 0x03,
-    EnumerateCredentialsBegin = 0x04,
-    EnumerateCredentialsGetNextCredential = 0x05,
-    DeleteCredential = 0x06,
-    UpdateUserInformation = 0x07,
+    #[strum(props(SubCommandId = "1"))]
+    GetCredsMetadata,
+    #[strum(props(SubCommandId = "2"))]
+    EnumerateRPsBegin,
+    #[strum(props(SubCommandId = "3"))]
+    EnumerateRPsGetNextRp,
+    #[strum(props(SubCommandId = "4"))]
+    EnumerateCredentialsBegin,
+    #[strum(props(SubCommandId = "5"))]
+    EnumerateCredentialsGetNextCredential,
+    #[strum(props(SubCommandId = "6"))]
+    DeleteCredential,
+    #[strum(props(SubCommandId = "7"))]
+    UpdateUserInformation,
 }
-
-/*
-fn parse_test(cbor:Value){
-    if let Value::Map(n) = cbor {
-        for (key, val) in n {
-            if let Value::Integer(member) = key {
-                match member {
-                    0x02 => {
-                        if let Value::Map(nn) = val {
-                            for (key2, val2) in nn {
-                                if let Value::Integer(member2) = key2 {
-                                    match member2 {
-                                        0x02 => {
-                                            let a = 0;
-                                        },
-                                        0x03 => {
-                                            let id = util::cbor_get_bytes_from_map(&val2, "id");
-                                            let name = util::cbor_get_string_from_map(&val2,"name");
-                                            let dname = util::cbor_get_string_from_map(&val2,"displayName");
-                                            let a = 0;
-                                        },
-                                        _ => (),
-                                    }
-                                }
-                            }
-                        }
-                    },
-                    _ => (),
-                }
-            }
-        }
+impl SubCommandBase for SubCommand {
+    fn has_param(&self) -> bool {
+        matches!(
+            self,
+            SubCommand::EnumerateCredentialsBegin
+            | SubCommand::EnumerateCredentialsGetNextCredential
+            | SubCommand::DeleteCredential
+            | SubCommand::UpdateUserInformation
+            )
     }
 }
-*/
 
 pub fn create_payload(
     pin_token: Option<pintoken::PinToken>,
@@ -63,18 +43,18 @@ pub fn create_payload(
     pkcd: Option<PublicKeyCredentialDescriptor>,
     pkcue: Option<PublicKeyCredentialUserEntity>,
     use_pre_credential_management: bool,
-) -> Vec<u8> {
+) -> Result<Vec<u8>> {
     let mut map = BTreeMap::new();
 
     // subCommand(0x01)
     {
-        let sub_cmd = Value::Integer(sub_command as i128);
+        let sub_cmd = Value::Integer(sub_command.id()? as i128);
         map.insert(Value::Integer(0x01), sub_cmd);
     }
 
     // subCommandParams (0x02): Map containing following parameters
     let mut sub_command_params_cbor = Vec::new();
-    if need_sub_command_param(sub_command) {
+    if sub_command.has_param() {
         let value = match sub_command {
             SubCommand::EnumerateCredentialsBegin
             | SubCommand::EnumerateCredentialsGetNextCredential => {
@@ -97,7 +77,7 @@ pub fn create_payload(
             _ => (None),
         };
         if let Some(v) = value {
-            sub_command_params_cbor = to_vec(&v).unwrap();
+            sub_command_params_cbor = to_vec(&v)?;
         }
     }
 
@@ -110,7 +90,7 @@ pub fn create_payload(
         // - authenticate(pinUvAuthToken, getCredsMetadata (0x01)).
         // - authenticate(pinUvAuthToken, enumerateCredentialsBegin (0x04) || subCommandParams).
         // -- First 16 bytes of HMAC-SHA-256 of contents using pinUvAuthToken.
-        let mut message = vec![sub_command as u8];
+        let mut message = vec![sub_command.id()?];
         message.append(&mut sub_command_params_cbor.to_vec());
 
         let sig = enc_hmac_sha_256::authenticate(&pin_token.key, &message);
@@ -131,15 +111,8 @@ pub fn create_payload(
         [ctapdef::AUTHENTICATOR_CREDENTIAL_MANAGEMENT].to_vec()
     };
 
-    payload.append(&mut to_vec(&cbor).unwrap());
-    payload
-}
-
-fn need_sub_command_param(sub_command: SubCommand) -> bool {
-    sub_command == SubCommand::EnumerateCredentialsBegin
-        || sub_command == SubCommand::EnumerateCredentialsGetNextCredential
-        || sub_command == SubCommand::DeleteCredential
-        || sub_command == SubCommand::UpdateUserInformation
+    payload.append(&mut to_vec(&cbor)?);
+    Ok(payload)
 }
 
 fn create_rpid_hash(rpid_hash: Vec<u8>) -> Value {
