@@ -7,7 +7,7 @@ use serde_cbor::{to_vec, Value};
 use std::collections::BTreeMap;
 use strum_macros::EnumProperty;
 
-#[derive(Debug, Copy, Clone, PartialEq, EnumProperty)]
+#[derive(Debug, Clone, PartialEq, EnumProperty)]
 pub enum SubCommand {
     #[strum(props(SubCommandId = "1"))]
     GetCredsMetadata,
@@ -16,9 +16,9 @@ pub enum SubCommand {
     #[strum(props(SubCommandId = "3"))]
     EnumerateRPsGetNextRp,
     #[strum(props(SubCommandId = "4"))]
-    EnumerateCredentialsBegin,
+    EnumerateCredentialsBegin(Vec<u8>),
     #[strum(props(SubCommandId = "5"))]
-    EnumerateCredentialsGetNextCredential,
+    EnumerateCredentialsGetNextCredential(Vec<u8>),
     #[strum(props(SubCommandId = "6"))]
     DeleteCredential,
     #[strum(props(SubCommandId = "7"))]
@@ -28,8 +28,8 @@ impl SubCommandBase for SubCommand {
     fn has_param(&self) -> bool {
         matches!(
             self,
-            SubCommand::EnumerateCredentialsBegin
-            | SubCommand::EnumerateCredentialsGetNextCredential
+            SubCommand::EnumerateCredentialsBegin(_)
+            | SubCommand::EnumerateCredentialsGetNextCredential(_)
             | SubCommand::DeleteCredential
             | SubCommand::UpdateUserInformation
             )
@@ -39,7 +39,6 @@ impl SubCommandBase for SubCommand {
 pub fn create_payload(
     pin_token: Option<pintoken::PinToken>,
     sub_command: SubCommand,
-    rpid_hash: Option<Vec<u8>>,
     pkcd: Option<PublicKeyCredentialDescriptor>,
     pkcue: Option<PublicKeyCredentialUserEntity>,
     use_pre_credential_management: bool,
@@ -56,10 +55,10 @@ pub fn create_payload(
     let mut sub_command_params_cbor = Vec::new();
     if sub_command.has_param() {
         let value = match sub_command {
-            SubCommand::EnumerateCredentialsBegin
-            | SubCommand::EnumerateCredentialsGetNextCredential => {
+            SubCommand::EnumerateCredentialsBegin(ref rpid_hash)
+            | SubCommand::EnumerateCredentialsGetNextCredential(ref rpid_hash) => {
                 // rpIDHash (0x01): RPID SHA-256 hash.
-                let param = create_rpid_hash(rpid_hash.unwrap());
+                let param = create_rpid_hash(rpid_hash);
                 map.insert(Value::Integer(0x02), param.clone());
                 Some(param)
             }
@@ -113,9 +112,9 @@ pub fn create_payload(
     Ok(payload)
 }
 
-fn create_rpid_hash(rpid_hash: Vec<u8>) -> Value {
+fn create_rpid_hash(rpid_hash: &[u8]) -> Value {
     let mut param = BTreeMap::new();
-    param.insert(Value::Integer(0x01), Value::Bytes(rpid_hash));
+    param.insert(Value::Integer(0x01), Value::Bytes(rpid_hash.to_vec()));
     Value::Map(param)
 }
 
