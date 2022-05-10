@@ -54,28 +54,22 @@ pub fn create_payload(
         // subCommandParams (0x03): Map containing following parameters
         let mut sub_command_params_cbor = Vec::new();
         if sub_command.has_param() {
-            let value = match sub_command {
+            let param = match sub_command {
                 SubCommand::EnrollBegin(timeout_milliseconds) => {
-                    let param = to_value_timeout(None, timeout_milliseconds);
-                    map.insert(Value::Integer(0x03), param.clone());
-                    Some(param)
+                    Some(to_value_timeout(None, timeout_milliseconds))
                 }
                 SubCommand::EnrollCaptureNextSample(ref template_info, timeout_milliseconds) => {
-                    let param = to_value_timeout(Some(template_info), timeout_milliseconds);
-                    map.insert(Value::Integer(0x03), param.clone());
-                    Some(param)
+                    Some(to_value_timeout(Some(template_info), timeout_milliseconds))
                 }
                 SubCommand::SetFriendlyName(ref template_info)
                 | SubCommand::RemoveEnrollment(ref template_info) => {
-                    let param = to_value_template_info(template_info);
-                    map.insert(Value::Integer(0x03), param.clone());
-                    Some(param)
+                    Some(to_value_template_info(template_info))
                 }
                 _ => (None),
             };
-
-            if let Some(v) = value {
-                sub_command_params_cbor = to_vec(&v)?;
+            if let Some(param) = param {
+                map.insert(Value::Integer(0x03), param.clone());
+                sub_command_params_cbor = to_vec(&param)?;
             }
         }
 

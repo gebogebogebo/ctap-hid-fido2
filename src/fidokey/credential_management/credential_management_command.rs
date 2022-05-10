@@ -102,8 +102,6 @@ pub fn create_payload(
     // create cbor
     let cbor = Value::Map(map);
 
-    //parse_test(cbor.clone());
-
     // create payload
     let mut payload = if use_pre_credential_management {
         [ctapdef::AUTHENTICATOR_CREDENTIAL_MANAGEMENT_P].to_vec()

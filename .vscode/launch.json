@@ -68,7 +68,7 @@
                     "kind": "example"
                 }
             },
-            "args": ["bio", "-l"],
+            "args": ["bio", "-e"],
             "cwd": "${workspaceFolder}"
         },
         {
