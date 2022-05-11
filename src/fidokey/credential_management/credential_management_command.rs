@@ -20,9 +20,9 @@ pub enum SubCommand {
     #[strum(props(SubCommandId = "5"))]
     EnumerateCredentialsGetNextCredential(Vec<u8>),
     #[strum(props(SubCommandId = "6"))]
-    DeleteCredential,
+    DeleteCredential(PublicKeyCredentialDescriptor),
     #[strum(props(SubCommandId = "7"))]
-    UpdateUserInformation,
+    UpdateUserInformation(PublicKeyCredentialDescriptor, PublicKeyCredentialUserEntity),
 }
 impl SubCommandBase for SubCommand {
     fn has_param(&self) -> bool {
@@ -30,8 +30,8 @@ impl SubCommandBase for SubCommand {
             self,
             SubCommand::EnumerateCredentialsBegin(_)
             | SubCommand::EnumerateCredentialsGetNextCredential(_)
-            | SubCommand::DeleteCredential
-            | SubCommand::UpdateUserInformation
+            | SubCommand::DeleteCredential(_)
+            | SubCommand::UpdateUserInformation(_, _)
             )
     }
 }
@@ -39,8 +39,6 @@ impl SubCommandBase for SubCommand {
 pub fn create_payload(
     pin_token: Option<pintoken::PinToken>,
     sub_command: SubCommand,
-    pkcd: Option<PublicKeyCredentialDescriptor>,
-    pkcue: Option<PublicKeyCredentialUserEntity>,
     use_pre_credential_management: bool,
 ) -> Result<Vec<u8>> {
     let mut map = BTreeMap::new();
@@ -54,6 +52,7 @@ pub fn create_payload(
     // subCommandParams (0x02): Map containing following parameters
     let mut sub_command_params_cbor = Vec::new();
     if sub_command.has_param() {
+        // TODO Refactoring
         let value = match sub_command {
             SubCommand::EnumerateCredentialsBegin(ref rpid_hash)
             | SubCommand::EnumerateCredentialsGetNextCredential(ref rpid_hash) => {
@@ -62,14 +61,14 @@ pub fn create_payload(
                 map.insert(Value::Integer(0x02), param.clone());
                 Some(param)
             }
-            SubCommand::DeleteCredential | SubCommand::UpdateUserInformation => {
-                let param = if sub_command == SubCommand::UpdateUserInformation {
-                    create_public_key_credential_descriptor_pend(pkcd.unwrap(), pkcue.unwrap())
-                } else {
-                    // credentialId (0x02): PublicKeyCredentialDescriptor of the credential to be deleted or updated.
-                    create_public_key_credential_descriptor(pkcd.unwrap())
-                };
-
+            SubCommand::UpdateUserInformation(ref pkcd, ref pkcue) => {
+                let param = create_public_key_credential_descriptor_pend(pkcd, pkcue);
+                map.insert(Value::Integer(0x02), param.clone());
+                Some(param)
+            }
+            SubCommand::DeleteCredential(ref pkcd) => {
+                // credentialId (0x02): PublicKeyCredentialDescriptor of the credential to be deleted or updated.
+                let param = create_public_key_credential_descriptor(pkcd);
                 map.insert(Value::Integer(0x02), param.clone());
                 Some(param)
             }
@@ -118,10 +117,10 @@ fn create_rpid_hash(rpid_hash: &[u8]) -> Value {
     Value::Map(param)
 }
 
-fn create_public_key_credential_descriptor(in_param: PublicKeyCredentialDescriptor) -> Value {
+fn create_public_key_credential_descriptor(in_param: &PublicKeyCredentialDescriptor) -> Value {
     let mut map = BTreeMap::new();
-    map.insert(Value::Text("id".to_string()), Value::Bytes(in_param.id));
-    map.insert(Value::Text("type".to_string()), Value::Text(in_param.ctype));
+    map.insert(Value::Text("id".to_string()), Value::Bytes(in_param.id.clone()));
+    map.insert(Value::Text("type".to_string()), Value::Text(in_param.ctype.clone()));
 
     let mut param = BTreeMap::new();
     param.insert(Value::Integer(0x02), Value::Map(map));
@@ -129,24 +128,24 @@ fn create_public_key_credential_descriptor(in_param: PublicKeyCredentialDescript
 }
 
 fn create_public_key_credential_descriptor_pend(
-    in_param: PublicKeyCredentialDescriptor,
-    pkcuee: PublicKeyCredentialUserEntity,
+    in_param: &PublicKeyCredentialDescriptor,
+    pkcue: &PublicKeyCredentialUserEntity,
 ) -> Value {
     let mut param = BTreeMap::new();
     {
         let mut map = BTreeMap::new();
-        map.insert(Value::Text("id".to_string()), Value::Bytes(in_param.id));
-        map.insert(Value::Text("type".to_string()), Value::Text(in_param.ctype));
+        map.insert(Value::Text("id".to_string()), Value::Bytes(in_param.id.clone()));
+        map.insert(Value::Text("type".to_string()), Value::Text(in_param.ctype.clone()));
         param.insert(Value::Integer(0x02), Value::Map(map));
     }
 
     {
         let mut user = BTreeMap::new();
-        user.insert(Value::Text("id".to_string()), Value::Bytes(pkcuee.id));
-        user.insert(Value::Text("name".to_string()), Value::Text(pkcuee.name));
+        user.insert(Value::Text("id".to_string()), Value::Bytes(pkcue.id.clone()));
+        user.insert(Value::Text("name".to_string()), Value::Text(pkcue.name.to_string()));
         user.insert(
             Value::Text("displayName".to_string()),
-            Value::Text(pkcuee.display_name),
+            Value::Text(pkcue.display_name.to_string()),
         );
         param.insert(Value::Integer(0x03), Value::Map(user));
     }

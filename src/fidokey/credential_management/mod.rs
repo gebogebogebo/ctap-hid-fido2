@@ -23,7 +23,7 @@ impl FidoKeyHid {
         pin: Option<&str>,
     ) -> Result<CredentialsCount> {
         let meta =
-            self.credential_management(pin, SubCommand::GetCredsMetadata, None, None)?;
+            self.credential_management(pin, SubCommand::GetCredsMetadata)?;
         Ok(CredentialsCount::new(&meta))
     }
 
@@ -31,7 +31,7 @@ impl FidoKeyHid {
     pub fn credential_management_enumerate_rps(&self, pin: Option<&str>) -> Result<Vec<Rp>> {
         let mut datas: Vec<Rp> = Vec::new();
         let data =
-            self.credential_management(pin, SubCommand::EnumerateRPsBegin, None, None)?;
+            self.credential_management(pin, SubCommand::EnumerateRPsBegin)?;
 
         if data.total_rps > 0 {
             datas.push(Rp::new(&data));
@@ -40,8 +40,6 @@ impl FidoKeyHid {
                 let data = self.credential_management(
                     pin,
                     SubCommand::EnumerateRPsGetNextRp,
-                    None,
-                    None,
                 )?;
                 datas.push(Rp::new(&data));
             }
@@ -60,8 +58,6 @@ impl FidoKeyHid {
         let data = self.credential_management(
             pin,
             SubCommand::EnumerateCredentialsBegin(rpid_hash.to_vec()),
-            None,
-            None,
         )?;
 
         datas.push(Credential::new(&data));
@@ -71,8 +67,6 @@ impl FidoKeyHid {
                 let data = self.credential_management(
                     pin,
                     SubCommand::EnumerateCredentialsGetNextCredential(rpid_hash.to_vec()),
-                    None,
-                    None,
                 )?;
                 datas.push(Credential::new(&data));
             }
@@ -84,9 +78,9 @@ impl FidoKeyHid {
     pub fn credential_management_delete_credential(
         &self,
         pin: Option<&str>,
-        pkcd: Option<PublicKeyCredentialDescriptor>,
+        pkcd: Option<PublicKeyCredentialDescriptor>,    // TODO MUST
     ) -> Result<()> {
-        self.credential_management(pin, SubCommand::DeleteCredential, pkcd, None)?;
+        self.credential_management(pin, SubCommand::DeleteCredential(pkcd.unwrap()))?;
         Ok(())
     }
 
@@ -94,10 +88,10 @@ impl FidoKeyHid {
     pub fn credential_management_update_user_information(
         &self,
         pin: Option<&str>,
-        pkcd: Option<PublicKeyCredentialDescriptor>,
-        pkcue: Option<PublicKeyCredentialUserEntity>,
+        pkcd: Option<PublicKeyCredentialDescriptor>,    // TODO MUST
+        pkcue: Option<PublicKeyCredentialUserEntity>,   // TODO MUST
     ) -> Result<()> {
-        self.credential_management(pin, SubCommand::UpdateUserInformation, pkcd, pkcue)?;
+        self.credential_management(pin, SubCommand::UpdateUserInformation(pkcd.unwrap(), pkcue.unwrap()))?;
         Ok(())
     }
 
@@ -105,8 +99,6 @@ impl FidoKeyHid {
         &self,
         pin: Option<&str>,
         sub_command: SubCommand,
-        pkcd: Option<PublicKeyCredentialDescriptor>,
-        pkcue: Option<PublicKeyCredentialUserEntity>,
     ) -> Result<CredentialManagementData> {
         let cid = ctaphid::ctaphid_init(self).map_err(Error::msg)?;
 
@@ -130,8 +122,6 @@ impl FidoKeyHid {
         let send_payload = credential_management_command::create_payload(
             pin_token,
             sub_command,
-            pkcd,
-            pkcue,
             self.use_pre_credential_management,
         )?;
 

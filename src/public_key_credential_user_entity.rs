@@ -6,7 +6,7 @@ use crate::util;
 use serde_cbor::Value;
 use std::fmt;
 
-#[derive(Debug, Default, Clone)]
+#[derive(Debug, Default, Clone, PartialEq)]
 pub struct PublicKeyCredentialUserEntity {
     pub id: Vec<u8>,
     pub name: String,
