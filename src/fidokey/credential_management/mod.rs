@@ -22,25 +22,20 @@ impl FidoKeyHid {
         &self,
         pin: Option<&str>,
     ) -> Result<CredentialsCount> {
-        let meta =
-            self.credential_management(pin, SubCommand::GetCredsMetadata)?;
+        let meta = self.credential_management(pin, SubCommand::GetCredsMetadata)?;
         Ok(CredentialsCount::new(&meta))
     }
 
     /// CredentialManagement - enumerateRPsBegin & enumerateRPsNext (CTAP 2.1-PRE)
     pub fn credential_management_enumerate_rps(&self, pin: Option<&str>) -> Result<Vec<Rp>> {
         let mut datas: Vec<Rp> = Vec::new();
-        let data =
-            self.credential_management(pin, SubCommand::EnumerateRPsBegin)?;
+        let data = self.credential_management(pin, SubCommand::EnumerateRPsBegin)?;
 
         if data.total_rps > 0 {
             datas.push(Rp::new(&data));
             let roop_n = data.total_rps - 1;
             for _ in 0..roop_n {
-                let data = self.credential_management(
-                    pin,
-                    SubCommand::EnumerateRPsGetNextRp,
-                )?;
+                let data = self.credential_management(pin, SubCommand::EnumerateRPsGetNextRp)?;
                 datas.push(Rp::new(&data));
             }
         }
@@ -78,7 +73,7 @@ impl FidoKeyHid {
     pub fn credential_management_delete_credential(
         &self,
         pin: Option<&str>,
-        pkcd: Option<PublicKeyCredentialDescriptor>,    // TODO MUST
+        pkcd: Option<PublicKeyCredentialDescriptor>, // TODO MUST
     ) -> Result<()> {
         self.credential_management(pin, SubCommand::DeleteCredential(pkcd.unwrap()))?;
         Ok(())
@@ -88,10 +83,13 @@ impl FidoKeyHid {
     pub fn credential_management_update_user_information(
         &self,
         pin: Option<&str>,
-        pkcd: Option<PublicKeyCredentialDescriptor>,    // TODO MUST
-        pkcue: Option<PublicKeyCredentialUserEntity>,   // TODO MUST
+        pkcd: Option<PublicKeyCredentialDescriptor>, // TODO MUST
+        pkcue: Option<PublicKeyCredentialUserEntity>, // TODO MUST
     ) -> Result<()> {
-        self.credential_management(pin, SubCommand::UpdateUserInformation(pkcd.unwrap(), pkcue.unwrap()))?;
+        self.credential_management(
+            pin,
+            SubCommand::UpdateUserInformation(pkcd.unwrap(), pkcue.unwrap()),
+        )?;
         Ok(())
     }
 
