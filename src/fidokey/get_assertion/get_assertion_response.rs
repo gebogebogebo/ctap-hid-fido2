@@ -53,7 +53,7 @@ fn parse_cbor_authdata(
     };
 
     if ass.flags.extension_data_included {
-        //println!("{:02} - {:?}", slice.len(), util::to_hex_str(&slice));
+        println!("{:02} - {:?}", slice.len(), util::to_hex_str(&slice));
         let maps = util::cbor_bytes_to_map(&slice)?;
         for (key, val) in &maps {
             if let Value::Text(member) = key {
@@ -79,6 +79,11 @@ fn parse_cbor_authdata(
                     hmac_secret_0.copy_from_slice(&output1[0..32]);
                     ass.extensions
                         .push(Extension::HmacSecret(Some(hmac_secret_0)));
+                } else if *member == Extension::CredBlob((None, None)).to_string() {
+                    let cred_blob = util::cbor_value_to_vec_u8(val)?;
+                    ass.extensions.push(Extension::CredBlob((None, Some(cred_blob))));
+                } else {
+                    println!("Anything Extension!");
                 }
             }
         }

@@ -125,7 +125,13 @@ pub fn create_payload(params: Params, extensions: Option<&Vec<Extension>>) -> Ve
         let mut map = BTreeMap::new();
         for ext in extensions {
             match *ext {
-                Extension::CredBlob(_) => (),
+                Extension::CredBlob((ref n, _)) => {
+                    let x = n.clone().unwrap();
+                    map.insert(
+                        Value::Text(ext.to_string()),
+                        Value::Bytes(x),
+                    );
+                }
                 Extension::CredProtect(n) => {
                     map.insert(
                         Value::Text(ext.to_string()),
