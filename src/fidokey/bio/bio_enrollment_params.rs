@@ -1,6 +1,4 @@
-use crate::pintoken::PinToken;
-use crate::str_buf::StrBuf;
-use crate::util;
+use crate::{pintoken::PinToken, str_buf::StrBuf, util};
 use std::fmt;
 
 pub struct EnrollStatus1 {

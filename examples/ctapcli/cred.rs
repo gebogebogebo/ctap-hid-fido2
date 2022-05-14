@@ -124,7 +124,7 @@ fn delete(device: &FidoKeyHid, pin: &str, rpid: &str, user_id: &[u8]) -> Result<
     if let Some(cred) = memo::search_cred(device, pin, rpid, user_id)? {
         device.credential_management_delete_credential(
             Some(pin),
-            Some(cred.public_key_credential_descriptor),
+            cred.public_key_credential_descriptor,
         )?;
         println!("Delete Success!");
     } else {
@@ -143,8 +143,8 @@ fn update(device: &FidoKeyHid, pin: &str, rpid: &str, user_id: &[u8]) -> Result<
 
         device.credential_management_update_user_information(
             Some(pin),
-            Some(cred.public_key_credential_descriptor),
-            Some(pkcue),
+            cred.public_key_credential_descriptor,
+            pkcue,
         )?;
 
         println!("Update Success!");

@@ -85,7 +85,7 @@ fn del(device: &FidoKeyHid, tag: &str, pin: &str, rpid: &str) -> Result<()> {
     if let Some(cred) = search_cred(device, pin, rpid, tag.as_bytes())? {
         device.credential_management_delete_credential(
             Some(pin),
-            Some(cred.public_key_credential_descriptor),
+            cred.public_key_credential_descriptor,
         )?;
 
         println!("Delete Success!.");

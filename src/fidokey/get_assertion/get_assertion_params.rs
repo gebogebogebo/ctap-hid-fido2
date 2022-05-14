@@ -55,6 +55,8 @@ pub enum Extension {
     HmacSecret(Option<[u8; 32]>),
     #[strum(serialize = "largeBlobKey")]
     LargeBlobKey((Option<bool>, Option<Vec<u8>>)),
+    #[strum(serialize = "credBlob")]
+    CredBlob((Option<bool>, Option<Vec<u8>>)),
 }
 
 impl Extension {
