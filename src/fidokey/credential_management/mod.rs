@@ -73,9 +73,9 @@ impl FidoKeyHid {
     pub fn credential_management_delete_credential(
         &self,
         pin: Option<&str>,
-        pkcd: Option<PublicKeyCredentialDescriptor>, // TODO MUST
+        pkcd: PublicKeyCredentialDescriptor,
     ) -> Result<()> {
-        self.credential_management(pin, SubCommand::DeleteCredential(pkcd.unwrap()))?;
+        self.credential_management(pin, SubCommand::DeleteCredential(pkcd))?;
         Ok(())
     }
 
@@ -83,12 +83,12 @@ impl FidoKeyHid {
     pub fn credential_management_update_user_information(
         &self,
         pin: Option<&str>,
-        pkcd: Option<PublicKeyCredentialDescriptor>, // TODO MUST
-        pkcue: Option<PublicKeyCredentialUserEntity>, // TODO MUST
+        pkcd: PublicKeyCredentialDescriptor,
+        pkcue: PublicKeyCredentialUserEntity,
     ) -> Result<()> {
         self.credential_management(
             pin,
-            SubCommand::UpdateUserInformation(pkcd.unwrap(), pkcue.unwrap()),
+            SubCommand::UpdateUserInformation(pkcd, pkcue),
         )?;
         Ok(())
     }
