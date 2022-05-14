@@ -56,7 +56,7 @@ pub enum Extension {
     #[strum(serialize = "largeBlobKey")]
     LargeBlobKey((Option<bool>, Option<Vec<u8>>)),
     #[strum(serialize = "credBlob")]
-    CredBlob((Option<bool>,Option<Vec<u8>>)),
+    CredBlob((Option<bool>, Option<Vec<u8>>)),
 }
 
 impl Extension {

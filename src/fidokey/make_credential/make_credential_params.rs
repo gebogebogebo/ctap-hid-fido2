@@ -71,7 +71,7 @@ impl fmt::Display for Attestation {
 #[derive(Debug, Clone, Display, AsRefStr)]
 pub enum Extension {
     #[strum(serialize = "credBlob")]
-    CredBlob((Option<Vec<u8>>,Option<bool>)),
+    CredBlob((Option<Vec<u8>>, Option<bool>)),
     #[strum(serialize = "credProtect")]
     CredProtect(Option<CredentialProtectionPolicy>),
     #[strum(serialize = "hmac-secret")]

@@ -127,10 +127,7 @@ pub fn create_payload(params: Params, extensions: Option<&Vec<Extension>>) -> Ve
             match *ext {
                 Extension::CredBlob((ref n, _)) => {
                     let x = n.clone().unwrap();
-                    map.insert(
-                        Value::Text(ext.to_string()),
-                        Value::Bytes(x),
-                    );
+                    map.insert(Value::Text(ext.to_string()), Value::Bytes(x));
                 }
                 Extension::CredProtect(n) => {
                     map.insert(

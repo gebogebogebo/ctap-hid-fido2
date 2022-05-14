@@ -5,13 +5,11 @@ use ctap_hid_fido2::public_key_credential_user_entity::PublicKeyCredentialUserEn
 use ctap_hid_fido2::str_buf::StrBuf;
 use ctap_hid_fido2::{
     fidokey::{
-        AssertionExtension as Gext,
-        CredentialExtension as Mext,
         credential_management::credential_management_params::CredentialProtectionPolicy,
-        GetAssertionArgsBuilder,
+        AssertionExtension as Gext, CredentialExtension as Mext, GetAssertionArgsBuilder,
         MakeCredentialArgsBuilder,
     },
-    get_fidokey_devices, verifier, Cfg, FidoKeyHid, FidoKeyHidFactory, util,
+    get_fidokey_devices, verifier, Cfg, FidoKeyHid, FidoKeyHidFactory,
 };
 
 fn main() -> Result<()> {
@@ -126,8 +124,14 @@ fn with_cred_blob_ex(device: &FidoKeyHid, rpid: &str, pin: &str) -> Result<()> {
 
     println!("- Register");
     let challenge = verifier::create_challenge();
-    let rkparam = PublicKeyCredentialUserEntity::new(Some(b"2222"), Some("cred blob ex"), Some("cred blob ex"));
-    let protect = Mext::CredProtect(Some(CredentialProtectionPolicy::UserVerificationOptionalWithCredentialIdList));
+    let rkparam = PublicKeyCredentialUserEntity::new(
+        Some(b"2222"),
+        Some("cred blob ex"),
+        Some("cred blob ex"),
+    );
+    let protect = Mext::CredProtect(Some(
+        CredentialProtectionPolicy::UserVerificationOptionalWithCredentialIdList,
+    ));
     let blob = Mext::CredBlob((Some("this is test".as_bytes().to_vec()), None));
 
     let mut strbuf = StrBuf::new(20);
@@ -206,7 +210,7 @@ fn with_cred_blob_ex(device: &FidoKeyHid, rpid: &str, pin: &str) -> Result<()> {
     });
     if let Some(Gext::CredBlob((_, cred_blob))) = find {
         let val = cred_blob.clone().unwrap();
-        println!("--- Cred Blob = {}",String::from_utf8(val).unwrap());
+        println!("--- Cred Blob = {}", String::from_utf8(val).unwrap());
     } else {
         println!("--- Cred Blob Not Found");
     }

@@ -92,8 +92,7 @@ pub fn create_payload(
             for ext in extensions {
                 match *ext {
                     Extension::HmacSecret(_) => (),
-                    Extension::LargeBlobKey((n, _))
-                    | Extension::CredBlob((n, _)) => {
+                    Extension::LargeBlobKey((n, _)) | Extension::CredBlob((n, _)) => {
                         ext_val.insert(Value::Text(ext.to_string()), Value::Bool(n.unwrap()));
                     }
                 };

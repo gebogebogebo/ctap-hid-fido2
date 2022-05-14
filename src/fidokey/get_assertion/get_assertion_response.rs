@@ -81,7 +81,8 @@ fn parse_cbor_authdata(
                         .push(Extension::HmacSecret(Some(hmac_secret_0)));
                 } else if *member == Extension::CredBlob((None, None)).to_string() {
                     let cred_blob = util::cbor_value_to_vec_u8(val)?;
-                    ass.extensions.push(Extension::CredBlob((None, Some(cred_blob))));
+                    ass.extensions
+                        .push(Extension::CredBlob((None, Some(cred_blob))));
                 } else {
                     println!("Anything Extension!");
                 }
