@@ -127,10 +127,10 @@ fn with_cred_blob_ex(device: &FidoKeyHid, rpid: &str, pin: &str) -> Result<()> {
     let rkparam = PublicKeyCredentialUserEntity::new(
         Some(b"2222"),
         Some("cred blob ex"),
-        Some("cred blob ex"),
+        Some("CRED BLOB EXTENSION"),
     );
     let protect = Mext::CredProtect(Some(
-        CredentialProtectionPolicy::UserVerificationOptionalWithCredentialIdList,
+        CredentialProtectionPolicy::UserVerificationRequired,
     ));
     let blob = Mext::CredBlob((Some("this is test".as_bytes().to_vec()), None));
 
