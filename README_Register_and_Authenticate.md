@@ -148,11 +148,10 @@ if is_success {
   - [Spec: 6.10.5. Writing per-credential large-blob data for a new credential](https://fidoalliance.org/specs/fido-v2.1-ps-20210615/fido-client-to-authenticator-protocol-v2.1-ps-20210615.html#writing-per-credential-data)
 
 - [with Min Pin Length Extension](https://github.com/gebogebogebo/ctap-hid-fido2/blob/c75db2d8cb83f28177ddc5d8455310ada1ba03f3/examples/test-with-pin-non-rk/main.rs#L454-L487)
-
   - Get Min Pin Length Policy.
   - RPID must be set in Authenticator Config. → [Authenticator Config](README_Authenticator_Config.md)
   - [Spec: 12.4. Minimum PIN Length Extension (minPinLength)](https://fidoalliance.org/specs/fido-v2.1-ps-20210615/fido-client-to-authenticator-protocol-v2.1-ps-20210615.html#sctn-minpinlength-extension)
-
+  
 - [without PIN](https://github.com/gebogebogebo/ctap-hid-fido2/blob/0791003c87b5d36392868a26247fca0b36ed9d5c/examples/test-with-pin-non-rk/main.rs#L282-L333)
 
   - **For security reasons, this feature is deprecated**
@@ -169,7 +168,8 @@ if is_success {
 - [discoverable credentials/resident-key](https://github.com/gebogebogebo/ctap-hid-fido2/blob/0791003c87b5d36392868a26247fca0b36ed9d5c/examples/test-with-pin-rk/main.rs#L49-L113)
   - User data can be stored in the authenticator.
   - user_name and user_display_name are set only when multiple Assertions are acquired.
-- 
+- [with Credential Blob Extension](https://github.com/gebogebogebo/ctap-hid-fido2/blob/6078240c480197a90f905e7f02fb4023fd6882c1/examples/test-with-pin-rk/main.rs#L122-L238)
+  - This extension enables RPs to provide a small amount of extra credential configuration.
 
 
 

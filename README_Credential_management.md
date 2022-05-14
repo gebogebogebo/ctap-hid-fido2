@@ -86,7 +86,7 @@ let mut pkcd = PublicKeyCredentialDescriptor::default();
 pkcd.id = util::to_str_hex(credential_id.unwrap());
 pkcd.ctype = "public_key".to_string();
 
-match device.credential_management_delete_credential(Some(pin), Some(pkcd)) {
+match device.credential_management_delete_credential(Some(pin), pkcd) {
     Ok(_) => println!("- success"),
     Err(e) => println!("- error: {:?}",e),
 }
