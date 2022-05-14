@@ -16,6 +16,7 @@ pub mod pin;
 
 // Simple Submodules
 mod selection;
+mod sub_command_base;
 mod wink;
 
 pub use get_assertion::{Extension as AssertionExtension, GetAssertionArgsBuilder};

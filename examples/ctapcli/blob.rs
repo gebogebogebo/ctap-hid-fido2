@@ -7,7 +7,7 @@ pub enum Command {
     Set(Vec<u8>),
 }
 
-pub fn blobs(device: &FidoKeyHid, command: Command, pin: Option<String>) -> Result<()> {
+pub fn blob(device: &FidoKeyHid, command: Command, pin: Option<String>) -> Result<()> {
     if !(is_supported(device)?) {
         return Err(anyhow!(
             "This authenticator is not Supported Large Blob Key."

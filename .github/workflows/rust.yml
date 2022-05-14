@@ -24,7 +24,9 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: Install dependencies
-      run: sudo apt install -y libusb-1.0-0-dev libudev-dev
+      run: |
+        sudo apt-get update
+        sudo apt install -y libusb-1.0-0-dev libudev-dev
     - name: Build
       run: cargo build --examples --verbose
 

@@ -15,7 +15,7 @@ use ctap_hid_fido2::{str_buf, Cfg, FidoKeyHid, FidoKeyHidFactory};
 use ctap_hid_fido2::fidokey::get_info::InfoParam;
 
 mod bio;
-mod blobs;
+mod blob;
 mod cfg;
 mod common;
 mod cred;
@@ -185,7 +185,7 @@ enum Action {
         #[clap(short = 'p')]
         pin: Option<String>,
     },
-    #[clap(about = "Authenticator Config.")]
+    #[clap(about = "Authenticator Config.\n- Configure various authenticator features.")]
     Config {
         #[clap(long = "auv", help = "Toggle Always Require User Verification.")]
         toggle_always_uv: bool,
@@ -204,8 +204,8 @@ enum Action {
         #[clap(short = 'p')]
         pin: Option<String>,
     },
-    #[clap(about = "Large Blob.")]
-    Blobs {
+    #[clap(about = "Large Blob.\n- Large amount of information can be stored in the security key.")]
+    Blob {
         #[clap(long = "get", help = "Get Large Blob Data.")]
         get: bool,
 
@@ -385,18 +385,18 @@ fn main() -> Result<()> {
                     )?;
                 }
             }
-            Action::Blobs {
+            Action::Blob {
                 get,
                 set,
                 str_val,
                 pin,
             } => {
                 if get {
-                    blobs::blobs(&device, blobs::Command::Get, None)?;
+                    blob::blob(&device, blob::Command::Get, None)?;
                 } else if set {
                     if let Some(str_val) = str_val {
-                        let command = blobs::Command::Set(str_val.as_bytes().to_vec());
-                        blobs::blobs(&device, command, pin)?;
+                        let command = blob::Command::Set(str_val.as_bytes().to_vec());
+                        blob::blob(&device, command, pin)?;
                     } else {
                         println!("need str.");
                     }
