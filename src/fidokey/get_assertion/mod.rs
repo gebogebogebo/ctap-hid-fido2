@@ -12,58 +12,6 @@ use get_assertion_params::{Assertion, Extension as Gext, GetAssertionArgs};
 pub use get_assertion_params::{Extension, GetAssertionArgsBuilder};
 
 impl FidoKeyHid {
-    /// Authentication command(with PIN , non Resident Key)
-    pub fn get_assertion(
-        &self,
-        rpid: &str,
-        challenge: &[u8],
-        credential_ids: &[Vec<u8>],
-        pin: Option<&str>,
-    ) -> Result<Assertion> {
-        let asss = self.get_assertion_internal(
-            rpid,
-            challenge,
-            credential_ids,
-            pin,
-            true,
-            should_uv(pin),
-            None,
-        )?;
-        Ok(asss[0].clone())
-    }
-
-    /// Authentication command(with PIN , non Resident Key , Extension)
-    pub fn get_assertion_with_extensios(
-        &self,
-        rpid: &str,
-        challenge: &[u8],
-        credential_ids: &[Vec<u8>],
-        pin: Option<&str>,
-        extensions: Option<&Vec<Gext>>,
-    ) -> Result<Assertion> {
-        let asss = self.get_assertion_internal(
-            rpid,
-            challenge,
-            credential_ids,
-            pin,
-            true,
-            should_uv(pin),
-            extensions,
-        )?;
-        Ok(asss[0].clone())
-    }
-
-    /// Authentication command(with PIN , Resident Key)
-    pub fn get_assertions_rk(
-        &self,
-        rpid: &str,
-        challenge: &[u8],
-        pin: Option<&str>,
-    ) -> Result<Vec<Assertion>> {
-        let dmy: Vec<Vec<u8>> = vec![];
-        self.get_assertion_internal(rpid, challenge, &dmy, pin, true, should_uv(pin), None)
-    }
-
     /// Create a new assertion manually specifying the args using GetAssertionArgs
     pub fn get_assertion_with_args(&self, args: &GetAssertionArgs) -> Result<Vec<Assertion>> {
         let dummy_credentials;
@@ -80,29 +28,6 @@ impl FidoKeyHid {
             None
         };
 
-        let asss = self.get_assertion_internal(
-            &args.rpid,
-            &args.challenge,
-            credential_ids,
-            args.pin,
-            true,
-            args.uv,
-            extensions,
-        )?;
-
-        Ok(asss)
-    }
-
-    fn get_assertion_internal(
-        &self,
-        rpid: &str,
-        challenge: &[u8],
-        credential_ids: &[Vec<u8>],
-        pin: Option<&str>,
-        up: bool,
-        uv: Option<bool>,
-        extensions: Option<&Vec<Gext>>,
-    ) -> Result<Vec<Assertion>> {
         // init
         let cid = ctaphid::ctaphid_init(self).map_err(Error::msg)?;
 
@@ -110,7 +35,7 @@ impl FidoKeyHid {
 
         // pin token
         let pin_token = {
-            if let Some(pin) = pin {
+            if let Some(pin) = args.pin {
                 Some(self.get_pin_token(&cid, pin)?)
             } else {
                 None
@@ -120,12 +45,16 @@ impl FidoKeyHid {
         // create cmmand
         let send_payload = {
             let mut params = get_assertion_command::Params::new(
-                rpid,
-                challenge.to_vec(),
+                &args.rpid,
+                args.challenge.to_vec(),
                 credential_ids.to_vec(),
             );
-            params.option_up = up;
-            params.option_uv = uv;
+            params.option_up = true;
+            params.option_uv = if let Some(uv) = args.uv {
+                Some(uv)
+            } else {
+                should_uv(args.pin)
+            };
 
             // create pin auth
             if let Some(pin_token) = pin_token {
@@ -153,6 +82,66 @@ impl FidoKeyHid {
 
         Ok(asss)
     }
+
+    /// Authentication command(with PIN , non Resident Key)
+    pub fn get_assertion(
+        &self,
+        rpid: &str,
+        challenge: &[u8],
+        credential_ids: &[Vec<u8>],
+        pin: Option<&str>,
+    ) -> Result<Assertion> {
+        let mut builder = GetAssertionArgsBuilder::new(rpid, &challenge);
+        for credential_id in credential_ids {
+            builder = builder.add_credential_id(credential_id);
+        }
+        if let Some(pin) = pin {
+            builder = builder.pin(pin);
+        }
+        let args = builder.build();
+        let assertions = self.get_assertion_with_args(&args)?;
+        Ok(assertions[0].clone())
+    }
+
+    /// Authentication command(with PIN , non Resident Key , Extension)
+    pub fn get_assertion_with_extensios(
+        &self,
+        rpid: &str,
+        challenge: &[u8],
+        credential_ids: &[Vec<u8>],
+        pin: Option<&str>,
+        extensions: Option<&Vec<Gext>>,
+    ) -> Result<Assertion> {
+        let mut builder = GetAssertionArgsBuilder::new(rpid, &challenge);
+        for credential_id in credential_ids {
+            builder = builder.add_credential_id(credential_id);
+        }
+        if let Some(pin) = pin {
+            builder = builder.pin(pin);
+        }
+        if let Some(extensions) = extensions {
+            builder = builder.extensions(extensions);
+        }
+        let args = builder.build();
+        let assertions = self.get_assertion_with_args(&args)?;
+        Ok(assertions[0].clone())
+    }
+
+    /// Authentication command(with PIN , Resident Key)
+    pub fn get_assertions_rk(
+        &self,
+        rpid: &str,
+        challenge: &[u8],
+        pin: Option<&str>,
+    ) -> Result<Vec<Assertion>> {
+        let mut builder = GetAssertionArgsBuilder::new(rpid, &challenge);
+        if let Some(pin) = pin {
+            builder = builder.pin(pin);
+        }
+        let args = builder.build();
+        self.get_assertion_with_args(&args)
+    }
+
 }
 
 fn get_next_assertion(device: &FidoKeyHid, cid: &[u8]) -> Result<Assertion, String> {
