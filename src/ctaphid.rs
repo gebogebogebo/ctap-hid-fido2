@@ -1,10 +1,6 @@
-use crate::ctapdef;
-#[allow(unused_imports)]
-use crate::util;
-
-use crate::fidokey::*;
-
+use anyhow::{Error, Result, anyhow};
 use std::{thread, time};
+use crate::{ctapdef, fidokey::FidoKeyHid, util};
 
 //pub const USAGE_PAGE_FIDO: u16 = 0xf1d0;
 
@@ -25,7 +21,7 @@ const CTAPHID_KEEPALIVE: u8 = CTAP_FRAME_INIT | 0x3B;
 //const CTAPHID_KEEPALIVE_STATUS_PROCESSING = 1;     // The authenticator is still processing the current request.
 //const CTAPHID_KEEPALIVE_STATUS_UPNEEDED = 2;       // The authenticator is waiting for user presence.
 
-pub fn ctaphid_init(device: &FidoKeyHid) -> Result<[u8; 4], String> {
+pub fn ctaphid_init(device: &FidoKeyHid) -> Result<[u8; 4]> {
     // CTAPHID_INIT
     let mut cmd: [u8; 65] = [0; 65];
 
@@ -57,14 +53,14 @@ pub fn ctaphid_init(device: &FidoKeyHid) -> Result<[u8; 4], String> {
 
     //println!("CTAPHID_INIT = {}", util::to_hex_str(&cmd));
 
-    device.write(&cmd)?;
-    let buf = device.read()?;
+    device.write(&cmd).map_err(Error::msg)?;
+    let buf = device.read().map_err(Error::msg)?;
 
     // CID
     Ok([buf[15], buf[16], buf[17], buf[18]])
 }
 
-fn get_responce_status(packet: &[u8]) -> Result<(u8, u16, u8), String> {
+fn get_responce_status(packet: &[u8]) -> Result<(u8, u16, u8)> {
     // cid
     //println!("- cid: {:?}", &packet[0..4]);
     // cmd
@@ -79,7 +75,7 @@ fn get_responce_status(packet: &[u8]) -> Result<(u8, u16, u8), String> {
     let response_status = if command == CTAPHID_MSG {
         // length check ()
         if payload_size > packet.len() as u16 {
-            return Err("u2f response size error?".to_string());
+            return Err(anyhow!("u2f response size error?"));
         }
         // U2F(last byte of data)
         packet[(4 + 2 + payload_size - 1) as usize]
@@ -202,7 +198,7 @@ fn create_continuation_packet(seqno: u8, cid: &[u8], payload: &[u8]) -> (Vec<u8>
     (cmd, next)
 }
 
-pub fn ctaphid_wink(device: &FidoKeyHid, cid: &[u8]) -> Result<(), String> {
+pub fn ctaphid_wink(device: &FidoKeyHid, cid: &[u8]) -> Result<()> {
     // CTAPHID_WINK
     let mut cmd: [u8; 65] = [0; 65];
 
@@ -226,9 +222,9 @@ pub fn ctaphid_wink(device: &FidoKeyHid, cid: &[u8]) -> Result<(), String> {
         println!("- wink({:02})    = {:?}", cmd.len(), util::to_hex_str(&cmd));
     }
 
-    device.write(&cmd)?;
+    device.write(&cmd).map_err(Error::msg)?;
 
-    let _buf = device.read()?;
+    let _buf = device.read().map_err(Error::msg)?;
 
     if device.enable_log {
         println!(
@@ -246,7 +242,7 @@ fn ctaphid_cbormsg(
     cid: &[u8],
     command: u8,
     payload: &[u8],
-) -> Result<Vec<u8>, String> {
+) -> Result<Vec<u8>> {
     if device.enable_log {
         println!();
         println!("-- send cbor({:02})", payload.len());
@@ -259,7 +255,7 @@ fn ctaphid_cbormsg(
     //println!("CTAPHID_CBOR(0) = {}", util::to_hex_str(&res.0));
 
     // Write data to device
-    let _res = device.write(&res.0)?;
+    let _res = device.write(&res.0).map_err(Error::msg)?;
     //println!("Wrote: {:?} byte", res);
 
     // next
@@ -267,7 +263,7 @@ fn ctaphid_cbormsg(
         for seqno in 0..100 {
             let res = create_continuation_packet(seqno, cid, payload);
             //println!("CTAPHID_CBOR(1) = {}", util::to_hex_str(&res.0));
-            let _res = device.write(&res.0)?;
+            let _res = device.write(&res.0).map_err(Error::msg)?;
             if !res.1 {
                 break;
             }
@@ -282,10 +278,8 @@ fn ctaphid_cbormsg(
         let buf = match device.read() {
             Ok(res) => res,
             Err(_error) => {
-                return Err(format!(
-                    "read err = {}",
-                    ctapdef::get_ctap_status_message(0xfe)
-                ));
+                let msg = format!("read err = {}",ctapdef::get_ctap_status_message(0xfe));
+                return Err(anyhow!(msg));
             }
         };
         //println!("Read: {:?} byte", res);
@@ -319,7 +313,7 @@ fn ctaphid_cbormsg(
     //println!("response_status = 0x{:02X}", st.2);
 
     if is_responce_error(st) {
-        Err(format!("response_status err = {}", get_status_message(st)))
+        Err(anyhow!(format!("response_status err = {}", get_status_message(st))))
     } else {
         let mut payload = ctaphid_cbor_responce_get_payload_1(&packet_1st);
 
@@ -331,10 +325,8 @@ fn ctaphid_cbormsg(
                 let buf = match device.read() {
                     Ok(res) => res,
                     Err(_error) => {
-                        return Err(format!(
-                            "read err = {}",
-                            ctapdef::get_ctap_status_message(0xfe)
-                        ));
+                        let msg = format!("read err = {}",ctapdef::get_ctap_status_message(0xfe));
+                        return Err(anyhow!(msg));
                     }
                 };
                 //println!("Read: {:?} byte", &buf[..res]);
@@ -365,11 +357,11 @@ fn ctaphid_cbormsg(
     }
 }
 
-pub fn ctaphid_cbor(device: &FidoKeyHid, cid: &[u8], payload: &[u8]) -> Result<Vec<u8>, String> {
+pub fn ctaphid_cbor(device: &FidoKeyHid, cid: &[u8], payload: &[u8]) -> Result<Vec<u8>> {
     ctaphid_cbormsg(device, cid, CTAPHID_CBOR, payload)
 }
 
-pub fn ctaphid_msg(device: &FidoKeyHid, cid: &[u8], payload: &[u8]) -> Result<Vec<u8>, String> {
+pub fn ctaphid_msg(device: &FidoKeyHid, cid: &[u8], payload: &[u8]) -> Result<Vec<u8>> {
     ctaphid_cbormsg(device, cid, CTAPHID_MSG, payload)
 }
 
@@ -381,7 +373,7 @@ pub fn send_apdu(
     p1: u8,
     p2: u8,
     data: &[u8],
-) -> Result<Vec<u8>, String> {
+) -> Result<Vec<u8>> {
     /*
     Packs and sends an APDU for use in CTAP1 commands.
     This is a low-level method mainly used internally. Avoid calling it

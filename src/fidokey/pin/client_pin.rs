@@ -122,7 +122,7 @@ impl FidoKeyHid {
             &new_pin_enc,
         );
 
-        ctaphid::ctaphid_cbor(self, cid, &send_payload).map_err(Error::msg)?;
+        ctaphid::ctaphid_cbor(self, cid, &send_payload)?;
 
         Ok(())
     }

@@ -27,7 +27,7 @@ impl FidoKeyHid {
             return Err(anyhow!("need PIN."));
         };
 
-        let cid = ctaphid::ctaphid_init(self).map_err(Error::msg)?;
+        let cid = ctaphid::ctaphid_init(self)?;
 
         // get pintoken
         let pin_token =

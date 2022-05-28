@@ -14,7 +14,7 @@ pub use client_pin_response::*;
 impl FidoKeyHid {
     /// Get PIN retry count
     pub fn get_pin_retries(&self) -> Result<i32> {
-        let cid = ctaphid::ctaphid_init(self).map_err(Error::msg)?;
+        let cid = ctaphid::ctaphid_init(self)?;
 
         let send_payload =
             client_pin_command::create_payload(PinCmd::GetRetries).map_err(Error::msg)?;
@@ -29,7 +29,7 @@ impl FidoKeyHid {
 
     /// Get UV retry count
     pub fn get_uv_retries(&self) -> Result<i32> {
-        let cid = ctaphid::ctaphid_init(self).map_err(Error::msg)?;
+        let cid = ctaphid::ctaphid_init(self)?;
 
         let send_payload =
             client_pin_command::create_payload(PinCmd::GetUVRetries).map_err(Error::msg)?;
@@ -44,14 +44,14 @@ impl FidoKeyHid {
 
     /// Set New PIN
     pub fn set_new_pin(&self, pin: &str) -> Result<()> {
-        let cid = ctaphid::ctaphid_init(self).map_err(Error::msg)?;
+        let cid = ctaphid::ctaphid_init(self)?;
         self.set_pin(&cid, pin)?;
         Ok(())
     }
 
     /// Change PIN
     pub fn change_pin(&self, current_pin: &str, new_pin: &str) -> Result<()> {
-        let cid = ctaphid::ctaphid_init(self).map_err(Error::msg)?;
+        let cid = ctaphid::ctaphid_init(self)?;
         client_pin::change_pin(self, &cid, current_pin, new_pin)?;
         Ok(())
     }

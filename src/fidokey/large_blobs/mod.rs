@@ -31,7 +31,7 @@ impl FidoKeyHid {
         get: Option<u32>,
         set: Option<Vec<u8>>,
     ) -> Result<LargeBlobData> {
-        let cid = ctaphid::ctaphid_init(self).map_err(Error::msg)?;
+        let cid = ctaphid::ctaphid_init(self)?;
 
         // get pintoken
         let pin_token = if let Some(pin) = pin {

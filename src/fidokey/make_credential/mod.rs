@@ -21,7 +21,7 @@ pub use make_credential_params::{
 impl FidoKeyHid {
     pub fn make_credential_with_args(&self, args: &MakeCredentialArgs) -> Result<Attestation> {
         // init
-        let cid = ctaphid::ctaphid_init(self).map_err(Error::msg)?;
+        let cid = ctaphid::ctaphid_init(self)?;
 
         let user_id = {
             if let Some(rkp) = &args.rkparam {
@@ -151,7 +151,6 @@ impl FidoKeyHid {
         let arg = builder.build();
         self.make_credential_with_args(&arg)
     }
-
 }
 //
 

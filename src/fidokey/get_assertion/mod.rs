@@ -29,7 +29,7 @@ impl FidoKeyHid {
         };
 
         // init
-        let cid = ctaphid::ctaphid_init(self).map_err(Error::msg)?;
+        let cid = ctaphid::ctaphid_init(self)?;
 
         let hmac_ext = create_hmacext(self, &cid, extensions)?;
 
@@ -91,7 +91,7 @@ impl FidoKeyHid {
         credential_ids: &[Vec<u8>],
         pin: Option<&str>,
     ) -> Result<Assertion> {
-        let mut builder = GetAssertionArgsBuilder::new(rpid, &challenge);
+        let mut builder = GetAssertionArgsBuilder::new(rpid, challenge);
         for credential_id in credential_ids {
             builder = builder.add_credential_id(credential_id);
         }
@@ -112,7 +112,7 @@ impl FidoKeyHid {
         pin: Option<&str>,
         extensions: Option<&Vec<Gext>>,
     ) -> Result<Assertion> {
-        let mut builder = GetAssertionArgsBuilder::new(rpid, &challenge);
+        let mut builder = GetAssertionArgsBuilder::new(rpid, challenge);
         for credential_id in credential_ids {
             builder = builder.add_credential_id(credential_id);
         }
@@ -134,20 +134,19 @@ impl FidoKeyHid {
         challenge: &[u8],
         pin: Option<&str>,
     ) -> Result<Vec<Assertion>> {
-        let mut builder = GetAssertionArgsBuilder::new(rpid, &challenge);
+        let mut builder = GetAssertionArgsBuilder::new(rpid, challenge);
         if let Some(pin) = pin {
             builder = builder.pin(pin);
         }
         let args = builder.build();
         self.get_assertion_with_args(&args)
     }
-
 }
 
-fn get_next_assertion(device: &FidoKeyHid, cid: &[u8]) -> Result<Assertion, String> {
+fn get_next_assertion(device: &FidoKeyHid, cid: &[u8]) -> Result<Assertion> {
     let send_payload = get_next_assertion_command::create_payload();
     let response_cbor = ctaphid::ctaphid_cbor(device, cid, &send_payload)?;
-    get_assertion_response::parse_cbor(&response_cbor, None)
+    get_assertion_response::parse_cbor(&response_cbor, None).map_err(Error::msg)
 }
 
 fn create_hmacext(
