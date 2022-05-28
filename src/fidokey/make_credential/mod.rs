@@ -19,76 +19,6 @@ pub use make_credential_params::{
 };
 
 impl FidoKeyHid {
-    /// Registration command.Generate credentials(with PIN,non Resident Key)
-    pub fn make_credential(
-        &self,
-        rpid: &str,
-        challenge: &[u8],
-        pin: Option<&str>,
-    ) -> Result<Attestation> {
-        let mut builder = MakeCredentialArgsBuilder::new(rpid, challenge);
-        if let Some(pin) = pin {
-            builder = builder.pin(pin);
-        }
-        let arg = builder.build();
-        self.make_credential_with_args(&arg)
-    }
-
-    /// Registration command. Generate credentials (with PIN, non Resident Key) while also
-    /// specifying the type of key you'd like to create.
-    pub fn make_credential_with_key_type(
-        &self,
-        rpid: &str,
-        challenge: &[u8],
-        pin: Option<&str>,
-        key_type: Option<CredentialSupportedKeyType>,
-    ) -> Result<Attestation> {
-        let mut builder = MakeCredentialArgsBuilder::new(rpid, challenge);
-        if let Some(pin) = pin {
-            builder = builder.pin(pin);
-        }
-        if let Some(key_type) = key_type {
-            builder = builder.key_type(key_type);
-        }
-        let arg = builder.build();
-        self.make_credential_with_args(&arg)
-    }
-
-    pub fn make_credential_with_extensions(
-        &self,
-        rpid: &str,
-        challenge: &[u8],
-        pin: Option<&str>,
-        extensions: Option<&Vec<Mext>>,
-    ) -> Result<Attestation> {
-        let mut builder = MakeCredentialArgsBuilder::new(rpid, challenge);
-        if let Some(pin) = pin {
-            builder = builder.pin(pin);
-        }
-        if let Some(extensions) = extensions {
-            builder = builder.extensions(extensions);
-        }
-        let arg = builder.build();
-        self.make_credential_with_args(&arg)
-    }
-
-    /// Registration command.Generate credentials(with PIN ,Resident Key)
-    pub fn make_credential_rk(
-        &self,
-        rpid: &str,
-        challenge: &[u8],
-        pin: Option<&str>,
-        rkparam: &PublicKeyCredentialUserEntity,
-    ) -> Result<Attestation> {
-        let mut builder = MakeCredentialArgsBuilder::new(rpid, challenge).rkparam(rkparam);
-
-        if let Some(pin) = pin {
-            builder = builder.pin(pin);
-        }
-        let arg = builder.build();
-        self.make_credential_with_args(&arg)
-    }
-
     pub fn make_credential_with_args(&self, args: &MakeCredentialArgs) -> Result<Attestation> {
         // init
         let cid = ctaphid::ctaphid_init(self).map_err(Error::msg)?;
@@ -150,6 +80,78 @@ impl FidoKeyHid {
         let att = make_credential_response::parse_cbor(&response_cbor).map_err(Error::msg)?;
         Ok(att)
     }
+
+    /// Registration command.Generate credentials(with PIN,non Resident Key)
+    pub fn make_credential(
+        &self,
+        rpid: &str,
+        challenge: &[u8],
+        pin: Option<&str>,
+    ) -> Result<Attestation> {
+        let mut builder = MakeCredentialArgsBuilder::new(rpid, challenge);
+        if let Some(pin) = pin {
+            builder = builder.pin(pin);
+        }
+        let arg = builder.build();
+        self.make_credential_with_args(&arg)
+    }
+
+    /// Registration command. Generate credentials (with PIN, non Resident Key) while also
+    /// specifying the type of key you'd like to create.
+    pub fn make_credential_with_key_type(
+        &self,
+        rpid: &str,
+        challenge: &[u8],
+        pin: Option<&str>,
+        key_type: Option<CredentialSupportedKeyType>,
+    ) -> Result<Attestation> {
+        let mut builder = MakeCredentialArgsBuilder::new(rpid, challenge);
+        if let Some(pin) = pin {
+            builder = builder.pin(pin);
+        }
+        if let Some(key_type) = key_type {
+            builder = builder.key_type(key_type);
+        }
+        let arg = builder.build();
+        self.make_credential_with_args(&arg)
+    }
+
+    /// Registration command.Generate credentials(with PIN and extensions,non Resident Key)
+    pub fn make_credential_with_extensions(
+        &self,
+        rpid: &str,
+        challenge: &[u8],
+        pin: Option<&str>,
+        extensions: Option<&Vec<Mext>>,
+    ) -> Result<Attestation> {
+        let mut builder = MakeCredentialArgsBuilder::new(rpid, challenge);
+        if let Some(pin) = pin {
+            builder = builder.pin(pin);
+        }
+        if let Some(extensions) = extensions {
+            builder = builder.extensions(extensions);
+        }
+        let arg = builder.build();
+        self.make_credential_with_args(&arg)
+    }
+
+    /// Registration command.Generate credentials(with PIN ,Resident Key)
+    pub fn make_credential_rk(
+        &self,
+        rpid: &str,
+        challenge: &[u8],
+        pin: Option<&str>,
+        rkparam: &PublicKeyCredentialUserEntity,
+    ) -> Result<Attestation> {
+        let mut builder = MakeCredentialArgsBuilder::new(rpid, challenge).rkparam(rkparam);
+
+        if let Some(pin) = pin {
+            builder = builder.pin(pin);
+        }
+        let arg = builder.build();
+        self.make_credential_with_args(&arg)
+    }
+
 }
 //
 

@@ -3,15 +3,11 @@ pub mod get_assertion_params;
 pub mod get_assertion_response;
 pub mod get_next_assertion_command;
 
-use get_assertion_params::{Assertion, Extension as Gext, GetAssertionArgs};
-
-use crate::ctaphid;
-use crate::encrypt::enc_hmac_sha_256;
-use crate::hmac_ext::HmacExt;
-use crate::util::should_uv;
-use crate::FidoKeyHid;
-
 use anyhow::{Error, Result};
+
+use crate::{ctaphid, encrypt::enc_hmac_sha_256, hmac_ext::HmacExt, util::should_uv, FidoKeyHid};
+
+use get_assertion_params::{Assertion, Extension as Gext, GetAssertionArgs};
 
 pub use get_assertion_params::{Extension, GetAssertionArgsBuilder};
 
