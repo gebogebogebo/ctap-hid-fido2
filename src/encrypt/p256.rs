@@ -1,4 +1,5 @@
 use crate::encrypt::cose;
+use anyhow::{anyhow, Result};
 use serde_cbor::Value;
 
 #[derive(Debug, Default)]
@@ -8,9 +9,9 @@ pub struct P256Key {
 }
 
 impl P256Key {
-    pub fn from_cose(cose: &cose::CoseKey) -> Result<Self, String> {
+    pub fn from_cose(cose: &cose::CoseKey) -> Result<Self> {
         if cose.key_type != 2 || (cose.algorithm != -7 && cose.algorithm != -25) {
-            return Err(String::from("Err KeyType"));
+            return Err(anyhow!("Err KeyType"));
         }
 
         if let (Some(Value::Integer(curve)), Some(Value::Bytes(x)), Some(Value::Bytes(y))) = (
@@ -19,19 +20,19 @@ impl P256Key {
             cose.parameters.get(&-3),
         ) {
             if *curve != 1 {
-                return Err(String::from("Err KeyType"));
+                return Err(anyhow!("Err KeyType"));
             }
             let mut key = P256Key::default();
             key.x.copy_from_slice(x);
             key.y.copy_from_slice(y);
             return Ok(key);
         }
-        Err(String::from("Err KeyType"))
+        Err(anyhow!("Err KeyType"))
     }
 
-    pub fn from_bytes(bytes: &[u8]) -> Result<Self, String> {
+    pub fn from_bytes(bytes: &[u8]) -> Result<Self> {
         if bytes.len() != 65 || bytes[0] != 0x04 {
-            return Err(String::from("FidoErrorKind::CborDecode"));
+            return Err(anyhow!("FidoErrorKind::CborDecode"));
         }
         let mut res = P256Key::default();
         res.x.copy_from_slice(&bytes[1..33]);

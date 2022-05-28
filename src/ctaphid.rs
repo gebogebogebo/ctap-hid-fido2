@@ -1,6 +1,6 @@
-use anyhow::{Error, Result, anyhow};
-use std::{thread, time};
 use crate::{ctapdef, fidokey::FidoKeyHid, util};
+use anyhow::{anyhow, Error, Result};
+use std::{thread, time};
 
 //pub const USAGE_PAGE_FIDO: u16 = 0xf1d0;
 
@@ -278,7 +278,7 @@ fn ctaphid_cbormsg(
         let buf = match device.read() {
             Ok(res) => res,
             Err(_error) => {
-                let msg = format!("read err = {}",ctapdef::get_ctap_status_message(0xfe));
+                let msg = format!("read err = {}", ctapdef::get_ctap_status_message(0xfe));
                 return Err(anyhow!(msg));
             }
         };
@@ -313,7 +313,10 @@ fn ctaphid_cbormsg(
     //println!("response_status = 0x{:02X}", st.2);
 
     if is_responce_error(st) {
-        Err(anyhow!(format!("response_status err = {}", get_status_message(st))))
+        Err(anyhow!(format!(
+            "response_status err = {}",
+            get_status_message(st)
+        )))
     } else {
         let mut payload = ctaphid_cbor_responce_get_payload_1(&packet_1st);
 
@@ -325,7 +328,7 @@ fn ctaphid_cbormsg(
                 let buf = match device.read() {
                     Ok(res) => res,
                     Err(_error) => {
-                        let msg = format!("read err = {}",ctapdef::get_ctap_status_message(0xfe));
+                        let msg = format!("read err = {}", ctapdef::get_ctap_status_message(0xfe));
                         return Err(anyhow!(msg));
                     }
                 };
