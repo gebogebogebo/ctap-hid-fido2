@@ -86,10 +86,7 @@ impl FidoKeyHid {
         pkcd: PublicKeyCredentialDescriptor,
         pkcue: PublicKeyCredentialUserEntity,
     ) -> Result<()> {
-        self.credential_management(
-            pin,
-            SubCommand::UpdateUserInformation(pkcd, pkcue),
-        )?;
+        self.credential_management(pin, SubCommand::UpdateUserInformation(pkcd, pkcue))?;
         Ok(())
     }
 

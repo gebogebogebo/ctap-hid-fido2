@@ -204,7 +204,9 @@ enum Action {
         #[clap(short = 'p')]
         pin: Option<String>,
     },
-    #[clap(about = "Large Blob.\n- Large amount of information can be stored in the security key.")]
+    #[clap(
+        about = "Large Blob.\n- Large amount of information can be stored in the security key."
+    )]
     Blob {
         #[clap(long = "get", help = "Get Large Blob Data.")]
         get: bool,
