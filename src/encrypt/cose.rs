@@ -1,6 +1,6 @@
 use crate::str_buf::StrBuf;
 use crate::util;
-use anyhow::Result;
+use anyhow::{anyhow, Result};
 use num::NumCast;
 use serde_cbor::Value;
 use std::collections::{BTreeMap, HashMap};
@@ -70,14 +70,14 @@ impl CoseKey {
                             //      6: Ed25519(OKP)
                             //println!("member = {:?} , val = {:?}",member,val);
                             cose.parameters.insert(
-                                NumCast::from(*member).unwrap(),
+                                NumCast::from(*member).ok_or(anyhow!("err"))?,
                                 Value::Integer(util::cbor_value_to_num(val)?),
                             );
                         }
                         -2 | -3 => {
                             //println!("member = {:?} , val = {:?}",member,val);
                             cose.parameters.insert(
-                                NumCast::from(*member).unwrap(),
+                                NumCast::from(*member).ok_or(anyhow!("err"))?,
                                 Value::Bytes(util::cbor_value_to_vec_u8(val)?),
                             );
                         }
@@ -95,15 +95,15 @@ impl CoseKey {
         map.insert(Value::Integer(3), Value::Integer(self.algorithm.into()));
         map.insert(
             Value::Integer(-1),
-            self.parameters.get(&-1).unwrap().clone(),
+            self.parameters.get(&-1).ok_or(anyhow!("err"))?.clone(),
         );
         map.insert(
             Value::Integer(-2),
-            self.parameters.get(&-2).unwrap().clone(),
+            self.parameters.get(&-2).ok_or(anyhow!("err"))?.clone(),
         );
         map.insert(
             Value::Integer(-3),
-            self.parameters.get(&-3).unwrap().clone(),
+            self.parameters.get(&-3).ok_or(anyhow!("err"))?.clone(),
         );
         Ok(Value::Map(map))
     }

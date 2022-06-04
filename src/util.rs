@@ -77,7 +77,7 @@ pub(crate) fn cbor_get_bytes_from_map(cbor_map: &Value, get_key: &str) -> Result
 
 pub(crate) fn cbor_value_to_num<T: NumCast>(value: &Value) -> Result<T> {
     if let Value::Integer(x) = value {
-        Ok(NumCast::from(*x).unwrap())
+        Ok(NumCast::from(*x).ok_or(anyhow!("err"))?)
     } else {
         Err(anyhow!("Cast Error : Value is not a Integer."))
     }
