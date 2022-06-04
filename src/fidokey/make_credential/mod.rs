@@ -1,18 +1,14 @@
 pub mod make_credential_command;
 pub mod make_credential_params;
 pub mod make_credential_response;
-
-use anyhow::{Error, Result};
-
 use super::{
     credential_management::credential_management_params::CredentialProtectionPolicy, FidoKeyHid,
 };
-
 use crate::{
     ctaphid, encrypt::enc_hmac_sha_256,
     public_key_credential_user_entity::PublicKeyCredentialUserEntity, util::should_uv,
 };
-
+use anyhow::Result;
 pub use make_credential_params::{
     Attestation, CredentialSupportedKeyType, Extension, Extension as Mext, MakeCredentialArgs,
     MakeCredentialArgsBuilder,
@@ -77,7 +73,7 @@ impl FidoKeyHid {
         // send & response
         let response_cbor = ctaphid::ctaphid_cbor(self, &cid, &send_payload)?;
 
-        let att = make_credential_response::parse_cbor(&response_cbor).map_err(Error::msg)?;
+        let att = make_credential_response::parse_cbor(&response_cbor)?;
         Ok(att)
     }
 

@@ -1,7 +1,3 @@
-use std::io::Cursor;
-use anyhow::{Result};
-use byteorder::{BigEndian, ReadBytesExt};
-use serde_cbor::Value;
 use super::get_assertion_params;
 use super::get_assertion_params::Extension;
 use crate::auth_data::Flags;
@@ -9,6 +5,10 @@ use crate::encrypt::enc_aes256_cbc;
 use crate::encrypt::shared_secret::SharedSecret;
 use crate::public_key_credential_user_entity::PublicKeyCredentialUserEntity;
 use crate::util;
+use anyhow::Result;
+use byteorder::{BigEndian, ReadBytesExt};
+use serde_cbor::Value;
+use std::io::Cursor;
 
 fn parse_cbor_authdata(
     authdata: Vec<u8>,

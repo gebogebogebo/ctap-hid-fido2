@@ -1,13 +1,10 @@
 mod client_pin;
 mod client_pin_command;
 mod client_pin_response;
-
-use client_pin_command::SubCommand as PinCmd;
-
 use super::FidoKeyHid;
 use crate::ctaphid;
-use anyhow::{Error, Result};
-
+use anyhow::Result;
+use client_pin_command::SubCommand as PinCmd;
 pub use client_pin_command::*;
 pub use client_pin_response::*;
 
@@ -16,13 +13,11 @@ impl FidoKeyHid {
     pub fn get_pin_retries(&self) -> Result<i32> {
         let cid = ctaphid::ctaphid_init(self)?;
 
-        let send_payload =
-            client_pin_command::create_payload(PinCmd::GetRetries).map_err(Error::msg)?;
+        let send_payload = client_pin_command::create_payload(PinCmd::GetRetries)?;
 
         let response_cbor = ctaphid::ctaphid_cbor(self, &cid, &send_payload)?;
 
-        let pin = client_pin_response::parse_cbor_client_pin_get_retries(&response_cbor)
-            .map_err(Error::msg)?;
+        let pin = client_pin_response::parse_cbor_client_pin_get_retries(&response_cbor)?;
 
         Ok(pin.retries)
     }
@@ -31,13 +26,11 @@ impl FidoKeyHid {
     pub fn get_uv_retries(&self) -> Result<i32> {
         let cid = ctaphid::ctaphid_init(self)?;
 
-        let send_payload =
-            client_pin_command::create_payload(PinCmd::GetUVRetries).map_err(Error::msg)?;
+        let send_payload = client_pin_command::create_payload(PinCmd::GetUVRetries)?;
 
         let response_cbor = ctaphid::ctaphid_cbor(self, &cid, &send_payload)?;
 
-        let pin = client_pin_response::parse_cbor_client_pin_get_retries(&response_cbor)
-            .map_err(Error::msg)?;
+        let pin = client_pin_response::parse_cbor_client_pin_get_retries(&response_cbor)?;
 
         Ok(pin.uv_retries)
     }

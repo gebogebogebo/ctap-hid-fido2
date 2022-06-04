@@ -1,26 +1,22 @@
-use anyhow::{anyhow, Error, Result};
-
 use super::client_pin_command;
 use super::client_pin_command::Permission;
 use super::client_pin_command::SubCommand as PinCmd;
 use super::client_pin_response;
 use super::FidoKeyHid;
-
 use crate::ctaphid;
 use crate::encrypt::cose;
 use crate::encrypt::enc_aes256_cbc;
 use crate::encrypt::enc_hmac_sha_256;
 use crate::encrypt::shared_secret::SharedSecret;
 use crate::pintoken::PinToken;
+use anyhow::{anyhow, Result};
 
 impl FidoKeyHid {
     pub fn get_authenticator_key_agreement(&self, cid: &[u8]) -> Result<cose::CoseKey> {
-        let send_payload =
-            client_pin_command::create_payload(PinCmd::GetKeyAgreement).map_err(Error::msg)?;
+        let send_payload = client_pin_command::create_payload(PinCmd::GetKeyAgreement)?;
         let response_cbor = ctaphid::ctaphid_cbor(self, cid, &send_payload)?;
         let authenticator_key_agreement =
-            client_pin_response::parse_cbor_client_pin_get_keyagreement(&response_cbor)
-                .map_err(Error::msg)?;
+            client_pin_response::parse_cbor_client_pin_get_keyagreement(&response_cbor)?;
         Ok(authenticator_key_agreement)
     }
 
@@ -40,8 +36,7 @@ impl FidoKeyHid {
 
             // get pin_token (enc)
             let mut pin_token_enc =
-                client_pin_response::parse_cbor_client_pin_get_pin_token(&response_cbor)
-                    .map_err(Error::msg)?;
+                client_pin_response::parse_cbor_client_pin_get_pin_token(&response_cbor)?;
 
             // pintoken -> dec(pintoken)
             let pin_token_dec = shared_secret.decrypt_token(&mut pin_token_enc)?;
@@ -77,8 +72,7 @@ impl FidoKeyHid {
 
             // get pin_token (enc)
             let mut pin_token_enc =
-                client_pin_response::parse_cbor_client_pin_get_pin_token(&response_cbor)
-                    .map_err(Error::msg)?;
+                client_pin_response::parse_cbor_client_pin_get_pin_token(&response_cbor)?;
 
             // pintoken -> dec(pintoken)
             let pin_token_dec = shared_secret.decrypt_token(&mut pin_token_enc)?;
@@ -94,13 +88,11 @@ impl FidoKeyHid {
             return Err(anyhow!("new pin not set"));
         }
 
-        let send_payload =
-            client_pin_command::create_payload(PinCmd::GetKeyAgreement).map_err(Error::msg)?;
+        let send_payload = client_pin_command::create_payload(PinCmd::GetKeyAgreement)?;
         let response_cbor = ctaphid::ctaphid_cbor(self, cid, &send_payload)?;
 
         let key_agreement =
-            client_pin_response::parse_cbor_client_pin_get_keyagreement(&response_cbor)
-                .map_err(Error::msg)?;
+            client_pin_response::parse_cbor_client_pin_get_keyagreement(&response_cbor)?;
 
         let shared_secret = SharedSecret::new(&key_agreement)?;
 
@@ -188,12 +180,11 @@ pub fn change_pin(device: &FidoKeyHid, cid: &[u8], current_pin: &str, new_pin: &
         return Err(anyhow!("new pin not set"));
     }
 
-    let send_payload =
-        client_pin_command::create_payload(PinCmd::GetKeyAgreement).map_err(Error::msg)?;
+    let send_payload = client_pin_command::create_payload(PinCmd::GetKeyAgreement)?;
     let response_cbor = ctaphid::ctaphid_cbor(device, cid, &send_payload)?;
 
-    let key_agreement = client_pin_response::parse_cbor_client_pin_get_keyagreement(&response_cbor)
-        .map_err(Error::msg)?;
+    let key_agreement =
+        client_pin_response::parse_cbor_client_pin_get_keyagreement(&response_cbor)?;
 
     let shared_secret = SharedSecret::new(&key_agreement)?;
 

@@ -1,7 +1,6 @@
+use crate::{encrypt::cose::CoseKey, encrypt::enc_aes256_cbc, encrypt::p256, pintoken::PinToken};
 use anyhow::{Error, Result};
 use ring::{agreement, digest, error::Unspecified, rand};
-
-use crate::{encrypt::cose::CoseKey, encrypt::enc_aes256_cbc, encrypt::p256, pintoken::PinToken};
 
 #[derive(Debug, Default, Clone)]
 pub struct SharedSecret {

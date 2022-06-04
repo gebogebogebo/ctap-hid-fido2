@@ -1,6 +1,6 @@
 use crate::encrypt::cose::CoseKey;
 use crate::util;
-use anyhow::{anyhow, Error, Result};
+use anyhow::{anyhow, Result};
 use serde_cbor::Value;
 
 #[derive(Default)]
@@ -49,8 +49,8 @@ pub fn parse_cbor_client_pin_get_retries(bytes: &[u8]) -> Result<Pin> {
         for (key, val) in &n {
             if let Value::Integer(member) = key {
                 match member {
-                    3 => pin.retries = util::cbor_value_to_num(val).map_err(Error::msg)?,
-                    5 => pin.uv_retries = util::cbor_value_to_num(val).map_err(Error::msg)?,
+                    3 => pin.retries = util::cbor_value_to_num(val)?,
+                    5 => pin.uv_retries = util::cbor_value_to_num(val)?,
                     _ => println!("- anything error"),
                 }
             }

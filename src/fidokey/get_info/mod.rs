@@ -2,10 +2,8 @@ use crate::ctaphid;
 mod get_info_command;
 mod get_info_params;
 mod get_info_response;
-
-use anyhow::{anyhow, Error, Result};
-
 use super::FidoKeyHid;
+use anyhow::{anyhow, Result};
 
 #[derive(Debug, Clone, PartialEq, strum_macros::AsRefStr)]
 pub enum InfoOption {
@@ -78,7 +76,7 @@ impl FidoKeyHid {
         let cid = ctaphid::ctaphid_init(self)?;
         let send_payload = get_info_command::create_payload();
         let response_cbor = ctaphid::ctaphid_cbor(self, &cid, &send_payload)?;
-        let info = get_info_response::parse_cbor(&response_cbor).map_err(Error::msg)?;
+        let info = get_info_response::parse_cbor(&response_cbor)?;
         Ok(info)
     }
 

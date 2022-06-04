@@ -1,6 +1,6 @@
 use crate::str_buf::StrBuf;
 use crate::util;
-use anyhow::{Error, Result};
+use anyhow::Result;
 use num::NumCast;
 use serde_cbor::Value;
 use std::collections::{BTreeMap, HashMap};
@@ -49,7 +49,7 @@ impl CoseKey {
                             // 1: kty
                             //      1: OKP (Octet Key Pair) → need x
                             //      2: EC2 (Double Coordinate Curves) → need x&y
-                            cose.key_type = util::cbor_value_to_num(val).map_err(Error::msg)?;
+                            cose.key_type = util::cbor_value_to_num(val)?;
                         }
                         // 2: kid
                         3 => {
@@ -59,7 +59,7 @@ impl CoseKey {
                             //      -25: ECDH-ES + HKDF-256
                             //      -35: ES384
                             //      -36: ES512
-                            cose.algorithm = util::cbor_value_to_num(val).map_err(Error::msg)?;
+                            cose.algorithm = util::cbor_value_to_num(val)?;
                         }
                         // 4: key_ops
                         // 5: Base IV
@@ -71,14 +71,14 @@ impl CoseKey {
                             //println!("member = {:?} , val = {:?}",member,val);
                             cose.parameters.insert(
                                 NumCast::from(*member).unwrap(),
-                                Value::Integer(util::cbor_value_to_num(val).map_err(Error::msg)?),
+                                Value::Integer(util::cbor_value_to_num(val)?),
                             );
                         }
                         -2 | -3 => {
                             //println!("member = {:?} , val = {:?}",member,val);
                             cose.parameters.insert(
                                 NumCast::from(*member).unwrap(),
-                                Value::Bytes(util::cbor_value_to_vec_u8(val).map_err(Error::msg)?),
+                                Value::Bytes(util::cbor_value_to_vec_u8(val)?),
                             );
                         }
                         _ => {}

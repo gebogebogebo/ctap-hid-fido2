@@ -2,13 +2,9 @@ pub mod get_assertion_command;
 pub mod get_assertion_params;
 pub mod get_assertion_response;
 pub mod get_next_assertion_command;
-
-use anyhow::{Error, Result};
-
 use crate::{ctaphid, encrypt::enc_hmac_sha_256, hmac_ext::HmacExt, util::should_uv, FidoKeyHid};
-
+use anyhow::Result;
 use get_assertion_params::{Assertion, Extension as Gext, GetAssertionArgs};
-
 pub use get_assertion_params::{Extension, GetAssertionArgsBuilder};
 
 impl FidoKeyHid {
@@ -66,13 +62,12 @@ impl FidoKeyHid {
         };
 
         // send & response
-        let response_cbor = ctaphid::ctaphid_cbor(self, &cid, &send_payload).map_err(Error::msg)?;
+        let response_cbor = ctaphid::ctaphid_cbor(self, &cid, &send_payload)?;
 
         let ass = get_assertion_response::parse_cbor(
             &response_cbor,
             hmac_ext.map(|ext| ext.shared_secret),
-        )
-        .map_err(Error::msg)?;
+        )?;
 
         let mut asss = vec![ass];
         for _ in 0..(asss[0].number_of_credentials - 1) {
@@ -146,7 +141,7 @@ impl FidoKeyHid {
 fn get_next_assertion(device: &FidoKeyHid, cid: &[u8]) -> Result<Assertion> {
     let send_payload = get_next_assertion_command::create_payload();
     let response_cbor = ctaphid::ctaphid_cbor(device, cid, &send_payload)?;
-    get_assertion_response::parse_cbor(&response_cbor, None).map_err(Error::msg)
+    get_assertion_response::parse_cbor(&response_cbor, None)
 }
 
 fn create_hmacext(

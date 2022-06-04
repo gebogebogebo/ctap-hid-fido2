@@ -5,19 +5,16 @@ pub use bio_enrollment_command::SubCommand as BioCmd;
 pub use bio_enrollment_params::*;
 
 use crate::pintoken::PinToken;
+use crate::util;
 use crate::{ctapdef, ctaphid};
 use crate::{fidokey::pin::Permission::BioEnrollment, FidoKeyHid};
+use anyhow::Result;
 use bio_enrollment_params::{BioEnrollmentData, TemplateInfo};
-
-#[allow(unused_imports)]
-use crate::util;
-
-use anyhow::{Error, Result};
 
 impl FidoKeyHid {
     /// BioEnrollment - getFingerprintSensorInfo (CTAP 2.1-PRE)
     pub fn bio_enrollment_get_fingerprint_sensor_info(&self) -> Result<BioSensorInfo> {
-        let init = self.bio_enrollment_init(None).map_err(Error::msg)?;
+        let init = self.bio_enrollment_init(None)?;
 
         // 6.7.2. Get bio modality
         let data1 = self.bio_enrollment(&init.0, None, None)?;
@@ -208,7 +205,7 @@ impl FidoKeyHid {
             println!("response(cbor) = {}", util::to_hex_str(&response_cbor));
         }
 
-        let ret = bio_enrollment_response::parse_cbor(&response_cbor).map_err(Error::msg)?;
+        let ret = bio_enrollment_response::parse_cbor(&response_cbor)?;
         Ok(ret)
     }
 

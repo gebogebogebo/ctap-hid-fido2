@@ -1,20 +1,16 @@
 pub mod credential_management_command;
 pub mod credential_management_params;
 pub mod credential_management_response;
-
+use super::{pin::Permission::CredentialManagement, FidoKeyHid};
 use crate::{
     ctaphid, public_key_credential_descriptor::PublicKeyCredentialDescriptor,
     public_key_credential_user_entity::PublicKeyCredentialUserEntity, util,
 };
-
+use anyhow::Result;
 use {
     credential_management_command::SubCommand,
     credential_management_params::{Credential, CredentialManagementData, CredentialsCount, Rp},
 };
-
-use super::{pin::Permission::CredentialManagement, FidoKeyHid};
-
-use anyhow::{Error, Result};
 
 impl FidoKeyHid {
     /// CredentialManagement - getCredsMetadata (CTAP 2.1-PRE)
@@ -130,6 +126,6 @@ impl FidoKeyHid {
             println!("response(cbor) = {}", util::to_hex_str(&response_cbor));
         }
 
-        credential_management_response::parse_cbor(&response_cbor).map_err(Error::msg)
+        credential_management_response::parse_cbor(&response_cbor)
     }
 }
