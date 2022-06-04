@@ -201,6 +201,12 @@ enum Action {
         #[clap(long = "rpid", takes_value = true, help = "xxx.")]
         rpids: Option<Vec<String>>,
 
+        #[clap(
+            long = "fcp",
+            help = "PIN change is required after this command.\nThe authenticator returns CTAP2_ERR_PIN_POLICY_VIOLATION until changePIN is successful."
+        )]
+        force_change_pin: bool,
+
         #[clap(short = 'p')]
         pin: Option<String>,
     },
@@ -369,6 +375,7 @@ fn main() -> Result<()> {
                 toggle_always_uv,
                 new_min_pin_length,
                 rpids,
+                force_change_pin,
                 pin,
             } => {
                 if toggle_always_uv {
@@ -385,6 +392,8 @@ fn main() -> Result<()> {
                         cfg::Command::SetMinPinLengthRPIDs(rpids.unwrap()),
                         pin,
                     )?;
+                } else if force_change_pin {
+                    cfg::config(&device, cfg::Command::ForceChangePin, pin)?;
                 }
             }
             Action::Blob {

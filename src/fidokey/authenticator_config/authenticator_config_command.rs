@@ -14,12 +14,16 @@ pub enum SubCommand {
     SetMinPinLength(u8),
     #[strum(props(SubCommandId = "3"))]
     SetMinPinLengthRpIds(Vec<String>),
+    #[strum(props(SubCommandId = "3"))]
+    ForceChangePin,
 }
 impl SubCommandBase for SubCommand {
     fn has_param(&self) -> bool {
         matches!(
             self,
-            SubCommand::SetMinPinLength(_) | SubCommand::SetMinPinLengthRpIds(_)
+            SubCommand::SetMinPinLength(_)
+                | SubCommand::SetMinPinLengthRpIds(_)
+                | SubCommand::ForceChangePin
         )
     }
 }
@@ -55,6 +59,13 @@ pub fn create_payload(pin_token: pintoken::PinToken, sub_command: SubCommand) ->
                     Value::Integer(0x02),
                     Value::Array(rpids.iter().cloned().map(Value::Text).collect()),
                 );
+                map.insert(Value::Integer(0x02), Value::Map(param.clone()));
+                Some(param)
+            }
+            SubCommand::ForceChangePin => {
+                let mut param = BTreeMap::new();
+                // 0x03:ForceChangePin
+                param.insert(Value::Integer(0x03), Value::Bool(true));
                 map.insert(Value::Integer(0x02), Value::Map(param.clone()));
                 Some(param)
             }

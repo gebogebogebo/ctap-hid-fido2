@@ -20,6 +20,10 @@ impl FidoKeyHid {
         self.config(pin, SubCommand::SetMinPinLengthRpIds(rpids))
     }
 
+    pub fn force_change_pin(&self, pin: Option<&str>) -> Result<()> {
+        self.config(pin, SubCommand::ForceChangePin)
+    }
+
     fn config(&self, pin: Option<&str>, sub_command: SubCommand) -> Result<()> {
         let pin = if let Some(v) = pin {
             v
