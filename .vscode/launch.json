@@ -68,7 +68,7 @@
                     "kind": "example"
                 }
             },
-            "args": ["config", "--fcp", "-p", "1234"],
+            "args": ["config", "--rpid", "hoge.com", "-p", "1234"],
             "cwd": "${workspaceFolder}"
         },
         {
