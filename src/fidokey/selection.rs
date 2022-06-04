@@ -1,7 +1,5 @@
-use crate::{ctapdef, ctaphid};
-
 use super::FidoKeyHid;
-
+use crate::{ctapdef, ctaphid};
 use anyhow::Result;
 
 fn create_payload() -> Vec<u8> {

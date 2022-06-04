@@ -23,10 +23,6 @@ pub fn print_typename<T>(_: T) {
     println!("{}", std::any::type_name::<T>());
 }
 
-//
-// pub crate
-//
-
 #[allow(dead_code)]
 pub(crate) fn debugp(title: &str, bytes: &[u8]) {
     println!("{}", StrBuf::bufh(title, bytes));

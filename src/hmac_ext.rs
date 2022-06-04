@@ -2,12 +2,11 @@ use crate::ctaphid;
 use crate::encrypt::enc_aes256_cbc;
 use crate::encrypt::enc_hmac_sha_256;
 use crate::encrypt::shared_secret::SharedSecret;
-use crate::FidoKeyHid;
-use anyhow::Result;
-
 use crate::fidokey::pin::{
     create_payload, parse_cbor_client_pin_get_keyagreement, SubCommand as PinCmd,
 };
+use crate::FidoKeyHid;
+use anyhow::Result;
 
 #[derive(Debug, Default, Clone)]
 pub struct HmacExt {

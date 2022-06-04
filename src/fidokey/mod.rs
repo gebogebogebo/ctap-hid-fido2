@@ -1,6 +1,5 @@
 use crate::HidParam;
 use hidapi::HidApi;
-
 use anyhow::{anyhow, Result};
 use std::ffi::CString;
 
