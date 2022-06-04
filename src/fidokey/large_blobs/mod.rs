@@ -1,11 +1,9 @@
 pub mod large_blobs_command;
 pub mod large_blobs_params;
 pub mod large_blobs_response;
-
-use anyhow::{Error, Result};
-
 use super::FidoKeyHid;
 use crate::ctaphid;
+use anyhow::Result;
 use large_blobs_params::LargeBlobData;
 
 impl FidoKeyHid {
@@ -31,7 +29,7 @@ impl FidoKeyHid {
         get: Option<u32>,
         set: Option<Vec<u8>>,
     ) -> Result<LargeBlobData> {
-        let cid = ctaphid::ctaphid_init(self).map_err(Error::msg)?;
+        let cid = ctaphid::ctaphid_init(self)?;
 
         // get pintoken
         let pin_token = if let Some(pin) = pin {
@@ -45,7 +43,7 @@ impl FidoKeyHid {
         };
 
         let send_payload = large_blobs_command::create_payload(pin_token, offset, get, set)?;
-        let response_cbor = ctaphid::ctaphid_cbor(self, &cid, &send_payload).map_err(Error::msg)?;
+        let response_cbor = ctaphid::ctaphid_cbor(self, &cid, &send_payload)?;
 
         large_blobs_response::parse_cbor(&response_cbor)
     }

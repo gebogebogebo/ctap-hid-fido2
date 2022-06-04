@@ -1,7 +1,3 @@
-/*!
-PublicKeyCredentialUserEntity
-*/
-
 use crate::util;
 use serde_cbor::Value;
 use std::fmt;

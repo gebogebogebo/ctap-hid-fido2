@@ -1,9 +1,8 @@
+use crate::{ctapdef, encrypt::enc_hmac_sha_256, pintoken::PinToken};
 use anyhow::Result;
 use ring::digest;
 use serde_cbor::{to_vec, Value};
 use std::collections::BTreeMap;
-
-use crate::{ctapdef, encrypt::enc_hmac_sha_256, pintoken::PinToken};
 
 pub fn create_payload(
     pin_token: Option<PinToken>,

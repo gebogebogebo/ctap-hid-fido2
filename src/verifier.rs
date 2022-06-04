@@ -1,7 +1,3 @@
-/*!
-Verify Attestation Assertion API
-*/
-
 use crate::fidokey::get_assertion::get_assertion_params;
 use crate::fidokey::make_credential::make_credential_params;
 use crate::util;

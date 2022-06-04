@@ -1,14 +1,13 @@
-use crate::public_key::PublicKey;
-use crate::util;
-
 use super::make_credential_params::{Attestation, Extension};
 use super::CredentialProtectionPolicy;
-
+use crate::public_key::PublicKey;
+use crate::util;
+use anyhow::Result;
 use byteorder::{BigEndian, ReadBytesExt};
 use serde_cbor::Value;
 use std::io::Cursor;
 
-fn parse_cbor_att_stmt(obj: &Value, att: &mut Attestation) -> Result<(), String> {
+fn parse_cbor_att_stmt(obj: &Value, att: &mut Attestation) -> Result<()> {
     if let Value::Map(xs) = obj {
         for (key, val) in xs {
             if let Value::Text(s) = key {
@@ -25,7 +24,7 @@ fn parse_cbor_att_stmt(obj: &Value, att: &mut Attestation) -> Result<(), String>
     Ok(())
 }
 
-fn parse_cbor_authdata(authdata: &[u8], attestation: &mut Attestation) -> Result<(), String> {
+fn parse_cbor_authdata(authdata: &[u8], attestation: &mut Attestation) -> Result<()> {
     // copy
     attestation.auth_data = authdata.to_vec();
 
@@ -120,7 +119,7 @@ fn parse_cbor_authdata(authdata: &[u8], attestation: &mut Attestation) -> Result
     Ok(())
 }
 
-pub fn parse_cbor(bytes: &[u8]) -> Result<Attestation, String> {
+pub fn parse_cbor(bytes: &[u8]) -> Result<Attestation> {
     let mut attestation = Attestation::default();
     let maps = util::cbor_bytes_to_map(bytes)?;
     for (key, val) in &maps {

@@ -1,7 +1,6 @@
 use crate::HidParam;
-use hidapi::HidApi;
-
 use anyhow::{anyhow, Result};
+use hidapi::HidApi;
 use std::ffi::CString;
 
 // Complex Submodules

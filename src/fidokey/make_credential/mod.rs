@@ -1,24 +1,82 @@
 pub mod make_credential_command;
 pub mod make_credential_params;
 pub mod make_credential_response;
-
-use make_credential_params::{Attestation, Extension as Mext, MakeCredentialArgs};
-
-use crate::ctaphid;
-use crate::encrypt::enc_hmac_sha_256;
-use crate::public_key_credential_user_entity::PublicKeyCredentialUserEntity;
-use crate::util::should_uv;
-
-use super::credential_management::credential_management_params::CredentialProtectionPolicy;
-use super::FidoKeyHid;
-
+use super::{
+    credential_management::credential_management_params::CredentialProtectionPolicy, FidoKeyHid,
+};
+use crate::{
+    ctaphid, encrypt::enc_hmac_sha_256,
+    public_key_credential_user_entity::PublicKeyCredentialUserEntity, util::should_uv,
+};
+use anyhow::Result;
 pub use make_credential_params::{
-    CredentialSupportedKeyType, Extension, MakeCredentialArgsBuilder,
+    Attestation, CredentialSupportedKeyType, Extension, Extension as Mext, MakeCredentialArgs,
+    MakeCredentialArgsBuilder,
 };
 
-use anyhow::{Error, Result};
-
 impl FidoKeyHid {
+    pub fn make_credential_with_args(&self, args: &MakeCredentialArgs) -> Result<Attestation> {
+        // init
+        let cid = ctaphid::ctaphid_init(self)?;
+
+        let user_id = {
+            if let Some(rkp) = &args.rkparam {
+                rkp.id.to_vec()
+            } else {
+                [].to_vec()
+            }
+        };
+
+        // create cmmand
+        let send_payload = {
+            let mut params =
+                make_credential_command::Params::new(&args.rpid, args.challenge.to_vec(), user_id);
+
+            params.option_rk = args.rkparam.is_some();
+
+            params.option_uv = if let Some(uv) = args.uv {
+                Some(uv)
+            } else {
+                should_uv(args.pin)
+            };
+
+            params.exclude_list = args.exclude_list.to_vec();
+            params.key_type = args
+                .key_type
+                .unwrap_or(CredentialSupportedKeyType::Ecdsa256);
+
+            if let Some(rkp) = &args.rkparam {
+                params.user_name = rkp.name.to_string();
+                params.user_display_name = rkp.display_name.to_string();
+            }
+
+            // get pintoken & create pin auth
+            if let Some(pin) = args.pin {
+                if !pin.is_empty() {
+                    let pin_token = self.get_pin_token(&cid, pin)?;
+                    let sig =
+                        enc_hmac_sha_256::authenticate(&pin_token.key, &params.client_data_hash);
+                    params.pin_auth = sig[0..16].to_vec();
+                }
+            }
+
+            // TODO
+            let extensions = if args.extensions.is_some() {
+                Some(args.extensions.as_ref().unwrap())
+            } else {
+                None
+            };
+
+            make_credential_command::create_payload(params, extensions)
+        };
+
+        // send & response
+        let response_cbor = ctaphid::ctaphid_cbor(self, &cid, &send_payload)?;
+
+        let att = make_credential_response::parse_cbor(&response_cbor)?;
+        Ok(att)
+    }
+
     /// Registration command.Generate credentials(with PIN,non Resident Key)
     pub fn make_credential(
         &self,
@@ -26,17 +84,12 @@ impl FidoKeyHid {
         challenge: &[u8],
         pin: Option<&str>,
     ) -> Result<Attestation> {
-        self.make_credential_internal(
-            rpid,
-            challenge,
-            pin,
-            false,
-            None,
-            should_uv(pin),
-            &[],
-            None,
-            None,
-        )
+        let mut builder = MakeCredentialArgsBuilder::new(rpid, challenge);
+        if let Some(pin) = pin {
+            builder = builder.pin(pin);
+        }
+        let arg = builder.build();
+        self.make_credential_with_args(&arg)
     }
 
     /// Registration command. Generate credentials (with PIN, non Resident Key) while also
@@ -48,19 +101,18 @@ impl FidoKeyHid {
         pin: Option<&str>,
         key_type: Option<CredentialSupportedKeyType>,
     ) -> Result<Attestation> {
-        self.make_credential_internal(
-            rpid,
-            challenge,
-            pin,
-            false,
-            None,
-            should_uv(pin),
-            &[],
-            None,
-            key_type,
-        )
+        let mut builder = MakeCredentialArgsBuilder::new(rpid, challenge);
+        if let Some(pin) = pin {
+            builder = builder.pin(pin);
+        }
+        if let Some(key_type) = key_type {
+            builder = builder.key_type(key_type);
+        }
+        let arg = builder.build();
+        self.make_credential_with_args(&arg)
     }
 
+    /// Registration command.Generate credentials(with PIN and extensions,non Resident Key)
     pub fn make_credential_with_extensions(
         &self,
         rpid: &str,
@@ -68,17 +120,15 @@ impl FidoKeyHid {
         pin: Option<&str>,
         extensions: Option<&Vec<Mext>>,
     ) -> Result<Attestation> {
-        self.make_credential_internal(
-            rpid,
-            challenge,
-            pin,
-            false,
-            None,
-            should_uv(pin),
-            &[],
-            extensions,
-            None,
-        )
+        let mut builder = MakeCredentialArgsBuilder::new(rpid, challenge);
+        if let Some(pin) = pin {
+            builder = builder.pin(pin);
+        }
+        if let Some(extensions) = extensions {
+            builder = builder.extensions(extensions);
+        }
+        let arg = builder.build();
+        self.make_credential_with_args(&arg)
     }
 
     /// Registration command.Generate credentials(with PIN ,Resident Key)
@@ -89,100 +139,13 @@ impl FidoKeyHid {
         pin: Option<&str>,
         rkparam: &PublicKeyCredentialUserEntity,
     ) -> Result<Attestation> {
-        self.make_credential_internal(
-            rpid,
-            challenge,
-            pin,
-            true,
-            Some(rkparam),
-            should_uv(pin),
-            &[],
-            None,
-            None,
-        )
-    }
+        let mut builder = MakeCredentialArgsBuilder::new(rpid, challenge).rkparam(rkparam);
 
-    pub fn make_credential_with_args(&self, args: &MakeCredentialArgs) -> Result<Attestation> {
-        let extensions = if args.extensions.is_some() {
-            Some(args.extensions.as_ref().unwrap())
-        } else {
-            None
-        };
-
-        let (rk, rk_param) = if args.rkparam.is_some() {
-            (true, Some(args.rkparam.as_ref().unwrap()))
-        } else {
-            (false, None)
-        };
-
-        self.make_credential_internal(
-            &args.rpid,
-            &args.challenge,
-            args.pin,
-            rk,
-            rk_param,
-            args.uv,
-            &args.exclude_list,
-            extensions,
-            args.key_type,
-        )
-    }
-
-    fn make_credential_internal(
-        &self,
-        rpid: &str,
-        challenge: &[u8],
-        pin: Option<&str>,
-        rk: bool,
-        rkparam: Option<&PublicKeyCredentialUserEntity>,
-        uv: Option<bool>,
-        exclude_list: &[Vec<u8>],
-        extensions: Option<&Vec<Mext>>,
-        key_type: Option<CredentialSupportedKeyType>,
-    ) -> Result<make_credential_params::Attestation> {
-        // init
-        let cid = ctaphid::ctaphid_init(self).map_err(Error::msg)?;
-
-        let user_id = {
-            if let Some(rkp) = rkparam {
-                rkp.id.to_vec()
-            } else {
-                [].to_vec()
-            }
-        };
-
-        // create cmmand
-        let send_payload = {
-            let mut params =
-                make_credential_command::Params::new(rpid, challenge.to_vec(), user_id);
-            params.option_rk = rk;
-            params.option_uv = uv;
-            params.exclude_list = exclude_list.to_vec();
-            params.key_type = key_type.unwrap_or(CredentialSupportedKeyType::Ecdsa256);
-
-            if let Some(rkp) = rkparam {
-                params.user_name = rkp.name.to_string();
-                params.user_display_name = rkp.display_name.to_string();
-            }
-
-            // get pintoken & create pin auth
-            if let Some(pin) = pin {
-                if !pin.is_empty() {
-                    let pin_token = self.get_pin_token(&cid, pin)?;
-                    let sig =
-                        enc_hmac_sha_256::authenticate(&pin_token.key, &params.client_data_hash);
-                    params.pin_auth = sig[0..16].to_vec();
-                }
-            }
-
-            make_credential_command::create_payload(params, extensions)
-        };
-
-        // send & response
-        let response_cbor = ctaphid::ctaphid_cbor(self, &cid, &send_payload).map_err(Error::msg)?;
-
-        let att = make_credential_response::parse_cbor(&response_cbor).map_err(Error::msg)?;
-        Ok(att)
+        if let Some(pin) = pin {
+            builder = builder.pin(pin);
+        }
+        let arg = builder.build();
+        self.make_credential_with_args(&arg)
     }
 }
 //

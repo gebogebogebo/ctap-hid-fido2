@@ -1,36 +1,28 @@
 mod bio_enrollment_command;
 mod bio_enrollment_params;
 mod bio_enrollment_response;
-pub use bio_enrollment_command::SubCommand as BioCmd;
-pub use bio_enrollment_params::*;
-
 use crate::pintoken::PinToken;
+use crate::util;
 use crate::{ctapdef, ctaphid};
 use crate::{fidokey::pin::Permission::BioEnrollment, FidoKeyHid};
+use anyhow::Result;
+pub use bio_enrollment_command::SubCommand as BioCmd;
+pub use bio_enrollment_params::*;
 use bio_enrollment_params::{BioEnrollmentData, TemplateInfo};
-
-#[allow(unused_imports)]
-use crate::util;
-
-use anyhow::{Error, Result};
 
 impl FidoKeyHid {
     /// BioEnrollment - getFingerprintSensorInfo (CTAP 2.1-PRE)
     pub fn bio_enrollment_get_fingerprint_sensor_info(&self) -> Result<BioSensorInfo> {
-        let init = self.bio_enrollment_init(None).map_err(Error::msg)?;
+        let init = self.bio_enrollment_init(None)?;
 
         // 6.7.2. Get bio modality
-        let data1 = self
-            .bio_enrollment(&init.0, None, None)
-            .map_err(Error::msg)?;
+        let data1 = self.bio_enrollment(&init.0, None, None)?;
         if self.enable_log {
             println!("{}", data1);
         }
 
         // 6.7.3. Get fingerprint sensor info
-        let data2 = self
-            .bio_enrollment(&init.0, None, Some(BioCmd::GetFingerprintSensorInfo))
-            .map_err(Error::msg)?;
+        let data2 = self.bio_enrollment(&init.0, None, Some(BioCmd::GetFingerprintSensorInfo))?;
 
         if self.enable_log {
             println!("{}", data2);
@@ -207,18 +199,18 @@ impl FidoKeyHid {
             println!("send(cbor) = {}", util::to_hex_str(&send_payload));
         }
 
-        let response_cbor = ctaphid::ctaphid_cbor(self, cid, &send_payload).map_err(Error::msg)?;
+        let response_cbor = ctaphid::ctaphid_cbor(self, cid, &send_payload)?;
         if self.enable_log {
             println!("response(cbor) = {}", util::to_hex_str(&response_cbor));
         }
 
-        let ret = bio_enrollment_response::parse_cbor(&response_cbor).map_err(Error::msg)?;
+        let ret = bio_enrollment_response::parse_cbor(&response_cbor)?;
         Ok(ret)
     }
 
     fn bio_enrollment_init(&self, pin: Option<&str>) -> Result<([u8; 4], Option<PinToken>)> {
         // init
-        let cid = ctaphid::ctaphid_init(self).map_err(Error::msg)?;
+        let cid = ctaphid::ctaphid_init(self)?;
 
         // pin token
         let pin_token = {

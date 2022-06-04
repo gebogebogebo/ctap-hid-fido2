@@ -129,9 +129,7 @@ fn with_cred_blob_ex(device: &FidoKeyHid, rpid: &str, pin: &str) -> Result<()> {
         Some("cred blob ex"),
         Some("CRED BLOB EXTENSION"),
     );
-    let protect = Mext::CredProtect(Some(
-        CredentialProtectionPolicy::UserVerificationRequired,
-    ));
+    let protect = Mext::CredProtect(Some(CredentialProtectionPolicy::UserVerificationRequired));
     let blob = Mext::CredBlob((Some("this is test".as_bytes().to_vec()), None));
 
     let mut strbuf = StrBuf::new(20);

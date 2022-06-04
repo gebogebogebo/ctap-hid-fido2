@@ -4,11 +4,12 @@ use crate::public_key_credential_descriptor::PublicKeyCredentialDescriptor;
 use crate::public_key_credential_rp_entity::PublicKeyCredentialRpEntity;
 use crate::public_key_credential_user_entity::PublicKeyCredentialUserEntity;
 use crate::util;
+use anyhow::Result;
 use serde_cbor::Value;
 
 pub(crate) fn parse_cbor(
     bytes: &[u8],
-) -> Result<credential_management_params::CredentialManagementData, String> {
+) -> Result<credential_management_params::CredentialManagementData> {
     let mut data = credential_management_params::CredentialManagementData::default();
     let maps = util::cbor_bytes_to_map(bytes)?;
     for (key, val) in &maps {

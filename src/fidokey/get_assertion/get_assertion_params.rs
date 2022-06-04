@@ -1,7 +1,3 @@
-/*!
-get_assertion API parameters
-*/
-
 use crate::auth_data::Flags;
 use crate::public_key_credential_user_entity::PublicKeyCredentialUserEntity;
 use crate::str_buf::StrBuf;

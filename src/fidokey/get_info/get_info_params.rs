@@ -1,7 +1,3 @@
-/*!
-get_info API parameters
-*/
-
 use crate::str_buf::StrBuf;
 use std::fmt;
 

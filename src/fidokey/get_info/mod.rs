@@ -2,10 +2,8 @@ use crate::ctaphid;
 mod get_info_command;
 mod get_info_params;
 mod get_info_response;
-
-use anyhow::{anyhow, Error, Result};
-
 use super::FidoKeyHid;
+use anyhow::{anyhow, Result};
 
 #[derive(Debug, Clone, PartialEq, strum_macros::AsRefStr)]
 pub enum InfoOption {
@@ -75,15 +73,15 @@ pub enum InfoParam {
 
 impl FidoKeyHid {
     pub fn get_info(&self) -> Result<get_info_params::Info> {
-        let cid = ctaphid::ctaphid_init(self).map_err(Error::msg)?;
+        let cid = ctaphid::ctaphid_init(self)?;
         let send_payload = get_info_command::create_payload();
-        let response_cbor = ctaphid::ctaphid_cbor(self, &cid, &send_payload).map_err(Error::msg)?;
-        let info = get_info_response::parse_cbor(&response_cbor).map_err(Error::msg)?;
+        let response_cbor = ctaphid::ctaphid_cbor(self, &cid, &send_payload)?;
+        let info = get_info_response::parse_cbor(&response_cbor)?;
         Ok(info)
     }
 
     pub fn get_info_u2f(&self) -> Result<String> {
-        let cid = ctaphid::ctaphid_init(self).map_err(Error::msg)?;
+        let cid = ctaphid::ctaphid_init(self)?;
 
         let _data: Vec<u8> = Vec::new();
 

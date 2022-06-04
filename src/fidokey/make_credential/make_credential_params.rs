@@ -1,15 +1,9 @@
-/*!
-make_credential API parameters
-*/
-
+use super::make_credential_params::Extension as Mext;
+use super::CredentialProtectionPolicy;
 use crate::public_key::PublicKey;
 use crate::public_key_credential_descriptor::PublicKeyCredentialDescriptor;
 use crate::public_key_credential_user_entity::PublicKeyCredentialUserEntity;
 use crate::str_buf::StrBuf;
-
-use super::make_credential_params::Extension as Mext;
-use super::CredentialProtectionPolicy;
-
 use std::fmt;
 use strum_macros::{AsRefStr, Display};
 
