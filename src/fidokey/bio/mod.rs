@@ -20,17 +20,13 @@ impl FidoKeyHid {
         let init = self.bio_enrollment_init(None).map_err(Error::msg)?;
 
         // 6.7.2. Get bio modality
-        let data1 = self
-            .bio_enrollment(&init.0, None, None)
-            .map_err(Error::msg)?;
+        let data1 = self.bio_enrollment(&init.0, None, None)?;
         if self.enable_log {
             println!("{}", data1);
         }
 
         // 6.7.3. Get fingerprint sensor info
-        let data2 = self
-            .bio_enrollment(&init.0, None, Some(BioCmd::GetFingerprintSensorInfo))
-            .map_err(Error::msg)?;
+        let data2 = self.bio_enrollment(&init.0, None, Some(BioCmd::GetFingerprintSensorInfo))?;
 
         if self.enable_log {
             println!("{}", data2);
@@ -207,7 +203,7 @@ impl FidoKeyHid {
             println!("send(cbor) = {}", util::to_hex_str(&send_payload));
         }
 
-        let response_cbor = ctaphid::ctaphid_cbor(self, cid, &send_payload).map_err(Error::msg)?;
+        let response_cbor = ctaphid::ctaphid_cbor(self, cid, &send_payload)?;
         if self.enable_log {
             println!("response(cbor) = {}", util::to_hex_str(&response_cbor));
         }

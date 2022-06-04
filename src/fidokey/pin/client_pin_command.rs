@@ -1,5 +1,6 @@
 use crate::ctapdef;
 use crate::encrypt::cose;
+use anyhow::{anyhow, Result};
 use serde_cbor::Value;
 use std::collections::BTreeMap;
 
@@ -195,15 +196,15 @@ fn insert_pin_hash_enc(map: &mut BTreeMap<Value, Value>, pin_hash_enc: &[u8]) {
     map.insert(Value::Integer(0x06), pin_hash_enc_val);
 }
 
-pub fn create_payload(sub_command: SubCommand) -> Result<Vec<u8>, String> {
+pub fn create_payload(sub_command: SubCommand) -> Result<Vec<u8>> {
     match sub_command {
         SubCommand::GetRetries => Ok(create_payload_get_retries()),
         SubCommand::GetKeyAgreement => Ok(create_payload_get_keyagreement()),
-        SubCommand::SetPin => Err(String::from("Not Supported")),
-        SubCommand::ChangePin => Err(String::from("Not Supported")),
-        SubCommand::GetPinToken => Err(String::from("Not Supported")),
-        SubCommand::GetPinUvAuthTokenUsingUvWithPermissions => Err(String::from("Not Supported")),
+        SubCommand::SetPin => Err(anyhow!("Not Supported")),
+        SubCommand::ChangePin => Err(anyhow!("Not Supported")),
+        SubCommand::GetPinToken => Err(anyhow!("Not Supported")),
+        SubCommand::GetPinUvAuthTokenUsingUvWithPermissions => Err(anyhow!("Not Supported")),
         SubCommand::GetUVRetries => Ok(create_payload_get_uv_retries()),
-        SubCommand::GetPinUvAuthTokenUsingPinWithPermissions => Err(String::from("Not Supported")),
+        SubCommand::GetPinUvAuthTokenUsingPinWithPermissions => Err(anyhow!("Not Supported")),
     }
 }

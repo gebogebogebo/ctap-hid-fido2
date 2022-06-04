@@ -1,11 +1,11 @@
 use super::bio_enrollment_params::{BioEnrollmentData, TemplateInfo};
-#[allow(unused_imports)]
 use crate::util;
+use anyhow::{Error, Result};
 use serde_cbor::Value;
 
-pub(crate) fn parse_cbor(bytes: &[u8]) -> Result<BioEnrollmentData, String> {
+pub(crate) fn parse_cbor(bytes: &[u8]) -> Result<BioEnrollmentData> {
     let mut data = BioEnrollmentData::default();
-    let maps = util::cbor_bytes_to_map(bytes)?;
+    let maps = util::cbor_bytes_to_map(bytes).map_err(Error::msg)?;
     for (key, val) in &maps {
         if let Value::Integer(member) = key {
             match member {

@@ -1,5 +1,6 @@
 use crate::encrypt::cose::CoseKey;
 use crate::util;
+use anyhow::{anyhow, Error, Result};
 use serde_cbor::Value;
 
 #[derive(Default)]
@@ -8,8 +9,8 @@ pub struct Pin {
     pub uv_retries: i32,
 }
 
-pub fn parse_cbor_client_pin_get_pin_token(bytes: &[u8]) -> Result<Vec<u8>, String> {
-    let cbor: Value = serde_cbor::from_slice(bytes).unwrap();
+pub fn parse_cbor_client_pin_get_pin_token(bytes: &[u8]) -> Result<Vec<u8>> {
+    let cbor: Value = serde_cbor::from_slice(bytes)?;
 
     if let Value::Map(n) = cbor {
         // 最初の要素を取得
@@ -20,11 +21,11 @@ pub fn parse_cbor_client_pin_get_pin_token(bytes: &[u8]) -> Result<Vec<u8>, Stri
             }
         }
     }
-    Err("parse_cbor_client_pin_get_pin_token error".into())
+    Err(anyhow!("parse_cbor_client_pin_get_pin_token error"))
 }
 
-pub fn parse_cbor_client_pin_get_keyagreement(bytes: &[u8]) -> Result<CoseKey, String> {
-    let cbor: Value = serde_cbor::from_slice(bytes).unwrap();
+pub fn parse_cbor_client_pin_get_keyagreement(bytes: &[u8]) -> Result<CoseKey> {
+    let cbor: Value = serde_cbor::from_slice(bytes)?;
 
     if let Value::Map(n) = cbor {
         // 最初の要素を取得
@@ -35,12 +36,12 @@ pub fn parse_cbor_client_pin_get_keyagreement(bytes: &[u8]) -> Result<CoseKey, S
             }
         }
     }
-    Err("parse_cbor_client_pin_get_keyagreement error".into())
+    Err(anyhow!("parse_cbor_client_pin_get_keyagreement error"))
 }
 
-pub fn parse_cbor_client_pin_get_retries(bytes: &[u8]) -> Result<Pin, String> {
+pub fn parse_cbor_client_pin_get_retries(bytes: &[u8]) -> Result<Pin> {
     // deserialize to a serde_cbor::Value
-    let cbor: Value = serde_cbor::from_slice(bytes).unwrap();
+    let cbor: Value = serde_cbor::from_slice(bytes)?;
 
     let mut pin = Pin::default();
 
@@ -48,14 +49,14 @@ pub fn parse_cbor_client_pin_get_retries(bytes: &[u8]) -> Result<Pin, String> {
         for (key, val) in &n {
             if let Value::Integer(member) = key {
                 match member {
-                    3 => pin.retries = util::cbor_value_to_num(val)?,
-                    5 => pin.uv_retries = util::cbor_value_to_num(val)?,
+                    3 => pin.retries = util::cbor_value_to_num(val).map_err(Error::msg)?,
+                    5 => pin.uv_retries = util::cbor_value_to_num(val).map_err(Error::msg)?,
                     _ => println!("- anything error"),
                 }
             }
         }
         Ok(pin)
     } else {
-        Err("parse_cbor_client_pin_get_retries error".into())
+        Err(anyhow!("parse_cbor_client_pin_get_retries error"))
     }
 }

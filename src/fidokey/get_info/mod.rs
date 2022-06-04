@@ -77,7 +77,7 @@ impl FidoKeyHid {
     pub fn get_info(&self) -> Result<get_info_params::Info> {
         let cid = ctaphid::ctaphid_init(self)?;
         let send_payload = get_info_command::create_payload();
-        let response_cbor = ctaphid::ctaphid_cbor(self, &cid, &send_payload).map_err(Error::msg)?;
+        let response_cbor = ctaphid::ctaphid_cbor(self, &cid, &send_payload)?;
         let info = get_info_response::parse_cbor(&response_cbor).map_err(Error::msg)?;
         Ok(info)
     }

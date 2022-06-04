@@ -1,3 +1,7 @@
+use std::io::Cursor;
+use anyhow::{Result};
+use byteorder::{BigEndian, ReadBytesExt};
+use serde_cbor::Value;
 use super::get_assertion_params;
 use super::get_assertion_params::Extension;
 use crate::auth_data::Flags;
@@ -5,15 +9,12 @@ use crate::encrypt::enc_aes256_cbc;
 use crate::encrypt::shared_secret::SharedSecret;
 use crate::public_key_credential_user_entity::PublicKeyCredentialUserEntity;
 use crate::util;
-use byteorder::{BigEndian, ReadBytesExt};
-use serde_cbor::Value;
-use std::io::Cursor;
 
 fn parse_cbor_authdata(
     authdata: Vec<u8>,
     ass: &mut get_assertion_params::Assertion,
     shared_secret: Option<&SharedSecret>,
-) -> Result<(), String> {
+) -> Result<()> {
     // copy
     ass.auth_data = authdata.to_vec();
 
@@ -95,7 +96,7 @@ fn parse_cbor_authdata(
 pub fn parse_cbor(
     bytes: &[u8],
     shared_secret: Option<SharedSecret>,
-) -> Result<get_assertion_params::Assertion, String> {
+) -> Result<get_assertion_params::Assertion> {
     let mut ass = get_assertion_params::Assertion::default();
     let maps = util::cbor_bytes_to_map(bytes)?;
     for (key, val) in &maps {

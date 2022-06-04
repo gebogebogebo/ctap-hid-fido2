@@ -1,6 +1,6 @@
 use crate::str_buf::StrBuf;
 use crate::util;
-use anyhow::{Result, Error};
+use anyhow::{Error, Result};
 use num::NumCast;
 use serde_cbor::Value;
 use std::collections::{BTreeMap, HashMap};

@@ -1,8 +1,5 @@
-/*!
-Utility API
-*/
-
 use crate::str_buf::StrBuf;
+use anyhow::{anyhow, Result};
 use num::NumCast;
 use ring::digest;
 use serde_cbor::Value;
@@ -36,7 +33,7 @@ pub(crate) fn debugp(title: &str, bytes: &[u8]) {
 }
 
 // for cbor
-pub(crate) fn cbor_get_string_from_map(cbor_map: &Value, get_key: &str) -> Result<String, String> {
+pub(crate) fn cbor_get_string_from_map(cbor_map: &Value, get_key: &str) -> Result<String> {
     if let Value::Map(xs) = cbor_map {
         for (key, val) in xs {
             if let Value::Text(s) = key {
@@ -55,11 +52,11 @@ pub(crate) fn cbor_get_string_from_map(cbor_map: &Value, get_key: &str) -> Resul
         }
         Ok("".to_string())
     } else {
-        Err("Cast Error : Value is not a Map.".to_string())
+        Err(anyhow!("Cast Error : Value is not a Map."))
     }
 }
 
-pub(crate) fn cbor_get_bytes_from_map(cbor_map: &Value, get_key: &str) -> Result<Vec<u8>, String> {
+pub(crate) fn cbor_get_bytes_from_map(cbor_map: &Value, get_key: &str) -> Result<Vec<u8>> {
     if let Value::Map(xs) = cbor_map {
         for (key, val) in xs {
             if let Value::Text(s) = key {
@@ -74,48 +71,46 @@ pub(crate) fn cbor_get_bytes_from_map(cbor_map: &Value, get_key: &str) -> Result
         }
         Ok(vec![])
     } else {
-        Err("Cast Error : Value is not a Map.".to_string())
+        Err(anyhow!("Cast Error : Value is not a Map."))
     }
 }
 
-#[allow(dead_code)]
-pub(crate) fn cbor_value_to_num<T: NumCast>(value: &Value) -> Result<T, String> {
+pub(crate) fn cbor_value_to_num<T: NumCast>(value: &Value) -> Result<T> {
     if let Value::Integer(x) = value {
         Ok(NumCast::from(*x).unwrap())
     } else {
-        Err("Cast Error : Value is not a Integer.".to_string())
+        Err(anyhow!("Cast Error : Value is not a Integer."))
     }
 }
 
 #[allow(dead_code)]
-pub(crate) fn cbor_value_to_vec_u8(value: &Value) -> Result<Vec<u8>, String> {
+pub(crate) fn cbor_value_to_vec_u8(value: &Value) -> Result<Vec<u8>> {
     if let Value::Bytes(xs) = value {
         Ok(xs.to_vec())
     } else {
-        Err("Cast Error : Value is not a Bytes.".to_string())
+        Err(anyhow!("Cast Error : Value is not a Bytes."))
     }
 }
 
 #[allow(dead_code)]
-pub(crate) fn cbor_value_to_str(value: &Value) -> Result<String, String> {
+pub(crate) fn cbor_value_to_str(value: &Value) -> Result<String> {
     if let Value::Text(s) = value {
         Ok(s.to_string())
     } else {
-        Err("Cast Error : Value is not a Text.".to_string())
+        Err(anyhow!("Cast Error : Value is not a Text."))
     }
 }
 
-#[allow(dead_code)]
-pub(crate) fn cbor_value_to_bool(value: &Value) -> Result<bool, String> {
+pub(crate) fn cbor_value_to_bool(value: &Value) -> Result<bool> {
     if let Value::Bool(v) = value {
         Ok(*v)
     } else {
-        Err("Cast Error : Value is not a Bool.".to_string())
+        Err(anyhow!("Cast Error : Value is not a Bool."))
     }
 }
 
 #[allow(dead_code)]
-pub(crate) fn cbor_value_to_vec_string(value: &Value) -> Result<Vec<String>, String> {
+pub(crate) fn cbor_value_to_vec_string(value: &Value) -> Result<Vec<String>> {
     if let Value::Array(x) = value {
         let mut strings = [].to_vec();
         for ver in x {
@@ -125,12 +120,11 @@ pub(crate) fn cbor_value_to_vec_string(value: &Value) -> Result<Vec<String>, Str
         }
         Ok(strings)
     } else {
-        Err("Cast Error : Value is not Array.".to_string())
+        Err(anyhow!("Cast Error : Value is not Array."))
     }
 }
 
-#[allow(dead_code)]
-pub(crate) fn cbor_value_to_vec_bytes(value: &Value) -> Result<Vec<Vec<u8>>, String> {
+pub(crate) fn cbor_value_to_vec_bytes(value: &Value) -> Result<Vec<Vec<u8>>> {
     if let Value::Array(xs) = value {
         let mut bytes = [].to_vec();
         for x in xs {
@@ -140,11 +134,11 @@ pub(crate) fn cbor_value_to_vec_bytes(value: &Value) -> Result<Vec<Vec<u8>>, Str
         }
         Ok(bytes)
     } else {
-        Err("Cast Error : Value is not Array.".to_string())
+        Err(anyhow!("Cast Error : Value is not Array."))
     }
 }
 
-pub(crate) fn cbor_bytes_to_map(bytes: &[u8]) -> Result<BTreeMap<Value, Value>, String> {
+pub(crate) fn cbor_bytes_to_map(bytes: &[u8]) -> Result<BTreeMap<Value, Value>> {
     if bytes.is_empty() {
         return Ok(BTreeMap::new());
     }
@@ -153,10 +147,10 @@ pub(crate) fn cbor_bytes_to_map(bytes: &[u8]) -> Result<BTreeMap<Value, Value>, 
             if let Value::Map(n) = cbor {
                 Ok(n)
             } else {
-                Err("parse error 2".to_string())
+                Err(anyhow!("parse error 2"))
             }
         }
-        Err(_) => Err("parse error 1".to_string()),
+        Err(_) => Err(anyhow!("parse error 1")),
     }
 }
 

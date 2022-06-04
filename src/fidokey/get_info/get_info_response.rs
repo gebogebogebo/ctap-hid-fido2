@@ -1,8 +1,9 @@
+use anyhow::{Result};
+use serde_cbor::Value;
 use super::get_info_params;
 use crate::util;
-use serde_cbor::Value;
 
-pub fn parse_cbor(bytes: &[u8]) -> Result<get_info_params::Info, String> {
+pub fn parse_cbor(bytes: &[u8]) -> Result<get_info_params::Info> {
     let mut info = get_info_params::Info::default();
     let maps = util::cbor_bytes_to_map(bytes)?;
     for (key, val) in &maps {

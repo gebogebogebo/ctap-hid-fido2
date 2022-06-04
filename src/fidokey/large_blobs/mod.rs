@@ -2,7 +2,7 @@ pub mod large_blobs_command;
 pub mod large_blobs_params;
 pub mod large_blobs_response;
 
-use anyhow::{Error, Result};
+use anyhow::Result;
 
 use super::FidoKeyHid;
 use crate::ctaphid;
@@ -45,7 +45,7 @@ impl FidoKeyHid {
         };
 
         let send_payload = large_blobs_command::create_payload(pin_token, offset, get, set)?;
-        let response_cbor = ctaphid::ctaphid_cbor(self, &cid, &send_payload).map_err(Error::msg)?;
+        let response_cbor = ctaphid::ctaphid_cbor(self, &cid, &send_payload)?;
 
         large_blobs_response::parse_cbor(&response_cbor)
     }
