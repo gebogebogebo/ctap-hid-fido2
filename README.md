@@ -17,7 +17,12 @@ Authentication using FIDO2-compliant security keys (e.g. Yubikey) is possible.
 - Management of credentials recorded in security keys.
 
 ## Version
+### Ver 3.3.1
+
+- Implement `Authenticator Confi`g - `force_change_pin()`. → [Authenticator Config(CTAP 2.1)](README_Authenticator_Config.md)
+
 ### Ver 3.3.0
+
 - Implement `Credential Blob Extension`. → [Register and Authenticate Examples](README_Register_and_Authenticate.md)
 ### Ver 3.2.0
 - Implement `Authenticator Config` - `set_min_pin_length()`. → [Authenticator Config(CTAP 2.1)](README_Authenticator_Config.md)

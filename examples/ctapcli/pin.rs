@@ -46,6 +46,11 @@ pub fn pin(device: &FidoKeyHid, command: PinCommand) -> Result<()> {
             println!("Success! :)\n");
         }
         PinCommand::View => {
+            let info = device.get_info()?;
+            if info.force_pin_change {
+                println!("[Force Change PIN is True]\n Please change your PIN.\n");
+            }
+
             println!("Get PIN retry counter.\n");
             let pin_retries = device.get_pin_retries()?;
             println!("PIN retry counter = {}", pin_retries);

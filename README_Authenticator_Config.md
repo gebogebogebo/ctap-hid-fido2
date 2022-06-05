@@ -48,3 +48,34 @@ device.set_min_pin_length(new_min_pin_length, Some(&pin))?;
 ```
 
 > [Example](https://github.com/gebogebogebo/ctap-hid-fido2/blob/c0b8279335b3387d6307731602e59655b7cc5517/examples/ctapcli/config.rs#L49)
+
+
+
+## set_min_pin_length_rpids()
+
+**WARNING Cannot be restored.**<br>Set RP IDs which are allowed to get this information via the minPinLength extension.
+
+[Spec: 6.11.4. Setting a minimum PIN Length](https://fidoalliance.org/specs/fido-v2.1-ps-20210615/fido-client-to-authenticator-protocol-v2.1-ps-20210615.html#setMinPINLength)
+
+```rust
+device.set_min_pin_length_rpids(rpids, Some(&pin))?;
+```
+
+> [Example](https://github.com/gebogebogebo/ctap-hid-fido2/blob/eba34ec41e16cab12b974652abe368c362edf929/examples/ctapcli/cfg.rs#L67)
+
+
+
+## force_change_pin()
+
+**WARNING Cannot be restored.**<br>PIN change is required after this command.<br>The authenticator returns CTAP2_ERR_PIN_POLICY_VIOLATION until changePIN is successful.
+
+[Spec: 6.11.4. Setting a minimum PIN Length](https://fidoalliance.org/specs/fido-v2.1-ps-20210615/fido-client-to-authenticator-protocol-v2.1-ps-20210615.html#setMinPINLength)
+
+```rust
+device.force_change_pin(Some(&pin))?;
+```
+
+> [Example](https://github.com/gebogebogebo/ctap-hid-fido2/blob/eba34ec41e16cab12b974652abe368c362edf929/examples/ctapcli/cfg.rs#L82)
+
+
+

@@ -4,7 +4,7 @@ use super::{pin::Permission::AuthenticatorConfiguration, FidoKeyHid};
 
 use crate::ctaphid;
 
-use anyhow::{anyhow, Error, Result};
+use anyhow::{anyhow, Result};
 use authenticator_config_command::SubCommand;
 
 impl FidoKeyHid {
@@ -20,6 +20,10 @@ impl FidoKeyHid {
         self.config(pin, SubCommand::SetMinPinLengthRpIds(rpids))
     }
 
+    pub fn force_change_pin(&self, pin: Option<&str>) -> Result<()> {
+        self.config(pin, SubCommand::ForceChangePin)
+    }
+
     fn config(&self, pin: Option<&str>, sub_command: SubCommand) -> Result<()> {
         let pin = if let Some(v) = pin {
             v
@@ -27,15 +31,14 @@ impl FidoKeyHid {
             return Err(anyhow!("need PIN."));
         };
 
-        let cid = ctaphid::ctaphid_init(self).map_err(Error::msg)?;
+        let cid = ctaphid::ctaphid_init(self)?;
 
         // get pintoken
         let pin_token =
             self.get_pinuv_auth_token_with_permission(&cid, pin, AuthenticatorConfiguration)?;
 
         let send_payload = authenticator_config_command::create_payload(pin_token, sub_command)?;
-        let _response_cbor =
-            ctaphid::ctaphid_cbor(self, &cid, &send_payload).map_err(Error::msg)?;
+        let _response_cbor = ctaphid::ctaphid_cbor(self, &cid, &send_payload)?;
         Ok(())
     }
 }

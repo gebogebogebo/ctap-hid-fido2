@@ -14,12 +14,16 @@ pub enum SubCommand {
     SetMinPinLength(u8),
     #[strum(props(SubCommandId = "3"))]
     SetMinPinLengthRpIds(Vec<String>),
+    #[strum(props(SubCommandId = "3"))]
+    ForceChangePin,
 }
 impl SubCommandBase for SubCommand {
     fn has_param(&self) -> bool {
         matches!(
             self,
-            SubCommand::SetMinPinLength(_) | SubCommand::SetMinPinLengthRpIds(_)
+            SubCommand::SetMinPinLength(_)
+                | SubCommand::SetMinPinLengthRpIds(_)
+                | SubCommand::ForceChangePin
         )
     }
 }
@@ -37,31 +41,30 @@ pub fn create_payload(pin_token: pintoken::PinToken, sub_command: SubCommand) ->
     // subCommandParams (0x02): Map containing following parameters
     let mut sub_command_params_cbor = Vec::new();
     if sub_command.has_param() {
-        let value = match sub_command.clone() {
+        let param = match sub_command.clone() {
             SubCommand::SetMinPinLength(new_min_pin_length) => {
-                let mut param = BTreeMap::new();
                 // 0x01:newMinPINLength
-                param.insert(
+                Some(BTreeMap::from([(
                     Value::Integer(0x01),
                     Value::Integer(new_min_pin_length as i128),
-                );
-                map.insert(Value::Integer(0x02), Value::Map(param.clone()));
-                Some(param)
+                )]))
             }
             SubCommand::SetMinPinLengthRpIds(rpids) => {
-                let mut param = BTreeMap::new();
                 // 0x02:minPinLengthRPIDs
-                param.insert(
+                Some(BTreeMap::from([(
                     Value::Integer(0x02),
                     Value::Array(rpids.iter().cloned().map(Value::Text).collect()),
-                );
-                map.insert(Value::Integer(0x02), Value::Map(param.clone()));
-                Some(param)
+                )]))
+            }
+            SubCommand::ForceChangePin => {
+                // 0x03:ForceChangePin
+                Some(BTreeMap::from([(Value::Integer(0x03), Value::Bool(true))]))
             }
             _ => (None),
         };
-        if let Some(v) = value {
-            sub_command_params_cbor = to_vec(&v)?;
+        if let Some(param) = param {
+            map.insert(Value::Integer(0x02), Value::Map(param.clone()));
+            sub_command_params_cbor = to_vec(&param)?;
         }
     }
 

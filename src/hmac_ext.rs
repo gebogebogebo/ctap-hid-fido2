@@ -2,12 +2,11 @@ use crate::ctaphid;
 use crate::encrypt::enc_aes256_cbc;
 use crate::encrypt::enc_hmac_sha_256;
 use crate::encrypt::shared_secret::SharedSecret;
-use crate::FidoKeyHid;
-use anyhow::{Error, Result};
-
 use crate::fidokey::pin::{
     create_payload, parse_cbor_client_pin_get_keyagreement, SubCommand as PinCmd,
 };
+use crate::FidoKeyHid;
+use anyhow::Result;
 
 #[derive(Debug, Default, Clone)]
 pub struct HmacExt {
@@ -27,17 +26,15 @@ impl HmacExt {
         //println!("----------");
         //println!("{}", StrBuf::bufh("salt1", salt1));
 
-        let send_payload = create_payload(PinCmd::GetKeyAgreement).map_err(Error::msg)?;
-        let response_cbor =
-            ctaphid::ctaphid_cbor(device, cid, &send_payload).map_err(Error::msg)?;
+        let send_payload = create_payload(PinCmd::GetKeyAgreement)?;
+        let response_cbor = ctaphid::ctaphid_cbor(device, cid, &send_payload)?;
 
-        let key_agreement =
-            parse_cbor_client_pin_get_keyagreement(&response_cbor).map_err(Error::msg)?;
+        let key_agreement = parse_cbor_client_pin_get_keyagreement(&response_cbor)?;
 
         //println!("key_agreement");
         //println!("{}", self.key_agreement);
 
-        self.shared_secret = SharedSecret::new(&key_agreement).map_err(Error::msg)?;
+        self.shared_secret = SharedSecret::new(&key_agreement)?;
 
         // saltEnc
         //  Encryption of the one or two salts (called salt1 (32 bytes)

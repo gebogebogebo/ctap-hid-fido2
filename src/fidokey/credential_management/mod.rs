@@ -1,20 +1,16 @@
 pub mod credential_management_command;
 pub mod credential_management_params;
 pub mod credential_management_response;
-
+use super::{pin::Permission::CredentialManagement, FidoKeyHid};
 use crate::{
     ctaphid, public_key_credential_descriptor::PublicKeyCredentialDescriptor,
     public_key_credential_user_entity::PublicKeyCredentialUserEntity, util,
 };
-
+use anyhow::Result;
 use {
     credential_management_command::SubCommand,
     credential_management_params::{Credential, CredentialManagementData, CredentialsCount, Rp},
 };
-
-use super::{pin::Permission::CredentialManagement, FidoKeyHid};
-
-use anyhow::{Error, Result};
 
 impl FidoKeyHid {
     /// CredentialManagement - getCredsMetadata (CTAP 2.1-PRE)
@@ -86,10 +82,7 @@ impl FidoKeyHid {
         pkcd: PublicKeyCredentialDescriptor,
         pkcue: PublicKeyCredentialUserEntity,
     ) -> Result<()> {
-        self.credential_management(
-            pin,
-            SubCommand::UpdateUserInformation(pkcd, pkcue),
-        )?;
+        self.credential_management(pin, SubCommand::UpdateUserInformation(pkcd, pkcue))?;
         Ok(())
     }
 
@@ -98,7 +91,7 @@ impl FidoKeyHid {
         pin: Option<&str>,
         sub_command: SubCommand,
     ) -> Result<CredentialManagementData> {
-        let cid = ctaphid::ctaphid_init(self).map_err(Error::msg)?;
+        let cid = ctaphid::ctaphid_init(self)?;
 
         // pin token
         let pin_token = {
@@ -127,12 +120,12 @@ impl FidoKeyHid {
             println!("send(cbor) = {}", util::to_hex_str(&send_payload));
         }
 
-        let response_cbor = ctaphid::ctaphid_cbor(self, &cid, &send_payload).map_err(Error::msg)?;
+        let response_cbor = ctaphid::ctaphid_cbor(self, &cid, &send_payload)?;
 
         if self.enable_log {
             println!("response(cbor) = {}", util::to_hex_str(&response_cbor));
         }
 
-        credential_management_response::parse_cbor(&response_cbor).map_err(Error::msg)
+        credential_management_response::parse_cbor(&response_cbor)
     }
 }
