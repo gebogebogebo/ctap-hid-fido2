@@ -96,7 +96,8 @@ pub struct MakeCredentialArgs<'a> {
     pub key_type: Option<CredentialSupportedKeyType>,
     pub uv: Option<bool>,
     pub exclude_list: Vec<Vec<u8>>,
-    pub rkparam: Option<PublicKeyCredentialUserEntity>,
+    pub user_entity: Option<PublicKeyCredentialUserEntity>,
+    pub rk: Option<bool>,
     pub extensions: Option<Vec<Mext>>,
 }
 impl<'a> MakeCredentialArgs<'a> {
@@ -113,7 +114,8 @@ pub struct MakeCredentialArgsBuilder<'a> {
     key_type: Option<CredentialSupportedKeyType>,
     uv: Option<bool>,
     exclude_list: Vec<Vec<u8>>,
-    rkparam: Option<PublicKeyCredentialUserEntity>,
+    user_entity: Option<PublicKeyCredentialUserEntity>,
+    rk: Option<bool>,
     extensions: Option<Vec<Mext>>,
 }
 
@@ -160,11 +162,16 @@ impl<'a> MakeCredentialArgsBuilder<'a> {
         self
     }
 
-    pub fn rkparam(
+    pub fn user_entity(
         mut self,
-        rkparam: &PublicKeyCredentialUserEntity,
+        user_entity: &PublicKeyCredentialUserEntity,
     ) -> MakeCredentialArgsBuilder<'a> {
-        self.rkparam = Some(rkparam.clone());
+        self.user_entity = Some(user_entity.clone());
+        self
+    }
+
+    pub fn resident_key(mut self) -> MakeCredentialArgsBuilder<'a> {
+        self.rk = Some(true);
         self
     }
 
@@ -176,7 +183,8 @@ impl<'a> MakeCredentialArgsBuilder<'a> {
             key_type: self.key_type,
             uv: self.uv,
             exclude_list: self.exclude_list,
-            rkparam: self.rkparam,
+            user_entity: self.user_entity,
+            rk: self.rk,
             extensions: self.extensions,
         }
     }

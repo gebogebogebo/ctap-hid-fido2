@@ -20,7 +20,7 @@ impl FidoKeyHid {
         let cid = ctaphid::ctaphid_init(self)?;
 
         let user_id = {
-            if let Some(rkp) = &args.rkparam {
+            if let Some(rkp) = &args.user_entity{
                 rkp.id.to_vec()
             } else {
                 [].to_vec()
@@ -32,7 +32,7 @@ impl FidoKeyHid {
             let mut params =
                 make_credential_command::Params::new(&args.rpid, args.challenge.to_vec(), user_id);
 
-            params.option_rk = args.rkparam.is_some();
+            params.option_rk = args.rk.unwrap_or(false);
 
             params.option_uv = if let Some(uv) = args.uv {
                 Some(uv)
@@ -45,7 +45,7 @@ impl FidoKeyHid {
                 .key_type
                 .unwrap_or(CredentialSupportedKeyType::Ecdsa256);
 
-            if let Some(rkp) = &args.rkparam {
+            if let Some(rkp) = &args.user_entity {
                 params.user_name = rkp.name.to_string();
                 params.user_display_name = rkp.display_name.to_string();
             }
@@ -137,9 +137,9 @@ impl FidoKeyHid {
         rpid: &str,
         challenge: &[u8],
         pin: Option<&str>,
-        rkparam: &PublicKeyCredentialUserEntity,
+        user_entity: &PublicKeyCredentialUserEntity,
     ) -> Result<Attestation> {
-        let mut builder = MakeCredentialArgsBuilder::new(rpid, challenge).rkparam(rkparam);
+        let mut builder = MakeCredentialArgsBuilder::new(rpid, challenge).user_entity(user_entity);
 
         if let Some(pin) = pin {
             builder = builder.pin(pin);
