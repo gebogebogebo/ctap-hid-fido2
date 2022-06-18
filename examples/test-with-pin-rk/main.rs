@@ -58,7 +58,7 @@ fn discoverable_credentials(device: &FidoKeyHid, rpid: &str, pin: &str) -> Resul
 
     println!("- Register");
     let challenge = verifier::create_challenge();
-    let rkparam =
+    let user_entity =
         PublicKeyCredentialUserEntity::new(Some(b"1111"), Some("gebo"), Some("GEBO GEBO"));
 
     let mut strbuf = StrBuf::new(20);
@@ -67,13 +67,14 @@ fn discoverable_credentials(device: &FidoKeyHid, rpid: &str, pin: &str) -> Resul
         strbuf
             .append("- rpid", &rpid)
             .appenh("- challenge", &challenge)
-            .append("- rkparam", &rkparam)
+            .append("- user_entity", &user_entity)
             .build()
     );
 
     let make_credential_args = MakeCredentialArgsBuilder::new(&rpid, &challenge)
         .pin(pin)
-        .rkparam(&rkparam)
+        .user_entity(&user_entity)
+        .resident_key()
         .build();
 
     let attestation = device.make_credential_with_args(&make_credential_args)?;
@@ -124,7 +125,7 @@ fn with_cred_blob_ex(device: &FidoKeyHid, rpid: &str, pin: &str) -> Result<()> {
 
     println!("- Register");
     let challenge = verifier::create_challenge();
-    let rkparam = PublicKeyCredentialUserEntity::new(
+    let user_entity = PublicKeyCredentialUserEntity::new(
         Some(b"2222"),
         Some("cred blob ex"),
         Some("CRED BLOB EXTENSION"),
@@ -138,13 +139,13 @@ fn with_cred_blob_ex(device: &FidoKeyHid, rpid: &str, pin: &str) -> Result<()> {
         strbuf
             .append("- rpid", &rpid)
             .appenh("- challenge", &challenge)
-            .append("- rkparam", &rkparam)
+            .append("- user_entity", &user_entity)
             .build()
     );
 
     let make_credential_args = MakeCredentialArgsBuilder::new(&rpid, &challenge)
         .pin(pin)
-        .rkparam(&rkparam)
+        .user_entity(&user_entity)
         .extensions(&vec![protect, blob])
         .build();
 
@@ -250,9 +251,9 @@ fn legacy_discoverable_credentials(device: &FidoKeyHid, rpid: &str, pin: &str) -
 
     println!("- Register");
     let challenge = verifier::create_challenge();
-    let rkparam =
+    let user_entity =
         PublicKeyCredentialUserEntity::new(Some(b"1111"), Some("gebo"), Some("GEBO GEBO"));
-    //let rkparam = PublicKeyCredentialUserEntity::new(Some(b"2222"),Some("gebo-2"),Some("GEBO GEBO-2"));
+    //let user_entity = PublicKeyCredentialUserEntity::new(Some(b"2222"),Some("gebo-2"),Some("GEBO GEBO-2"));
 
     let mut strbuf = StrBuf::new(20);
     println!(
@@ -260,11 +261,11 @@ fn legacy_discoverable_credentials(device: &FidoKeyHid, rpid: &str, pin: &str) -
         strbuf
             .append("- rpid", &rpid)
             .appenh("- challenge", &challenge)
-            .append("- rkparam", &rkparam)
+            .append("- user_entity", &user_entity)
             .build()
     );
 
-    let attestation = device.make_credential_rk(rpid, &challenge, Some(pin), &rkparam)?;
+    let attestation = device.make_credential_rk(rpid, &challenge, Some(pin), &user_entity)?;
 
     println!("-- Register Success");
     debug!("Attestation");

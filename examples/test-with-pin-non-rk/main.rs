@@ -6,7 +6,7 @@ use ctap_hid_fido2::{
         AssertionExtension as Gext, CredentialExtension as Mext, CredentialSupportedKeyType,
         GetAssertionArgsBuilder, MakeCredentialArgsBuilder,
     },
-    get_fidokey_devices, util, verifier, Cfg, FidoKeyHid, FidoKeyHidFactory,
+    get_fidokey_devices, util, verifier, Cfg, FidoKeyHid, FidoKeyHidFactory, public_key_credential_user_entity::PublicKeyCredentialUserEntity,
 };
 
 fn main() -> Result<()> {
@@ -69,9 +69,12 @@ fn non_discoverable_credentials(device: &FidoKeyHid, rpid: &str, pin: &str) -> R
 
     println!("- Register");
     let challenge = verifier::create_challenge();
+    let user_entity =
+        PublicKeyCredentialUserEntity::new(Some(b"2222"), Some("gebo"), Some("GEBO GEBO"));
 
     let make_credential_args = MakeCredentialArgsBuilder::new(&rpid, &challenge)
         .pin(pin)
+        .user_entity(&user_entity)
         .build();
 
     let attestation = device.make_credential_with_args(&make_credential_args)?;
