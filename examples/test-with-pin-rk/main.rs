@@ -20,7 +20,6 @@ fn main() -> Result<()> {
         cfg.enable_log = true;
     }
 
-    let rpid = "test-rk.com";
     let pin = "1234";
 
     if get_fidokey_devices().is_empty() {
@@ -32,24 +31,22 @@ fn main() -> Result<()> {
 
     let device = FidoKeyHidFactory::create(&cfg)?;
 
-    builder_pattern_sample(&device, rpid, pin)?;
+    //
+    // Builder Pattern Sample
+    //
+    discoverable_credentials(&device, "test-rk.com", pin)
+        .unwrap_or_else(|err| eprintln!("Error => {}\n", err));
 
-    legacy_pattern_sample(&device, rpid, pin)?;
+    with_cred_blob_ex(&device, "test-rk-2.com", pin)
+        .unwrap_or_else(|err| eprintln!("Error => {}\n", err));
+
+    //
+    // Legacy Pattern Sample
+    //
+    legacy_discoverable_credentials(&device, "test-rk-legacy.com", pin)
+        .unwrap_or_else(|err| eprintln!("Error => {}\n", err));
 
     println!("----- test-with-pin-rk end -----");
-    Ok(())
-}
-
-//
-// Builder Pattern Sample
-//
-fn builder_pattern_sample(device: &FidoKeyHid, rpid: &str, pin: &str) -> Result<()> {
-    discoverable_credentials(device, rpid, pin)
-        .unwrap_or_else(|err| eprintln!("Error => {}\n", err));
-
-    with_cred_blob_ex(device, "test-rk-2.com", pin)
-        .unwrap_or_else(|err| eprintln!("Error => {}\n", err));
-
     Ok(())
 }
 
@@ -126,7 +123,7 @@ fn with_cred_blob_ex(device: &FidoKeyHid, rpid: &str, pin: &str) -> Result<()> {
     println!("- Register");
     let challenge = verifier::create_challenge();
     let user_entity = PublicKeyCredentialUserEntity::new(
-        Some(b"2222"),
+        Some(b"9999"),
         Some("cred blob ex"),
         Some("CRED BLOB EXTENSION"),
     );
@@ -146,6 +143,7 @@ fn with_cred_blob_ex(device: &FidoKeyHid, rpid: &str, pin: &str) -> Result<()> {
     let make_credential_args = MakeCredentialArgsBuilder::new(&rpid, &challenge)
         .pin(pin)
         .user_entity(&user_entity)
+        .resident_key()
         .extensions(&vec![protect, blob])
         .build();
 
@@ -232,16 +230,6 @@ fn with_cred_blob_ex(device: &FidoKeyHid, rpid: &str, pin: &str) -> Result<()> {
     } else {
         println!("-- ! Verify Assertion Failed");
     }
-
-    Ok(())
-}
-
-//
-// Legacy Pattern Sample
-//
-fn legacy_pattern_sample(device: &FidoKeyHid, rpid: &str, pin: &str) -> Result<()> {
-    legacy_discoverable_credentials(device, rpid, pin)
-        .unwrap_or_else(|err| eprintln!("Error => {}\n", err));
 
     Ok(())
 }

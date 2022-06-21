@@ -20,7 +20,7 @@ impl FidoKeyHid {
         let cid = ctaphid::ctaphid_init(self)?;
 
         let user_id = {
-            if let Some(rkp) = &args.user_entity{
+            if let Some(rkp) = &args.user_entity {
                 rkp.id.to_vec()
             } else {
                 [].to_vec()
@@ -139,7 +139,9 @@ impl FidoKeyHid {
         pin: Option<&str>,
         user_entity: &PublicKeyCredentialUserEntity,
     ) -> Result<Attestation> {
-        let mut builder = MakeCredentialArgsBuilder::new(rpid, challenge).user_entity(user_entity);
+        let mut builder = MakeCredentialArgsBuilder::new(rpid, challenge)
+            .user_entity(user_entity)
+            .resident_key();
 
         if let Some(pin) = pin {
             builder = builder.pin(pin);
