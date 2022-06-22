@@ -165,15 +165,19 @@ if is_success {
 
 ### discoverable credentials/resident-key
 
-- [discoverable credentials/resident-key](https://github.com/gebogebogebo/ctap-hid-fido2/blob/0791003c87b5d36392868a26247fca0b36ed9d5c/examples/test-with-pin-rk/main.rs#L49-L113)
+- [discoverable credentials/resident-key](https://github.com/gebogebogebo/ctap-hid-fido2/blob/5c8a4c8e9517bf305b41589ddc0343ea3a9ae994/examples/test-with-pin-rk/main.rs#L53-L118)
   - User data can be stored in the authenticator.
   - user_name and user_display_name are set only when multiple Assertions are acquired.
-- [with Credential Blob Extension](https://github.com/gebogebogebo/ctap-hid-fido2/blob/6078240c480197a90f905e7f02fb4023fd6882c1/examples/test-with-pin-rk/main.rs#L122-L238)
+- [with Credential Blob Extension](https://github.com/gebogebogebo/ctap-hid-fido2/blob/5c8a4c8e9517bf305b41589ddc0343ea3a9ae994/examples/test-with-pin-rk/main.rs#L120-L235)
   - This extension enables RPs to provide a small amount of extra credential configuration.
+  - This extension only works if CTAP 2.1 is implemented.
 
 
 
 ## Legacy Pattern Examples
+
+Legacy patterns are **deprecated.**
+They will be removed in a future version.
 
 - [non-discoverable credentials/non-resident-key](https://github.com/gebogebogebo/ctap-hid-fido2/blob/0791003c87b5d36392868a26247fca0b36ed9d5c/examples/test-with-pin-non-rk/main.rs#L352-L394)
 
