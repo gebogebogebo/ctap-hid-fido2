@@ -17,6 +17,13 @@ Authentication using FIDO2-compliant security keys (e.g. Yubikey) is possible.
 - Management of credentials recorded in security keys.
 
 ## Version
+### Ver 3.4.0
+
+- Update `MakeCredentialArgs` 
+  - change `rkparam` → `user_entity`
+  - add `resident_key`
+  - examples → [discoverable credentials/resident-key](https://github.com/gebogebogebo/ctap-hid-fido2/blob/5c8a4c8e9517bf305b41589ddc0343ea3a9ae994/examples/test-with-pin-rk/main.rs#L53-L118)
+
 ### Ver 3.3.1
 
 - Implement `Authenticator Confi`g - `force_change_pin()`. → [Authenticator Config(CTAP 2.1)](README_Authenticator_Config.md)
