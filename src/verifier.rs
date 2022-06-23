@@ -37,10 +37,9 @@ pub fn verify_attestation(
         let res = X509Certificate::from_der(&attestation.attstmt_x5c[0]);
         let cert = {
             match res {
-                Ok((rem, cert)) => {
-                    assert!(rem.is_empty());
-                    //
-                    assert_eq!(cert.tbs_certificate.version, X509Version::V3);
+                Ok((_rem, cert)) => {
+                    //assert!(rem.is_empty());
+                    //assert_eq!(cert.tbs_certificate.version, X509Version::V3);
                     cert
                 }
                 _ => panic!("x509 parsing failed: {:?}", res),

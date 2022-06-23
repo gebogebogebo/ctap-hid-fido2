@@ -149,7 +149,7 @@ pub fn create_payload(params: Params, extensions: Option<&Vec<Extension>>) -> Ve
 
     /*
     let user_id = {
-        if let Some(rkp) = rkparam {
+        if let Some(rkp) = user_entity {
             rkp.id.to_vec()
         } else {
             [].to_vec()
