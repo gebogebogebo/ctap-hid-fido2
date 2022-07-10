@@ -274,7 +274,9 @@ fn ctaphid_cbormsg(
     let mut keep_alive_msg_flag = false;
     let mut st: (u8, u16, u8) = (0, 0, 0);
     let mut packet_1st = vec![];
-    for _ in 0..100 {
+    for _counter in 0..500 {
+        // println!("counter: {:?}", _counter);
+
         let buf = match device.read() {
             Ok(res) => res,
             Err(_error) => {

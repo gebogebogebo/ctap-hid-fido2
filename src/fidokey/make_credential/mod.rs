@@ -6,7 +6,7 @@ use super::{
 };
 use crate::{
     ctaphid, encrypt::enc_hmac_sha_256,
-    public_key_credential_user_entity::PublicKeyCredentialUserEntity, util::should_uv,
+    public_key_credential_user_entity::PublicKeyCredentialUserEntity,
 };
 use anyhow::Result;
 pub use make_credential_params::{
@@ -34,11 +34,7 @@ impl FidoKeyHid {
 
             params.option_rk = args.rk.unwrap_or(false);
 
-            params.option_uv = if let Some(uv) = args.uv {
-                Some(uv)
-            } else {
-                should_uv(args.pin)
-            };
+            params.option_uv = args.uv;
 
             params.exclude_list = args.exclude_list.to_vec();
             params.key_type = args

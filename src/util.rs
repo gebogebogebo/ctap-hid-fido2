@@ -204,11 +204,3 @@ pub(crate) fn convert_to_publickey_pem(public_key_der: &[u8]) -> String {
     // 3. Header and footer
     "-----BEGIN PUBLIC KEY-----\n".to_string() + &pem_base + "-----END PUBLIC KEY-----"
 }
-
-/// Determine if we should use User Verification or not
-pub fn should_uv(pin: Option<&str>) -> Option<bool> {
-    match pin {
-        Some(_) => None,
-        None => Some(true),
-    }
-}

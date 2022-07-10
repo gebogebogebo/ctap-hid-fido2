@@ -2,7 +2,7 @@ pub mod get_assertion_command;
 pub mod get_assertion_params;
 pub mod get_assertion_response;
 pub mod get_next_assertion_command;
-use crate::{ctaphid, encrypt::enc_hmac_sha_256, hmac_ext::HmacExt, util::should_uv, FidoKeyHid};
+use crate::{ctaphid, encrypt::enc_hmac_sha_256, hmac_ext::HmacExt, FidoKeyHid};
 use anyhow::Result;
 use get_assertion_params::{Assertion, Extension as Gext, GetAssertionArgs};
 pub use get_assertion_params::{Extension, GetAssertionArgsBuilder};
@@ -46,11 +46,7 @@ impl FidoKeyHid {
                 credential_ids.to_vec(),
             );
             params.option_up = true;
-            params.option_uv = if let Some(uv) = args.uv {
-                Some(uv)
-            } else {
-                should_uv(args.pin)
-            };
+            params.option_uv = args.uv;
 
             // create pin auth
             if let Some(pin_token) = pin_token {
