@@ -1,9 +1,8 @@
-use aes::Aes256;
-use block_modes::block_padding::NoPadding;
-use block_modes::{BlockMode, Cbc};
+use aes::cipher::{block_padding::NoPadding, BlockDecryptMut, BlockEncryptMut, KeyIvInit};
 
 // AES256-CBC(key,IV=0,message)
-type Aes256Cbc = Cbc<Aes256, NoPadding>;
+type Aes256CbcEnc = cbc::Encryptor<aes::Aes256>;
+type Aes256CbcDec = cbc::Decryptor<aes::Aes256>;
 
 #[allow(dead_code)]
 pub fn encrypt_message_str(key: &[u8; 32], message: &str) -> Vec<u8> {
@@ -15,10 +14,11 @@ pub fn encrypt_message(key: &[u8; 32], message: &[u8]) -> Vec<u8> {
         panic!("Message too long");
     }
 
-    let cipher = Aes256Cbc::new_from_slices(key, &[0u8; 16]).unwrap();
     let mut buffer = message.to_vec();
-    let ciphertext = cipher.encrypt(&mut buffer, message.len()).unwrap();
-
+    let pt_len = message.len();
+    let ciphertext = Aes256CbcEnc::new(key.into(), &[0u8; 16].into())
+        .encrypt_padded_mut::<NoPadding>(&mut buffer, pt_len)
+        .unwrap();
     ciphertext.to_vec()
 }
 
@@ -33,10 +33,9 @@ pub fn decrypt_message(key: &[u8; 32], message: &[u8]) -> Vec<u8> {
         panic!("Message too long");
     }
 
-    let cipher = Aes256Cbc::new_from_slices(key, &[0u8; 16]).unwrap();
     let mut buffer = message.to_vec();
-
-    let plaintext = cipher.decrypt(&mut buffer).unwrap();
-
+    let plaintext = Aes256CbcDec::new(key.into(), &[0u8; 16].into())
+        .decrypt_padded_mut::<NoPadding>(&mut buffer)
+        .unwrap();
     plaintext.to_vec()
 }

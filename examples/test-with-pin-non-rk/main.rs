@@ -500,8 +500,7 @@ fn legacy_pattern_sample(device: &FidoKeyHid, rpid: &str, pin: &str) -> Result<(
     legacy_with_key_type(device, rpid, pin, CredentialSupportedKeyType::Ed25519)
         .unwrap_or_else(|err| eprintln!("Error => {}\n", err));
 
-    legacy_with_uv(device, rpid)
-        .unwrap_or_else(|err| eprintln!("Error => {}\n", err));
+    legacy_with_uv(device, rpid).unwrap_or_else(|err| eprintln!("Error => {}\n", err));
 
     Ok(())
 }
@@ -621,8 +620,7 @@ fn legacy_with_uv(device: &FidoKeyHid, rpid: &str) -> Result<()> {
 
     println!("- Authenticate");
     let challenge = verifier::create_challenge();
-    let assertion =
-        device.get_assertion(rpid, &challenge, &[verify_result.credential_id], None)?;
+    let assertion = device.get_assertion(rpid, &challenge, &[verify_result.credential_id], None)?;
     println!("-- Authenticate Success");
     debug!("Assertion");
     debug!("{}", assertion);
