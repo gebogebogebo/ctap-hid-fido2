@@ -37,7 +37,7 @@ features=["linux-static-hidraw"]
 clap = { version = "3.1", features = ["derive"] }
 env_logger = "0.9"
 log = "0.4"
-rpassword = "6.0"
+rpassword = "7.0"
 serde_json = "1.0.64"
 ihex = "3.0"
 base64-url = "1.4.10"

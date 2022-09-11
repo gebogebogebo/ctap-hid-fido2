@@ -19,7 +19,8 @@ Authentication using FIDO2-compliant security keys (e.g. Yubikey) is possible.
 ## Version
 ### Ver 3.4.2
 
-- update dependencies aes, cbc
+- update dependencies → aes, cbc, x509-parser, rpassword
+- remove dependencies → block-modes
 
 ### Ver 3.4.1
 
