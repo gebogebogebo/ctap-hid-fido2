@@ -279,7 +279,7 @@ fn main() -> Result<()> {
                 let item_val = if list {
                     "".to_string()
                 } else {
-                    item.unwrap_or_else(|| "".to_string())
+                    item.unwrap_or_default()
                 };
                 info::info(&device, &item_val)?;
             }
@@ -357,13 +357,13 @@ fn main() -> Result<()> {
                     cred::Command::Metadata
                 } else if delete {
                     cred::Command::Del((
-                        rpid.unwrap_or_else(|| "".to_string()),
-                        userid.unwrap_or_else(|| "".to_string()),
+                        rpid.unwrap_or_default(),
+                        userid.unwrap_or_default(),
                     ))
                 } else if update {
                     cred::Command::Update((
-                        rpid.unwrap_or_else(|| "".to_string()),
-                        userid.unwrap_or_else(|| "".to_string()),
+                        rpid.unwrap_or_default(),
+                        userid.unwrap_or_default(),
                     ))
                 } else {
                     cred::Command::List

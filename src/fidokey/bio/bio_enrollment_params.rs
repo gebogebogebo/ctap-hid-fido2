@@ -49,15 +49,11 @@ impl fmt::Display for BioSensorInfo {
     }
 }
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, Default)]
 pub enum Modality {
+    #[default]
     Unknown,
     Fingerprint,
-}
-impl Default for Modality {
-    fn default() -> Self {
-        Modality::Unknown
-    }
 }
 impl From<u32> for Modality {
     fn from(from: u32) -> Modality {
@@ -69,16 +65,12 @@ impl From<u32> for Modality {
 }
 
 #[allow(dead_code)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, Default)]
 pub enum FingerprintKind {
+    #[default]
     Unknown = 0,
     TouchType = 1,
     SwipeType = 2,
-}
-impl Default for FingerprintKind {
-    fn default() -> Self {
-        FingerprintKind::Unknown
-    }
 }
 impl From<u32> for FingerprintKind {
     fn from(from: u32) -> FingerprintKind {

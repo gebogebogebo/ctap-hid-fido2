@@ -110,7 +110,7 @@ impl FidoKeyHid {
 
     pub fn enable_info_option(&self, info_option: &InfoOption) -> Result<Option<bool>> {
         let info = self.get_info()?;
-        let ret = info.options.iter().find(|v| (*v).0 == info_option.as_ref());
+        let ret = info.options.iter().find(|v| (v).0 == info_option.as_ref());
         if let Some(v) = ret {
             // v.1 == true or false
             // - present and set to true.

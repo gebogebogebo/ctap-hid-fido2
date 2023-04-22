@@ -60,7 +60,7 @@ pub fn create_payload(pin_token: pintoken::PinToken, sub_command: SubCommand) ->
                 // 0x03:ForceChangePin
                 Some(BTreeMap::from([(Value::Integer(0x03), Value::Bool(true))]))
             }
-            _ => (None),
+            _ => None,
         };
         if let Some(param) = param {
             map.insert(Value::Integer(0x02), Value::Map(param.clone()));

@@ -68,7 +68,7 @@ fn discoverable_credentials(device: &FidoKeyHid, rpid: &str, pin: &str) -> Resul
             .build()
     );
 
-    let make_credential_args = MakeCredentialArgsBuilder::new(&rpid, &challenge)
+    let make_credential_args = MakeCredentialArgsBuilder::new(rpid, &challenge)
         .pin(pin)
         .user_entity(&user_entity)
         .resident_key()
@@ -89,7 +89,7 @@ fn discoverable_credentials(device: &FidoKeyHid, rpid: &str, pin: &str) -> Resul
 
     println!("- Authenticate");
     let challenge = verifier::create_challenge();
-    let get_assertion_args = GetAssertionArgsBuilder::new(&rpid, &challenge)
+    let get_assertion_args = GetAssertionArgsBuilder::new(rpid, &challenge)
         .pin(pin)
         .build();
 
@@ -140,11 +140,11 @@ fn with_cred_blob_ex(device: &FidoKeyHid, rpid: &str, pin: &str) -> Result<()> {
             .build()
     );
 
-    let make_credential_args = MakeCredentialArgsBuilder::new(&rpid, &challenge)
+    let make_credential_args = MakeCredentialArgsBuilder::new(rpid, &challenge)
         .pin(pin)
         .user_entity(&user_entity)
         .resident_key()
-        .extensions(&vec![protect, blob])
+        .extensions(&[protect, blob])
         .build();
 
     let attestation = device.make_credential_with_args(&make_credential_args)?;
@@ -190,9 +190,9 @@ fn with_cred_blob_ex(device: &FidoKeyHid, rpid: &str, pin: &str) -> Result<()> {
     println!("- Authenticate");
     let challenge = verifier::create_challenge();
     let ext = Gext::CredBlob((Some(true), None));
-    let get_assertion_args = GetAssertionArgsBuilder::new(&rpid, &challenge)
+    let get_assertion_args = GetAssertionArgsBuilder::new(rpid, &challenge)
         .pin(pin)
-        .extensions(&vec![ext])
+        .extensions(&[ext])
         .build();
 
     let assertions = device.get_assertion_with_args(&get_assertion_args)?;

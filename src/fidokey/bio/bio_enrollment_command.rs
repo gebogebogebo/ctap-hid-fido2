@@ -65,7 +65,7 @@ pub fn create_payload(
                 | SubCommand::RemoveEnrollment(ref template_info) => {
                     Some(to_value_template_info(template_info))
                 }
-                _ => (None),
+                _ => None,
             };
             if let Some(param) = param {
                 map.insert(Value::Integer(0x03), param.clone());

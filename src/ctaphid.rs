@@ -125,11 +125,11 @@ fn get_data(status: (u8, u16, u8), payload: Vec<u8>) -> Vec<u8> {
 }
 
 fn ctaphid_cbor_responce_get_payload_1(packet: &[u8]) -> Vec<u8> {
-    (&packet[7..64]).to_vec()
+    packet[7..64].to_vec()
 }
 
 fn ctaphid_cbor_responce_get_payload_2(packet: &[u8]) -> Vec<u8> {
-    (&packet[5..64]).to_vec()
+    packet[5..64].to_vec()
 }
 
 fn create_initialization_packet(cid: &[u8], commoand: u8, payload: &[u8]) -> (Vec<u8>, bool) {
