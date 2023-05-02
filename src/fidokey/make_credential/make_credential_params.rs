@@ -93,7 +93,7 @@ pub struct MakeCredentialArgs<'a> {
     pub rpid: String,
     pub challenge: Vec<u8>,
     pub pin: Option<&'a str>,
-    pub key_type: Option<CredentialSupportedKeyType>,
+    pub key_type: Vec<CredentialSupportedKeyType>,
     pub uv: Option<bool>,
     pub exclude_list: Vec<Vec<u8>>,
     pub user_entity: Option<PublicKeyCredentialUserEntity>,
@@ -111,7 +111,7 @@ pub struct MakeCredentialArgsBuilder<'a> {
     rpid: String,
     challenge: Vec<u8>,
     pin: Option<&'a str>,
-    key_type: Option<CredentialSupportedKeyType>,
+    key_type: Vec<CredentialSupportedKeyType>,
     uv: Option<bool>,
     exclude_list: Vec<Vec<u8>>,
     user_entity: Option<PublicKeyCredentialUserEntity>,
@@ -153,7 +153,7 @@ impl<'a> MakeCredentialArgsBuilder<'a> {
         mut self,
         key_type: CredentialSupportedKeyType,
     ) -> MakeCredentialArgsBuilder<'a> {
-        self.key_type = Some(key_type);
+        self.key_type.push(key_type);
         self
     }
 
