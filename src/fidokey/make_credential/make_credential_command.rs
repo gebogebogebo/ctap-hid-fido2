@@ -18,7 +18,7 @@ pub struct Params {
     pub option_uv: Option<bool>,
     pub client_data_hash: Vec<u8>,
     pub pin_auth: Vec<u8>,
-    pub key_type: Vec<CredentialSupportedKeyType>,
+    pub key_types: Vec<CredentialSupportedKeyType>,
 }
 
 impl Params {
@@ -27,7 +27,7 @@ impl Params {
             rp_id: rp_id.to_string(),
             user_id: user_id.to_vec(),
             client_data_hash: util::create_clientdata_hash(challenge),
-            key_type: vec![CredentialSupportedKeyType::Ecdsa256],
+            key_types: vec![CredentialSupportedKeyType::Ecdsa256],
             ..Default::default()
         }
     }
@@ -91,7 +91,7 @@ pub fn create_payload(params: Params, extensions: Option<&Vec<Extension>>) -> Ve
 
     // 0x04 : pubKeyCredParams
     let pub_key_cred_params_vec = params
-        .key_type
+        .key_types
         .iter()
         .map(|key_type| {
             let mut pub_key_cred_params_val = BTreeMap::new();
