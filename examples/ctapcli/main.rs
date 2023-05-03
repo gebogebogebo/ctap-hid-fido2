@@ -59,8 +59,7 @@ enum Action {
         #[clap(
             short = 'g',
             long = "get",
-            takes_value = true,
-            help = "Get a info.\n- rk/up/uv/plat/pin/mgmtp/mgmt/biop/bio/auv/ep/minpin/\n  u2f_v2/fido2/fido21p/fido21/hmac."
+            help = "Get a info.\n- a/rk/up/uv/plat/pin/mgmtp/mgmt/biop/bio/auv/ep/minpin/\n  u2f_v2/fido2/fido21p/fido21/hmac."
         )]
         item: Option<String>,
     },
@@ -87,7 +86,6 @@ enum Action {
         #[clap(
             short = 'g',
             long = "get",
-            takes_value = true,
             value_name = "tag",
             default_value = "",
             help = "Get a memo to Clipboard."
@@ -97,7 +95,6 @@ enum Action {
         #[clap(
             short = 'd',
             long = "del",
-            takes_value = true,
             value_name = "tag",
             default_value = "",
             help = "Delete a memo."
@@ -124,7 +121,6 @@ enum Action {
         #[clap(
             short = 'd',
             long = "delete",
-            takes_value = true,
             value_name = "template-id",
             help = "Delete fingerprint."
         )]
@@ -170,14 +166,12 @@ enum Action {
 
         #[clap(
             long = "rpid",
-            takes_value = true,
             help = "rpid to be deleted(or updated)."
         )]
         rpid: Option<String>,
 
         #[clap(
             long = "userid",
-            takes_value = true,
             help = "user-id to be deleted(or updated)."
         )]
         userid: Option<String>,
@@ -192,13 +186,14 @@ enum Action {
 
         #[clap(
             long = "minpin",
-            takes_value = true,
             value_name = "new-min-pin-length",
             help = "Setting a minimum PIN Length."
         )]
         new_min_pin_length: Option<u8>,
 
-        #[clap(long = "rpid", takes_value = true, help = "xxx.")]
+        #[clap(
+            long = "rpid", 
+            help = "xxx.")]
         rpids: Option<Vec<String>>,
 
         #[clap(
