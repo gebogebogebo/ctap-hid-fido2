@@ -37,7 +37,11 @@ impl FidoKeyHid {
             params.option_uv = args.uv;
 
             params.exclude_list = args.exclude_list.to_vec();
-            params.key_type = args.key_type.clone();
+            params.key_type = if args.key_type.is_empty() {
+                vec![CredentialSupportedKeyType::Ecdsa256]
+            } else {
+                args.key_type.clone()
+            };
 
             if let Some(rkp) = &args.user_entity {
                 params.user_name = rkp.name.to_string();
