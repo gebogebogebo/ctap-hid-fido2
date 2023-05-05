@@ -109,7 +109,20 @@ impl CoseKey {
     }
 
     pub fn to_public_key_der(&self) -> Vec<u8> {
-        if self.key_type == 2 {
+        if self.key_type == 1 {
+            // case of ED25519
+            // kty == 1: OKP → need x
+            let pub_key = if let Some(Value::Bytes(der)) = self.parameters.get(&-2) {
+                // 32byte
+                der.to_vec()
+            } else {
+                // ?
+                vec![]
+            };
+
+            pub_key
+        } else if self.key_type == 2 {
+            // case of Ecdsa256
             // kty == 2: EC2 → need x&y
 
             // tag:0x04(OCTET STRING)
@@ -126,10 +139,6 @@ impl CoseKey {
 
             pub_key
         } else {
-            // kty == 1: OKP → need x&y
-
-            // TODO case of ED25519
-            // ???
             vec![]
         }
     }

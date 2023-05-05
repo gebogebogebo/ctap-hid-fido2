@@ -92,7 +92,7 @@ pub fn get_hid_devices(usage_page: Option<u16>) -> Vec<HidInfo> {
 
     let devices = api.device_list();
     for dev in devices {
-        if usage_page == None || dev.usage_page() == usage_page.unwrap() {
+        if usage_page.is_none() || dev.usage_page() == usage_page.unwrap() {
             let mut memo = StrBuf::new(0);
 
             if let Some(n) = dev.product_string() {

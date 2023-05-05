@@ -18,7 +18,7 @@ pub struct Params {
     pub option_uv: Option<bool>,
     pub client_data_hash: Vec<u8>,
     pub pin_auth: Vec<u8>,
-    pub key_type: CredentialSupportedKeyType,
+    pub key_types: Vec<CredentialSupportedKeyType>,
 }
 
 impl Params {
@@ -27,7 +27,7 @@ impl Params {
             rp_id: rp_id.to_string(),
             user_id: user_id.to_vec(),
             client_data_hash: util::create_clientdata_hash(challenge),
-            key_type: CredentialSupportedKeyType::Ecdsa256,
+            key_types: vec![CredentialSupportedKeyType::Ecdsa256],
             ..Default::default()
         }
     }
@@ -90,17 +90,24 @@ pub fn create_payload(params: Params, extensions: Option<&Vec<Extension>>) -> Ve
     let user = Value::Map(user_val);
 
     // 0x04 : pubKeyCredParams
-    let mut pub_key_cred_params_val = BTreeMap::new();
-    pub_key_cred_params_val.insert(
-        Value::Text("alg".to_string()),
-        Value::Integer(params.key_type as i128),
-    );
-    pub_key_cred_params_val.insert(
-        Value::Text("type".to_string()),
-        Value::Text("public-key".to_string()),
-    );
-    let tmp = Value::Map(pub_key_cred_params_val);
-    let pub_key_cred_params = Value::Array(vec![tmp]);
+    let pub_key_cred_params_vec = params
+        .key_types
+        .iter()
+        .map(|key_type| {
+            let mut pub_key_cred_params_val = BTreeMap::new();
+            pub_key_cred_params_val.insert(
+                Value::Text("alg".to_string()),
+                Value::Integer(*key_type as i128),
+            );
+            pub_key_cred_params_val.insert(
+                Value::Text("type".to_string()),
+                Value::Text("public-key".to_string()),
+            );
+            Value::Map(pub_key_cred_params_val)
+        })
+        .collect();
+
+    let pub_key_cred_params = Value::Array(pub_key_cred_params_vec);
 
     // 0x05 : excludeList
     let exclude_list = Value::Array(

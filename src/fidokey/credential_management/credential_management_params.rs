@@ -77,17 +77,13 @@ impl fmt::Display for Rp {
 }
 
 #[allow(dead_code)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, Default)]
 pub enum CredentialProtectionPolicy {
+    #[default]
     Unknown,
     UserVerificationOptional,
     UserVerificationOptionalWithCredentialIdList,
     UserVerificationRequired,
-}
-impl Default for CredentialProtectionPolicy {
-    fn default() -> Self {
-        CredentialProtectionPolicy::Unknown
-    }
 }
 impl From<u32> for CredentialProtectionPolicy {
     fn from(from: u32) -> CredentialProtectionPolicy {

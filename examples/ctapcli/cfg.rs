@@ -74,9 +74,7 @@ pub fn config(device: &FidoKeyHid, command: Command, pin: Option<String>) -> Res
             println!("Force Change PIN: PIN change is required after this command.\nThe authenticator returns CTAP2_ERR_PIN_POLICY_VIOLATION until changePIN is successful.");
             println!("https://fidoalliance.org/specs/fido-v2.1-ps-20210615/fido-client-to-authenticator-protocol-v2.1-ps-20210615.html#sctn-feature-descriptions-minPinLength");
             println!();
-            let input = common::get_input_with_message(&format!(
-                "[WARNING] Cannot be restored\nForce Change PIN ?. (Yes/No)",
-            ));
+            let input = common::get_input_with_message("[WARNING] Cannot be restored\nForce Change PIN ?. (Yes/No)");
 
             if input == "Yes" {
                 device.force_change_pin(Some(&pin))?;

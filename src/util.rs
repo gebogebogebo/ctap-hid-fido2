@@ -4,6 +4,7 @@ use num::NumCast;
 use ring::digest;
 use serde_cbor::Value;
 use std::collections::BTreeMap;
+use base64::{Engine as _, engine::general_purpose};
 
 pub fn to_hex_str(bytes: &[u8]) -> String {
     bytes
@@ -183,7 +184,7 @@ pub(crate) fn convert_to_publickey_pem(public_key_der: &[u8]) -> String {
     tmp.append(&mut public_key_der.to_vec());
 
     // 1.encode Base64
-    let base64_str = base64::encode(tmp);
+    let base64_str = general_purpose::STANDARD_NO_PAD.encode(tmp);
 
     // 2. /n　every 64 characters
     let pem_base = {

@@ -9,7 +9,7 @@ use strum_macros::{AsRefStr, Display};
 
 /// Attestation Object
 /// [https://www.w3.org/TR/webauthn/#sctn-attestation](https://www.w3.org/TR/webauthn/#sctn-attestation)
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone)]
 pub struct Attestation {
     pub fmt: String,
     pub rpid_hash: Vec<u8>,
@@ -93,7 +93,7 @@ pub struct MakeCredentialArgs<'a> {
     pub rpid: String,
     pub challenge: Vec<u8>,
     pub pin: Option<&'a str>,
-    pub key_type: Option<CredentialSupportedKeyType>,
+    pub key_types: Vec<CredentialSupportedKeyType>,
     pub uv: Option<bool>,
     pub exclude_list: Vec<Vec<u8>>,
     pub user_entity: Option<PublicKeyCredentialUserEntity>,
@@ -111,7 +111,7 @@ pub struct MakeCredentialArgsBuilder<'a> {
     rpid: String,
     challenge: Vec<u8>,
     pin: Option<&'a str>,
-    key_type: Option<CredentialSupportedKeyType>,
+    key_types: Vec<CredentialSupportedKeyType>,
     uv: Option<bool>,
     exclude_list: Vec<Vec<u8>>,
     user_entity: Option<PublicKeyCredentialUserEntity>,
@@ -153,7 +153,7 @@ impl<'a> MakeCredentialArgsBuilder<'a> {
         mut self,
         key_type: CredentialSupportedKeyType,
     ) -> MakeCredentialArgsBuilder<'a> {
-        self.key_type = Some(key_type);
+        self.key_types.push(key_type);
         self
     }
 
@@ -180,7 +180,7 @@ impl<'a> MakeCredentialArgsBuilder<'a> {
             rpid: self.rpid,
             challenge: self.challenge,
             pin: self.pin,
-            key_type: self.key_type,
+            key_types: self.key_types,
             uv: self.uv,
             exclude_list: self.exclude_list,
             user_entity: self.user_entity,

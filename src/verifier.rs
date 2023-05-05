@@ -1,6 +1,7 @@
 use crate::fidokey::get_assertion::get_assertion_params;
 use crate::fidokey::make_credential::make_credential_params;
 use crate::util;
+use crate::public_key::{PublicKey, PublicKeyType};
 use ring::digest;
 use ring::rand::SecureRandom;
 use ring::signature;
@@ -19,8 +20,7 @@ pub fn create_challenge() -> [u8; 32] {
 pub struct AttestationVerifyResult {
     pub is_success: bool,
     pub credential_id: Vec<u8>,
-    pub credential_publickey_pem: String,
-    pub credential_publickey_der: Vec<u8>,
+    pub credential_public_key: PublicKey,
 }
 
 /// Verify Atterstaion Object
@@ -33,7 +33,7 @@ pub fn verify_attestation(
         return AttestationVerifyResult::default();
     }
 
-    let public_key = {
+    let public_key_der = {
         let res = X509Certificate::from_der(&attestation.attstmt_x5c[0]);
         let cert = {
             match res {
@@ -48,9 +48,12 @@ pub fn verify_attestation(
         cert.tbs_certificate.subject_pki.subject_public_key
     };
 
+    // TODO Ecdsa256 fixed
+    let public_key = PublicKey::with_der(public_key_der.as_ref(), PublicKeyType::Ecdsa256);
+
     // Verify the signature.
     let result = verify_sig(
-        public_key.as_ref(),
+        &public_key,
         challenge,
         &attestation.auth_data,
         &attestation.attstmt_sig,
@@ -59,15 +62,14 @@ pub fn verify_attestation(
     AttestationVerifyResult {
         is_success: result,
         credential_id: attestation.credential_descriptor.id.to_vec(),
-        credential_publickey_pem: attestation.credential_publickey.pem.to_string(),
-        credential_publickey_der: attestation.credential_publickey.der.to_vec(),
+        credential_public_key: attestation.credential_publickey.clone(),
     }
 }
 
 /// Verify Assertion Object
 pub fn verify_assertion(
     rpid: &str,
-    publickey: &[u8],
+    publickey: &PublicKey,
     challenge: &[u8],
     assertion: &get_assertion_params::Assertion,
 ) -> bool {
@@ -85,7 +87,7 @@ pub fn verify_assertion(
     )
 }
 
-fn verify_sig(public_key_der: &[u8], challenge: &[u8], auth_data: &[u8], sig: &[u8]) -> bool {
+fn verify_sig(public_key: &PublicKey, challenge: &[u8], auth_data: &[u8], sig: &[u8]) -> bool {
     // message = authData + SHA256(challenge)
     let message = {
         let mut base: Vec<u8> = vec![];
@@ -96,12 +98,11 @@ fn verify_sig(public_key_der: &[u8], challenge: &[u8], auth_data: &[u8], sig: &[
         base
     };
 
-    // TODO case of ED25519
-    // https://www.iana.org/assignments/cose/cose.xhtml#algorithms
-    //let peer_public_key =
-    //     signature::UnparsedPublicKey::new(&ED25519, public_key_der);
-    let peer_public_key =
-        signature::UnparsedPublicKey::new(&signature::ECDSA_P256_SHA256_ASN1, public_key_der);
+    let peer_public_key = match public_key.key_type {
+        PublicKeyType::Ecdsa256 => signature::UnparsedPublicKey::new(&signature::ECDSA_P256_SHA256_ASN1, public_key.der.to_vec()),
+        PublicKeyType::Ed25519 => signature::UnparsedPublicKey::new(&signature::ED25519, public_key.der.to_vec()),
+        _ => return false
+    };
 
     let result = peer_public_key.verify(&message, sig);
 

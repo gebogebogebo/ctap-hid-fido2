@@ -58,7 +58,7 @@ Correct implementation is done on the server side.
 
 ```rust
 let userdata.credential_id = verify_result.credential_id;
-let userdata.credential_publickey_der = verify_result.credential_publickey_der;
+let userdata.credential_public_key = verify_result.credential_public_key;
 
 store(&userdata); <- ex.store to database
 ```
@@ -75,7 +75,7 @@ Correct implementation is done on the server side.
 let userdata = restore(userid); <- ex.restore from database
 
 userdata.credential_id;
-userdata.credential_publickey_der;
+userdata.credential_public_key;
 ```
 
 2. create `Challenge`
@@ -113,7 +113,7 @@ Correct implementation is done on the server side.
 ```rust
 let is_success = verifier::verify_assertion(
   rpid,
-  &userdata.credential_publickey_der,
+  &userdata.credential_public_key,
   &challenge,
   &assertions[0],
 );
@@ -130,45 +130,41 @@ if is_success {
 
 ### non-discoverable credentials/non-resident-key
 
-- [non-discoverable credentials/non-resident-key](https://github.com/gebogebogebo/ctap-hid-fido2/blob/0791003c87b5d36392868a26247fca0b36ed9d5c/examples/test-with-pin-non-rk/main.rs#L63-L114)
+- [non-discoverable credentials/non-resident-key](https://github.com/gebogebogebo/ctap-hid-fido2/blob/4554732f4647b0bce0d7674c554a7a33dabf099a/examples/test-with-pin-non-rk/main.rs#L69-L120)
   - Most common use to specify PIN.
-- [with UV](https://github.com/gebogebogebo/ctap-hid-fido2/blob/0791003c87b5d36392868a26247fca0b36ed9d5c/examples/test-with-pin-non-rk/main.rs#L116-L164)
+- [with UV](https://github.com/gebogebogebo/ctap-hid-fido2/blob/4554732f4647b0bce0d7674c554a7a33dabf099a/examples/test-with-pin-non-rk/main.rs#L122-L170)
   - to use Yubikey bio for fingerprint authentication.
-
-- [with Key Type](https://github.com/gebogebogebo/ctap-hid-fido2/blob/0791003c87b5d36392868a26247fca0b36ed9d5c/examples/test-with-pin-non-rk/main.rs#L166-L223)
+- [with Key Type](https://github.com/gebogebogebo/ctap-hid-fido2/blob/4554732f4647b0bce0d7674c554a7a33dabf099a/examples/test-with-pin-non-rk/main.rs#L172-L230)
   - Specify the algorithm(`Ecdsa256`/`Ed25519`).
-  - Verify Assertion in `Ed25519` is always false because it is not yet implemented.
 
 
-- [with HMAC Secret Extension](https://github.com/gebogebogebo/ctap-hid-fido2/blob/c75db2d8cb83f28177ddc5d8455310ada1ba03f3/examples/test-with-pin-non-rk/main.rs#L229-L312)
+- [with HMAC Secret Extension](https://github.com/gebogebogebo/ctap-hid-fido2/blob/4554732f4647b0bce0d7674c554a7a33dabf099a/examples/test-with-pin-non-rk/main.rs#L232-L315)
   - I do not know the correct use of this option.
-- [with Large Blob Key Extension](https://github.com/gebogebogebo/ctap-hid-fido2/blob/c75db2d8cb83f28177ddc5d8455310ada1ba03f3/examples/test-with-pin-non-rk/main.rs#L367-L452)
-
+- [with Large Blob Key Extension](https://github.com/gebogebogebo/ctap-hid-fido2/blob/4554732f4647b0bce0d7674c554a7a33dabf099a/examples/test-with-pin-non-rk/main.rs#L370-L455)
   - Used with Large Blob Command.
   - [Spec: 6.10.5. Writing per-credential large-blob data for a new credential](https://fidoalliance.org/specs/fido-v2.1-ps-20210615/fido-client-to-authenticator-protocol-v2.1-ps-20210615.html#writing-per-credential-data)
-
-- [with Min Pin Length Extension](https://github.com/gebogebogebo/ctap-hid-fido2/blob/c75db2d8cb83f28177ddc5d8455310ada1ba03f3/examples/test-with-pin-non-rk/main.rs#L454-L487)
+  
+- [with Min Pin Length Extension](https://github.com/gebogebogebo/ctap-hid-fido2/blob/4554732f4647b0bce0d7674c554a7a33dabf099a/examples/test-with-pin-non-rk/main.rs#L457-L490)
   - Get Min Pin Length Policy.
   - RPID must be set in Authenticator Config. → [Authenticator Config](README_Authenticator_Config.md)
   - [Spec: 12.4. Minimum PIN Length Extension (minPinLength)](https://fidoalliance.org/specs/fido-v2.1-ps-20210615/fido-client-to-authenticator-protocol-v2.1-ps-20210615.html#sctn-minpinlength-extension)
   
-- [without PIN](https://github.com/gebogebogebo/ctap-hid-fido2/blob/0791003c87b5d36392868a26247fca0b36ed9d5c/examples/test-with-pin-non-rk/main.rs#L282-L333)
-
+- [without PIN](https://github.com/gebogebogebo/ctap-hid-fido2/blob/4554732f4647b0bce0d7674c554a7a33dabf099a/examples/test-with-pin-non-rk/main.rs#L317-L368)
   - **For security reasons, this feature is deprecated**
-
+  
   - Use `without_pin_and_uv` to run with an Authenticator that does not have a PIN set.
-
+  
   - Using `without_pin_and_uv` on an Authenticator with a PIN set may result in an error (behavior depends on Authenticator type).
-
+  
   - Get whether PIN is set in Authenticator with `enable_info_option()`
     - [Example](https://github.com/gebogebogebo/ctap-hid-fido2/blob/0791003c87b5d36392868a26247fca0b36ed9d5c/examples/get-info/main.rs#L44-L49)
 
 ### discoverable credentials/resident-key
 
-- [discoverable credentials/resident-key](https://github.com/gebogebogebo/ctap-hid-fido2/blob/5c8a4c8e9517bf305b41589ddc0343ea3a9ae994/examples/test-with-pin-rk/main.rs#L53-L118)
+- [discoverable credentials/resident-key](https://github.com/gebogebogebo/ctap-hid-fido2/blob/4554732f4647b0bce0d7674c554a7a33dabf099a/examples/test-with-pin-rk/main.rs#L53-L118)
   - User data can be stored in the authenticator.
   - user_name and user_display_name are set only when multiple Assertions are acquired.
-- [with Credential Blob Extension](https://github.com/gebogebogebo/ctap-hid-fido2/blob/5c8a4c8e9517bf305b41589ddc0343ea3a9ae994/examples/test-with-pin-rk/main.rs#L120-L235)
+- [with Credential Blob Extension](https://github.com/gebogebogebo/ctap-hid-fido2/blob/4554732f4647b0bce0d7674c554a7a33dabf099a/examples/test-with-pin-rk/main.rs#L120-L235)
   - This extension enables RPs to provide a small amount of extra credential configuration.
   - This extension only works if CTAP 2.1 is implemented.
 
@@ -179,12 +175,12 @@ if is_success {
 Legacy patterns are **deprecated.**
 They will be removed in a future version.
 
-- [non-discoverable credentials/non-resident-key](https://github.com/gebogebogebo/ctap-hid-fido2/blob/0791003c87b5d36392868a26247fca0b36ed9d5c/examples/test-with-pin-non-rk/main.rs#L352-L394)
+- [non-discoverable credentials/non-resident-key](https://github.com/gebogebogebo/ctap-hid-fido2/blob/4554732f4647b0bce0d7674c554a7a33dabf099a/examples/test-with-pin-non-rk/main.rs#L511-L553)
 
 
-- [with Key Type](https://github.com/gebogebogebo/ctap-hid-fido2/blob/0791003c87b5d36392868a26247fca0b36ed9d5c/examples/test-with-pin-non-rk/main.rs#L396-L444)
+- [with Key Type](https://github.com/gebogebogebo/ctap-hid-fido2/blob/4554732f4647b0bce0d7674c554a7a33dabf099a/examples/test-with-pin-non-rk/main.rs#L555-L603)
 
-- [discoverable credentials/resident-key](https://github.com/gebogebogebo/ctap-hid-fido2/blob/0791003c87b5d36392868a26247fca0b36ed9d5c/examples/test-with-pin-rk/main.rs#L125-L183)
+- [discoverable credentials/resident-key](https://github.com/gebogebogebo/ctap-hid-fido2/blob/4554732f4647b0bce0d7674c554a7a33dabf099a/examples/test-with-pin-rk/main.rs#L237-L295)
 
 
 

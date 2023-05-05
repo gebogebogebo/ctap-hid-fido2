@@ -46,12 +46,14 @@ fn builder_pattern_sample(device: &FidoKeyHid, rpid: &str, pin: &str) -> Result<
 
     with_uv(device, rpid).unwrap_or_else(|err| eprintln!("Error => {}\n", err));
 
-    with_key_type(device, rpid, pin, CredentialSupportedKeyType::Ecdsa256)
+    with_key_types(device, rpid, pin, vec![CredentialSupportedKeyType::Ecdsa256])
         .unwrap_or_else(|err| eprintln!("Error => {}\n", err));
 
-    // Verify Assertion in Ed25519 is always false because it is not yet implemented
-    with_key_type(device, rpid, pin, CredentialSupportedKeyType::Ed25519)
+    with_key_types(device, rpid, pin, vec![CredentialSupportedKeyType::Ed25519])
         .unwrap_or_else(|err| eprintln!("Error => {}\n", err));
+
+    with_key_types(device, rpid, pin, vec![CredentialSupportedKeyType::Ed25519, CredentialSupportedKeyType::Ecdsa256])
+    .unwrap_or_else(|err| eprintln!("Error => {}\n", err));
 
     with_hmac(device, rpid, pin).unwrap_or_else(|err| eprintln!("Error => {}\n", err));
 
@@ -70,7 +72,7 @@ fn non_discoverable_credentials(device: &FidoKeyHid, rpid: &str, pin: &str) -> R
     println!("- Register");
     let challenge = verifier::create_challenge();
 
-    let make_credential_args = MakeCredentialArgsBuilder::new(&rpid, &challenge)
+    let make_credential_args = MakeCredentialArgsBuilder::new(rpid, &challenge)
         .pin(pin)
         .build();
 
@@ -103,7 +105,7 @@ fn non_discoverable_credentials(device: &FidoKeyHid, rpid: &str, pin: &str) -> R
     println!("-- Verify Assertion");
     let is_success = verifier::verify_assertion(
         rpid,
-        &verify_result.credential_publickey_der,
+        &verify_result.credential_public_key,
         &challenge,
         &assertions[0],
     );
@@ -123,7 +125,7 @@ fn with_uv(device: &FidoKeyHid, rpid: &str) -> Result<()> {
     println!("- Register");
     let challenge = verifier::create_challenge();
 
-    let make_credential_args = MakeCredentialArgsBuilder::new(&rpid, &challenge).build();
+    let make_credential_args = MakeCredentialArgsBuilder::new(rpid, &challenge).build();
 
     let attestation = device.make_credential_with_args(&make_credential_args)?;
     println!("-- Register Success");
@@ -153,7 +155,7 @@ fn with_uv(device: &FidoKeyHid, rpid: &str) -> Result<()> {
     println!("-- Verify Assertion");
     let is_success = verifier::verify_assertion(
         rpid,
-        &verify_result.credential_publickey_der,
+        &verify_result.credential_public_key,
         &challenge,
         &assertions[0],
     );
@@ -167,21 +169,22 @@ fn with_uv(device: &FidoKeyHid, rpid: &str) -> Result<()> {
     Ok(())
 }
 
-fn with_key_type(
+fn with_key_types(
     device: &FidoKeyHid,
     rpid: &str,
     pin: &str,
-    key_type: CredentialSupportedKeyType,
+    key_types: Vec<CredentialSupportedKeyType>,
 ) -> Result<()> {
-    println!("----- with_key_type ({:?}) -----", key_type);
+    println!("----- with_key_type ({:?}) -----", key_types);
 
     println!("- Register");
     let challenge = verifier::create_challenge();
 
-    let make_credential_args = MakeCredentialArgsBuilder::new(&rpid, &challenge)
-        .pin(pin)
-        .key_type(key_type)
-        .build();
+    let mut builder = MakeCredentialArgsBuilder::new(rpid, &challenge).pin(pin);
+    for key_type in key_types {
+        builder = builder.key_type(key_type)
+    }
+    let make_credential_args = builder.build();
 
     let attestation = device.make_credential_with_args(&make_credential_args)?;
     println!("-- Register Success");
@@ -212,7 +215,7 @@ fn with_key_type(
     println!("-- Verify Assertion");
     let is_success = verifier::verify_assertion(
         rpid,
-        &verify_result.credential_publickey_der,
+        &verify_result.credential_public_key,
         &challenge,
         &assertions[0],
     );
@@ -233,9 +236,9 @@ fn with_hmac(device: &FidoKeyHid, rpid: &str, pin: &str) -> Result<()> {
     let challenge = verifier::create_challenge();
     let ext = Mext::HmacSecret(Some(true));
 
-    let make_credential_args = MakeCredentialArgsBuilder::new(&rpid, &challenge)
+    let make_credential_args = MakeCredentialArgsBuilder::new(rpid, &challenge)
         .pin(pin)
-        .extensions(&vec![ext])
+        .extensions(&[ext])
         .build();
 
     let attestation = device.make_credential_with_args(&make_credential_args)?;
@@ -271,7 +274,7 @@ fn with_hmac(device: &FidoKeyHid, rpid: &str, pin: &str) -> Result<()> {
     let get_assertion_args = GetAssertionArgsBuilder::new(rpid, &challenge)
         .pin(pin)
         .credential_id(&verify_result.credential_id)
-        .extensions(&vec![ext])
+        .extensions(&[ext])
         .build();
 
     let assertions = device.get_assertion_with_args(&get_assertion_args)?;
@@ -297,7 +300,7 @@ fn with_hmac(device: &FidoKeyHid, rpid: &str, pin: &str) -> Result<()> {
     println!("-- Verify Assertion");
     let is_success = verifier::verify_assertion(
         rpid,
-        &verify_result.credential_publickey_der,
+        &verify_result.credential_public_key,
         &challenge,
         &assertions[0],
     );
@@ -317,7 +320,7 @@ fn without_pin(device: &FidoKeyHid, rpid: &str) -> Result<()> {
     println!("- Register");
     let challenge = verifier::create_challenge();
 
-    let make_credential_args = MakeCredentialArgsBuilder::new(&rpid, &challenge)
+    let make_credential_args = MakeCredentialArgsBuilder::new(rpid, &challenge)
         .without_pin_and_uv()
         .build();
 
@@ -350,7 +353,7 @@ fn without_pin(device: &FidoKeyHid, rpid: &str) -> Result<()> {
     println!("-- Verify Assertion");
     let is_success = verifier::verify_assertion(
         rpid,
-        &verify_result.credential_publickey_der,
+        &verify_result.credential_public_key,
         &challenge,
         &assertions[0],
     );
@@ -371,9 +374,9 @@ fn with_large_blob_key(device: &FidoKeyHid, rpid: &str, pin: &str) -> Result<()>
     let challenge = verifier::create_challenge();
     let ext = Mext::LargeBlobKey((Some(true), None));
 
-    let make_credential_args = MakeCredentialArgsBuilder::new(&rpid, &challenge)
+    let make_credential_args = MakeCredentialArgsBuilder::new(rpid, &challenge)
         .pin(pin)
-        .extensions(&vec![ext])
+        .extensions(&[ext])
         .build();
 
     let attestation = device.make_credential_with_args(&make_credential_args)?;
@@ -411,7 +414,7 @@ fn with_large_blob_key(device: &FidoKeyHid, rpid: &str, pin: &str) -> Result<()>
     let get_assertion_args = GetAssertionArgsBuilder::new(rpid, &challenge)
         .pin(pin)
         .credential_id(&verify_result.credential_id)
-        .extensions(&vec![ext])
+        .extensions(&[ext])
         .build();
 
     let assertions = device.get_assertion_with_args(&get_assertion_args)?;
@@ -437,7 +440,7 @@ fn with_large_blob_key(device: &FidoKeyHid, rpid: &str, pin: &str) -> Result<()>
     println!("-- Verify Assertion");
     let is_success = verifier::verify_assertion(
         rpid,
-        &verify_result.credential_publickey_der,
+        &verify_result.credential_public_key,
         &challenge,
         &assertions[0],
     );
@@ -460,9 +463,9 @@ fn with_min_pin_length_ex(device: &FidoKeyHid, rpid: &str, pin: &str) -> Result<
     let challenge = verifier::create_challenge();
     let ext = Mext::MinPinLength((Some(true), None));
 
-    let make_credential_args = MakeCredentialArgsBuilder::new(&rpid, &challenge)
+    let make_credential_args = MakeCredentialArgsBuilder::new(rpid, &challenge)
         .pin(pin)
-        .extensions(&vec![ext])
+        .extensions(&[ext])
         .build();
 
     let attestation = device.make_credential_with_args(&make_credential_args)?;
@@ -535,7 +538,7 @@ fn legacy_non_discoverable_credentials(device: &FidoKeyHid, rpid: &str, pin: &st
     println!("-- Verify Assertion");
     let is_success = verifier::verify_assertion(
         rpid,
-        &verify_result.credential_publickey_der,
+        &verify_result.credential_public_key,
         &challenge,
         &assertion,
     );
@@ -585,7 +588,7 @@ fn legacy_with_key_type(
     println!("-- Verify Assertion");
     let is_success = verifier::verify_assertion(
         rpid,
-        &verify_result.credential_publickey_der,
+        &verify_result.credential_public_key,
         &challenge,
         &assertion,
     );
@@ -628,7 +631,7 @@ fn legacy_with_uv(device: &FidoKeyHid, rpid: &str) -> Result<()> {
     println!("-- Verify Assertion");
     let is_success = verifier::verify_assertion(
         rpid,
-        &verify_result.credential_publickey_der,
+        &verify_result.credential_public_key,
         &challenge,
         &assertion,
     );

@@ -21,7 +21,7 @@ fn main() {
             info.vid, info.pid, info.info
         );
 
-        let dev = FidoKeyHidFactory::create_by_params(&vec![info.param], &Cfg::init()).unwrap();
+        let dev = FidoKeyHidFactory::create_by_params(&[info.param], &Cfg::init()).unwrap();
 
         println!("get_info()");
         match dev.get_info() {

@@ -65,7 +65,7 @@ pub fn create_payload(
                 // credentialId (0x02): PublicKeyCredentialDescriptor of the credential to be deleted or updated.
                 Some(create_public_key_credential_descriptor(pkcd))
             }
-            _ => (None),
+            _ => None,
         };
         if let Some(param) = param {
             map.insert(Value::Integer(0x02), param.clone());
