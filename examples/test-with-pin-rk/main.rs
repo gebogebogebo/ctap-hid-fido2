@@ -104,7 +104,7 @@ fn discoverable_credentials(device: &FidoKeyHid, rpid: &str, pin: &str) -> Resul
     println!("-- Verify Assertion");
     let is_success = verifier::verify_assertion(
         rpid,
-        &verify_result.credential_publickey_der,
+        &verify_result.credential_public_key,
         &challenge,
         &assertions[0],
     );
@@ -221,7 +221,7 @@ fn with_cred_blob_ex(device: &FidoKeyHid, rpid: &str, pin: &str) -> Result<()> {
     println!("-- Verify Assertion");
     let is_success = verifier::verify_assertion(
         rpid,
-        &verify_result.credential_publickey_der,
+        &verify_result.credential_public_key,
         &challenge,
         &assertions[0],
     );
@@ -281,7 +281,7 @@ fn legacy_discoverable_credentials(device: &FidoKeyHid, rpid: &str, pin: &str) -
     println!("-- Verify Assertion");
     let is_success = verifier::verify_assertion(
         rpid,
-        &verify_result.credential_publickey_der,
+        &verify_result.credential_public_key,
         &challenge,
         &assertions[0],
     );

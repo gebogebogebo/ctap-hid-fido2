@@ -9,7 +9,7 @@ use strum_macros::{AsRefStr, Display};
 
 /// Attestation Object
 /// [https://www.w3.org/TR/webauthn/#sctn-attestation](https://www.w3.org/TR/webauthn/#sctn-attestation)
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone)]
 pub struct Attestation {
     pub fmt: String,
     pub rpid_hash: Vec<u8>,
