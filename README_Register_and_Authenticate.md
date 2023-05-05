@@ -58,7 +58,7 @@ Correct implementation is done on the server side.
 
 ```rust
 let userdata.credential_id = verify_result.credential_id;
-let userdata.credential_publickey_der = verify_result.credential_publickey_der;
+let userdata.credential_public_key = verify_result.credential_public_key;
 
 store(&userdata); <- ex.store to database
 ```
@@ -75,7 +75,7 @@ Correct implementation is done on the server side.
 let userdata = restore(userid); <- ex.restore from database
 
 userdata.credential_id;
-userdata.credential_publickey_der;
+userdata.credential_public_key;
 ```
 
 2. create `Challenge`
@@ -113,7 +113,7 @@ Correct implementation is done on the server side.
 ```rust
 let is_success = verifier::verify_assertion(
   rpid,
-  &userdata.credential_publickey_der,
+  &userdata.credential_public_key,
   &challenge,
   &assertions[0],
 );

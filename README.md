@@ -17,6 +17,13 @@ Authentication using FIDO2-compliant security keys (e.g. Yubikey) is possible.
 - Management of credentials recorded in security keys.
 
 ## Version
+### Ver 3.5.0
+
+- Specify multiple key_types in MakeCredentialArgsBuilder.
+- ED25519 support.
+- update dependencies → base64, x509-parser, hidapi, clap, env_logger
+- remove dependencies → serde_json, ihex, base64-url
+
 ### Ver 3.4.2
 
 - update dependencies → aes, cbc, x509-parser, rpassword
@@ -92,7 +99,7 @@ fn main() {
 
     // store Credential Id and Publickey
     let userdata_credential_id = verify_result.credential_id;
-    let userdata_credential_publickey_der = verify_result.credential_publickey_der;
+    let userdata_credential_public_key = verify_result.credential_public_key;
 
     println!("Authenticate");
     // create `challenge`
@@ -111,7 +118,7 @@ fn main() {
     // verify `Assertion` Object
     if !verifier::verify_assertion(
         rpid,
-        &userdata_credential_publickey_der,
+        &userdata_credential_public_key,
         &challenge,
         &assertions[0],
     ) {

@@ -34,7 +34,7 @@ fn main() {
 
     // store Credential Id and Publickey
     let userdata_credential_id = verify_result.credential_id;
-    let userdata_credential_publickey_der = verify_result.credential_public_key;
+    let userdata_credential_public_key = verify_result.credential_public_key;
 
     println!("Authenticate");
     // create `challenge`
@@ -53,7 +53,7 @@ fn main() {
     // verify `Assertion` Object
     if !verifier::verify_assertion(
         rpid,
-        &userdata_credential_publickey_der,
+        &userdata_credential_public_key,
         &challenge,
         &assertions[0],
     ) {
