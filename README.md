@@ -17,6 +17,10 @@ Authentication using FIDO2-compliant security keys (e.g. Yubikey) is possible.
 - Management of credentials recorded in security keys.
 
 ## Version
+### Ver 3.5.1
+
+- Dependency Updates.
+
 ### Ver 3.5.0
 
 - Specify multiple key_types in MakeCredentialArgsBuilder.
@@ -162,14 +166,6 @@ pub fn get_input_with_message(message: &str) -> String {
   - [Nitrokey FIDO2](https://www.nitrokey.com/)
   - [OpenSK](https://github.com/google/OpenSK)
   - Idem Key
-- Rust Version
-  - cargo 1.59.0 , rustc 1.59.0 , rustup 1.24.3
-- for Mac
-  - macOS Monterey
-- for Windows
-  - Windows11 (21H2)
-- for Raspberry Pi
-  - Raspberry Pi OS 32bit (11 bullseye)
 
 
 

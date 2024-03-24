@@ -8,7 +8,6 @@ use crate::{fidokey::pin::Permission::BioEnrollment, FidoKeyHid};
 use anyhow::Result;
 pub use bio_enrollment_command::SubCommand as BioCmd;
 pub use bio_enrollment_params::*;
-use bio_enrollment_params::{BioEnrollmentData, TemplateInfo};
 
 impl FidoKeyHid {
     /// BioEnrollment - getFingerprintSensorInfo (CTAP 2.1-PRE)
