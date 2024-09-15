@@ -7,17 +7,14 @@ use std::collections::BTreeMap;
 use base64::{Engine as _, engine::general_purpose};
 
 pub fn to_hex_str(bytes: &[u8]) -> String {
-    bytes
-        .iter()
-        .map(|n| format!("{:02X}", n))
-        .collect::<String>()
+    bytes.iter().fold(String::new(), |mut acc, n| {
+        acc.push_str(&format!("{:02X}", n));
+        acc
+    })
 }
 
 pub fn to_str_hex(hexstr: &str) -> Vec<u8> {
-    match hex::decode(hexstr) {
-        Ok(val) => val,
-        Err(_) => vec![],
-    }
+    hex::decode(hexstr).unwrap_or_default()
 }
 
 pub fn print_typename<T>(_: T) {

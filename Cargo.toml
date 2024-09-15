@@ -1,47 +1,46 @@
 [package]
 name = "ctap-hid-fido2"
-version = "3.5.1"
+version = "3.5.2"
 authors = ["gebo <35388172+gebogebogebo@users.noreply.github.com>"]
-edition = "2018"
+edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 license="MIT"
 description="Rust FIDO2 CTAP library"
 repository="https://github.com/gebogebogebo/ctap-hid-fido2"
-keywords=["FIDO2","CTAP"]
+keywords=["FIDO2","CTAP","CTAP2"]
 readme="README.md"
 
 [dependencies]
-aes="0.8.1"
-anyhow = "1.0"
-base64 = "0.22.0"
-byteorder = "1.3.4"
+aes="0.8.4"
+anyhow = "1.0.88"
+base64 = "0.22.1"
+byteorder = "1.5.0"
 cbc = "0.1.2"
-hex = "0.4.2"
-num = "0.4.0"
+hex = "0.4.3"
+num = "0.4.3"
 pad = "0.1.6"
 ring = "0.17.8"
-serde = "1.0.126"
-serde_cbor = "0.11.1"
-strum = "0.26"
-strum_macros = "0.26.2"
+serde = "1.0.210"
+serde_cbor = "0.11.2"
+strum = "0.26.3"
+strum_macros = "0.26.4"
 x509-parser = "0.16.0"
 
 [dependencies.hidapi]
-version = "1.5.0"
+version = "2.6.3"
 default-features = false
 features=["linux-static-hidraw"]
 
 [dev-dependencies]
-clap = { version = "4.1", features = ["derive"] }
-env_logger = "0.11.3"
+clap = { version = "4.5.17", features = ["derive"] }
+env_logger = "0.11.5"
 log = "0.4"
-rpassword = "7.0"
+rpassword = "7.3.1"
 
 # Used in ctapcli
-[target.'cfg(not(linux))'.dev-dependencies]
-clipboard = "0.5.0"
+arboard = "3.4.1"
 
 [[example]]
 name = "ctapcli"

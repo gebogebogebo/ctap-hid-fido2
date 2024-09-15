@@ -36,10 +36,11 @@ impl PublicKey {
     }
 
     pub fn with_der(der: &[u8], public_key_type: PublicKeyType) -> Self {
-        let mut public_key = PublicKey::default();
-        public_key.key_type = public_key_type;
-        public_key.der = der.to_vec();
-        public_key
+        PublicKey {
+            key_type: public_key_type,
+            der: der.to_vec(),
+            ..Default::default()
+        }
     }
 }
 

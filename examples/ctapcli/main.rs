@@ -3,8 +3,7 @@ use anyhow::{anyhow, Result};
 extern crate clap;
 use clap::{Parser, Subcommand};
 
-#[cfg(not(target_os = "linux"))]
-extern crate clipboard;
+extern crate arboard;
 
 extern crate rpassword;
 
