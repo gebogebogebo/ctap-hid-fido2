@@ -17,6 +17,10 @@ Authentication using FIDO2-compliant security keys (e.g. Yubikey) is possible.
 - Management of credentials recorded in security keys.
 
 ## Version
+### Ver 3.5.2
+
+- Dependency Updates.
+
 ### Ver 3.5.1
 
 - Dependency Updates.
