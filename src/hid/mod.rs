@@ -1,15 +1,5 @@
 use crate::str_buf::StrBuf;
 use hidapi::HidApi;
-use std::path::PathBuf;
-
-#[derive(Debug, Clone)]
-/// Storage for device related information
-pub struct DeviceInfo {
-    pub path: PathBuf,
-    pub usage_page: u16,
-    pub usage: u16,
-    pub report_size: u16,
-}
 
 /// HID device vendor ID , product ID
 #[derive(Clone)]

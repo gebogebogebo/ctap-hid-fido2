@@ -1,7 +1,5 @@
 use anyhow::{anyhow, Result};
-
-#[cfg(not(target_os = "linux"))]
-use clipboard::{ClipboardContext, ClipboardProvider};
+use arboard::Clipboard;
 
 use ctap_hid_fido2::fidokey::{
     credential_management::credential_management_params::{Credential, Rp},
@@ -177,28 +175,14 @@ pub fn search_cred(
     Ok(None)
 }
 
-#[cfg(not(target_os = "linux"))]
 fn get(device: &FidoKeyHid, tag: &str, pin: &str, rpid: &str) -> Result<()> {
     if let Some(cred) = search_cred(device, pin, rpid, tag.as_bytes())? {
         let data = cred.public_key_credential_user_entity.name;
 
-        let mut ctx: ClipboardContext = ClipboardProvider::new().unwrap();
-        ctx.set_contents(data).unwrap();
+        let mut clipboard = Clipboard::new().unwrap();
+        clipboard.set_text(data).unwrap();
 
         println!("Copied it to the clipboard :) :) :) !");
-    } else {
-        println!("tag not found...");
-    }
-    Ok(())
-}
-
-// for pi
-#[cfg(target_os = "linux")]
-fn get(device: &FidoKeyHid, tag: &str, pin: &str, rpid: &str) -> Result<()> {
-    if let Some(cred) = search_cred(device, pin, rpid, tag.as_bytes())? {
-        let data = cred.public_key_credential_user_entity.name;
-        println!("tag found :) :) :) !");
-        println!("{:?}", data);
     } else {
         println!("tag not found...");
     }
