@@ -1,6 +1,9 @@
 //
 // cargo test test_main -- --nocapture
 //
+// [Be sure to also run the following tests:]
+// cargo run --example test-with-pin-non-rk
+// cargo run --example test-with-pin-rk
 
 use ctap_hid_fido2::*;
 use fidokey::get_info::{InfoOption, InfoParam};
