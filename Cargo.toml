@@ -14,18 +14,18 @@ readme="README.md"
 
 [dependencies]
 aes="0.8.4"
-anyhow = "1.0.88"
+anyhow = "1.0.97"
 base64 = "0.22.1"
 byteorder = "1.5.0"
 cbc = "0.1.2"
 hex = "0.4.3"
 num = "0.4.3"
 pad = "0.1.6"
-ring = "0.17.8"
+ring = "0.17.14"
 serde = "1.0.210"
 serde_cbor = "0.11.2"
-strum = "0.26.3"
-strum_macros = "0.26.4"
+strum = "0.27.1"
+strum_macros = "0.27.1"
 x509-parser = "0.16.0"
 
 [dependencies.hidapi]
