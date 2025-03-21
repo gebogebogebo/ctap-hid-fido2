@@ -41,15 +41,15 @@ pub fn create_payload(
     sub_command: Option<SubCommand>,
     use_pre_bio_enrollment: bool,
 ) -> Result<Vec<u8>> {
-    let mut map = BTreeMap::new();
+    let mut map = Vec::new();
 
     if let Some(sub_command) = sub_command {
         // modality (0x01) = fingerprint (0x01)
-        map.insert(Value::Integer(0x01), Value::Integer(0x01_i128));
+        map.push((Value::Integer(0x01), Value::Integer(0x01_i128)));
 
         // subCommand(0x02)
         let sub_cmd = Value::Integer(sub_command.id()? as i128);
-        map.insert(Value::Integer(0x02), sub_cmd);
+        map.push((Value::Integer(0x02), sub_cmd));
 
         // subCommandParams (0x03): Map containing following parameters
         let mut sub_command_params_cbor = Vec::new();
@@ -68,7 +68,7 @@ pub fn create_payload(
                 _ => None,
             };
             if let Some(param) = param {
-                map.insert(Value::Integer(0x03), param.clone());
+                map.push((Value::Integer(0x03), param.clone()));
                 sub_command_params_cbor = to_vec(&param)?;
             }
         }
@@ -76,7 +76,7 @@ pub fn create_payload(
         if let Some(pin_token) = pin_token {
             // pinUvAuthProtocol(0x04)
             let pin_protocol = Value::Integer(1);
-            map.insert(Value::Integer(0x04), pin_protocol);
+            map.push((Value::Integer(0x04), pin_protocol));
 
             // pinUvAuthParam (0x05)
             // - authenticate(pinUvAuthToken, fingerprint (0x01) || enumerateEnrollments (0x04)).
@@ -88,15 +88,16 @@ pub fn create_payload(
                 sig[0..16].to_vec()
             };
 
-            map.insert(Value::Integer(0x05), Value::Bytes(pin_uv_auth_param));
+            map.push((Value::Integer(0x05), Value::Bytes(pin_uv_auth_param)));
         }
     } else {
         // getModality (0x06)
-        map.insert(Value::Integer(0x06), Value::Bool(true));
+        map.push((Value::Integer(0x06), Value::Bool(true)));
     }
 
     // create cbor
-    let cbor = Value::Map(map);
+    let map_btree: BTreeMap<Value, Value> = map.into_iter().collect();
+    let cbor = Value::Map(map_btree);
 
     // create payload
     let mut payload = if use_pre_bio_enrollment {
@@ -109,27 +110,29 @@ pub fn create_payload(
 }
 
 fn to_value_template_info(in_param: &TemplateInfo) -> Value {
-    let mut param = BTreeMap::new();
-    param.insert(
+    let mut param = Vec::new();
+    param.push((
         Value::Integer(0x01),
         Value::Bytes(in_param.template_id.clone()),
-    );
+    ));
     if let Some(v) = in_param.template_friendly_name.clone() {
-        param.insert(Value::Integer(0x02), Value::Text(v));
+        param.push((Value::Integer(0x02), Value::Text(v)));
     }
-    Value::Map(param)
+    let param_btree: BTreeMap<Value, Value> = param.into_iter().collect();
+    Value::Map(param_btree)
 }
 
 fn to_value_timeout(
     template_info: Option<&TemplateInfo>,
     timeout_milliseconds: Option<u16>,
 ) -> Value {
-    let mut param = BTreeMap::new();
+    let mut param = Vec::new();
     if let Some(v) = template_info {
-        param.insert(Value::Integer(0x01), Value::Bytes(v.template_id.clone()));
+        param.push((Value::Integer(0x01), Value::Bytes(v.template_id.clone())));
     }
     if let Some(v) = timeout_milliseconds {
-        param.insert(Value::Integer(0x03), Value::Integer(v as i128));
+        param.push((Value::Integer(0x03), Value::Integer(v as i128)));
     }
-    Value::Map(param)
+    let param_btree: BTreeMap<Value, Value> = param.into_iter().collect();
+    Value::Map(param_btree)
 }

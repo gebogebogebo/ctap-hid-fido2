@@ -3,7 +3,6 @@ use anyhow::{anyhow, Result};
 use num::NumCast;
 use ring::digest;
 use serde_cbor::Value;
-use std::collections::BTreeMap;
 use base64::{Engine as _, engine::general_purpose};
 
 pub fn to_hex_str(bytes: &[u8]) -> String {
@@ -132,14 +131,15 @@ pub(crate) fn cbor_value_to_vec_bytes(value: &Value) -> Result<Vec<Vec<u8>>> {
     }
 }
 
-pub(crate) fn cbor_bytes_to_map(bytes: &[u8]) -> Result<BTreeMap<Value, Value>> {
+pub(crate) fn cbor_bytes_to_map(bytes: &[u8]) -> Result<Vec<(Value, Value)>> {
     if bytes.is_empty() {
-        return Ok(BTreeMap::new());
+        return Ok(Vec::new());
     }
     match serde_cbor::from_slice(bytes) {
         Ok(cbor) => {
             if let Value::Map(n) = cbor {
-                Ok(n)
+                let vec_map: Vec<(Value, Value)> = n.into_iter().collect();
+                Ok(vec_map)
             } else {
                 Err(anyhow!("parse error 2"))
             }

@@ -30,13 +30,13 @@ impl SubCommandBase for SubCommand {
 
 pub fn create_payload(pin_token: pintoken::PinToken, sub_command: SubCommand) -> Result<Vec<u8>> {
     // create cbor
-    let mut map = BTreeMap::new();
+    let mut map = Vec::new();
 
     // 0x01: subCommand
-    map.insert(
+    map.push((
         Value::Integer(0x01),
         Value::Integer(sub_command.id()? as i128),
-    );
+    ));
 
     // subCommandParams (0x02): Map containing following parameters
     let mut sub_command_params_cbor = Vec::new();
@@ -44,32 +44,41 @@ pub fn create_payload(pin_token: pintoken::PinToken, sub_command: SubCommand) ->
         let param = match sub_command.clone() {
             SubCommand::SetMinPinLength(new_min_pin_length) => {
                 // 0x01:newMinPINLength
-                Some(BTreeMap::from([(
+                let mut param_vec = Vec::new();
+                param_vec.push((
                     Value::Integer(0x01),
                     Value::Integer(new_min_pin_length as i128),
-                )]))
+                ));
+                let param_btree: BTreeMap<Value, Value> = param_vec.into_iter().collect();
+                Some(param_btree)
             }
             SubCommand::SetMinPinLengthRpIds(rpids) => {
                 // 0x02:minPinLengthRPIDs
-                Some(BTreeMap::from([(
+                let mut param_vec = Vec::new();
+                param_vec.push((
                     Value::Integer(0x02),
                     Value::Array(rpids.iter().cloned().map(Value::Text).collect()),
-                )]))
+                ));
+                let param_btree: BTreeMap<Value, Value> = param_vec.into_iter().collect();
+                Some(param_btree)
             }
             SubCommand::ForceChangePin => {
                 // 0x03:ForceChangePin
-                Some(BTreeMap::from([(Value::Integer(0x03), Value::Bool(true))]))
+                let mut param_vec = Vec::new();
+                param_vec.push((Value::Integer(0x03), Value::Bool(true)));
+                let param_btree: BTreeMap<Value, Value> = param_vec.into_iter().collect();
+                Some(param_btree)
             }
             _ => None,
         };
         if let Some(param) = param {
-            map.insert(Value::Integer(0x02), Value::Map(param.clone()));
+            map.push((Value::Integer(0x02), Value::Map(param.clone())));
             sub_command_params_cbor = to_vec(&param)?;
         }
     }
 
     // 0x03: pinProtocol
-    map.insert(Value::Integer(0x03), Value::Integer(1));
+    map.push((Value::Integer(0x03), Value::Integer(1)));
 
     // 0x04: pinUvAuthParam
     let pin_uv_auth_param = {
@@ -84,13 +93,14 @@ pub fn create_payload(pin_token: pintoken::PinToken, sub_command: SubCommand) ->
         let sig = enc_hmac_sha_256::authenticate(&pin_token.key, &message);
         sig[0..16].to_vec()
     };
-    map.insert(
+    map.push((
         Value::Integer(0x04),
         Value::Bytes(pin_uv_auth_param.to_vec()),
-    );
+    ));
 
     // CBOR
-    let cbor = Value::Map(map);
+    let map_btree: BTreeMap<Value, Value> = map.into_iter().collect();
+    let cbor = Value::Map(map_btree);
     let mut payload = [ctapdef::AUTHENTICATOR_CONFIG].to_vec();
     payload.append(&mut to_vec(&cbor)?);
     Ok(payload)

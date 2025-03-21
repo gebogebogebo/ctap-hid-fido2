@@ -38,19 +38,21 @@ pub fn create_payload(params: Params, extensions: Option<&Vec<Extension>>) -> Ve
     let cdh = Value::Bytes(params.client_data_hash);
 
     // 0x02 : rp
-    let mut rp_val = BTreeMap::new();
-    rp_val.insert(
+    let mut rp_val = Vec::new();
+    rp_val.push((
         Value::Text("id".to_string()),
         Value::Text(params.rp_id.to_string()),
-    );
-    rp_val.insert(
+    ));
+    rp_val.push((
         Value::Text("name".to_string()),
         Value::Text(params.rp_name.to_string()),
-    );
-    let rp = Value::Map(rp_val);
+    ));
+
+    let rp_btree: BTreeMap<Value, Value> = rp_val.into_iter().collect();
+    let rp = Value::Map(rp_btree);
 
     // 0x03 : user
-    let mut user_val = BTreeMap::new();
+    let mut user_val = Vec::new();
     // user id
     {
         let user_id = {
@@ -60,7 +62,7 @@ pub fn create_payload(params: Params, extensions: Option<&Vec<Extension>>) -> Ve
                 vec![0x00]
             }
         };
-        user_val.insert(Value::Text("id".to_string()), Value::Bytes(user_id));
+        user_val.push((Value::Text("id".to_string()), Value::Bytes(user_id)));
     }
     // user name
     {
@@ -71,7 +73,7 @@ pub fn create_payload(params: Params, extensions: Option<&Vec<Extension>>) -> Ve
                 " ".to_string()
             }
         };
-        user_val.insert(Value::Text("name".to_string()), Value::Text(user_name));
+        user_val.push((Value::Text("name".to_string()), Value::Text(user_name)));
     }
     // displayName
     {
@@ -82,28 +84,32 @@ pub fn create_payload(params: Params, extensions: Option<&Vec<Extension>>) -> Ve
                 " ".to_string()
             }
         };
-        user_val.insert(
+        user_val.push((
             Value::Text("displayName".to_string()),
             Value::Text(display_name),
-        );
+        ));
     }
-    let user = Value::Map(user_val);
+
+    let user_btree: BTreeMap<Value, Value> = user_val.into_iter().collect();
+    let user = Value::Map(user_btree);
 
     // 0x04 : pubKeyCredParams
     let pub_key_cred_params_vec = params
         .key_types
         .iter()
         .map(|key_type| {
-            let mut pub_key_cred_params_val = BTreeMap::new();
-            pub_key_cred_params_val.insert(
+            let mut pub_key_cred_params_val = Vec::new();
+            pub_key_cred_params_val.push((
                 Value::Text("alg".to_string()),
                 Value::Integer(*key_type as i128),
-            );
-            pub_key_cred_params_val.insert(
+            ));
+            pub_key_cred_params_val.push((
                 Value::Text("type".to_string()),
                 Value::Text("public-key".to_string()),
-            );
-            Value::Map(pub_key_cred_params_val)
+            ));
+
+            let pub_key_cred_params_btree: BTreeMap<Value, Value> = pub_key_cred_params_val.into_iter().collect();
+            Value::Map(pub_key_cred_params_btree)
         })
         .collect();
 
@@ -116,40 +122,42 @@ pub fn create_payload(params: Params, extensions: Option<&Vec<Extension>>) -> Ve
             .iter()
             .cloned()
             .map(|credential_id| {
-                let mut exclude_list_val = BTreeMap::new();
-                exclude_list_val.insert(Value::Text("id".to_string()), Value::Bytes(credential_id));
-                exclude_list_val.insert(
+                let mut exclude_list_val = Vec::new();
+                exclude_list_val.push((Value::Text("id".to_string()), Value::Bytes(credential_id)));
+                exclude_list_val.push((
                     Value::Text("type".to_string()),
                     Value::Text("public-key".to_string()),
-                );
-                Value::Map(exclude_list_val)
+                ));
+                let exclude_list_btree: BTreeMap<Value, Value> = exclude_list_val.into_iter().collect();
+                Value::Map(exclude_list_btree)
             })
             .collect(),
     );
 
     // 0x06 : extensions
     let extensions = if let Some(extensions) = extensions {
-        let mut map = BTreeMap::new();
+        let mut map = Vec::new();
         for ext in extensions {
             match *ext {
                 Extension::CredBlob((ref n, _)) => {
                     let x = n.clone().unwrap();
-                    map.insert(Value::Text(ext.to_string()), Value::Bytes(x));
+                    map.push((Value::Text(ext.to_string()), Value::Bytes(x)));
                 }
                 Extension::CredProtect(n) => {
-                    map.insert(
+                    map.push((
                         Value::Text(ext.to_string()),
                         Value::Integer(n.unwrap() as i128),
-                    );
+                    ));
                 }
                 Extension::HmacSecret(n)
                 | Extension::LargeBlobKey((n, _))
                 | Extension::MinPinLength((n, _)) => {
-                    map.insert(Value::Text(ext.to_string()), Value::Bool(n.unwrap()));
+                    map.push((Value::Text(ext.to_string()), Value::Bool(n.unwrap())));
                 }
             };
         }
-        Some(Value::Map(map))
+        let map_btree: BTreeMap<Value, Value> = map.into_iter().collect();
+        Some(Value::Map(map_btree))
     } else {
         None
     };
@@ -166,15 +174,16 @@ pub fn create_payload(params: Params, extensions: Option<&Vec<Extension>>) -> Ve
 
     // 0x07 : options
     let options = {
-        let mut options_val = BTreeMap::new();
-        options_val.insert(Value::Text("rk".to_string()), Value::Bool(params.option_rk));
+        let mut options_val = Vec::new();
+        options_val.push((Value::Text("rk".to_string()), Value::Bool(params.option_rk)));
         if let Some(v) = params.option_up {
-            options_val.insert(Value::Text("up".to_string()), Value::Bool(v));
+            options_val.push((Value::Text("up".to_string()), Value::Bool(v)));
         }
         if let Some(v) = params.option_uv {
-            options_val.insert(Value::Text("uv".to_string()), Value::Bool(v));
+            options_val.push((Value::Text("uv".to_string()), Value::Bool(v)));
         }
-        Value::Map(options_val)
+        let options_btree: BTreeMap<Value, Value> = options_val.into_iter().collect();
+        Value::Map(options_btree)
     };
 
     // pinAuth(0x08)
@@ -190,23 +199,24 @@ pub fn create_payload(params: Params, extensions: Option<&Vec<Extension>>) -> Ve
     let pin_protocol = Value::Integer(1);
 
     // create cbor object
-    let mut make_credential = BTreeMap::new();
-    make_credential.insert(Value::Integer(0x01), cdh);
-    make_credential.insert(Value::Integer(0x02), rp);
-    make_credential.insert(Value::Integer(0x03), user);
-    make_credential.insert(Value::Integer(0x04), pub_key_cred_params);
+    let mut make_credential = Vec::new();
+    make_credential.push((Value::Integer(0x01), cdh));
+    make_credential.push((Value::Integer(0x02), rp));
+    make_credential.push((Value::Integer(0x03), user));
+    make_credential.push((Value::Integer(0x04), pub_key_cred_params));
     if !params.exclude_list.is_empty() {
-        make_credential.insert(Value::Integer(0x05), exclude_list);
+        make_credential.push((Value::Integer(0x05), exclude_list));
     }
     if let Some(x) = extensions {
-        make_credential.insert(Value::Integer(0x06), x);
+        make_credential.push((Value::Integer(0x06), x));
     }
-    make_credential.insert(Value::Integer(0x07), options);
+    make_credential.push((Value::Integer(0x07), options));
     if let Some(x) = pin_auth {
-        make_credential.insert(Value::Integer(0x08), x);
-        make_credential.insert(Value::Integer(0x09), pin_protocol);
+        make_credential.push((Value::Integer(0x08), x));
+        make_credential.push((Value::Integer(0x09), pin_protocol));
     }
-    let cbor = Value::Map(make_credential);
+    let make_credential_btree: BTreeMap<Value, Value> = make_credential.into_iter().collect();
+    let cbor = Value::Map(make_credential_btree);
 
     // Command - authenticatorMakeCredential (0x01)
     let mut payload = [ctapdef::AUTHENTICATOR_MAKE_CREDENTIAL].to_vec();

@@ -90,22 +90,23 @@ impl CoseKey {
     }
 
     pub fn to_value(&self) -> Result<Value> {
-        let mut map = BTreeMap::new();
-        map.insert(Value::Integer(1), Value::Integer(self.key_type.into()));
-        map.insert(Value::Integer(3), Value::Integer(self.algorithm.into()));
-        map.insert(
+        let mut map = Vec::new();
+        map.push((Value::Integer(1), Value::Integer(self.key_type.into())));
+        map.push((Value::Integer(3), Value::Integer(self.algorithm.into())));
+        map.push((
             Value::Integer(-1),
             self.parameters.get(&-1).ok_or(anyhow!("err"))?.clone(),
-        );
-        map.insert(
+        ));
+        map.push((
             Value::Integer(-2),
             self.parameters.get(&-2).ok_or(anyhow!("err"))?.clone(),
-        );
-        map.insert(
+        ));
+        map.push((
             Value::Integer(-3),
             self.parameters.get(&-3).ok_or(anyhow!("err"))?.clone(),
-        );
-        Ok(Value::Map(map))
+        ));
+        let btree_map: BTreeMap<Value, Value> = map.into_iter().collect();
+        Ok(Value::Map(btree_map))
     }
 
     pub fn to_public_key_der(&self) -> Vec<u8> {
