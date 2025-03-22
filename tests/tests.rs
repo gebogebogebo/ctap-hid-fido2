@@ -10,6 +10,21 @@ use fidokey::get_info::{InfoOption, InfoParam};
 use fidokey::MakeCredentialArgsBuilder;
 use anyhow::{anyhow, Result};
 
+fn is_my_test_key() -> Result<bool> {
+    let keys = ctap_hid_fido2::get_fidokey_devices();
+    if keys.len() != 1 {
+        return Err(anyhow!("Expected exactly 1 FIDO key device, found {}", keys.len()));
+    }
+
+    if keys[0].vid == 0x1050 && keys[0].pid == 0x0402 {
+        println!("Yubikey Bio");
+        return Ok(true);
+    } else {
+        println!("Unexpected key {}", keys[0].info);
+        return Ok(false);
+    }
+}
+
 fn do_test<F>(f: F) where F: FnOnce() -> Result<()> {
     println!("{}", std::any::type_name::<F>());
 
@@ -58,14 +73,7 @@ fn test_wink() -> Result<()> {
 
 #[test]
 fn test_get_info() -> Result<()> {
-    let keys = ctap_hid_fido2::get_fidokey_devices();
-    if keys.len() != 1 {
-        return Err(anyhow!("Expected exactly 1 FIDO key device, found {}", keys.len()));
-    }
-
-    if keys[0].vid == 0x1050 && keys[0].pid == 0x0402 {
-        println!("Yubikey Bio");
-
+    if is_my_test_key()? {
         let device = FidoKeyHidFactory::create(&Cfg::init()).unwrap();
         let info = device.get_info()?;
         println!("- versions = {:?}", info.versions);
@@ -163,8 +171,6 @@ fn test_get_info() -> Result<()> {
         println!("- remaining_discoverable_credentials = {}", info.remaining_discoverable_credentials);
         assert_eq!(info.remaining_discoverable_credentials, 15);
     } else {
-        println!("Unexpected key {}", keys[0].info);
-
         let device = FidoKeyHidFactory::create(&Cfg::init()).unwrap();
         device.get_info()?;
     }
@@ -191,8 +197,18 @@ fn test_get_info_u2f() -> Result<()> {
 #[test]
 fn test_client_pin_get_retries() -> Result<()> {
     let device = FidoKeyHidFactory::create(&Cfg::init()).unwrap();
-    let retry = device.get_pin_retries();
+
+    let retry = device.get_pin_retries();    
     println!("- retries = {:?}", retry);
+
+    let uv_retry = device.get_uv_retries();    
+    println!("- uv retries = {:?}", uv_retry);
+
+    if is_my_test_key()? {
+        assert_eq!(retry.unwrap(), 8);
+        assert_eq!(uv_retry.unwrap(), 3);
+    }
+
     Ok(())
 }
 
