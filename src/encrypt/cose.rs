@@ -1,8 +1,7 @@
 use crate::str_buf::StrBuf;
-use crate::util::{self, vec_to_btree_map};
+use crate::util::vec_to_btree_map;
 use crate::util_ciborium;
 use anyhow::{anyhow, Result};
-use num::NumCast;
 use serde_cbor::Value;
 use std::collections::HashMap;
 use std::fmt;
@@ -35,9 +34,7 @@ impl fmt::Display for CoseKey {
 
 // https://tex2e.github.io/rfc-translater/html/rfc8152.html
 impl CoseKey {
-    // TODO 後でメソッド名をnewにする
-    // New constructor for ciborium::value::Value
-    pub fn new_for_ciborium(cbor: &ciborium::value::Value) -> Result<Self> {
+    pub fn new(cbor: &ciborium::value::Value) -> Result<Self> {
         let mut cose = CoseKey::default();
 
         if util_ciborium::is_map(cbor) {
@@ -96,63 +93,6 @@ impl CoseKey {
             }
         }
 
-        Ok(cose)
-    }
-
-    // TODO いずれ削除する
-    // Original constructor for serde_cbor::Value
-    pub fn new(cbor: &Value) -> Result<Self> {
-        let mut cose = CoseKey::default();
-
-        if let Value::Map(xs) = cbor {
-            for (key, val) in xs {
-                // debug
-                //util::cbor_value_print(val);
-
-                if let Value::Integer(member) = key {
-                    match member {
-                        1 => {
-                            // Table 21: Key Type Values
-                            // 1: kty
-                            //      1: OKP (Octet Key Pair) → need x
-                            //      2: EC2 (Double Coordinate Curves) → need x&y
-                            cose.key_type = util::cbor_value_to_num(val)?;
-                        }
-                        // 2: kid
-                        3 => {
-                            // 3: alg
-                            //       -7: ES256
-                            //       -8: EdDSA
-                            //      -25: ECDH-ES + HKDF-256
-                            //      -35: ES384
-                            //      -36: ES512
-                            cose.algorithm = util::cbor_value_to_num(val)?;
-                        }
-                        // 4: key_ops
-                        // 5: Base IV
-                        -1 => {
-                            // Table 22: Elliptic Curves
-                            // -1: Curves
-                            //      1: P-256(EC2)
-                            //      6: Ed25519(OKP)
-                            //println!("member = {:?} , val = {:?}",member,val);
-                            cose.parameters.insert(
-                                NumCast::from(*member).ok_or(anyhow!("err"))?,
-                                Value::Integer(util::cbor_value_to_num(val)?),
-                            );
-                        }
-                        -2 | -3 => {
-                            //println!("member = {:?} , val = {:?}",member,val);
-                            cose.parameters.insert(
-                                NumCast::from(*member).ok_or(anyhow!("err"))?,
-                                Value::Bytes(util::cbor_value_to_vec_u8(val)?),
-                            );
-                        }
-                        _ => {}
-                    }
-                }
-            }
-        }
         Ok(cose)
     }
 

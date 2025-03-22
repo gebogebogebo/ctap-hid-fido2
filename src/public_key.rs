@@ -1,5 +1,7 @@
 use crate::encrypt::cose::CoseKey;
 use crate::util;
+use crate::util_ciborium;
+use anyhow::Result;
 use serde_cbor::Value;
 use std::fmt;
 
@@ -18,8 +20,9 @@ pub struct PublicKey {
     pub der: Vec<u8>,
 }
 impl PublicKey {
-    pub fn new(cbor: &Value) -> Self {
-        let cose_key = CoseKey::new(cbor).unwrap();
+    pub fn new(cbor: &Value) -> Result<Self> {
+        let ciborium_value = util_ciborium::serde_to_ciborium(cbor.clone())?;
+        let cose_key = CoseKey::new(&ciborium_value)?;
 
         let mut public_key = PublicKey::default();
 
@@ -32,7 +35,7 @@ impl PublicKey {
         };
         public_key.der = cose_key.to_public_key_der();
         public_key.pem = util::convert_to_publickey_pem(&public_key.der);
-        public_key
+        Ok(public_key)
     }
 
     pub fn with_der(der: &[u8], public_key_type: PublicKeyType) -> Self {

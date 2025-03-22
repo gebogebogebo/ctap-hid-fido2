@@ -118,3 +118,25 @@ pub(crate) fn extract_array_ref(value: &Value) -> Result<&Vec<Value>> {
         Err(anyhow!("Value is not an Array"))
     }
 }
+
+// TODO 最終的には削除する
+// serde_cbor::Value を ciborium::value::Value に変換する
+#[allow(dead_code)]
+pub(crate) fn serde_to_ciborium(serde_value: serde_cbor::Value) -> Result<Value> {
+    // serde_cbor::Value を CBOR のバイト列にシリアライズ
+    let bytes = serde_cbor::to_vec(&serde_value)?;
+    // バイト列から ciborium::value::Value にデシリアライズ
+    let cib_value: Value = ciborium::de::from_reader(bytes.as_slice())?;
+    Ok(cib_value)
+}
+
+// ciborium::value::Value を serde_cbor::Value に変換する
+pub fn ciborium_to_serde(cib_value: Value) -> Result<serde_cbor::Value> {
+    // ciborium の Value をバイト列にシリアライズ
+    let mut bytes = Vec::new();
+    ciborium::ser::into_writer(&cib_value, &mut bytes)?;
+    // シリアライズしたバイト列から serde_cbor の Value にデシリアライズ
+    let serde_value: serde_cbor::Value = serde_cbor::from_slice(&bytes)?;
+    Ok(serde_value)
+}
+// TODO 最終的には削除する

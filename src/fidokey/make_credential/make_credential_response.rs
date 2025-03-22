@@ -80,7 +80,7 @@ fn parse_cbor_authdata(authdata: &[u8], attestation: &mut Attestation) -> Result
         let slice = &authdata[index..authdata.len()];
         let mut deserializer = serde_cbor::Deserializer::from_slice(slice);
         let value: Value = serde::de::Deserialize::deserialize(&mut deserializer).unwrap();
-        attestation.credential_publickey = PublicKey::new(&value);
+        attestation.credential_publickey = PublicKey::new(&value)?;
         slice[deserializer.byte_offset()..].to_vec()
     } else {
         authdata[index..authdata.len()].to_vec()

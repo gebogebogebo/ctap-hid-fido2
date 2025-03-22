@@ -33,7 +33,7 @@ pub fn parse_cbor_client_pin_get_keyagreement(bytes: &[u8]) -> Result<CoseKey> {
         }
         match util_ciborium::integer_to_i64(key)? {
             0x01 => {
-                return Ok(CoseKey::new_for_ciborium(val)?);
+                return Ok(CoseKey::new(val)?);
             },
             _ => println!("parse_cbor_member - unknown info {:?}", val),
         }

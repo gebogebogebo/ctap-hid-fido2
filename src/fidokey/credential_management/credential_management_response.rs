@@ -39,7 +39,7 @@ pub(crate) fn parse_cbor(
                         .get_id(val)
                         .get_type(val)
                 }
-                0x08 => data.public_key = PublicKey::new(val),
+                0x08 => data.public_key = PublicKey::new(val)?,
                 0x09 => data.total_credentials = util::cbor_value_to_num(val)?,
                 0x0A => data.cred_protect = util::cbor_value_to_num(val)?,
                 0x0B => data.large_blob_key = util::cbor_value_to_vec_u8(val)?,
