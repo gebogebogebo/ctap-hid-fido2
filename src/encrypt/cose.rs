@@ -1,5 +1,6 @@
 use crate::str_buf::StrBuf;
 use crate::util::{self, vec_to_btree_map};
+use crate::util_ciborium;
 use anyhow::{anyhow, Result};
 use num::NumCast;
 use serde_cbor::Value;
@@ -34,6 +35,72 @@ impl fmt::Display for CoseKey {
 
 // https://tex2e.github.io/rfc-translater/html/rfc8152.html
 impl CoseKey {
+    // TODO 後でメソッド名をnewにする
+    // New constructor for ciborium::value::Value
+    pub fn new_for_ciborium(cbor: &ciborium::value::Value) -> Result<Self> {
+        let mut cose = CoseKey::default();
+
+        if util_ciborium::is_map(cbor) {
+            let map = util_ciborium::extract_map_ref(cbor)?;
+            
+            for (key, val) in map {
+                if util_ciborium::is_integer(key) {
+                    match util_ciborium::integer_to_i64(key)? {
+                        1 => {
+                            // Table 21: Key Type Values
+                            // 1: kty
+                            //      1: OKP (Octet Key Pair) → need x
+                            //      2: EC2 (Double Coordinate Curves) → need x&y
+                            cose.key_type = util_ciborium::cbor_value_to_num(val)?;
+                        }
+                        // 2: kid
+                        3 => {
+                            // 3: alg
+                            //       -7: ES256
+                            //       -8: EdDSA
+                            //      -25: ECDH-ES + HKDF-256
+                            //      -35: ES384
+                            //      -36: ES512
+                            cose.algorithm = util_ciborium::cbor_value_to_num(val)?;
+                        }
+                        // 4: key_ops
+                        // 5: Base IV
+                        -1 => {
+                            // Table 22: Elliptic Curves
+                            // -1: Curves
+                            //      1: P-256(EC2)
+                            //      6: Ed25519(OKP)
+                            let int_val: i64 = util_ciborium::cbor_value_to_num(val)?;
+                            cose.parameters.insert(
+                                -1,
+                                Value::Integer(int_val as i128),
+                            );
+                        }
+                        -2 => {
+                            let bytes = util_ciborium::cbor_value_to_vec_u8(val)?;
+                            cose.parameters.insert(
+                                -2,
+                                Value::Bytes(bytes),
+                            );
+                        }
+                        -3 => {
+                            let bytes = util_ciborium::cbor_value_to_vec_u8(val)?;
+                            cose.parameters.insert(
+                                -3,
+                                Value::Bytes(bytes),
+                            );
+                        }
+                        _ => {}
+                    }
+                }
+            }
+        }
+
+        Ok(cose)
+    }
+
+    // TODO いずれ削除する
+    // Original constructor for serde_cbor::Value
     pub fn new(cbor: &Value) -> Result<Self> {
         let mut cose = CoseKey::default();
 
