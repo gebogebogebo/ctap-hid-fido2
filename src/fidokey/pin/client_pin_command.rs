@@ -1,8 +1,8 @@
 use crate::ctapdef;
 use crate::encrypt::cose;
+use crate::util::vec_to_btree_map;
 use anyhow::{anyhow, Result};
 use serde_cbor::Value;
-use std::collections::BTreeMap;
 
 #[allow(dead_code)]
 pub enum SubCommand {
@@ -133,8 +133,7 @@ pub fn create_payload_get_pin_uv_auth_token_using_uv_with_permissions(
 
 // create payload
 fn to_payload(map: Vec<(Value, Value)>) -> Vec<u8> {
-    let btree_map: BTreeMap<Value, Value> = map.into_iter().collect();
-    let cbor = Value::Map(btree_map);
+    let cbor = Value::Map(vec_to_btree_map(map));
     let mut payload = [ctapdef::AUTHENTICATOR_CLIENT_PIN].to_vec();
     payload.append(&mut serde_cbor::to_vec(&cbor).unwrap());
     payload.to_vec()
@@ -173,8 +172,7 @@ fn insert_key_agreement(map: &mut Vec<(Value, Value)>, key_agreement: &cose::Cos
         ka_val.push((Value::Integer(-3), Value::Bytes(bval.to_vec())));
     }
     
-    let btree_map: BTreeMap<Value, Value> = ka_val.into_iter().collect();
-    let ka = Value::Map(btree_map);
+    let ka = Value::Map(vec_to_btree_map(ka_val));
 
     map.push((Value::Integer(0x03), ka));
 }
