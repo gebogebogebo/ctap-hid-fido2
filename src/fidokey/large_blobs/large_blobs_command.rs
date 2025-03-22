@@ -11,30 +11,30 @@ pub fn create_payload(
     set: Option<Vec<u8>>,
 ) -> Result<Vec<u8>> {
     // create cbor
-    let mut map = BTreeMap::new();
+    let mut map = Vec::new();
 
     // 0x01: get
     if let Some(read_bytes) = get {
-        map.insert(Value::Integer(0x01), Value::Integer(read_bytes as i128));
+        map.push((Value::Integer(0x01), Value::Integer(read_bytes as i128)));
     }
 
     // 0x03: offset
-    map.insert(Value::Integer(0x03), Value::Integer(offset as i128));
+    map.push((Value::Integer(0x03), Value::Integer(offset as i128)));
 
     if let Some(write_datas) = set {
         let large_blob_array = create_large_blob_array(write_datas)?;
 
         // 0x02: set
-        map.insert(
+        map.push((
             Value::Integer(0x02),
             Value::Bytes(large_blob_array.to_vec()),
-        );
+        ));
 
         // 0x04: length
-        map.insert(
+        map.push((
             Value::Integer(0x04),
             Value::Integer(large_blob_array.len() as i128),
-        );
+        ));
 
         // 0x05: pinUvAuthParam
         // 0x06: pinUvAuthProtocol
@@ -64,13 +64,13 @@ pub fn create_payload(
                 let sig = enc_hmac_sha_256::authenticate(&pin_token.key, &message);
                 sig[0..16].to_vec()
             };
-            map.insert(Value::Integer(0x05), Value::Bytes(pin_uv_auth_param));
-            map.insert(Value::Integer(0x06), Value::Integer(1));
+            map.push((Value::Integer(0x05), Value::Bytes(pin_uv_auth_param)));
+            map.push((Value::Integer(0x06), Value::Integer(1)));
         }
     }
 
     // CBOR
-    let cbor = Value::Map(map);
+    let cbor = Value::Map(map.into_iter().collect::<BTreeMap<_, _>>());
     let mut payload = [ctapdef::AUTHENTICATOR_LARGEBLOBS].to_vec();
     payload.append(&mut to_vec(&cbor)?);
     Ok(payload)

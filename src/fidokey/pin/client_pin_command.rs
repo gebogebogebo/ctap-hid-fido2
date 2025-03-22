@@ -133,7 +133,6 @@ pub fn create_payload_get_pin_uv_auth_token_using_uv_with_permissions(
 
 // create payload
 fn to_payload(map: Vec<(Value, Value)>) -> Vec<u8> {
-    // Vec<(Value, Value)>をBTreeMap<Value, Value>に変換
     let btree_map: BTreeMap<Value, Value> = map.into_iter().collect();
     let cbor = Value::Map(btree_map);
     let mut payload = [ctapdef::AUTHENTICATOR_CLIENT_PIN].to_vec();
@@ -174,7 +173,6 @@ fn insert_key_agreement(map: &mut Vec<(Value, Value)>, key_agreement: &cose::Cos
         ka_val.push((Value::Integer(-3), Value::Bytes(bval.to_vec())));
     }
     
-    // Vec<(Value, Value)>をBTreeMap<Value, Value>に変換
     let btree_map: BTreeMap<Value, Value> = ka_val.into_iter().collect();
     let ka = Value::Map(btree_map);
 

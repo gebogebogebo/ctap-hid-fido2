@@ -47,14 +47,14 @@ pub fn create_payload(
                     .iter()
                     .cloned()
                     .map(|credential_id| {
-                        let mut allow_list_val = BTreeMap::new();
+                        let mut allow_list_val = Vec::new();
                         allow_list_val
-                            .insert(Value::Text("id".to_string()), Value::Bytes(credential_id));
-                        allow_list_val.insert(
+                            .push((Value::Text("id".to_string()), Value::Bytes(credential_id)));
+                        allow_list_val.push((
                             Value::Text("type".to_string()),
                             Value::Text("public-key".to_string()),
-                        );
-                        Value::Map(allow_list_val)
+                        ));
+                        Value::Map(allow_list_val.into_iter().collect::<BTreeMap<_, _>>())
                     })
                     .collect(),
             );
@@ -66,26 +66,26 @@ pub fn create_payload(
 
     // 0x04 : extensions
     let extensions = {
-        let mut ext_val = BTreeMap::new();
+        let mut ext_val = Vec::new();
 
         // HMAC Secret Extension
         if let Some(hmac_ext) = hmac_ext {
-            let mut param = BTreeMap::new();
+            let mut param = Vec::new();
 
             // keyAgreement(0x01)
             let val = hmac_ext.shared_secret.public_key.to_value().unwrap();
-            param.insert(Value::Integer(0x01), val);
+            param.push((Value::Integer(0x01), val));
 
             // saltEnc(0x02)
-            param.insert(Value::Integer(0x02), Value::Bytes(hmac_ext.salt_enc));
+            param.push((Value::Integer(0x02), Value::Bytes(hmac_ext.salt_enc)));
 
             // saltAuth(0x03)
-            param.insert(Value::Integer(0x03), Value::Bytes(hmac_ext.salt_auth));
+            param.push((Value::Integer(0x03), Value::Bytes(hmac_ext.salt_auth)));
 
-            ext_val.insert(
+            ext_val.push((
                 Value::Text(Extension::HmacSecret(None).to_string()),
-                Value::Map(param),
-            );
+                Value::Map(param.into_iter().collect::<BTreeMap<_, _>>()),
+            ));
         }
 
         if let Some(extensions) = extensions {
@@ -93,7 +93,7 @@ pub fn create_payload(
                 match *ext {
                     Extension::HmacSecret(_) => (),
                     Extension::LargeBlobKey((n, _)) | Extension::CredBlob((n, _)) => {
-                        ext_val.insert(Value::Text(ext.to_string()), Value::Bool(n.unwrap()));
+                        ext_val.push((Value::Text(ext.to_string()), Value::Bool(n.unwrap())));
                     }
                 };
             }
@@ -101,18 +101,18 @@ pub fn create_payload(
         if ext_val.is_empty() {
             None
         } else {
-            Some(Value::Map(ext_val))
+            Some(Value::Map(ext_val.into_iter().collect::<BTreeMap<_, _>>()))
         }
     };
 
     // 0x05 : options
-    let mut options_val = BTreeMap::new();
-    options_val.insert(Value::Text("up".to_string()), Value::Bool(params.option_up));
+    let mut options_val = Vec::new();
+    options_val.push((Value::Text("up".to_string()), Value::Bool(params.option_up)));
     if let Some(v) = params.option_uv {
-        options_val.insert(Value::Text("uv".to_string()), Value::Bool(v));
+        options_val.push((Value::Text("uv".to_string()), Value::Bool(v)));
     }
 
-    let options = Value::Map(options_val);
+    let options = Value::Map(options_val.into_iter().collect::<BTreeMap<_, _>>());
 
     // pinAuth(0x06)
     let pin_auth = {
@@ -127,21 +127,21 @@ pub fn create_payload(
     let pin_protocol = Value::Integer(1);
 
     // create cbor object
-    let mut get_assertion = BTreeMap::new();
-    get_assertion.insert(Value::Integer(0x01), rpid);
-    get_assertion.insert(Value::Integer(0x02), cdh);
+    let mut get_assertion = Vec::new();
+    get_assertion.push((Value::Integer(0x01), rpid));
+    get_assertion.push((Value::Integer(0x02), cdh));
     if let Some(obj) = allow_list {
-        get_assertion.insert(Value::Integer(0x03), obj);
+        get_assertion.push((Value::Integer(0x03), obj));
     }
     if let Some(extensions) = extensions {
-        get_assertion.insert(Value::Integer(0x04), extensions);
+        get_assertion.push((Value::Integer(0x04), extensions));
     }
-    get_assertion.insert(Value::Integer(0x05), options);
+    get_assertion.push((Value::Integer(0x05), options));
     if let Some(x) = pin_auth {
-        get_assertion.insert(Value::Integer(0x06), x);
-        get_assertion.insert(Value::Integer(0x07), pin_protocol);
+        get_assertion.push((Value::Integer(0x06), x));
+        get_assertion.push((Value::Integer(0x07), pin_protocol));
     }
-    let cbor = Value::Map(get_assertion);
+    let cbor = Value::Map(get_assertion.into_iter().collect::<BTreeMap<_, _>>());
 
     // Command - authenticatorGetAssertion (0x02)
     let mut payload = [ctapdef::AUTHENTICATOR_GET_ASSERTION].to_vec();
