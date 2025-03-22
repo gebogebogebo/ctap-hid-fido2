@@ -102,19 +102,19 @@ pub(crate) fn integer_to_i64(value: &Value) -> Result<i64> {
 }
 
 #[allow(dead_code)]
-pub(crate) fn extract_map_ref(value: &Value) -> Option<&Vec<(Value, Value)>> {
+pub(crate) fn extract_map_ref(value: &Value) -> Result<&Vec<(Value, Value)>> {
     if let Value::Map(map) = value {
-        Some(map)
+        Ok(map)
     } else {
-        None
+        Err(anyhow!("Value is not a Map"))
     }
 }
 
 #[allow(dead_code)]
-pub(crate) fn extract_array_ref(value: &Value) -> Option<&Vec<Value>> {
+pub(crate) fn extract_array_ref(value: &Value) -> Result<&Vec<Value>> {
     if let Value::Array(array) = value {
-        Some(array)
+        Ok(array)
     } else {
-        None
+        Err(anyhow!("Value is not an Array"))
     }
 }

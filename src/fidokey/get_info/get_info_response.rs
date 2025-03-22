@@ -8,55 +8,34 @@ pub fn parse_cbor(bytes: &[u8]) -> Result<get_info_params::Info> {
     let maps2 = util_ciborium::cbor_bytes_to_map(bytes)?;
     for (key, val) in &maps2 {
         if util_ciborium::is_integer(key) {
-            match util_ciborium::integer_to_i64(&key)? {
+            match util_ciborium::integer_to_i64(key)? {
                 0x01 => info.versions = util_ciborium::cbor_value_to_vec_string(val)?,
                 0x02 => info.extensions = util_ciborium::cbor_value_to_vec_string(val)?,
                 0x03 => info.aaguid = util_ciborium::cbor_value_to_vec_u8(val)?,
                 0x04 => {
                     if util_ciborium::is_map(val) {
-                        let xs = util_ciborium::extract_map_ref(val).expect("Expected a Map Value");
-                        for (key, val) in xs {
-                            let a = util_ciborium::cbor_value_to_str(key)?;
-                            let b = util_ciborium::cbor_value_to_bool(val)?;
-                            info.options.push((a.to_string(), b));
+                        let elements = util_ciborium::extract_map_ref(val)?;
+                        for (key, val) in elements {
+                            info.options.push((
+                                util_ciborium::cbor_value_to_str(key)?,
+                                util_ciborium::cbor_value_to_bool(val)?
+                            ));
                         }
                     }
                 },
                 0x05 => info.max_msg_size = util_ciborium::cbor_value_to_num(val)?,
                 0x06 => {
                     if util_ciborium::is_array(val) {
-                        let xs = util_ciborium::extract_array_ref(val).expect("Expected a Array Value");
-                        for x in xs {
-                            info.pin_uv_auth_protocols.push(util_ciborium::cbor_value_to_num(x)?);
+                        let elements = util_ciborium::extract_array_ref(val)?;
+                        for element in elements {
+                            info.pin_uv_auth_protocols.push(util_ciborium::cbor_value_to_num(element)?);
                         }
                     }
                 },
                 0x07 => info.max_credential_count_in_list = util_ciborium::cbor_value_to_num(val)?,
                 0x08 => info.max_credential_id_length = util_ciborium::cbor_value_to_num(val)?,
                 0x09 => info.transports = util_ciborium::cbor_value_to_vec_string(val)?,
-                0x0A => {
-                    if util_ciborium::is_array(val) {
-                        let xs = util_ciborium::extract_array_ref(val).expect("Expected a Array Value");
-                        for x in xs {
-                            if util_ciborium::is_map(x) {
-                                let n = util_ciborium::extract_map_ref(x).expect("Expected a Map Value");
-                                for (key, val) in n {
-                                    let setkey = util_ciborium::cbor_value_to_str(key)?;
-
-                                    let setval = if util_ciborium::is_integer(val) {
-                                        let q:i64 = util_ciborium::cbor_value_to_num(val)?;
-                                        q.to_string()
-                                    } else if util_ciborium::is_text(val) {
-                                        util_ciborium::cbor_value_to_str(val)?
-                                    } else {
-                                        "".to_string()
-                                    };
-                                    info.algorithms.push((setkey, setval));
-                                }
-                            }
-                        }
-                    }
-                },
+                0x0A => parse_algorithms(val, &mut info)?,
                 0x0B => info.max_serialized_large_blob_array = util_ciborium::cbor_value_to_num(val)?,
                 0x0C => info.force_pin_change = util_ciborium::cbor_value_to_bool(val)?,
                 0x0D => info.min_pin_length = util_ciborium::cbor_value_to_num(val)?,
@@ -73,3 +52,32 @@ pub fn parse_cbor(bytes: &[u8]) -> Result<get_info_params::Info> {
     
     Ok(info)
 }
+
+fn parse_algorithms(val: &ciborium::value::Value, info: &mut get_info_params::Info) -> Result<()> {
+    if !util_ciborium::is_array(val) {
+        return Ok(());
+    }
+    
+    let algorithm_entries = util_ciborium::extract_array_ref(val)?;
+    for entry in algorithm_entries {
+        if !util_ciborium::is_map(entry) {
+            continue;
+        }
+
+        let algorithm_map = util_ciborium::extract_map_ref(entry)?;
+        for (key, value) in algorithm_map {
+            let algorithm_key = util_ciborium::cbor_value_to_str(key)?;
+            let algorithm_value = if util_ciborium::is_integer(value) {
+                let num: i64 = util_ciborium::cbor_value_to_num(value)?;
+                num.to_string()
+            } else if util_ciborium::is_text(value) {
+                util_ciborium::cbor_value_to_str(value)?.to_string()
+            } else {
+                "".to_string()
+            };
+            info.algorithms.push((algorithm_key, algorithm_value));
+        }
+    }
+    Ok(())
+}
+
