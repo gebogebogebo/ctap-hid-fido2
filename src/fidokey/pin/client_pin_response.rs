@@ -2,6 +2,7 @@ use crate::encrypt::cose::CoseKey;
 use crate::util;
 use anyhow::{anyhow, Result};
 use serde_cbor::Value;
+use crate::util_ciborium;
 
 #[derive(Default)]
 pub struct Pin {
@@ -10,15 +11,16 @@ pub struct Pin {
 }
 
 pub fn parse_cbor_client_pin_get_pin_token(bytes: &[u8]) -> Result<Vec<u8>> {
-    let cbor: Value = serde_cbor::from_slice(bytes)?;
-
-    if let Value::Map(n) = cbor {
-        // 最初の要素を取得
-        let (key, val) = n.iter().next().unwrap();
-        if let Value::Integer(member) = key {
-            if *member == 2 {
-                return Ok(util::cbor_value_to_vec_u8(val).unwrap());
-            }
+    let map = util_ciborium::cbor_bytes_to_map(bytes)?;
+    for (key, val) in &map {
+        if !util_ciborium::is_integer(key) {
+            continue;
+        }
+        match util_ciborium::integer_to_i64(key)? {
+            0x02 => {
+                return Ok(util_ciborium::cbor_value_to_vec_u8(val)?);
+            },
+            _ => println!("parse_cbor_member - unknown info {:?}", val),
         }
     }
     Err(anyhow!("parse_cbor_client_pin_get_pin_token error"))
