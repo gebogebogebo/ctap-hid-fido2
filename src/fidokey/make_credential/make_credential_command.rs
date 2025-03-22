@@ -1,9 +1,8 @@
 use super::make_credential_params::{CredentialSupportedKeyType, Extension};
 use crate::ctapdef;
-use crate::util;
+use crate::util::{self, vec_to_btree_map};
 use serde_cbor::to_vec;
 use serde_cbor::Value;
-use std::collections::BTreeMap;
 
 #[derive(Debug, Default)]
 pub struct Params {
@@ -38,17 +37,11 @@ pub fn create_payload(params: Params, extensions: Option<&Vec<Extension>>) -> Ve
     let cdh = Value::Bytes(params.client_data_hash);
 
     // 0x02 : rp
-    let mut rp_val = Vec::new();
-    rp_val.push((
-        Value::Text("id".to_string()),
-        Value::Text(params.rp_id.to_string()),
-    ));
-    rp_val.push((
-        Value::Text("name".to_string()),
-        Value::Text(params.rp_name.to_string()),
-    ));
-
-    let rp_btree: BTreeMap<Value, Value> = rp_val.into_iter().collect();
+    let rp_val = vec![
+        (Value::Text("id".to_string()), Value::Text(params.rp_id.to_string())),
+        (Value::Text("name".to_string()), Value::Text(params.rp_name.to_string())),
+    ];
+    let rp_btree = vec_to_btree_map(rp_val);
     let rp = Value::Map(rp_btree);
 
     // 0x03 : user
@@ -90,25 +83,18 @@ pub fn create_payload(params: Params, extensions: Option<&Vec<Extension>>) -> Ve
         ));
     }
 
-    let user_btree: BTreeMap<Value, Value> = user_val.into_iter().collect();
-    let user = Value::Map(user_btree);
+    let user = Value::Map(vec_to_btree_map(user_val));
 
     // 0x04 : pubKeyCredParams
     let pub_key_cred_params_vec = params
         .key_types
         .iter()
         .map(|key_type| {
-            let mut pub_key_cred_params_val = Vec::new();
-            pub_key_cred_params_val.push((
-                Value::Text("alg".to_string()),
-                Value::Integer(*key_type as i128),
-            ));
-            pub_key_cred_params_val.push((
-                Value::Text("type".to_string()),
-                Value::Text("public-key".to_string()),
-            ));
-
-            let pub_key_cred_params_btree: BTreeMap<Value, Value> = pub_key_cred_params_val.into_iter().collect();
+            let pub_key_cred_params_val = vec![
+                (Value::Text("alg".to_string()), Value::Integer(*key_type as i128)),
+                (Value::Text("type".to_string()), Value::Text("public-key".to_string())),
+            ];
+            let pub_key_cred_params_btree = vec_to_btree_map(pub_key_cred_params_val);
             Value::Map(pub_key_cred_params_btree)
         })
         .collect();
@@ -122,13 +108,11 @@ pub fn create_payload(params: Params, extensions: Option<&Vec<Extension>>) -> Ve
             .iter()
             .cloned()
             .map(|credential_id| {
-                let mut exclude_list_val = Vec::new();
-                exclude_list_val.push((Value::Text("id".to_string()), Value::Bytes(credential_id)));
-                exclude_list_val.push((
-                    Value::Text("type".to_string()),
-                    Value::Text("public-key".to_string()),
-                ));
-                let exclude_list_btree: BTreeMap<Value, Value> = exclude_list_val.into_iter().collect();
+                let exclude_list_val = vec![
+                    (Value::Text("id".to_string()), Value::Bytes(credential_id)),
+                    (Value::Text("type".to_string()), Value::Text("public-key".to_string())),
+                ];
+                let exclude_list_btree = vec_to_btree_map(exclude_list_val);
                 Value::Map(exclude_list_btree)
             })
             .collect(),
@@ -156,7 +140,7 @@ pub fn create_payload(params: Params, extensions: Option<&Vec<Extension>>) -> Ve
                 }
             };
         }
-        let map_btree: BTreeMap<Value, Value> = map.into_iter().collect();
+        let map_btree = vec_to_btree_map(map);
         Some(Value::Map(map_btree))
     } else {
         None
@@ -182,7 +166,7 @@ pub fn create_payload(params: Params, extensions: Option<&Vec<Extension>>) -> Ve
         if let Some(v) = params.option_uv {
             options_val.push((Value::Text("uv".to_string()), Value::Bool(v)));
         }
-        let options_btree: BTreeMap<Value, Value> = options_val.into_iter().collect();
+        let options_btree = vec_to_btree_map(options_val);
         Value::Map(options_btree)
     };
 
@@ -199,11 +183,12 @@ pub fn create_payload(params: Params, extensions: Option<&Vec<Extension>>) -> Ve
     let pin_protocol = Value::Integer(1);
 
     // create cbor object
-    let mut make_credential = Vec::new();
-    make_credential.push((Value::Integer(0x01), cdh));
-    make_credential.push((Value::Integer(0x02), rp));
-    make_credential.push((Value::Integer(0x03), user));
-    make_credential.push((Value::Integer(0x04), pub_key_cred_params));
+    let mut make_credential = vec![
+        (Value::Integer(0x01), cdh),
+        (Value::Integer(0x02), rp),
+        (Value::Integer(0x03), user),
+        (Value::Integer(0x04), pub_key_cred_params),
+    ];
     if !params.exclude_list.is_empty() {
         make_credential.push((Value::Integer(0x05), exclude_list));
     }
@@ -215,7 +200,7 @@ pub fn create_payload(params: Params, extensions: Option<&Vec<Extension>>) -> Ve
         make_credential.push((Value::Integer(0x08), x));
         make_credential.push((Value::Integer(0x09), pin_protocol));
     }
-    let make_credential_btree: BTreeMap<Value, Value> = make_credential.into_iter().collect();
+    let make_credential_btree = vec_to_btree_map(make_credential);
     let cbor = Value::Map(make_credential_btree);
 
     // Command - authenticatorMakeCredential (0x01)

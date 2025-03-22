@@ -106,26 +106,24 @@ pub fn create_payload(
 }
 
 fn create_rpid_hash(rpid_hash: &[u8]) -> Value {
-    let mut param = Vec::new();
-    param.push((Value::Integer(0x01), Value::Bytes(rpid_hash.to_vec())));
+    let param = vec![(Value::Integer(0x01), Value::Bytes(rpid_hash.to_vec()))];
     let btree_param = vec_to_btree_map(param);
     Value::Map(btree_param)
 }
 
 fn create_public_key_credential_descriptor(in_param: &PublicKeyCredentialDescriptor) -> Value {
-    let mut map = Vec::new();
-    map.push((
-        Value::Text("id".to_string()),
-        Value::Bytes(in_param.id.clone()),
-    ));
-    map.push((
-        Value::Text("type".to_string()),
-        Value::Text(in_param.ctype.clone()),
-    ));
+    let map = vec![
+        (
+            Value::Text("id".to_string()),
+            Value::Bytes(in_param.id.clone()),
+        ),
+        (
+            Value::Text("type".to_string()),
+            Value::Text(in_param.ctype.clone()),
+        ),
+    ];
 
-    let mut param = Vec::new();
-    let btree_map = vec_to_btree_map(map);
-    param.push((Value::Integer(0x02), Value::Map(btree_map)));
+    let param = vec![(Value::Integer(0x02), Value::Map(vec_to_btree_map(map)))];
     let btree_param = vec_to_btree_map(param);
     Value::Map(btree_param)
 }
@@ -134,38 +132,36 @@ fn create_public_key_credential_descriptor_pend(
     in_param: &PublicKeyCredentialDescriptor,
     pkcue: &PublicKeyCredentialUserEntity,
 ) -> Value {
-    let mut param = Vec::new();
-    {
-        let mut map = Vec::new();
-        map.push((
+    let map = vec![
+        (
             Value::Text("id".to_string()),
             Value::Bytes(in_param.id.clone()),
-        ));
-        map.push((
+        ),
+        (
             Value::Text("type".to_string()),
             Value::Text(in_param.ctype.clone()),
-        ));
-        let btree_map = vec_to_btree_map(map);
-        param.push((Value::Integer(0x02), Value::Map(btree_map)));
-    }
+        ),
+    ];
 
-    {
-        let mut user = Vec::new();
-        user.push((
+    let user = vec![
+        (
             Value::Text("id".to_string()),
             Value::Bytes(pkcue.id.clone()),
-        ));
-        user.push((
+        ),
+        (
             Value::Text("name".to_string()),
             Value::Text(pkcue.name.to_string()),
-        ));
-        user.push((
+        ),
+        (
             Value::Text("displayName".to_string()),
             Value::Text(pkcue.display_name.to_string()),
-        ));
-        let btree_user = vec_to_btree_map(user);
-        param.push((Value::Integer(0x03), Value::Map(btree_user)));
-    }
+        ),
+    ];
+
+    let param = vec![
+        (Value::Integer(0x02), Value::Map(vec_to_btree_map(map))),
+        (Value::Integer(0x03), Value::Map(vec_to_btree_map(user))),
+    ];
 
     let btree_param = vec_to_btree_map(param);
     Value::Map(btree_param)

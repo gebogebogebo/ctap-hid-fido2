@@ -46,13 +46,13 @@ pub fn create_payload(
                     .iter()
                     .cloned()
                     .map(|credential_id| {
-                        let mut allow_list_val = Vec::new();
-                        allow_list_val
-                            .push((Value::Text("id".to_string()), Value::Bytes(credential_id)));
-                        allow_list_val.push((
-                            Value::Text("type".to_string()),
-                            Value::Text("public-key".to_string()),
-                        ));
+                        let allow_list_val = vec![
+                            (Value::Text("id".to_string()), Value::Bytes(credential_id)),
+                            (
+                                Value::Text("type".to_string()),
+                                Value::Text("public-key".to_string()),
+                            ),
+                        ];
                         Value::Map(vec_to_btree_map(allow_list_val))
                     })
                     .collect(),
@@ -65,21 +65,19 @@ pub fn create_payload(
 
     // 0x04 : extensions
     let extensions = {
-        let mut ext_val = Vec::new();
+        let mut ext_val = Vec::new(); // 複数の条件分岐で追加されるのでvec![]に変更しない
 
         // HMAC Secret Extension
         if let Some(hmac_ext) = hmac_ext {
-            let mut param = Vec::new();
-
-            // keyAgreement(0x01)
             let val = hmac_ext.shared_secret.public_key.to_value().unwrap();
-            param.push((Value::Integer(0x01), val));
-
-            // saltEnc(0x02)
-            param.push((Value::Integer(0x02), Value::Bytes(hmac_ext.salt_enc)));
-
-            // saltAuth(0x03)
-            param.push((Value::Integer(0x03), Value::Bytes(hmac_ext.salt_auth)));
+            let param = vec![
+                // keyAgreement(0x01)
+                (Value::Integer(0x01), val),
+                // saltEnc(0x02)
+                (Value::Integer(0x02), Value::Bytes(hmac_ext.salt_enc)),
+                // saltAuth(0x03)
+                (Value::Integer(0x03), Value::Bytes(hmac_ext.salt_auth)),
+            ];
 
             ext_val.push((
                 Value::Text(Extension::HmacSecret(None).to_string()),
@@ -105,8 +103,7 @@ pub fn create_payload(
     };
 
     // 0x05 : options
-    let mut options_val = Vec::new();
-    options_val.push((Value::Text("up".to_string()), Value::Bool(params.option_up)));
+    let mut options_val = vec![(Value::Text("up".to_string()), Value::Bool(params.option_up))];
     if let Some(v) = params.option_uv {
         options_val.push((Value::Text("uv".to_string()), Value::Bool(v)));
     }
@@ -126,9 +123,10 @@ pub fn create_payload(
     let pin_protocol = Value::Integer(1);
 
     // create cbor object
-    let mut get_assertion = Vec::new();
-    get_assertion.push((Value::Integer(0x01), rpid));
-    get_assertion.push((Value::Integer(0x02), cdh));
+    let mut get_assertion = vec![
+        (Value::Integer(0x01), rpid),
+        (Value::Integer(0x02), cdh),
+    ];
     if let Some(obj) = allow_list {
         get_assertion.push((Value::Integer(0x03), obj));
     }

@@ -10,15 +10,12 @@ pub fn create_payload(
     set: Option<Vec<u8>>,
 ) -> Result<Vec<u8>> {
     // create cbor
-    let mut map = Vec::new();
+    let mut map = vec![(Value::Integer(0x03), Value::Integer(offset as i128))];
 
     // 0x01: get
     if let Some(read_bytes) = get {
         map.push((Value::Integer(0x01), Value::Integer(read_bytes as i128)));
     }
-
-    // 0x03: offset
-    map.push((Value::Integer(0x03), Value::Integer(offset as i128)));
 
     if let Some(write_datas) = set {
         let large_blob_array = create_large_blob_array(write_datas)?;
