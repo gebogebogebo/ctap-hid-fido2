@@ -59,7 +59,107 @@ fn test_wink() -> Result<()> {
 #[test]
 fn test_get_info() -> Result<()> {
     let device = FidoKeyHidFactory::create(&Cfg::init()).unwrap();
-    device.get_info().unwrap();
+    let info = device.get_info().unwrap();
+    
+    //
+    // use Yubikey Bio
+    //
+    
+    println!("- versions = {:?}", info.versions);
+    assert_eq!(
+        info.versions, 
+        vec!["U2F_V2", "FIDO_2_0", "FIDO_2_1_PRE", "FIDO_2_1"]
+    );
+    
+    println!("- extensions = {:?}", info.extensions);
+    assert_eq!(
+        info.extensions,
+        vec!["credProtect", "hmac-secret", "largeBlobKey", "credBlob", "minPinLength"]
+    );
+    
+    let aaguid_hex = util::to_hex_str(&info.aaguid);
+    println!("- aaguid = {}", aaguid_hex);
+    assert_eq!(aaguid_hex, "D8522D9F575B486688A9BA99FA02F35B");
+    
+    println!("- options = {:?}", info.options);
+    let expected_options = vec![
+        ("rk".to_string(), true),
+        ("up".to_string(), true),
+        ("uv".to_string(), true),
+        ("plat".to_string(), false),
+        ("uvToken".to_string(), true),
+        ("alwaysUv".to_string(), true),
+        ("credMgmt".to_string(), true),
+        ("authnrCfg".to_string(), true),
+        ("bioEnroll".to_string(), true),
+        ("clientPin".to_string(), true),
+        ("largeBlobs".to_string(), true),
+        ("pinUvAuthToken".to_string(), true),
+        ("setMinPINLength".to_string(), true),
+        ("makeCredUvNotRqd".to_string(), false),
+        ("credentialMgmtPreview".to_string(), true),
+        ("userVerificationMgmtPreview".to_string(), true),
+    ];
+
+    assert_eq!(info.options.len(), expected_options.len());
+    for option in expected_options {
+        assert!(info.options.contains(&option));
+    }
+    
+    println!("- max_msg_size = {}", info.max_msg_size);
+    assert_eq!(info.max_msg_size, 1200);
+    
+    println!("- pin_uv_auth_protocols = {:?}", info.pin_uv_auth_protocols);
+    assert_eq!(info.pin_uv_auth_protocols, vec![2, 1]);
+    
+    println!("- max_credential_count_in_list = {}", info.max_credential_count_in_list);
+    assert_eq!(info.max_credential_count_in_list, 8);
+    
+    println!("- max_credential_id_length = {}", info.max_credential_id_length);
+    assert_eq!(info.max_credential_id_length, 128);
+    
+    println!("- transports = {:?}", info.transports);
+    assert_eq!(info.transports, vec!["usb"]);
+    
+    println!("- algorithms = {:?}", info.algorithms);
+    let expected_algorithms = vec![
+        ("alg".to_string(), "-7".to_string()),
+        ("type".to_string(), "public-key".to_string()),
+        ("alg".to_string(), "-8".to_string()),
+        ("type".to_string(), "public-key".to_string()),
+    ];
+    assert_eq!(info.algorithms.len(), expected_algorithms.len());
+    for alg in expected_algorithms {
+        assert!(info.algorithms.contains(&alg));
+    }
+    
+    println!("- max_serialized_large_blob_array = {}", info.max_serialized_large_blob_array);
+    assert_eq!(info.max_serialized_large_blob_array, 1024);
+    
+    println!("- force_pin_change = {}", info.force_pin_change);
+    assert_eq!(info.force_pin_change, false);
+    
+    println!("- min_pin_length = {}", info.min_pin_length);
+    assert_eq!(info.min_pin_length, 4);
+    
+    println!("- firmware_version = {}", info.firmware_version);
+    assert_eq!(info.firmware_version, 328966);
+    
+    println!("- max_cred_blob_length = {}", info.max_cred_blob_length);
+    assert_eq!(info.max_cred_blob_length, 32);
+    
+    println!("- max_rpids_for_set_min_pin_length = {}", info.max_rpids_for_set_min_pin_length);
+    assert_eq!(info.max_rpids_for_set_min_pin_length, 1);
+    
+    println!("- preferred_platform_uv_attempts = {}", info.preferred_platform_uv_attempts);
+    assert_eq!(info.preferred_platform_uv_attempts, 3);
+    
+    println!("- uv_modality = {}", info.uv_modality);
+    assert_eq!(info.uv_modality, 2);
+    
+    println!("- remaining_discoverable_credentials = {}", info.remaining_discoverable_credentials);
+    assert_eq!(info.remaining_discoverable_credentials, 15);
+    
     Ok(())
 }
 
