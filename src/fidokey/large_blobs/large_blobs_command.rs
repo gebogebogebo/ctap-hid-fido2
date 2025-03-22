@@ -1,8 +1,7 @@
-use crate::{ctapdef, encrypt::enc_hmac_sha_256, pintoken::PinToken};
+use crate::{ctapdef, encrypt::enc_hmac_sha_256, pintoken::PinToken, util::vec_to_btree_map};
 use anyhow::Result;
 use ring::digest;
 use serde_cbor::{to_vec, Value};
-use std::collections::BTreeMap;
 
 pub fn create_payload(
     pin_token: Option<PinToken>,
@@ -70,7 +69,7 @@ pub fn create_payload(
     }
 
     // CBOR
-    let cbor = Value::Map(map.into_iter().collect::<BTreeMap<_, _>>());
+    let cbor = Value::Map(vec_to_btree_map(map));
     let mut payload = [ctapdef::AUTHENTICATOR_LARGEBLOBS].to_vec();
     payload.append(&mut to_vec(&cbor)?);
     Ok(payload)

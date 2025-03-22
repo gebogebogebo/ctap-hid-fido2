@@ -4,6 +4,7 @@ use num::NumCast;
 use ring::digest;
 use serde_cbor::Value;
 use base64::{Engine as _, engine::general_purpose};
+use std::collections::BTreeMap;
 
 pub fn to_hex_str(bytes: &[u8]) -> String {
     bytes.iter().fold(String::new(), |mut acc, n| {
@@ -23,6 +24,11 @@ pub fn print_typename<T>(_: T) {
 #[allow(dead_code)]
 pub(crate) fn debugp(title: &str, bytes: &[u8]) {
     println!("{}", StrBuf::bufh(title, bytes));
+}
+
+// Convert Vec<(Value, Value)> to BTreeMap<Value, Value> for serde_cbor::Value::Map
+pub fn vec_to_btree_map(vec: Vec<(Value, Value)>) -> BTreeMap<Value, Value> {
+    vec.into_iter().collect::<BTreeMap<_, _>>()
 }
 
 // for cbor

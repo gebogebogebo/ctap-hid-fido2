@@ -1,10 +1,9 @@
 use super::get_assertion_params::Extension;
 use crate::ctapdef;
 use crate::hmac_ext::HmacExt;
-use crate::util;
+use crate::util::{self, vec_to_btree_map};
 use serde_cbor::to_vec;
 use serde_cbor::Value;
-use std::collections::BTreeMap;
 
 #[derive(Debug, Default)]
 pub struct Params {
@@ -54,7 +53,7 @@ pub fn create_payload(
                             Value::Text("type".to_string()),
                             Value::Text("public-key".to_string()),
                         ));
-                        Value::Map(allow_list_val.into_iter().collect::<BTreeMap<_, _>>())
+                        Value::Map(vec_to_btree_map(allow_list_val))
                     })
                     .collect(),
             );
@@ -84,7 +83,7 @@ pub fn create_payload(
 
             ext_val.push((
                 Value::Text(Extension::HmacSecret(None).to_string()),
-                Value::Map(param.into_iter().collect::<BTreeMap<_, _>>()),
+                Value::Map(vec_to_btree_map(param)),
             ));
         }
 
@@ -101,7 +100,7 @@ pub fn create_payload(
         if ext_val.is_empty() {
             None
         } else {
-            Some(Value::Map(ext_val.into_iter().collect::<BTreeMap<_, _>>()))
+            Some(Value::Map(vec_to_btree_map(ext_val)))
         }
     };
 
@@ -112,7 +111,7 @@ pub fn create_payload(
         options_val.push((Value::Text("uv".to_string()), Value::Bool(v)));
     }
 
-    let options = Value::Map(options_val.into_iter().collect::<BTreeMap<_, _>>());
+    let options = Value::Map(vec_to_btree_map(options_val));
 
     // pinAuth(0x06)
     let pin_auth = {
@@ -141,7 +140,7 @@ pub fn create_payload(
         get_assertion.push((Value::Integer(0x06), x));
         get_assertion.push((Value::Integer(0x07), pin_protocol));
     }
-    let cbor = Value::Map(get_assertion.into_iter().collect::<BTreeMap<_, _>>());
+    let cbor = Value::Map(vec_to_btree_map(get_assertion));
 
     // Command - authenticatorGetAssertion (0x02)
     let mut payload = [ctapdef::AUTHENTICATOR_GET_ASSERTION].to_vec();

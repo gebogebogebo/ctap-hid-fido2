@@ -1,19 +1,10 @@
 use super::super::sub_command_base::SubCommandBase;
 use crate::public_key_credential_descriptor::PublicKeyCredentialDescriptor;
 use crate::public_key_credential_user_entity::PublicKeyCredentialUserEntity;
-use crate::{ctapdef, encrypt::enc_hmac_sha_256, pintoken};
+use crate::{ctapdef, encrypt::enc_hmac_sha_256, pintoken, util::vec_to_btree_map};
 use anyhow::Result;
 use serde_cbor::{to_vec, Value};
-use std::collections::BTreeMap;
 use strum_macros::EnumProperty;
-
-fn vec_to_btree_map(vec: Vec<(Value, Value)>) -> BTreeMap<Value, Value> {
-    let mut map = BTreeMap::new();
-    for (key, value) in vec {
-        map.insert(key, value);
-    }
-    map
-}
 
 #[derive(Debug, Clone, PartialEq, EnumProperty)]
 pub enum SubCommand {
