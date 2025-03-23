@@ -26,28 +26,28 @@ pub enum Permission {
     AuthenticatorConfiguration = 0x20,
 }
 
-fn create_payload_get_uv_retries() -> Vec<u8> {
+fn create_payload_get_uv_retries() -> Result<Vec<u8>> {
     let mut map = Vec::new();
     insert_pin_protocol(&mut map);
     insert_sub_command(&mut map, SubCommand::GetUVRetries);
     to_payload(map)
 }
 
-fn create_payload_get_retries() -> Vec<u8> {
+fn create_payload_get_retries() -> Result<Vec<u8>> {
     let mut map = Vec::new();
     insert_pin_protocol(&mut map);
     insert_sub_command(&mut map, SubCommand::GetRetries);
     to_payload(map)
 }
 
-fn create_payload_get_keyagreement() -> Vec<u8> {
+fn create_payload_get_keyagreement() -> Result<Vec<u8>> {
     let mut map = Vec::new();
     insert_pin_protocol(&mut map);
     insert_sub_command(&mut map, SubCommand::GetKeyAgreement);
     to_payload(map)
 }
 
-pub fn create_payload_get_pin_token(key_agreement: &cose::CoseKey, pin_hash_enc: &[u8]) -> Vec<u8> {
+pub fn create_payload_get_pin_token(key_agreement: &cose::CoseKey, pin_hash_enc: &[u8]) -> Result<Vec<u8>> {
     let mut map = Vec::new();
     insert_pin_protocol(&mut map);
     insert_sub_command(&mut map, SubCommand::GetPinToken);
@@ -60,7 +60,7 @@ pub fn create_payload_set_pin(
     key_agreement: &cose::CoseKey,
     pin_auth: &[u8],
     new_pin_enc: &[u8],
-) -> Vec<u8> {
+) -> Result<Vec<u8>> {
     let mut map = Vec::new();
     insert_pin_protocol(&mut map);
     insert_sub_command(&mut map, SubCommand::SetPin);
@@ -75,7 +75,7 @@ pub fn create_payload_change_pin(
     pin_auth: &[u8],
     new_pin_enc: &[u8],
     pin_hash_enc: &[u8],
-) -> Vec<u8> {
+) -> Result<Vec<u8>> {
     let mut map = Vec::new();
     insert_pin_protocol(&mut map);
     insert_sub_command(&mut map, SubCommand::ChangePin);
@@ -90,7 +90,7 @@ pub fn create_payload_get_pin_uv_auth_token_using_pin_with_permissions(
     key_agreement: &cose::CoseKey,
     pin_hash_enc: &[u8],
     permission: Permission,
-) -> Vec<u8> {
+) -> Result<Vec<u8>> {
     let mut map = Vec::new();
     insert_pin_protocol(&mut map);
     insert_sub_command(
@@ -114,7 +114,7 @@ pub fn create_payload_get_pin_uv_auth_token_using_uv_with_permissions(
     key_agreement: &cose::CoseKey,
     permission: Permission,
     rpid: &str,
-) -> Vec<u8> {
+) -> Result<Vec<u8>> {
     let mut map = Vec::new();
     insert_pin_protocol(&mut map);
     insert_sub_command(&mut map, SubCommand::GetPinUvAuthTokenUsingUvWithPermissions);
@@ -132,11 +132,12 @@ pub fn create_payload_get_pin_uv_auth_token_using_uv_with_permissions(
 }
 
 // create payload
-fn to_payload(map: Vec<(Value, Value)>) -> Vec<u8> {
+fn to_payload(map: Vec<(Value, Value)>) -> Result<Vec<u8>> {
     let cbor = Value::Map(vec_to_btree_map(map));
     let mut payload = [ctapdef::AUTHENTICATOR_CLIENT_PIN].to_vec();
-    payload.append(&mut serde_cbor::to_vec(&cbor).unwrap());
-    payload.to_vec()
+    let serialized = serde_cbor::to_vec(&cbor)?;
+    payload.append(&mut serialized.clone());
+    Ok(payload)
 }
 
 // 0x01 : pin_protocol
@@ -197,13 +198,13 @@ fn insert_pin_hash_enc(map: &mut Vec<(Value, Value)>, pin_hash_enc: &[u8]) {
 
 pub fn create_payload(sub_command: SubCommand) -> Result<Vec<u8>> {
     match sub_command {
-        SubCommand::GetRetries => Ok(create_payload_get_retries()),
-        SubCommand::GetKeyAgreement => Ok(create_payload_get_keyagreement()),
+        SubCommand::GetRetries => create_payload_get_retries(),
+        SubCommand::GetKeyAgreement => create_payload_get_keyagreement(),
         SubCommand::SetPin => Err(anyhow!("Not Supported")),
         SubCommand::ChangePin => Err(anyhow!("Not Supported")),
         SubCommand::GetPinToken => Err(anyhow!("Not Supported")),
         SubCommand::GetPinUvAuthTokenUsingUvWithPermissions => Err(anyhow!("Not Supported")),
-        SubCommand::GetUVRetries => Ok(create_payload_get_uv_retries()),
+        SubCommand::GetUVRetries => create_payload_get_uv_retries(),
         SubCommand::GetPinUvAuthTokenUsingPinWithPermissions => Err(anyhow!("Not Supported")),
     }
 }
