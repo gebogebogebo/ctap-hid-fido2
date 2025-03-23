@@ -26,6 +26,14 @@ pub enum Permission {
     AuthenticatorConfiguration = 0x20,
 }
 
+//  TODO ciborium用
+// impl From<Permission> for Value {
+//     fn from(permission: Permission) -> Self {
+//         // enum のディスクリミナントを i64 にキャストしてから Integer に変換
+//         Value::Integer((permission as i64).into())
+//     }
+// }
+
 fn create_payload_get_uv_retries() -> Result<Vec<u8>> {
     let mut map = Vec::new();
     insert_pin_protocol(&mut map);
