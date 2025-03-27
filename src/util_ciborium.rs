@@ -2,6 +2,7 @@ use anyhow::{anyhow, Result};
 use std::io::Cursor;
 use ciborium::value::Value;
 use num::NumCast;
+use std::collections::BTreeMap;
 
 #[allow(dead_code)]
 pub(crate) fn cbor_bytes_to_map(bytes: &[u8]) -> Result<Vec<(Value, Value)>> {
@@ -93,6 +94,11 @@ pub(crate) fn is_array(value: &Value) -> bool {
 }
 
 #[allow(dead_code)]
+pub(crate) fn is_bytes(value: &Value) -> bool {
+    matches!(value, Value::Bytes(_))
+}
+
+#[allow(dead_code)]
 pub(crate) fn integer_to_i64(value: &Value) -> Result<i64> {
     if let Value::Integer(n) = value {
         i64::try_from(*n).map_err(|_| anyhow!("Integer value too large for i64"))
@@ -139,4 +145,20 @@ pub fn ciborium_to_serde(cib_value: Value) -> Result<serde_cbor::Value> {
     let serde_value: serde_cbor::Value = serde_cbor::from_slice(&bytes)?;
     Ok(serde_value)
 }
+
+pub fn ciborium_to_serde_vec(map: Vec<(Value, Value)>) -> Result<Vec<(serde_cbor::Value, serde_cbor::Value)>> {
+    let mut result = Vec::new();
+    for (key, value) in map {
+        let serde_key = ciborium_to_serde(key)?;
+        let serde_value = ciborium_to_serde(value)?;
+        result.push((serde_key, serde_value));
+    }
+    Ok(result)
+}
+
+pub fn vec_to_btree_map(vec: Vec<(Value, Value)>) -> Result<BTreeMap<serde_cbor::Value, serde_cbor::Value>> {
+    let serde_vec = ciborium_to_serde_vec(vec)?;
+    Ok(serde_vec.into_iter().collect::<BTreeMap<_, _>>())
+}
+
 // TODO 最終的には削除する
