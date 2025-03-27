@@ -142,11 +142,11 @@ pub fn create_payload_get_pin_uv_auth_token_using_uv_with_permissions(
 
 // create payload
 fn to_payload(map: Vec<(Value, Value)>) -> Result<Vec<u8>> {
-    let tmp = util_ciborium::vec_to_btree_map(map)?;
-    let cbor = serde_cbor::Value::Map(tmp);
+    let cbor = Value::Map(map);
     let mut payload = [ctapdef::AUTHENTICATOR_CLIENT_PIN].to_vec();
-    let serialized = serde_cbor::to_vec(&cbor)?;
-    payload.append(&mut serialized.clone());
+    let mut serialized = Vec::new();
+    ciborium::ser::into_writer(&cbor, &mut serialized)?;
+    payload.append(&mut serialized);
     Ok(payload)
 }
 
