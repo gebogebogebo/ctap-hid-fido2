@@ -126,6 +126,20 @@ pub(crate) fn integer_to_i64(value: &Value) -> Result<i64> {
 }
 
 #[allow(dead_code)]
+pub(crate) fn cbor_get_bytes_from_map(cbor_map: &Value, get_key: &str) -> Result<Vec<u8>> {
+    if let Value::Map(map) = cbor_map {
+        for (key, val) in map {
+            if let Value::Text(key_text) = key {
+                if key_text == get_key {
+                    return cbor_value_to_vec_u8(val);
+                }
+            }
+        }
+    }
+    Ok(Vec::new()) // キーが見つからない場合は空の配列を返す
+}
+
+#[allow(dead_code)]
 pub(crate) fn extract_map_ref(value: &Value) -> Result<&Vec<(Value, Value)>> {
     if let Value::Map(map) = value {
         Ok(map)
