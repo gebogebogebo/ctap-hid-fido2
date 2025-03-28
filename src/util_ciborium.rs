@@ -196,4 +196,27 @@ pub fn vec_to_btree_map(vec: Vec<(Value, Value)>) -> Result<BTreeMap<serde_cbor:
     Ok(serde_vec.into_iter().collect::<BTreeMap<_, _>>())
 }
 
+// CBORデータの次の項目をスキップして、スキップしたバイト数を返す
+#[allow(dead_code)]
+pub(crate) fn skip_next_cbor_item(data: &[u8]) -> usize {
+    if data.is_empty() {
+        return 0;
+    }
+
+    // CBORデータをValueにパースして、そのバイト数を計算
+    let mut ser_bytes = Vec::new();
+    match ciborium::de::from_reader::<Value, _>(Cursor::new(data)) {
+        Ok(value) => {
+            // 再度シリアライズしてバイト数を計算
+            if let Ok(()) = ciborium::ser::into_writer(&value, &mut ser_bytes) {
+                // シリアライズしたバイト数を返す（元のデータとほぼ同じサイズ）
+                ser_bytes.len()
+            } else {
+                0
+            }
+        },
+        Err(_) => 0,
+    }
+}
+
 // TODO 最終的には削除する
