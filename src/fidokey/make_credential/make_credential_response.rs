@@ -1,21 +1,21 @@
 use super::make_credential_params::{Attestation, Extension};
 use super::CredentialProtectionPolicy;
 use crate::public_key::PublicKey;
-use crate::util;
+use crate::util_ciborium;
 use anyhow::Result;
 use byteorder::{BigEndian, ReadBytesExt};
-use serde_cbor::Value;
+use ciborium::value::Value;
 use std::io::Cursor;
 
 fn parse_cbor_att_stmt(obj: &Value, att: &mut Attestation) -> Result<()> {
-    if let Value::Map(xs) = obj {
-        for (key, val) in xs {
-            if let Value::Text(s) = key {
-                let ss = s.as_str();
-                match ss {
-                    "alg" => att.attstmt_alg = util::cbor_value_to_num(val)?,
-                    "sig" => att.attstmt_sig = util::cbor_value_to_vec_u8(val)?,
-                    "x5c" => att.attstmt_x5c = util::cbor_value_to_vec_bytes(val)?,
+    if let Some(map) = util_ciborium::extract_map_ref(obj).ok() {
+        for (key, val) in map {
+            if util_ciborium::is_text(key) {
+                let key_text = util_ciborium::cbor_value_to_str(key)?;
+                match key_text.as_str() {
+                    "alg" => att.attstmt_alg = util_ciborium::cbor_value_to_num(val)?,
+                    "sig" => att.attstmt_sig = util_ciborium::cbor_value_to_vec_u8(val)?,
+                    "x5c" => att.attstmt_x5c = util_ciborium::cbor_value_to_vec_bytes(val)?,
                     _ => {}
                 }
             }
@@ -78,34 +78,41 @@ fn parse_cbor_authdata(authdata: &[u8], attestation: &mut Attestation) -> Result
     // - [1] extensions
     let slice = if attestation.flags_attested_credential_data_included {
         let slice = &authdata[index..authdata.len()];
-        let mut deserializer = serde_cbor::Deserializer::from_slice(slice);
-        let value: Value = serde::de::Deserialize::deserialize(&mut deserializer).unwrap();
-        attestation.credential_publickey = PublicKey::new(&value)?;
-        slice[deserializer.byte_offset()..].to_vec()
+        match ciborium::de::from_reader(Cursor::new(slice)) {
+            Ok(value) => {
+                attestation.credential_publickey = PublicKey::new_from_ciborium(&value)?;
+                // シリアライズして公開鍵部分のバイト数を取得し、残りのデータを取得する
+                let mut bytes = Vec::new();
+                ciborium::ser::into_writer(&value, &mut bytes)?;
+                slice[bytes.len()..].to_vec()
+            },
+            Err(_) => authdata[index..authdata.len()].to_vec(),
+        }
     } else {
         authdata[index..authdata.len()].to_vec()
     };
 
     if attestation.flags_extension_data_included {
         //println!("{:02} - {:?}", slice.len(), util::to_hex_str(&slice));
-        let maps = util::cbor_bytes_to_map(&slice)?;
+        let maps = util_ciborium::cbor_bytes_to_map(&slice)?;
         for (key, val) in &maps {
-            if let Value::Text(member) = key {
-                if *member == Extension::HmacSecret(None).to_string() {
-                    let v = util::cbor_value_to_bool(val)?;
+            if util_ciborium::is_text(key) {
+                let member = util_ciborium::cbor_value_to_str(key)?;
+                if member == Extension::HmacSecret(None).to_string() {
+                    let v = util_ciborium::cbor_value_to_bool(val)?;
                     attestation.extensions.push(Extension::HmacSecret(Some(v)));
-                } else if *member == Extension::CredProtect(None).to_string() {
-                    let v: u32 = util::cbor_value_to_num(val)?;
+                } else if member == Extension::CredProtect(None).to_string() {
+                    let v: u32 = util_ciborium::cbor_value_to_num(val)?;
                     attestation.extensions.push(Extension::CredProtect(Some(
                         CredentialProtectionPolicy::from(v),
                     )));
-                } else if *member == Extension::MinPinLength((None, None)).to_string() {
-                    let v: u8 = util::cbor_value_to_num(val)?;
+                } else if member == Extension::MinPinLength((None, None)).to_string() {
+                    let v: u8 = util_ciborium::cbor_value_to_num(val)?;
                     attestation
                         .extensions
                         .push(Extension::MinPinLength((None, Some(v))));
-                } else if *member == Extension::CredBlob((None, None)).to_string() {
-                    let v = util::cbor_value_to_bool(val)?;
+                } else if member == Extension::CredBlob((None, None)).to_string() {
+                    let v = util_ciborium::cbor_value_to_bool(val)?;
                     attestation
                         .extensions
                         .push(Extension::CredBlob((None, Some(v))));
@@ -121,15 +128,15 @@ fn parse_cbor_authdata(authdata: &[u8], attestation: &mut Attestation) -> Result
 
 pub fn parse_cbor(bytes: &[u8]) -> Result<Attestation> {
     let mut attestation = Attestation::default();
-    let maps = util::cbor_bytes_to_map(bytes)?;
+    let maps = util_ciborium::cbor_bytes_to_map(bytes)?;
     for (key, val) in &maps {
-        if let Value::Integer(member) = key {
-            match member {
-                0x01 => attestation.fmt = util::cbor_value_to_str(val)?,
-                0x02 => parse_cbor_authdata(&util::cbor_value_to_vec_u8(val)?, &mut attestation)?,
+        if util_ciborium::is_integer(key) {
+            match util_ciborium::integer_to_i64(key)? {
+                0x01 => attestation.fmt = util_ciborium::cbor_value_to_str(val)?,
+                0x02 => parse_cbor_authdata(&util_ciborium::cbor_value_to_vec_u8(val)?, &mut attestation)?,
                 0x03 => parse_cbor_att_stmt(val, &mut attestation)?,
                 0x05 => {
-                    let lbk = util::cbor_value_to_vec_u8(val)?;
+                    let lbk = util_ciborium::cbor_value_to_vec_u8(val)?;
                     attestation
                         .extensions
                         .push(Extension::LargeBlobKey((None, Some(lbk))));

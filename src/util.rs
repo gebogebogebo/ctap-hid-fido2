@@ -100,6 +100,7 @@ pub(crate) fn cbor_value_to_str(value: &Value) -> Result<String> {
     }
 }
 
+#[allow(dead_code)]
 pub(crate) fn cbor_value_to_bool(value: &Value) -> Result<bool> {
     if let Value::Bool(v) = value {
         Ok(*v)
@@ -123,6 +124,7 @@ pub(crate) fn cbor_value_to_vec_string(value: &Value) -> Result<Vec<String>> {
     }
 }
 
+#[allow(dead_code)]
 pub(crate) fn cbor_value_to_vec_bytes(value: &Value) -> Result<Vec<Vec<u8>>> {
     if let Value::Array(xs) = value {
         let mut bytes = [].to_vec();
@@ -137,6 +139,7 @@ pub(crate) fn cbor_value_to_vec_bytes(value: &Value) -> Result<Vec<Vec<u8>>> {
     }
 }
 
+#[allow(dead_code)]
 pub(crate) fn cbor_bytes_to_map(bytes: &[u8]) -> Result<Vec<(Value, Value)>> {
     if bytes.is_empty() {
         return Ok(Vec::new());

@@ -96,6 +96,7 @@ pub(crate) fn is_integer(value: &Value) -> bool {
     matches!(value, Value::Integer(_))
 }
 
+#[allow(dead_code)]
 pub(crate) fn is_text(value: &Value) -> bool {
     matches!(value, Value::Text(_))
 }
@@ -154,6 +155,7 @@ pub(crate) fn serde_to_ciborium(serde_value: serde_cbor::Value) -> Result<Value>
 }
 
 // ciborium::value::Value を serde_cbor::Value に変換する
+#[allow(dead_code)]
 pub fn ciborium_to_serde(cib_value: Value) -> Result<serde_cbor::Value> {
     // ciborium の Value をバイト列にシリアライズ
     let mut bytes = Vec::new();
@@ -163,6 +165,7 @@ pub fn ciborium_to_serde(cib_value: Value) -> Result<serde_cbor::Value> {
     Ok(serde_value)
 }
 
+#[allow(dead_code)]
 pub fn ciborium_to_serde_vec(map: Vec<(Value, Value)>) -> Result<Vec<(serde_cbor::Value, serde_cbor::Value)>> {
     let mut result = Vec::new();
     for (key, value) in map {
@@ -173,6 +176,7 @@ pub fn ciborium_to_serde_vec(map: Vec<(Value, Value)>) -> Result<Vec<(serde_cbor
     Ok(result)
 }
 
+#[allow(dead_code)]
 pub fn vec_to_btree_map(vec: Vec<(Value, Value)>) -> Result<BTreeMap<serde_cbor::Value, serde_cbor::Value>> {
     let serde_vec = ciborium_to_serde_vec(vec)?;
     Ok(serde_vec.into_iter().collect::<BTreeMap<_, _>>())
