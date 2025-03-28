@@ -75,6 +75,23 @@ pub(crate) fn cbor_value_to_str(value: &Value) -> Result<String> {
 }
 
 #[allow(dead_code)]
+pub(crate) fn cbor_value_to_vec_bytes(value: &Value) -> Result<Vec<Vec<u8>>> {
+    if let Value::Array(values) = value {
+        let mut result = Vec::new();
+        for item in values {
+            if let Value::Bytes(bytes) = item {
+                result.push(bytes.clone());
+            } else {
+                return Err(anyhow!("Cast Error: Array item is not Bytes"));
+            }
+        }
+        Ok(result)
+    } else {
+        Err(anyhow!("Cast Error: Value is not an Array"))
+    }
+}
+
+#[allow(dead_code)]
 pub(crate) fn is_integer(value: &Value) -> bool {
     matches!(value, Value::Integer(_))
 }
