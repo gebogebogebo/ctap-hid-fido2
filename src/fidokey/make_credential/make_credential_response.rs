@@ -40,20 +40,7 @@ fn parse_cbor_authdata(authdata: &[u8], attestation: &mut Attestation) -> Result
 
     // flags(1)
     let byte = authdata[index];
-    attestation.flags = Flags::parse(byte).unwrap();
-
-    // // TODO src/auth_data.rs の Flags みたいにするといいかも
-    // // bit[0]: User Present (UP)
-    // attestation.flags_user_present_result = matches!(byte & 0x01, 0x01);
-    // // bit[1]: Reserved for future use (RFU1)
-    // // bit[2]: User Verified (UV)
-    // attestation.flags_user_verified_result = matches!(byte & 0x04, 0x04);
-    // // bit[3]-[5]: 3-5: Reserved for future use (RFU2)
-    // // bit[6]: Attested credential data included (AT)
-    // attestation.flags_attested_credential_data_included = matches!(byte & 0x40, 0x40);
-    // // bit[7]: Extension data included (ED)
-    // attestation.flags_extension_data_included = matches!(byte & 0x80, 0x80);
-
+    attestation.flags = Flags::parse(byte)?;
     index += 1;
 
     // signCount(4)

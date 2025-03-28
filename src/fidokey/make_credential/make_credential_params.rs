@@ -14,10 +14,6 @@ use strum_macros::{AsRefStr, Display};
 pub struct Attestation {
     pub fmt: String,
     pub rpid_hash: Vec<u8>,
-    // pub flags_user_present_result: bool,
-    // pub flags_user_verified_result: bool,
-    // pub flags_attested_credential_data_included: bool,
-    // pub flags_extension_data_included: bool,
     pub flags: Flags,
     pub sign_count: u32,
     pub aaguid: Vec<u8>,
