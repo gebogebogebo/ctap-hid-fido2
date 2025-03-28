@@ -1,5 +1,6 @@
 use super::make_credential_params::Extension as Mext;
 use super::CredentialProtectionPolicy;
+use crate::auth_data::Flags;
 use crate::public_key::PublicKey;
 use crate::public_key_credential_descriptor::PublicKeyCredentialDescriptor;
 use crate::public_key_credential_user_entity::PublicKeyCredentialUserEntity;
@@ -13,10 +14,11 @@ use strum_macros::{AsRefStr, Display};
 pub struct Attestation {
     pub fmt: String,
     pub rpid_hash: Vec<u8>,
-    pub flags_user_present_result: bool,
-    pub flags_user_verified_result: bool,
-    pub flags_attested_credential_data_included: bool,
-    pub flags_extension_data_included: bool,
+    // pub flags_user_present_result: bool,
+    // pub flags_user_verified_result: bool,
+    // pub flags_attested_credential_data_included: bool,
+    // pub flags_extension_data_included: bool,
+    pub flags: Flags,
     pub sign_count: u32,
     pub aaguid: Vec<u8>,
     pub credential_descriptor: PublicKeyCredentialDescriptor,
@@ -34,18 +36,7 @@ impl fmt::Display for Attestation {
         let mut strbuf = StrBuf::new(42);
         strbuf
             .appenh("- rpid_hash", &self.rpid_hash)
-            .append(
-                "- flags_user_present_result",
-                &self.flags_user_present_result,
-            )
-            .append(
-                "- flags_attested_credential_data_included",
-                &self.flags_attested_credential_data_included,
-            )
-            .append(
-                "- flags_extension_data_included",
-                &self.flags_extension_data_included,
-            )
+            .add(&format!("{}", &self.flags))
             .append("- sign_count", &self.sign_count)
             .appenh("- aaguid", &self.aaguid)
             .append("- credential_descriptor", &self.credential_descriptor)

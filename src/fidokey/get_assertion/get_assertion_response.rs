@@ -40,19 +40,10 @@ fn parse_cbor_authdata(
     ass.sign_count = ret.0;
     index = ret.1;
 
-    // rest is cbor objects
-    // - [0] credentialPublicKey
-    // - [1] extensions
-    let slice = if ass.flags.attested_credential_data_included {
-        // TODO この if 文に入るケースのテストをしていないので注意！
-        
-        let slice = &authdata[index..authdata.len()];
-        // skip device credential publicKey
-        let bytes_read = util_ciborium::skip_next_cbor_item(slice);
-        slice[bytes_read..].to_vec()
-    } else {
-        authdata[index..authdata.len()].to_vec()
-    };
+    // Attested credential data included (AT)
+    // https://www.w3.org/TR/webauthn-3/#sctn-authenticator-data
+    // For assertion signatures, the AT flag MUST NOT be set and the attestedCredentialData MUST NOT be included.
+    let slice = authdata[index..authdata.len()].to_vec();
 
     if ass.flags.extension_data_included {
         let maps = util_ciborium::cbor_bytes_to_map(&slice)?;

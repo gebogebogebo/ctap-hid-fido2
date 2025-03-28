@@ -2,6 +2,7 @@ use super::make_credential_params::{Attestation, Extension};
 use super::CredentialProtectionPolicy;
 use crate::public_key::PublicKey;
 use crate::util_ciborium;
+use crate::auth_data::Flags;
 use anyhow::Result;
 use byteorder::{BigEndian, ReadBytesExt};
 use ciborium::value::Value;
@@ -39,10 +40,20 @@ fn parse_cbor_authdata(authdata: &[u8], attestation: &mut Attestation) -> Result
 
     // flags(1)
     let byte = authdata[index];
-    attestation.flags_user_present_result = matches!(byte & 0x01, 0x01);
-    attestation.flags_user_verified_result = matches!(byte & 0x04, 0x04);
-    attestation.flags_attested_credential_data_included = matches!(byte & 0x40, 0x40);
-    attestation.flags_extension_data_included = matches!(byte & 0x80, 0x80);
+    attestation.flags = Flags::parse(byte).unwrap();
+
+    // // TODO src/auth_data.rs の Flags みたいにするといいかも
+    // // bit[0]: User Present (UP)
+    // attestation.flags_user_present_result = matches!(byte & 0x01, 0x01);
+    // // bit[1]: Reserved for future use (RFU1)
+    // // bit[2]: User Verified (UV)
+    // attestation.flags_user_verified_result = matches!(byte & 0x04, 0x04);
+    // // bit[3]-[5]: 3-5: Reserved for future use (RFU2)
+    // // bit[6]: Attested credential data included (AT)
+    // attestation.flags_attested_credential_data_included = matches!(byte & 0x40, 0x40);
+    // // bit[7]: Extension data included (ED)
+    // attestation.flags_extension_data_included = matches!(byte & 0x80, 0x80);
+
     index += 1;
 
     // signCount(4)
@@ -76,7 +87,7 @@ fn parse_cbor_authdata(authdata: &[u8], attestation: &mut Attestation) -> Result
     // rest is cbor objects
     // - [0] credentialPublicKey
     // - [1] extensions
-    let slice = if attestation.flags_attested_credential_data_included {
+    let slice = if attestation.flags.attested_credential_data_included {
         let slice = &authdata[index..authdata.len()];
         match ciborium::de::from_reader(Cursor::new(slice)) {
             Ok(value) => {
@@ -92,7 +103,7 @@ fn parse_cbor_authdata(authdata: &[u8], attestation: &mut Attestation) -> Result
         authdata[index..authdata.len()].to_vec()
     };
 
-    if attestation.flags_extension_data_included {
+    if attestation.flags.extension_data_included {
         //println!("{:02} - {:?}", slice.len(), util::to_hex_str(&slice));
         let maps = util_ciborium::cbor_bytes_to_map(&slice)?;
         for (key, val) in &maps {
