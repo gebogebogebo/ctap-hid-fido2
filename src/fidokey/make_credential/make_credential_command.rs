@@ -3,6 +3,7 @@ use crate::ctapdef;
 use crate::util::{self, vec_to_btree_map};
 use serde_cbor::to_vec;
 use serde_cbor::Value;
+use anyhow::Result;
 
 #[derive(Debug, Default)]
 pub struct Params {
@@ -32,7 +33,7 @@ impl Params {
     }
 }
 
-pub fn create_payload(params: Params, extensions: Option<&Vec<Extension>>) -> Vec<u8> {
+pub fn create_payload(params: Params, extensions: Option<&Vec<Extension>>) -> Result<Vec<u8>> {
     // 0x01 : clientDataHash
     let cdh = Value::Bytes(params.client_data_hash);
 
@@ -207,5 +208,5 @@ pub fn create_payload(params: Params, extensions: Option<&Vec<Extension>>) -> Ve
     let mut payload = [ctapdef::AUTHENTICATOR_MAKE_CREDENTIAL].to_vec();
     payload.append(&mut to_vec(&cbor).unwrap());
 
-    payload
+    Ok(payload)
 }
