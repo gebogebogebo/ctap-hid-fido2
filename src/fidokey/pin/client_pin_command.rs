@@ -140,6 +140,7 @@ pub fn create_payload_get_pin_uv_auth_token_using_uv_with_permissions(
     to_payload(map)
 }
 
+// TODO これ共通化できそう
 // create payload
 fn to_payload(map: Vec<(Value, Value)>) -> Result<Vec<u8>> {
     let cbor = Value::Map(map);
