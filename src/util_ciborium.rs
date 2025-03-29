@@ -39,6 +39,18 @@ impl ToValue for i64 {
     }
 }
 
+impl ToValue for Vec<Value> {
+    fn to_value(&self) -> Value {
+        Value::Array(self.clone())
+    }
+}
+
+impl ToValue for Vec<(Value, Value)> {
+    fn to_value(&self) -> Value {
+        Value::Map(self.clone())
+    }
+}
+
 #[allow(dead_code)]
 pub(crate) fn cbor_bytes_to_map(bytes: &[u8]) -> Result<Vec<(Value, Value)>> {
     if bytes.is_empty() {

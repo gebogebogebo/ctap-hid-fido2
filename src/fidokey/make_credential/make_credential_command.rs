@@ -39,10 +39,10 @@ pub fn create_payload(params: Params, extensions: Option<&Vec<Extension>>) -> Re
     let cdh = params.client_data_hash.to_value();
 
     // 0x02 : rp
-    let rp = Value::Map(vec![
+    let rp = vec![
         ("id".to_value(), params.rp_id.to_value()),
         ("name".to_value(), params.rp_name.to_value()),
-    ]);
+    ].to_value();
 
     // 0x03 : user
     // user id
@@ -66,44 +66,41 @@ pub fn create_payload(params: Params, extensions: Option<&Vec<Extension>>) -> Re
         params.user_display_name.to_string()
     };
 
-    let user = Value::Map(vec![
+    let user = vec![
         ("id".to_value(), user_id.to_value()),
         ("name".to_value(), user_name.to_value()),
         ("displayName".to_value(), display_name.to_value()),
-    ]);
-
+    ].to_value();
 
     // 0x04 : pubKeyCredParams
-    let pub_key_cred_params_vec = params
+    let pub_key_cred_params_vec: Vec<_> = params
         .key_types
         .iter()
         .map(|key_type| {
-            let pub_key_cred_params_val = vec![
+            vec![
                 ("alg".to_value(), (*key_type as i64).to_value() ),
                 ("type".to_value(), "public-key".to_value()),
-            ];
-            Value::Map(pub_key_cred_params_val)
+            ].to_value()
         })
         .collect();
 
-    let pub_key_cred_params = Value::Array(pub_key_cred_params_vec);
+    let pub_key_cred_params = pub_key_cred_params_vec.to_value();
 
     // TODO これのテストをやりたい
     // 0x05 : excludeList
-    let exclude_list = Value::Array(
-        params
-            .exclude_list
-            .iter()
-            .cloned()
-            .map(|credential_id| {
-                let exclude_list_val = vec![
-                    ("id".to_value(), credential_id.to_value()),
-                    ("type".to_value(), "public-key".to_value()),
-                ];
-                Value::Map(exclude_list_val)
-            })
-            .collect(),
-    );
+    let exclude_list = params
+        .exclude_list
+        .iter()
+        .cloned()
+        .map(|credential_id| {
+            let exclude_list_val = vec![
+                ("id".to_value(), credential_id.to_value()),
+                ("type".to_value(), "public-key".to_value()),
+            ];
+            exclude_list_val.to_value()
+        })
+        .collect::<Vec<Value>>()
+        .to_value();
 
     // 0x06 : extensions
     let extensions = if let Some(extensions) = extensions {
@@ -127,20 +124,10 @@ pub fn create_payload(params: Params, extensions: Option<&Vec<Extension>>) -> Re
                 }
             };
         }
-        Some(Value::Map(map))
+        Some(map.to_value())
     } else {
         None
     };
-
-    /*
-    let user_id = {
-        if let Some(rkp) = user_entity {
-            rkp.id.to_vec()
-        } else {
-            [].to_vec()
-        }
-    };
-    */
 
     // 0x07 : options
     let options = {
@@ -152,7 +139,7 @@ pub fn create_payload(params: Params, extensions: Option<&Vec<Extension>>) -> Re
         if let Some(v) = params.option_uv {
             options_val.push(("uv".to_value(), v.to_value()));
         }
-        Value::Map(options_val)
+        options_val.to_value()
     };
 
     // pinAuth(0x08)
