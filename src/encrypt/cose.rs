@@ -1,5 +1,4 @@
 use crate::str_buf::StrBuf;
-use crate::util::vec_to_btree_map;
 use crate::util_ciborium::{self, ToValue};
 use anyhow::{anyhow, Result};
 use serde_cbor::Value;
@@ -105,26 +104,6 @@ impl CoseKey {
         }
 
         Ok(cose)
-    }
-
-    pub fn to_value(&self) -> Result<Value> {
-        let map = vec![
-            (Value::Integer(1), Value::Integer(self.key_type.into())),
-            (Value::Integer(3), Value::Integer(self.algorithm.into())),
-            (
-                Value::Integer(-1),
-                self.parameters.get(&-1).ok_or(anyhow!("err"))?.clone(),
-            ),
-            (
-                Value::Integer(-2),
-                self.parameters.get(&-2).ok_or(anyhow!("err"))?.clone(),
-            ),
-            (
-                Value::Integer(-3),
-                self.parameters.get(&-3).ok_or(anyhow!("err"))?.clone(),
-            ),
-        ];
-        Ok(Value::Map(vec_to_btree_map(map)))
     }
 
     pub fn to_value_cib(&self) -> Result<CibValue> {

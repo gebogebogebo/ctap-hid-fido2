@@ -4,6 +4,7 @@ use crate::hmac_ext::HmacExt;
 use crate::util::{self, vec_to_btree_map};
 use serde_cbor::to_vec;
 use serde_cbor::Value;
+use crate::util_ciborium;
 
 #[derive(Debug, Default)]
 pub struct Params {
@@ -69,7 +70,8 @@ pub fn create_payload(
 
         // HMAC Secret Extension
         if let Some(hmac_ext) = hmac_ext {
-            let val = hmac_ext.shared_secret.public_key.to_value().unwrap();
+            let tmp = hmac_ext.shared_secret.public_key.to_value_cib().unwrap();
+            let val = util_ciborium::ciborium_to_serde(tmp).unwrap();
             let param = vec![
                 // keyAgreement(0x01)
                 (Value::Integer(0x01), val),
