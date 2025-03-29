@@ -1,5 +1,6 @@
 use super::make_credential_params::{CredentialSupportedKeyType, Extension};
 use crate::ctapdef;
+use crate::fidokey::common;
 use crate::util;
 use anyhow::Result;
 use ciborium::value::Value;
@@ -191,15 +192,6 @@ pub fn create_payload(params: Params, extensions: Option<&Vec<Extension>>) -> Re
         make_credential.push((Value::Integer(0x09.into()), pin_protocol));
     }
 
-    // client_pin_command.rsとの比較に基づく修正
-    // シリアライズ済みのCBORデータを二重にシリアライズせず、直接Value::Mapとして使用する
-    let cbor = Value::Map(make_credential);
-
-    // Command - authenticatorMakeCredential (0x01)
-    let mut payload = [ctapdef::AUTHENTICATOR_MAKE_CREDENTIAL].to_vec();
-    let mut serialized = Vec::new();
-    ciborium::ser::into_writer(&cbor, &mut serialized)?;
-    payload.append(&mut serialized);
-
-    Ok(payload)
+    // 共通関数を使用してペイロードを作成
+    common::to_payload(make_credential, ctapdef::AUTHENTICATOR_MAKE_CREDENTIAL)
 }

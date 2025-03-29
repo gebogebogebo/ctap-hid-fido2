@@ -1,5 +1,6 @@
 use crate::ctapdef;
 use crate::encrypt::cose;
+use crate::fidokey::common;
 use crate::util_ciborium;
 use anyhow::{anyhow, Result};
 use ciborium::value::Value;
@@ -140,15 +141,8 @@ pub fn create_payload_get_pin_uv_auth_token_using_uv_with_permissions(
     to_payload(map)
 }
 
-// TODO これ共通化できそう
-// create payload
 fn to_payload(map: Vec<(Value, Value)>) -> Result<Vec<u8>> {
-    let cbor = Value::Map(map);
-    let mut payload = [ctapdef::AUTHENTICATOR_CLIENT_PIN].to_vec();
-    let mut serialized = Vec::new();
-    ciborium::ser::into_writer(&cbor, &mut serialized)?;
-    payload.append(&mut serialized);
-    Ok(payload)
+    common::to_payload(map, ctapdef::AUTHENTICATOR_CLIENT_PIN)
 }
 
 // 0x01 : pin_protocol
