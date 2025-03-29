@@ -1,6 +1,8 @@
 use crate::encrypt::cose;
 use anyhow::{anyhow, Result};
 use serde_cbor::Value;
+use ciborium::value::Value as CibValue;
+use crate::util_ciborium::ToValue;
 
 #[derive(Debug, Default)]
 pub struct P256Key {
@@ -52,6 +54,11 @@ impl P256Key {
             .iter()
             .cloned()
             .collect(),
+            parameters_cib: [
+                (-1, 1.to_value()),
+                (-2, self.x.to_vec().to_value()),
+                (-3, self.y.to_vec().to_value()),
+            ].into()
         }
     }
 

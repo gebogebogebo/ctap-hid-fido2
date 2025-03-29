@@ -33,7 +33,19 @@ impl ToValue for bool {
     }
 }
 
+impl ToValue for i32 {
+    fn to_value(&self) -> Value {
+        Value::Integer((*self).into())
+    }
+}
+
 impl ToValue for i64 {
+    fn to_value(&self) -> Value {
+        Value::Integer((*self).into())
+    }
+}
+
+impl ToValue for u16 {
     fn to_value(&self) -> Value {
         Value::Integer((*self).into())
     }

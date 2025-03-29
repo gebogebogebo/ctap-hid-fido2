@@ -1,8 +1,9 @@
 use crate::str_buf::StrBuf;
 use crate::util::vec_to_btree_map;
-use crate::util_ciborium;
+use crate::util_ciborium::{self, ToValue};
 use anyhow::{anyhow, Result};
 use serde_cbor::Value;
+use ciborium::value::Value as CibValue;
 use std::collections::HashMap;
 use std::fmt;
 
@@ -11,6 +12,7 @@ pub struct CoseKey {
     pub key_type: u16,
     pub algorithm: i32,
     pub parameters: HashMap<i16, Value>,
+    pub parameters_cib: HashMap<i16, CibValue>,
 }
 
 impl fmt::Display for CoseKey {
@@ -34,7 +36,7 @@ impl fmt::Display for CoseKey {
 
 // https://tex2e.github.io/rfc-translater/html/rfc8152.html
 impl CoseKey {
-    pub fn new(cbor: &ciborium::value::Value) -> Result<Self> {
+    pub fn new(cbor: &CibValue) -> Result<Self> {
         let mut cose = CoseKey::default();
 
         if util_ciborium::is_map(cbor) {
@@ -72,20 +74,29 @@ impl CoseKey {
                                 -1,
                                 Value::Integer(int_val as i128),
                             );
+
+                            // for ciborium
+                            cose.parameters_cib.insert(-1, int_val.to_value());
                         }
                         -2 => {
                             let bytes = util_ciborium::cbor_value_to_vec_u8(val)?;
                             cose.parameters.insert(
                                 -2,
-                                Value::Bytes(bytes),
+                                Value::Bytes(bytes.clone()),
                             );
+
+                            // for ciborium
+                            cose.parameters_cib.insert(-2, bytes.to_value());
                         }
                         -3 => {
                             let bytes = util_ciborium::cbor_value_to_vec_u8(val)?;
                             cose.parameters.insert(
                                 -3,
-                                Value::Bytes(bytes),
+                                Value::Bytes(bytes.clone()),
                             );
+
+                            // for ciborium
+                            cose.parameters_cib.insert(-3, bytes.to_value());
                         }
                         _ => {}
                     }
@@ -116,11 +127,31 @@ impl CoseKey {
         Ok(Value::Map(vec_to_btree_map(map)))
     }
 
+    pub fn to_value_cib(&self) -> Result<CibValue> {
+        let map = vec![
+            (1.to_value() , self.key_type.to_value()),
+            (3.to_value() , self.algorithm.to_value()),
+            (
+                (-1).to_value(),
+                self.parameters_cib.get(&-1).ok_or(anyhow!("err"))?.clone(),
+            ),
+            (
+                (-2).to_value(),
+                self.parameters_cib.get(&-2).ok_or(anyhow!("err"))?.clone(),
+            ),
+            (
+                (-3).to_value(),
+                self.parameters_cib.get(&-3).ok_or(anyhow!("err"))?.clone(),
+            ),
+        ];
+        Ok(map.to_value())
+    }
+
     pub fn to_public_key_der(&self) -> Vec<u8> {
         if self.key_type == 1 {
             // case of ED25519
             // kty == 1: OKP → need x
-            let pub_key = if let Some(Value::Bytes(der)) = self.parameters.get(&-2) {
+            let pub_key = if let Some(CibValue::Bytes(der)) = self.parameters_cib.get(&-2) {
                 // 32byte
                 der.to_vec()
             } else {
@@ -137,11 +168,11 @@ impl CoseKey {
             let mut pub_key = vec![0x04];
 
             // 2.add X
-            if let Some(Value::Bytes(bytes)) = self.parameters.get(&-2) {
+            if let Some(CibValue::Bytes(bytes)) = self.parameters_cib.get(&-2) {
                 pub_key.append(&mut bytes.to_vec());
             }
             // 3.add Y
-            if let Some(Value::Bytes(bytes)) = self.parameters.get(&-3) {
+            if let Some(CibValue::Bytes(bytes)) = self.parameters_cib.get(&-3) {
                 pub_key.append(&mut bytes.to_vec());
             }
 
