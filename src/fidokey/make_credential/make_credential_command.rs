@@ -88,19 +88,18 @@ pub fn create_payload(params: Params, extensions: Option<&Vec<Extension>>) -> Re
 
     // TODO これのテストをやりたい
     // 0x05 : excludeList
-    let exclude_list = params
+    let exclude_list_vec: Vec<_> = params
         .exclude_list
         .iter()
-        .cloned()
         .map(|credential_id| {
-            let exclude_list_val = vec![
+            vec![
                 ("id".to_value(), credential_id.to_value()),
                 ("type".to_value(), "public-key".to_value()),
-            ];
-            exclude_list_val.to_value()
+            ].to_value()
         })
-        .collect::<Vec<Value>>()
-        .to_value();
+        .collect();
+
+    let exclude_list = exclude_list_vec.to_value();
 
     // 0x06 : extensions
     let extensions = if let Some(extensions) = extensions {
