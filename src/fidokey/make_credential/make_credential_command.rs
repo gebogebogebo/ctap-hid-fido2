@@ -35,17 +35,15 @@ impl Params {
 
 pub fn create_payload(params: Params, extensions: Option<&Vec<Extension>>) -> Result<Vec<u8>> {
     // 0x01 : clientDataHash
-    let cdh = cbor!(params.client_data_hash)?;
+    let cdh = Value::Bytes(params.client_data_hash);
 
     // 0x02 : rp
-    let rp_val = vec![
-        (cbor!("id")?, cbor!(params.rp_id)?),
-        (cbor!("name")?, cbor!(params.rp_name)?),
-    ];
-    let rp = cbor!(rp_val)?;
+    let rp = cbor!({
+        "id" => params.rp_id,
+        "name" => params.rp_name,
+    })?;
 
     // 0x03 : user
-    let mut user_val = Vec::new();
     // user id
     let user_id = {
         if !params.user_id.is_empty() {
@@ -54,7 +52,6 @@ pub fn create_payload(params: Params, extensions: Option<&Vec<Extension>>) -> Re
             vec![0x00]
         }
     };
-    user_val.push((cbor!("id")?, cbor!(user_id)?));
 
     // user name
     let user_name = {
@@ -64,7 +61,6 @@ pub fn create_payload(params: Params, extensions: Option<&Vec<Extension>>) -> Re
             " ".to_string()
         }
     };
-    user_val.push((cbor!("name")?, cbor!(user_name)?));
 
     // displayName
     let display_name = {
@@ -74,12 +70,12 @@ pub fn create_payload(params: Params, extensions: Option<&Vec<Extension>>) -> Re
             " ".to_string()
         }
     };
-    user_val.push((
-        cbor!("displayName")?,
-        cbor!(display_name)?,
-    ));
 
-    let user = cbor!(user_val)?;
+    let user = cbor!({
+        "id" => Value::Bytes(user_id),
+        "name" => user_name,
+        "displayName" => display_name,
+    })?;
 
     // 0x04 : pubKeyCredParams
     let pub_key_cred_params_vec = params
@@ -87,15 +83,16 @@ pub fn create_payload(params: Params, extensions: Option<&Vec<Extension>>) -> Re
         .iter()
         .map(|key_type| {
             let pub_key_cred_params_val = vec![
-                (cbor!("alg").unwrap(), cbor!(*key_type as i128).unwrap()),
-                (cbor!("type").unwrap(), cbor!("public-key").unwrap()),
+                (Value::Text("alg".to_string()), Value::Integer((*key_type as i64).into())),
+                (Value::Text("type".to_string()), Value::Text("public-key".to_string())),
             ];
-            cbor!(pub_key_cred_params_val).unwrap()
+            Value::Map(pub_key_cred_params_val)
         })
         .collect();
 
     let pub_key_cred_params = Value::Array(pub_key_cred_params_vec);
 
+    // TODO これのテストをやりたい
     // 0x05 : excludeList
     let exclude_list = Value::Array(
         params
@@ -104,10 +101,10 @@ pub fn create_payload(params: Params, extensions: Option<&Vec<Extension>>) -> Re
             .cloned()
             .map(|credential_id| {
                 let exclude_list_val = vec![
-                    (cbor!("id").unwrap(), cbor!(credential_id).unwrap()),
-                    (cbor!("type").unwrap(), cbor!("public-key").unwrap()),
+                    (Value::Text(("id").to_string()), Value::Bytes(credential_id)),
+                    (Value::Text(("type").to_string()), Value::Text(("public-key").to_string())),
                 ];
-                cbor!(exclude_list_val).unwrap()
+                Value::Map(exclude_list_val)
             })
             .collect(),
     );
@@ -119,18 +116,18 @@ pub fn create_payload(params: Params, extensions: Option<&Vec<Extension>>) -> Re
             match *ext {
                 Extension::CredBlob((ref n, _)) => {
                     let x = n.clone().unwrap();
-                    map.push((cbor!(ext.to_string())?, cbor!(x)?));
+                    map.push((Value::Text(ext.to_string()), Value::Bytes(x)));
                 }
                 Extension::CredProtect(n) => {
                     map.push((
-                        cbor!(ext.to_string())?,
-                        cbor!(n.unwrap() as i128)?,
+                        Value::Text(ext.to_string()),
+                        Value::Integer((n.unwrap() as i64).into()),
                     ));
                 }
                 Extension::HmacSecret(n)
                 | Extension::LargeBlobKey((n, _))
                 | Extension::MinPinLength((n, _)) => {
-                    map.push((cbor!(ext.to_string())?, cbor!(n.unwrap())?));
+                    map.push((Value::Text(ext.to_string()), Value::Bool(n.unwrap())));
                 }
             };
         }
@@ -159,7 +156,7 @@ pub fn create_payload(params: Params, extensions: Option<&Vec<Extension>>) -> Re
         if let Some(v) = params.option_uv {
             options_val.push((Value::Text("uv".to_string()), Value::Bool(v)));
         }
-        cbor!(options_val)?
+        Value::Map(options_val)
     };
 
     // pinAuth(0x08)
@@ -181,6 +178,7 @@ pub fn create_payload(params: Params, extensions: Option<&Vec<Extension>>) -> Re
         (cbor!(0x03)?, user),
         (cbor!(0x04)?, pub_key_cred_params),
     ];
+
     if !params.exclude_list.is_empty() {
         make_credential.push((cbor!(0x05)?, exclude_list));
     }
@@ -192,7 +190,10 @@ pub fn create_payload(params: Params, extensions: Option<&Vec<Extension>>) -> Re
         make_credential.push((cbor!(0x08)?, x));
         make_credential.push((cbor!(0x09)?, pin_protocol));
     }
-    let cbor = cbor!(make_credential)?;
+
+    // client_pin_command.rsとの比較に基づく修正
+    // シリアライズ済みのCBORデータを二重にシリアライズせず、直接Value::Mapとして使用する
+    let cbor = Value::Map(make_credential);
 
     // Command - authenticatorMakeCredential (0x01)
     let mut payload = [ctapdef::AUTHENTICATOR_MAKE_CREDENTIAL].to_vec();
