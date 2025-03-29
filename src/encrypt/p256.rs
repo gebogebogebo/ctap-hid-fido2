@@ -1,7 +1,6 @@
 use crate::encrypt::cose;
 use anyhow::{anyhow, Result};
-use serde_cbor::Value;
-use ciborium::value::Value as CibValue;
+use ciborium::value::Value;
 use crate::util_ciborium::ToValue;
 
 #[derive(Debug, Default)]
@@ -16,7 +15,7 @@ impl P256Key {
             return Err(anyhow!("Err KeyType"));
         }
 
-        if let (Some(CibValue::Integer(curve)), Some(CibValue::Bytes(x)), Some(CibValue::Bytes(y))) = (
+        if let (Some(Value::Integer(curve)), Some(Value::Bytes(x)), Some(Value::Bytes(y))) = (
             cose.parameters_cib.get(&-1),
             cose.parameters_cib.get(&-2),
             cose.parameters_cib.get(&-3),
@@ -46,14 +45,6 @@ impl P256Key {
         cose::CoseKey {
             key_type: 2,
             algorithm: -25,
-            parameters: [
-                (-1, Value::Integer(1)),
-                (-2, Value::Bytes(self.x.to_vec())),
-                (-3, Value::Bytes(self.y.to_vec())),
-            ]
-            .iter()
-            .cloned()
-            .collect(),
             parameters_cib: [
                 (-1, 1.to_value()),
                 (-2, self.x.to_vec().to_value()),

@@ -170,20 +170,17 @@ fn insert_key_agreement(map: &mut Vec<(Value, Value)>, key_agreement: &cose::Cos
         cbor!(key_agreement.algorithm)?,
     ));
 
-    let tmp = key_agreement.parameters.get(&-1).unwrap().clone();
-    let param = util_ciborium::serde_to_ciborium(tmp)?;
+    let param = key_agreement.parameters_cib.get(&-1).unwrap().clone();
     if util_ciborium::is_integer(&param) {
         ka_val.push((cbor!(-1)?, cbor!(param)?));
     }
 
-    let tmp = key_agreement.parameters.get(&-2).unwrap().clone();
-    let bval = util_ciborium::serde_to_ciborium(tmp)?;
+    let bval = key_agreement.parameters_cib.get(&-2).unwrap().clone();
     if util_ciborium::is_bytes(&bval) {
         ka_val.push((cbor!(-2)?, cbor!(bval)?));
     }
 
-    let tmp = key_agreement.parameters.get(&-3).unwrap().clone();
-    let bval = util_ciborium::serde_to_ciborium(tmp)?;
+    let bval = key_agreement.parameters_cib.get(&-3).unwrap().clone();
     if util_ciborium::is_bytes(&bval) {
         ka_val.push((cbor!(-3)?, cbor!(bval)?));
     }
