@@ -16,12 +16,12 @@ impl P256Key {
             return Err(anyhow!("Err KeyType"));
         }
 
-        if let (Some(Value::Integer(curve)), Some(Value::Bytes(x)), Some(Value::Bytes(y))) = (
-            cose.parameters.get(&-1),
-            cose.parameters.get(&-2),
-            cose.parameters.get(&-3),
+        if let (Some(CibValue::Integer(curve)), Some(CibValue::Bytes(x)), Some(CibValue::Bytes(y))) = (
+            cose.parameters_cib.get(&-1),
+            cose.parameters_cib.get(&-2),
+            cose.parameters_cib.get(&-3),
         ) {
-            if *curve != 1 {
+            if *curve != 1.into() {
                 return Err(anyhow!("Err KeyType"));
             }
             let mut key = P256Key::default();
