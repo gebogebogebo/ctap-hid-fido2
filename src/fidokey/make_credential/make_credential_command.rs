@@ -3,7 +3,6 @@ use crate::ctapdef;
 use crate::util;
 use anyhow::Result;
 use ciborium::value::Value;
-use ciborium::cbor;
 
 #[derive(Debug, Default)]
 pub struct Params {
@@ -38,10 +37,10 @@ pub fn create_payload(params: Params, extensions: Option<&Vec<Extension>>) -> Re
     let cdh = Value::Bytes(params.client_data_hash);
 
     // 0x02 : rp
-    let rp = cbor!({
-        "id" => params.rp_id,
-        "name" => params.rp_name,
-    })?;
+    let rp = Value::Map(vec![
+        (Value::Text("id".to_string()), Value::Text(params.rp_id.clone())),
+        (Value::Text("name".to_string()), Value::Text(params.rp_name.clone())),
+    ]);
 
     // 0x03 : user
     // user id
@@ -71,11 +70,12 @@ pub fn create_payload(params: Params, extensions: Option<&Vec<Extension>>) -> Re
         }
     };
 
-    let user = cbor!({
-        "id" => Value::Bytes(user_id),
-        "name" => user_name,
-        "displayName" => display_name,
-    })?;
+    let user = Value::Map(vec![
+        (Value::Text("id".to_string()), Value::Bytes(user_id)),
+        (Value::Text("name".to_string()), Value::Text(user_name.to_string())),
+        (Value::Text("displayName".to_string()), Value::Text(display_name.to_string())),
+    ]);
+
 
     // 0x04 : pubKeyCredParams
     let pub_key_cred_params_vec = params
@@ -131,7 +131,7 @@ pub fn create_payload(params: Params, extensions: Option<&Vec<Extension>>) -> Re
                 }
             };
         }
-        Some(cbor!(map)?)
+        Some(Value::Map(map))
     } else {
         None
     };
@@ -169,26 +169,26 @@ pub fn create_payload(params: Params, extensions: Option<&Vec<Extension>>) -> Re
     };
 
     // 0x09:pinProtocol
-    let pin_protocol = cbor!(1)?;
+    let pin_protocol = Value::Integer(1.into());
 
     // create cbor object
     let mut make_credential = vec![
-        (cbor!(0x01)?, cdh),
-        (cbor!(0x02)?, rp),
-        (cbor!(0x03)?, user),
-        (cbor!(0x04)?, pub_key_cred_params),
+        (Value::Integer(0x01.into()), cdh),
+        (Value::Integer(0x02.into()), rp),
+        (Value::Integer(0x03.into()), user),
+        (Value::Integer(0x04.into()), pub_key_cred_params),
     ];
 
     if !params.exclude_list.is_empty() {
-        make_credential.push((cbor!(0x05)?, exclude_list));
+        make_credential.push((Value::Integer(0x05.into()), exclude_list));
     }
     if let Some(x) = extensions {
-        make_credential.push((cbor!(0x06)?, x));
+        make_credential.push((Value::Integer(0x06.into()), x));
     }
-    make_credential.push((cbor!(0x07)?, options));
+    make_credential.push((Value::Integer(0x07.into()), options));
     if let Some(x) = pin_auth {
-        make_credential.push((cbor!(0x08)?, x));
-        make_credential.push((cbor!(0x09)?, pin_protocol));
+        make_credential.push((Value::Integer(0x08.into()), x));
+        make_credential.push((Value::Integer(0x09.into()), pin_protocol));
     }
 
     // client_pin_command.rsとの比較に基づく修正
