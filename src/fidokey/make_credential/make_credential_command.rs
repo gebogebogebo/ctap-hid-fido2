@@ -76,14 +76,13 @@ pub fn create_payload(params: Params, extensions: Option<&Vec<Extension>>) -> Re
     let ext_val = create_extensions(extensions);
     // 0x07 : options
     let options = create_options(params.option_rk, params.option_up, params.option_uv);
-    // 0x08 : pinAuth (必要なら)
+    // 0x08 : pinAuth
     let pin_auth = if params.pin_auth.is_empty() {
         None
     } else {
         Some(params.pin_auth.to_value())
     };
 
-    // CBOR マップの各フィールドをキー（0x01～）と値のタプルとして格納
     let mut make_credential = vec![
         (0x01.to_value(), cdh),
         (0x02.to_value(), rp),
