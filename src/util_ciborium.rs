@@ -5,6 +5,35 @@ use num::NumCast;
 use std::collections::BTreeMap;
 
 #[allow(dead_code)]
+pub(crate) trait ToValue {
+    fn to_value(&self) -> Value;
+}
+
+impl ToValue for String {
+    fn to_value(&self) -> Value {
+        Value::Text(self.to_string())
+    }
+}
+
+impl ToValue for &str {
+    fn to_value(&self) -> Value {
+        Value::Text(self.to_string())
+    }
+}
+
+impl ToValue for Vec<u8> {
+    fn to_value(&self) -> Value {
+        Value::Bytes(self.clone())
+    }
+}
+
+impl ToValue for bool {
+    fn to_value(&self) -> Value {
+        Value::Bool(self.clone())
+    }
+}
+
+#[allow(dead_code)]
 pub(crate) fn cbor_bytes_to_map(bytes: &[u8]) -> Result<Vec<(Value, Value)>> {
     if bytes.is_empty() {
         return Ok(Vec::new());

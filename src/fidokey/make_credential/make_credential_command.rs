@@ -2,6 +2,7 @@ use super::make_credential_params::{CredentialSupportedKeyType, Extension};
 use crate::ctapdef;
 use crate::fidokey::common;
 use crate::util;
+use crate::util_ciborium::ToValue;
 use anyhow::Result;
 use ciborium::value::Value;
 
@@ -39,8 +40,8 @@ pub fn create_payload(params: Params, extensions: Option<&Vec<Extension>>) -> Re
 
     // 0x02 : rp
     let rp = Value::Map(vec![
-        (Value::Text("id".to_string()), Value::Text(params.rp_id.clone())),
-        (Value::Text("name".to_string()), Value::Text(params.rp_name.clone())),
+        ("id".to_value(), params.rp_id.to_value()),
+        ("name".to_value(), params.rp_name.to_value()),
     ]);
 
     // 0x03 : user
@@ -72,7 +73,7 @@ pub fn create_payload(params: Params, extensions: Option<&Vec<Extension>>) -> Re
     };
 
     let user = Value::Map(vec![
-        (Value::Text("id".to_string()), Value::Bytes(user_id)),
+        (Value::Text("id".to_string()), user_id.to_value()),
         (Value::Text("name".to_string()), Value::Text(user_name.to_string())),
         (Value::Text("displayName".to_string()), Value::Text(display_name.to_string())),
     ]);
@@ -152,10 +153,10 @@ pub fn create_payload(params: Params, extensions: Option<&Vec<Extension>>) -> Re
         let mut options_val = Vec::new();
         options_val.push((Value::Text("rk".to_string()), Value::Bool(params.option_rk)));
         if let Some(v) = params.option_up {
-            options_val.push((Value::Text("up".to_string()), Value::Bool(v)));
+            options_val.push((Value::Text("up".to_string()), v.to_value()));
         }
         if let Some(v) = params.option_uv {
-            options_val.push((Value::Text("uv".to_string()), Value::Bool(v)));
+            options_val.push((Value::Text("uv".to_string()), v.to_value()));
         }
         Value::Map(options_val)
     };
