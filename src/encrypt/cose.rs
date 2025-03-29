@@ -9,8 +9,7 @@ use std::fmt;
 pub struct CoseKey {
     pub key_type: u16,
     pub algorithm: i32,
-    // TODO rename
-    pub parameters_cib: HashMap<i16, Value>,
+    pub parameters: HashMap<i16, Value>,
 }
 
 impl fmt::Display for CoseKey {
@@ -19,13 +18,14 @@ impl fmt::Display for CoseKey {
         strbuf
             .append("- key_type", &self.key_type)
             .append("- algorithm", &self.algorithm);
-        // if let Some(CibValue::Integer(intval)) = self.parameters_cib.get(&-1) {
-        //     strbuf.append("- crv", &tintval);
-        // }
-        if let Some(Value::Bytes(bytes)) = self.parameters_cib.get(&-2) {
+        if let Some(Value::Integer(intval)) = self.parameters.get(&-1) {
+            let i32_value: i32 = i32::try_from(*intval).expect("Integer Conversion failed");
+            strbuf.append("- crv", &i32_value);
+        }
+        if let Some(Value::Bytes(bytes)) = self.parameters.get(&-2) { 
             strbuf.appenh("- x", bytes);
         }
-        if let Some(Value::Bytes(bytes)) = self.parameters_cib.get(&-3) {
+        if let Some(Value::Bytes(bytes)) = self.parameters.get(&-3) {
             strbuf.appenh("- y", bytes);
         }
         write!(f, "{}", strbuf.build())
@@ -68,15 +68,15 @@ impl CoseKey {
                             //      1: P-256(EC2)
                             //      6: Ed25519(OKP)
                             let int_val: i64 = util_ciborium::cbor_value_to_num(val)?;
-                            cose.parameters_cib.insert(-1, int_val.to_value());
+                            cose.parameters.insert(-1, int_val.to_value());
                         }
                         -2 => {
                             let bytes = util_ciborium::cbor_value_to_vec_u8(val)?;
-                            cose.parameters_cib.insert(-2, bytes.to_value());
+                            cose.parameters.insert(-2, bytes.to_value());
                         }
                         -3 => {
                             let bytes = util_ciborium::cbor_value_to_vec_u8(val)?;
-                            cose.parameters_cib.insert(-3, bytes.to_value());
+                            cose.parameters.insert(-3, bytes.to_value());
                         }
                         _ => {}
                     }
@@ -94,15 +94,15 @@ impl CoseKey {
             (3.to_value() , self.algorithm.to_value()),
             (
                 (-1).to_value(),
-                self.parameters_cib.get(&-1).ok_or(anyhow!("err"))?.clone(),
+                self.parameters.get(&-1).ok_or(anyhow!("err"))?.clone(),
             ),
             (
                 (-2).to_value(),
-                self.parameters_cib.get(&-2).ok_or(anyhow!("err"))?.clone(),
+                self.parameters.get(&-2).ok_or(anyhow!("err"))?.clone(),
             ),
             (
                 (-3).to_value(),
-                self.parameters_cib.get(&-3).ok_or(anyhow!("err"))?.clone(),
+                self.parameters.get(&-3).ok_or(anyhow!("err"))?.clone(),
             ),
         ];
         Ok(map.to_value())
@@ -112,7 +112,7 @@ impl CoseKey {
         if self.key_type == 1 {
             // case of ED25519
             // kty == 1: OKP → need x
-            let pub_key = if let Some(Value::Bytes(der)) = self.parameters_cib.get(&-2) {
+            let pub_key = if let Some(Value::Bytes(der)) = self.parameters.get(&-2) {
                 // 32byte
                 der.to_vec()
             } else {
@@ -129,11 +129,11 @@ impl CoseKey {
             let mut pub_key = vec![0x04];
 
             // 2.add X
-            if let Some(Value::Bytes(bytes)) = self.parameters_cib.get(&-2) {
+            if let Some(Value::Bytes(bytes)) = self.parameters.get(&-2) {
                 pub_key.append(&mut bytes.to_vec());
             }
             // 3.add Y
-            if let Some(Value::Bytes(bytes)) = self.parameters_cib.get(&-3) {
+            if let Some(Value::Bytes(bytes)) = self.parameters.get(&-3) {
                 pub_key.append(&mut bytes.to_vec());
             }
 
