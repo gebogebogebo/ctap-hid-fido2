@@ -33,6 +33,12 @@ impl ToValue for bool {
     }
 }
 
+impl ToValue for i64 {
+    fn to_value(&self) -> Value {
+        Value::Integer((*self).into())
+    }
+}
+
 #[allow(dead_code)]
 pub(crate) fn cbor_bytes_to_map(bytes: &[u8]) -> Result<Vec<(Value, Value)>> {
     if bytes.is_empty() {

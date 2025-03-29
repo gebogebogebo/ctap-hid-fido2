@@ -36,7 +36,7 @@ impl Params {
 
 pub fn create_payload(params: Params, extensions: Option<&Vec<Extension>>) -> Result<Vec<u8>> {
     // 0x01 : clientDataHash
-    let cdh = Value::Bytes(params.client_data_hash);
+    let cdh = params.client_data_hash.to_value();
 
     // 0x02 : rp
     let rp = Value::Map(vec![
@@ -46,36 +46,30 @@ pub fn create_payload(params: Params, extensions: Option<&Vec<Extension>>) -> Re
 
     // 0x03 : user
     // user id
-    let user_id = {
-        if !params.user_id.is_empty() {
-            params.user_id.to_vec()
-        } else {
-            vec![0x00]
-        }
+    let user_id = if params.user_id.is_empty() {
+        vec![0x00]
+    } else {
+        params.user_id.to_vec()
     };
 
     // user name
-    let user_name = {
-        if !params.user_name.is_empty() {
-            params.user_name.to_string()
-        } else {
-            " ".to_string()
-        }
+    let user_name = if params.user_name.is_empty() {
+        " ".to_string()
+    } else {
+        params.user_name.to_string()
     };
 
     // displayName
-    let display_name = {
-        if !params.user_display_name.is_empty() {
-            params.user_display_name.to_string()
-        } else {
-            " ".to_string()
-        }
+    let display_name = if params.user_display_name.is_empty() {
+        " ".to_string()
+    } else {
+        params.user_display_name.to_string()
     };
 
     let user = Value::Map(vec![
-        (Value::Text("id".to_string()), user_id.to_value()),
-        (Value::Text("name".to_string()), Value::Text(user_name.to_string())),
-        (Value::Text("displayName".to_string()), Value::Text(display_name.to_string())),
+        ("id".to_value(), user_id.to_value()),
+        ("name".to_value(), user_name.to_value()),
+        ("displayName".to_value(), display_name.to_value()),
     ]);
 
 
@@ -85,8 +79,8 @@ pub fn create_payload(params: Params, extensions: Option<&Vec<Extension>>) -> Re
         .iter()
         .map(|key_type| {
             let pub_key_cred_params_val = vec![
-                (Value::Text("alg".to_string()), Value::Integer((*key_type as i64).into())),
-                (Value::Text("type".to_string()), Value::Text("public-key".to_string())),
+                ("alg".to_value(), (*key_type as i64).to_value() ),
+                ("type".to_value(), "public-key".to_value()),
             ];
             Value::Map(pub_key_cred_params_val)
         })
@@ -103,8 +97,8 @@ pub fn create_payload(params: Params, extensions: Option<&Vec<Extension>>) -> Re
             .cloned()
             .map(|credential_id| {
                 let exclude_list_val = vec![
-                    (Value::Text(("id").to_string()), Value::Bytes(credential_id)),
-                    (Value::Text(("type").to_string()), Value::Text(("public-key").to_string())),
+                    ("id".to_value(), credential_id.to_value()),
+                    ("type".to_value(), "public-key".to_value()),
                 ];
                 Value::Map(exclude_list_val)
             })
@@ -118,18 +112,18 @@ pub fn create_payload(params: Params, extensions: Option<&Vec<Extension>>) -> Re
             match *ext {
                 Extension::CredBlob((ref n, _)) => {
                     let x = n.clone().unwrap();
-                    map.push((Value::Text(ext.to_string()), Value::Bytes(x)));
+                    map.push((ext.to_string().to_value(), x.to_value()));
                 }
                 Extension::CredProtect(n) => {
                     map.push((
-                        Value::Text(ext.to_string()),
-                        Value::Integer((n.unwrap() as i64).into()),
+                        ext.to_string().to_value(),
+                        (n.unwrap() as i64).to_value()
                     ));
                 }
                 Extension::HmacSecret(n)
                 | Extension::LargeBlobKey((n, _))
                 | Extension::MinPinLength((n, _)) => {
-                    map.push((Value::Text(ext.to_string()), Value::Bool(n.unwrap())));
+                    map.push((ext.to_string().to_value(), n.unwrap().to_value()));
                 }
             };
         }
@@ -151,12 +145,12 @@ pub fn create_payload(params: Params, extensions: Option<&Vec<Extension>>) -> Re
     // 0x07 : options
     let options = {
         let mut options_val = Vec::new();
-        options_val.push((Value::Text("rk".to_string()), Value::Bool(params.option_rk)));
+        options_val.push(("rk".to_value(), params.option_rk.to_value()));
         if let Some(v) = params.option_up {
-            options_val.push((Value::Text("up".to_string()), v.to_value()));
+            options_val.push(("up".to_value(), v.to_value()));
         }
         if let Some(v) = params.option_uv {
-            options_val.push((Value::Text("uv".to_string()), v.to_value()));
+            options_val.push(("uv".to_value(), v.to_value()));
         }
         Value::Map(options_val)
     };
@@ -164,35 +158,34 @@ pub fn create_payload(params: Params, extensions: Option<&Vec<Extension>>) -> Re
     // pinAuth(0x08)
     let pin_auth = {
         if !params.pin_auth.is_empty() {
-            Some(Value::Bytes(params.pin_auth))
+            Some(params.pin_auth.to_value())
         } else {
             None
         }
     };
 
     // 0x09:pinProtocol
-    let pin_protocol = Value::Integer(1.into());
+    let pin_protocol = 1.to_value();
 
     // create cbor object
     let mut make_credential = vec![
-        (Value::Integer(0x01.into()), cdh),
-        (Value::Integer(0x02.into()), rp),
-        (Value::Integer(0x03.into()), user),
-        (Value::Integer(0x04.into()), pub_key_cred_params),
+        (0x01.to_value(), cdh),
+        (0x02.to_value(), rp),
+        (0x03.to_value(), user),
+        (0x04.to_value(), pub_key_cred_params),
     ];
 
     if !params.exclude_list.is_empty() {
-        make_credential.push((Value::Integer(0x05.into()), exclude_list));
+        make_credential.push((0x05.to_value(), exclude_list));
     }
     if let Some(x) = extensions {
-        make_credential.push((Value::Integer(0x06.into()), x));
+        make_credential.push((0x06.to_value(), x));
     }
-    make_credential.push((Value::Integer(0x07.into()), options));
+    make_credential.push((0x07.to_value(), options));
     if let Some(x) = pin_auth {
-        make_credential.push((Value::Integer(0x08.into()), x));
-        make_credential.push((Value::Integer(0x09.into()), pin_protocol));
+        make_credential.push((0x08.to_value(), x));
+        make_credential.push((0x09.to_value(), pin_protocol));
     }
 
-    // 共通関数を使用してペイロードを作成
     common::to_payload(make_credential, ctapdef::AUTHENTICATOR_MAKE_CREDENTIAL)
 }
