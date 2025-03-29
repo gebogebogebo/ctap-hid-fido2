@@ -73,8 +73,57 @@ pub fn create_payload(params: Params, extensions: Option<&Vec<Extension>>) -> Re
     ].to_value();
 
     // 0x04 : pubKeyCredParams
-    let pub_key_cred_params_vec: Vec<_> = params
-        .key_types
+    let pub_key_cred_params = create_pub_key_cred_params(&params.key_types);
+
+    // TODO これのテストをやりたい
+    // 0x05 : excludeList
+    let exclude_list = create_exclude_list(&params.exclude_list);
+
+    // 0x06 : extensions
+    let extensions = create_extensions(extensions);
+
+    // 0x07 : options
+    let options = create_options(params.option_rk, params.option_up, params.option_uv);
+
+    // pinAuth(0x08)
+    let pin_auth = {
+        if !params.pin_auth.is_empty() {
+            Some(params.pin_auth.to_value())
+        } else {
+            None
+        }
+    };
+
+
+    // create cbor object
+    let mut make_credential = vec![
+        (0x01.to_value(), cdh),
+        (0x02.to_value(), rp),
+        (0x03.to_value(), user),
+        (0x04.to_value(), pub_key_cred_params),
+    ];
+
+    if !params.exclude_list.is_empty() {
+        make_credential.push((0x05.to_value(), exclude_list));
+    }
+
+    if let Some(x) = extensions {
+        make_credential.push((0x06.to_value(), x));
+    }
+
+    make_credential.push((0x07.to_value(), options));
+    
+    if let Some(x) = pin_auth {
+        make_credential.push((0x08.to_value(), x));
+        // 0x09:pinProtocol
+        make_credential.push((0x09.to_value(), 1.to_value()));
+    }
+
+    common::to_payload(make_credential, ctapdef::AUTHENTICATOR_MAKE_CREDENTIAL)
+}
+
+fn create_pub_key_cred_params(key_types: &[CredentialSupportedKeyType]) -> Value {
+    let pub_key_cred_params_vec: Vec<_> = key_types
         .iter()
         .map(|key_type| {
             vec![
@@ -84,25 +133,11 @@ pub fn create_payload(params: Params, extensions: Option<&Vec<Extension>>) -> Re
         })
         .collect();
 
-    let pub_key_cred_params = pub_key_cred_params_vec.to_value();
+    pub_key_cred_params_vec.to_value()
+}
 
-    // TODO これのテストをやりたい
-    // 0x05 : excludeList
-    let exclude_list_vec: Vec<_> = params
-        .exclude_list
-        .iter()
-        .map(|credential_id| {
-            vec![
-                ("id".to_value(), credential_id.to_value()),
-                ("type".to_value(), "public-key".to_value()),
-            ].to_value()
-        })
-        .collect();
-
-    let exclude_list = exclude_list_vec.to_value();
-
-    // 0x06 : extensions
-    let extensions = if let Some(extensions) = extensions {
+fn create_extensions(extensions: Option<&Vec<Extension>>) -> Option<Value> {
+    if let Some(extensions) = extensions {
         let mut map = Vec::new();
         for ext in extensions {
             match *ext {
@@ -126,52 +161,32 @@ pub fn create_payload(params: Params, extensions: Option<&Vec<Extension>>) -> Re
         Some(map.to_value())
     } else {
         None
-    };
-
-    // 0x07 : options
-    let options = {
-        let mut options_val = Vec::new();
-        options_val.push(("rk".to_value(), params.option_rk.to_value()));
-        if let Some(v) = params.option_up {
-            options_val.push(("up".to_value(), v.to_value()));
-        }
-        if let Some(v) = params.option_uv {
-            options_val.push(("uv".to_value(), v.to_value()));
-        }
-        options_val.to_value()
-    };
-
-    // pinAuth(0x08)
-    let pin_auth = {
-        if !params.pin_auth.is_empty() {
-            Some(params.pin_auth.to_value())
-        } else {
-            None
-        }
-    };
-
-    // 0x09:pinProtocol
-    let pin_protocol = 1.to_value();
-
-    // create cbor object
-    let mut make_credential = vec![
-        (0x01.to_value(), cdh),
-        (0x02.to_value(), rp),
-        (0x03.to_value(), user),
-        (0x04.to_value(), pub_key_cred_params),
-    ];
-
-    if !params.exclude_list.is_empty() {
-        make_credential.push((0x05.to_value(), exclude_list));
     }
-    if let Some(x) = extensions {
-        make_credential.push((0x06.to_value(), x));
-    }
-    make_credential.push((0x07.to_value(), options));
-    if let Some(x) = pin_auth {
-        make_credential.push((0x08.to_value(), x));
-        make_credential.push((0x09.to_value(), pin_protocol));
-    }
+}
 
-    common::to_payload(make_credential, ctapdef::AUTHENTICATOR_MAKE_CREDENTIAL)
+
+fn create_options(rk: bool, up: Option<bool>, uv: Option<bool>) -> Value {
+    let mut options_val = Vec::new();
+    options_val.push(("rk".to_value(), rk.to_value()));
+    if let Some(v) = up {
+        options_val.push(("up".to_value(), v.to_value()));
+    }
+    if let Some(v) = uv {
+        options_val.push(("uv".to_value(), v.to_value()));
+    }
+    options_val.to_value()
+}
+
+fn create_exclude_list(credential_ids: &[Vec<u8>]) -> Value {
+    let exclude_list_vec: Vec<_> = credential_ids
+        .iter()
+        .map(|credential_id| {
+            vec![
+                ("id".to_value(), credential_id.to_value()),
+                ("type".to_value(), "public-key".to_value()),
+            ].to_value()
+        })
+        .collect();
+
+    exclude_list_vec.to_value()
 }
