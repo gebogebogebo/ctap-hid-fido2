@@ -1,25 +1,16 @@
+use anyhow::Result;
 use ctap_hid_fido2::{Cfg, FidoKeyHidFactory};
 
-fn main() {
-    let device = match FidoKeyHidFactory::create(&Cfg::init()) {
-        Ok(d) => d,
-        Err(e) => {
-            println!("error: {:?}", e);
-            return;
-        }
-    };
+fn main() -> Result<()> {
+    let device = FidoKeyHidFactory::create(&Cfg::init())?;
 
     println!("We are going to Wink this device:");
-    println!("{}", device.get_info().unwrap());
+    println!("{}", device.get_info()?);
 
     println!("----- wink start -----");
-    if let Err(e) = device.wink() {
-        println!("error: {:?}", e);
-    }
-
-    if let Err(e) = device.wink() {
-        println!("error: {:?}", e);
-    }
-
+    device.wink()?;
+    device.wink()?;
     println!("----- wink end -----");
+    
+    Ok(())
 }
