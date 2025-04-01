@@ -121,6 +121,23 @@
             },
             "args": [],
             "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "test-config: Debug Example",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--example=test-config"
+                ],
+                "filter": {
+                    "name": "test-config",
+                    "kind": "example"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
         }
     ]
 }

@@ -60,3 +60,6 @@ name = "test-with-pin-rk"
 
 [[example]]
 name = "wink"
+
+[[example]]
+name = "test-config"
