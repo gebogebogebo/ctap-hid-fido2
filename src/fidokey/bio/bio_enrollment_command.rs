@@ -1,8 +1,9 @@
 use super::super::sub_command_base::SubCommandBase;
 use super::bio_enrollment_params::TemplateInfo;
-use crate::{ctapdef, encrypt::enc_hmac_sha_256, pintoken::PinToken, util::vec_to_btree_map};
+use crate::{ctapdef, encrypt::enc_hmac_sha_256, pintoken::PinToken, fidokey::common};
+use crate::util_ciborium::ToValue;
 use anyhow::Result;
-use serde_cbor::{to_vec, Value};
+use ciborium::value::Value;
 use strum_macros::EnumProperty;
 
 #[allow(dead_code)]
@@ -23,6 +24,7 @@ pub enum SubCommand {
     #[strum(props(SubCommandId = "7"))]
     GetFingerprintSensorInfo,
 }
+
 impl SubCommandBase for SubCommand {
     fn has_param(&self) -> bool {
         matches!(
@@ -45,92 +47,108 @@ pub fn create_payload(
     match sub_command {
         Some(sub_command) => {
             // modality (0x01) = fingerprint (0x01)
-            map.push((Value::Integer(0x01), Value::Integer(0x01_i128)));
+            map.push((0x01.to_value(), 0x01.to_value()));
             
             // subCommand(0x02)
-            let sub_cmd_id = sub_command.id()?;
-            map.push((Value::Integer(0x02), Value::Integer(sub_cmd_id as i128)));
+            let sub_cmd_id = sub_command.id()? as u8;
+            map.push((0x02.to_value(), sub_cmd_id.to_value()));
 
             // subCommandParams (0x03): Map containing following parameters
-            let mut sub_command_params_cbor = Vec::new();
-            if sub_command.has_param() {
-                let param = match sub_command {
-                    SubCommand::EnrollBegin(timeout_milliseconds) => {
-                        Some(to_value_timeout(None, timeout_milliseconds))
-                    }
-                    SubCommand::EnrollCaptureNextSample(ref template_info, timeout_milliseconds) => {
-                        Some(to_value_timeout(Some(template_info), timeout_milliseconds))
-                    }
-                    SubCommand::SetFriendlyName(ref template_info)
-                    | SubCommand::RemoveEnrollment(ref template_info) => {
-                        Some(to_value_template_info(template_info))
-                    }
-                    _ => None,
-                };
-                if let Some(param) = param {
-                    map.push((Value::Integer(0x03), param.clone()));
-                    sub_command_params_cbor = to_vec(&param)?;
-                }
+            let (sub_command_params, sub_command_params_cbor) = create_sub_command_params(&sub_command)?;
+            if let Some(param) = &sub_command_params {
+                map.push((0x03.to_value(), param.clone()));
             }
 
             if let Some(pin_token) = pin_token {
                 // pinUvAuthProtocol(0x04)
-                let pin_protocol = Value::Integer(1);
-                map.push((Value::Integer(0x04), pin_protocol));
+                map.push((0x04.to_value(), 0x01.to_value()));
 
                 // pinUvAuthParam (0x05)
-                // - authenticate(pinUvAuthToken, fingerprint (0x01) || enumerateEnrollments (0x04)).
-                let pin_uv_auth_param = {
-                    let mut message = vec![0x01_u8];
-                    message.append(&mut vec![sub_cmd_id]);
-                    message.append(&mut sub_command_params_cbor.to_vec());
-                    let sig = enc_hmac_sha_256::authenticate(&pin_token.key, &message);
-                    sig[0..16].to_vec()
-                };
-
-                map.push((Value::Integer(0x05), Value::Bytes(pin_uv_auth_param)));
+                let pin_uv_auth_param = create_pin_auth_param(pin_token, sub_cmd_id, &sub_command_params_cbor);
+                map.push((0x05.to_value(), pin_uv_auth_param.to_value()));
             }
         },
         None => {
             // getModality (0x06)
-            map.push((Value::Integer(0x06), Value::Bool(true)));
+            map.push((0x06.to_value(), true.to_value()));
         }
     }
 
-    // create cbor
-    let cbor = Value::Map(vec_to_btree_map(map));
-
-    // create payload
-    let mut payload = if use_pre_bio_enrollment {
-        [ctapdef::AUTHENTICATOR_BIO_ENROLLMENT_P].to_vec()
+    // Generate command payload
+    let command_byte = if use_pre_bio_enrollment {
+        ctapdef::AUTHENTICATOR_BIO_ENROLLMENT_P
     } else {
-        [ctapdef::AUTHENTICATOR_BIO_ENROLLMENT].to_vec()
+        ctapdef::AUTHENTICATOR_BIO_ENROLLMENT
     };
-    payload.append(&mut to_vec(&cbor)?);
-    Ok(payload)
+
+    // Use common::to_payload for CBOR serialization
+    common::to_payload(map, command_byte)
 }
 
-fn to_value_template_info(in_param: &TemplateInfo) -> Value {
-    let mut param = vec![(
-        Value::Integer(0x01),
-        Value::Bytes(in_param.template_id.clone()),
-    )];
-    if let Some(v) = in_param.template_friendly_name.clone() {
-        param.push((Value::Integer(0x02), Value::Text(v)));
+/// Create sub-command parameters and their serialized form
+fn create_sub_command_params(sub_command: &SubCommand) -> Result<(Option<Value>, Vec<u8>)> {
+    if !sub_command.has_param() {
+        return Ok((None, Vec::new()));
     }
-    Value::Map(vec_to_btree_map(param))
+    
+    let param = match sub_command {
+        SubCommand::EnrollBegin(timeout_milliseconds) => {
+            Some(create_timeout_param(None, *timeout_milliseconds))
+        }
+        SubCommand::EnrollCaptureNextSample(template_info, timeout_milliseconds) => {
+            Some(create_timeout_param(Some(template_info), *timeout_milliseconds))
+        }
+        SubCommand::SetFriendlyName(template_info) | SubCommand::RemoveEnrollment(template_info) => {
+            Some(create_template_info_param(template_info))
+        }
+        _ => None,
+    };
+
+    if let Some(param_val) = &param {
+        // Serialize to bytes
+        let mut cbor_data = Vec::new();
+        ciborium::ser::into_writer(param_val, &mut cbor_data)?;
+        Ok((param, cbor_data))
+    } else {
+        Ok((None, Vec::new()))
+    }
 }
 
-fn to_value_timeout(
+/// Create PIN authentication parameter
+fn create_pin_auth_param(pin_token: &PinToken, sub_cmd_id: u8, sub_command_params_cbor: &[u8]) -> Vec<u8> {
+    let mut message = vec![0x01_u8];  // fingerprint modality
+    message.push(sub_cmd_id);
+    message.extend_from_slice(sub_command_params_cbor);
+    let sig = enc_hmac_sha_256::authenticate(&pin_token.key, &message);
+    sig[0..16].to_vec()
+}
+
+/// Create template info parameter
+fn create_template_info_param(template_info: &TemplateInfo) -> Value {
+    let mut param = Vec::new();
+    param.push((0x01.to_value(), template_info.template_id.to_value()));
+    
+    if let Some(friendly_name) = &template_info.template_friendly_name {
+        param.push((0x02.to_value(), friendly_name.to_value()));
+    }
+    
+    param.to_value()
+}
+
+/// Create timeout parameter
+fn create_timeout_param(
     template_info: Option<&TemplateInfo>,
     timeout_milliseconds: Option<u16>,
 ) -> Value {
-    let mut param = Vec::new(); // この関数では条件分岐で追加するので維持
-    if let Some(v) = template_info {
-        param.push((Value::Integer(0x01), Value::Bytes(v.template_id.clone())));
+    let mut param = Vec::new();
+    
+    if let Some(template_info) = template_info {
+        param.push((0x01.to_value(), template_info.template_id.to_value()));
     }
-    if let Some(v) = timeout_milliseconds {
-        param.push((Value::Integer(0x03), Value::Integer(v as i128)));
+    
+    if let Some(timeout) = timeout_milliseconds {
+        param.push((0x03.to_value(), (timeout as i32).to_value()));
     }
-    Value::Map(vec_to_btree_map(param))
+    
+    param.to_value()
 }
