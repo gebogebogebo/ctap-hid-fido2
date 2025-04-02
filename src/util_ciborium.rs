@@ -45,6 +45,12 @@ impl ToValue for i64 {
     }
 }
 
+impl ToValue for u8 {
+    fn to_value(&self) -> Value {
+        Value::Integer((*self).into())
+    }
+}
+
 impl ToValue for u16 {
     fn to_value(&self) -> Value {
         Value::Integer((*self).into())

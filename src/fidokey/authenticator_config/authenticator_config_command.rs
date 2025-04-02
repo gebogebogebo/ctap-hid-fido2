@@ -1,8 +1,9 @@
 use super::super::sub_command_base::SubCommandBase;
-use crate::{ctapdef, encrypt::enc_hmac_sha_256, pintoken, util::vec_to_btree_map};
+use crate::{ctapdef, encrypt::enc_hmac_sha_256, pintoken, fidokey::common};
+use crate::util_ciborium::ToValue;
 
 use anyhow::Result;
-use serde_cbor::{to_vec, Value};
+use ciborium::value::Value;
 use strum_macros::EnumProperty;
 
 #[derive(Debug, Clone, PartialEq, EnumProperty)]
@@ -32,47 +33,50 @@ pub fn create_payload(pin_token: pintoken::PinToken, sub_command: SubCommand) ->
     let mut map = Vec::new();
 
     // 0x01: subCommand
-    map.push((
-        Value::Integer(0x01),
-        Value::Integer(sub_command.id()? as i128),
-    ));
+    let key1: i32 = 1;
+    let sub_cmd_id: i32 = sub_command.id()? as i32;
+    map.push((key1.to_value(), sub_cmd_id.to_value()));
 
     // subCommandParams (0x02): Map containing following parameters
     let mut sub_command_params_cbor = Vec::new();
     if sub_command.has_param() {
-        let param = match sub_command.clone() {
+        let param_vec = match sub_command.clone() {
             SubCommand::SetMinPinLength(new_min_pin_length) => {
                 // 0x01:newMinPINLength
-                let param_vec = vec![
-                    (Value::Integer(0x01), Value::Integer(new_min_pin_length as i128))
-                ];
-                let param_btree = vec_to_btree_map(param_vec);
-                Some(param_btree)
+                let key1: i32 = 1;
+                vec![(key1.to_value(), new_min_pin_length.to_value())]
             }
             SubCommand::SetMinPinLengthRpIds(rpids) => {
                 // 0x02:minPinLengthRPIDs
-                let param_vec = vec![
-                    (Value::Integer(0x02), Value::Array(rpids.iter().cloned().map(Value::Text).collect()))
-                ];
-                let param_btree = vec_to_btree_map(param_vec);
-                Some(param_btree)
+                let key2: i32 = 2;
+                // RPIDsの配列を作成
+                let rpids_values: Vec<Value> = rpids.iter().map(|id| id.to_value()).collect();
+                vec![(key2.to_value(), rpids_values.to_value())]
             }
             SubCommand::ForceChangePin => {
                 // 0x03:ForceChangePin
-                let param_vec = vec![(Value::Integer(0x03), Value::Bool(true))];
-                let param_btree = vec_to_btree_map(param_vec);
-                Some(param_btree)
+                let key3: i32 = 3;
+                vec![(key3.to_value(), true.to_value())]
             }
-            _ => None,
+            _ => vec![],
         };
-        if let Some(param) = param {
-            map.push((Value::Integer(0x02), Value::Map(param.clone())));
-            sub_command_params_cbor = to_vec(&param)?;
+
+        if !param_vec.is_empty() {
+            let key2: i32 = 2;
+            let param_map = param_vec.to_value();
+            map.push((key2.to_value(), param_map.clone()));
+            
+            // シリアライズ
+            let mut cbor_data = Vec::new();
+            ciborium::ser::into_writer(&param_map, &mut cbor_data)?;
+            sub_command_params_cbor = cbor_data;
         }
     }
 
     // 0x03: pinProtocol
-    map.push((Value::Integer(0x03), Value::Integer(1)));
+    let key3: i32 = 3;
+    let pin_protocol: i32 = 1;
+    map.push((key3.to_value(), pin_protocol.to_value()));
 
     // 0x04: pinUvAuthParam
     let pin_uv_auth_param = {
@@ -87,14 +91,10 @@ pub fn create_payload(pin_token: pintoken::PinToken, sub_command: SubCommand) ->
         let sig = enc_hmac_sha_256::authenticate(&pin_token.key, &message);
         sig[0..16].to_vec()
     };
-    map.push((
-        Value::Integer(0x04),
-        Value::Bytes(pin_uv_auth_param.to_vec()),
-    ));
+    
+    let key4: i32 = 4;
+    map.push((key4.to_value(), pin_uv_auth_param.to_value()));
 
-    // CBOR
-    let cbor = Value::Map(vec_to_btree_map(map));
-    let mut payload = [ctapdef::AUTHENTICATOR_CONFIG].to_vec();
-    payload.append(&mut to_vec(&cbor)?);
-    Ok(payload)
+    // common::to_payload関数を使ってペイロードを生成
+    common::to_payload(map, ctapdef::AUTHENTICATOR_CONFIG)
 }
