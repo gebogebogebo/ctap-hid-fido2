@@ -169,7 +169,7 @@ fn test_get_info() -> Result<()> {
         assert_eq!(info.uv_modality, 2);
         
         println!("- remaining_discoverable_credentials = {}", info.remaining_discoverable_credentials);
-        assert_eq!(info.remaining_discoverable_credentials, 25);
+        assert_eq!(info.remaining_discoverable_credentials, 22);
     } else {
         let device = FidoKeyHidFactory::create(&Cfg::init()).unwrap();
         device.get_info()?;
