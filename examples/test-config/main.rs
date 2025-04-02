@@ -45,16 +45,16 @@ fn main() -> Result<()> {
     check_info_option(&dev, &InfoOption::AlwaysUv, true)?;
 
     // AlwaysUv: true -> false
-    dev.toggle_always_uv(Some(&pin))?;
+    dev.toggle_always_uv(Some(pin))?;
     check_info_option(&dev, &InfoOption::AlwaysUv, false)?;
 
     // AlwaysUv: false -> true
-    dev.toggle_always_uv(Some(&pin))?;
+    dev.toggle_always_uv(Some(pin))?;
     check_info_option(&dev, &InfoOption::AlwaysUv, true)?;
 
     // set_min_pin_length
     check_min_pin_length(&dev, 4)?;
-    dev.set_min_pin_length(4, Some(&pin))?;
+    dev.set_min_pin_length(4, Some(pin))?;
     check_min_pin_length(&dev, 4)?;
 
     println!("----- test-config end -----");
