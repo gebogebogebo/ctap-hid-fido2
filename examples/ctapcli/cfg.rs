@@ -41,6 +41,7 @@ pub fn config(device: &FidoKeyHid, command: Command, pin: Option<String>) -> Res
         }
         Command::SetMinPINLength(new_min_pin_length) => {
             println!("Authenticator Config: Setting a minimum PIN Length.");
+            println!("NOTE: The authenticator must be reset to return the current minimum PIN length to the pre-configured minimum PIN length.");
             println!("https://fidoalliance.org/specs/fido-v2.1-ps-20210615/fido-client-to-authenticator-protocol-v2.1-ps-20210615.html#sctn-feature-descriptions-minPinLength");
             println!();
             let info = device.get_info()?;
