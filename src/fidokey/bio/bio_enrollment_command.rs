@@ -147,7 +147,7 @@ fn create_timeout_param(
     }
     
     if let Some(timeout) = timeout_milliseconds {
-        param.push((0x03.to_value(), (timeout as i32).to_value()));
+        param.push((0x03.to_value(), timeout.to_value()));
     }
     
     param.to_value()
