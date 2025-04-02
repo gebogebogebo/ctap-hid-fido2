@@ -33,31 +33,31 @@ pub fn create_payload(pin_token: pintoken::PinToken, sub_command: SubCommand) ->
     // 0x01: subCommand
     let sub_cmd_id = sub_command.id()? as i32;
     
-    // 0x02: subCommandParams (必要な場合のみ)
+    // 0x02: subCommandParams (only if needed)
     let sub_command_params = create_sub_command_params(&sub_command)?;
     
     // 0x04: pinUvAuthParam
     let pin_uv_auth_param = create_pin_uv_auth_param(&pin_token, &sub_command, &sub_command_params.1)?;
 
-    // CBORマップの作成
+    // Create CBOR map
     let mut auth_config = vec![
         (0x01.to_value(), sub_cmd_id.to_value()),
-        (0x03.to_value(), 1.to_value()),  // pinProtocol は常に1
+        (0x03.to_value(), 1.to_value()),  // pinProtocol is always 1
         (0x04.to_value(), pin_uv_auth_param.to_value()),
     ];
     
-    // サブコマンドパラメータがある場合のみ追加
+    // Add subcommand parameters only if available
     if let Some(param_map) = sub_command_params.0 {
         auth_config.push((0x02.to_value(), param_map));
     }
 
-    // ペイロードの生成
+    // Generate payload
     common::to_payload(auth_config, ctapdef::AUTHENTICATOR_CONFIG)
 }
 
-/// サブコマンドパラメータの生成
+/// Generate subcommand parameters
 /// 
-/// 戻り値: (CBORマップ値（任意）, そのシリアライズされたバイト列)
+/// Returns: (Optional CBOR map value, serialized byte array)
 fn create_sub_command_params(sub_command: &SubCommand) -> Result<(Option<Value>, Vec<u8>)> {
     if !sub_command.has_param() {
         return Ok((None, Vec::new()));
@@ -86,14 +86,14 @@ fn create_sub_command_params(sub_command: &SubCommand) -> Result<(Option<Value>,
 
     let param_map = param_vec.to_value();
     
-    // シリアライズしてバイト列を取得
+    // Serialize to get byte array
     let mut cbor_data = Vec::new();
     ciborium::ser::into_writer(&param_map, &mut cbor_data)?;
     
     Ok((Some(param_map), cbor_data))
 }
 
-/// PINトークンと認証用パラメータからPIN/UV認証パラメータを作成
+/// Create PIN/UV authentication parameters from PIN token and authentication parameters
 fn create_pin_uv_auth_param(
     pin_token: &pintoken::PinToken, 
     sub_command: &SubCommand,
