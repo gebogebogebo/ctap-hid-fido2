@@ -105,7 +105,6 @@ fn check_force_pin_change(dev: &ctap_hid_fido2::FidoKeyHid, expected_value: bool
             println!("Force PIN change = {}", force_pin_change);
             
             if force_pin_change != expected_value {
-                let status = if expected_value { "disabled" } else { "enabled" };
                 return Err(anyhow!(
                     "Force PIN change is {}. Expected: {}. This configuration is not allowed", 
                     if force_pin_change { "enabled" } else { "disabled" }, 
