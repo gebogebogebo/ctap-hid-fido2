@@ -191,15 +191,45 @@ pub(crate) fn integer_to_i64(value: &Value) -> Result<i64> {
 }
 
 #[allow(dead_code)]
-pub(crate) fn cbor_get_bytes_from_map(cbor_map: &Value, get_key: &str) -> Result<Vec<u8>> {
-    if let Value::Map(map) = cbor_map {
-        for (key, val) in map {
-            if let Value::Text(key_text) = key {
-                if key_text == get_key {
-                    return cbor_value_to_vec_u8(val);
-                }
+pub(crate) fn cbor_get_string_from_map(cbor_map: &Value, get_key: &str) -> Result<String> {
+    if !is_map(cbor_map) {
+        return Err(anyhow!("Cast Error : Value is not a Map."))
+    }
+    let map: &Vec<(Value, Value)> = extract_map_ref(cbor_map)?;
+    for (key, val) in map {
+        if is_text(key) {
+            let key_text = cbor_value_to_str(key)?;
+            if key_text == get_key {
+                return cbor_value_to_str(val);
+            }
+        } else if is_integer(key) {
+            let n = integer_to_i64(key)?;
+            if n.to_string() == get_key {
+                return cbor_value_to_str(val);
             }
         }
+    }
+    Ok("".to_string())
+}
+
+#[allow(dead_code)]
+pub(crate) fn cbor_get_bytes_from_map(cbor_map: &Value, get_key: &str) -> Result<Vec<u8>> {
+    if !is_map(cbor_map) {
+        return Ok(Vec::new())
+    }
+    let map: &Vec<(Value, Value)> = extract_map_ref(cbor_map)?;
+    for (key, val) in map {
+        if is_text(key) {
+            let key_text = cbor_value_to_str(key)?;
+            if key_text == get_key {
+                return cbor_value_to_vec_u8(val);
+            }
+        } else if is_integer(key) {
+            let n = integer_to_i64(key)?;
+            if n.to_string() == get_key {
+                return cbor_value_to_vec_u8(val);
+            }
+        }        
     }
     Ok(Vec::new()) // キーが見つからない場合は空の配列を返す
 }
