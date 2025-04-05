@@ -57,6 +57,12 @@ impl ToValue for u16 {
     }
 }
 
+impl ToValue for u32 {
+    fn to_value(&self) -> Value {
+        Value::Integer((*self).into())
+    }
+}
+
 impl ToValue for Vec<Value> {
     fn to_value(&self) -> Value {
         Value::Array(self.clone())
