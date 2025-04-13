@@ -1,10 +1,6 @@
 use crate::str_buf::StrBuf;
-use anyhow::{anyhow, Result};
-use num::NumCast;
 use ring::digest;
-use serde_cbor::Value;
 use base64::{Engine as _, engine::general_purpose};
-use std::collections::BTreeMap;
 
 pub fn to_hex_str(bytes: &[u8]) -> String {
     bytes.iter().fold(String::new(), |mut acc, n| {
@@ -24,110 +20,6 @@ pub fn print_typename<T>(_: T) {
 #[allow(dead_code)]
 pub(crate) fn debugp(title: &str, bytes: &[u8]) {
     println!("{}", StrBuf::bufh(title, bytes));
-}
-
-// Convert Vec<(Value, Value)> to BTreeMap<Value, Value> for serde_cbor::Value::Map
-pub fn vec_to_btree_map(vec: Vec<(Value, Value)>) -> BTreeMap<Value, Value> {
-    vec.into_iter().collect::<BTreeMap<_, _>>()
-}
-
-// for cbor
-
-#[allow(dead_code)]
-pub(crate) fn cbor_value_to_num<T: NumCast>(value: &Value) -> Result<T> {
-    if let Value::Integer(x) = value {
-        Ok(NumCast::from(*x).ok_or(anyhow!("err"))?)
-    } else {
-        Err(anyhow!("Cast Error : Value is not a Integer."))
-    }
-}
-
-#[allow(dead_code)]
-pub(crate) fn cbor_value_to_vec_u8(value: &Value) -> Result<Vec<u8>> {
-    if let Value::Bytes(xs) = value {
-        Ok(xs.to_vec())
-    } else {
-        Err(anyhow!("Cast Error : Value is not a Bytes."))
-    }
-}
-
-#[allow(dead_code)]
-pub(crate) fn cbor_value_to_str(value: &Value) -> Result<String> {
-    if let Value::Text(s) = value {
-        Ok(s.to_string())
-    } else {
-        Err(anyhow!("Cast Error : Value is not a Text."))
-    }
-}
-
-#[allow(dead_code)]
-pub(crate) fn cbor_value_to_bool(value: &Value) -> Result<bool> {
-    if let Value::Bool(v) = value {
-        Ok(*v)
-    } else {
-        Err(anyhow!("Cast Error : Value is not a Bool."))
-    }
-}
-
-#[allow(dead_code)]
-pub(crate) fn cbor_value_to_vec_string(value: &Value) -> Result<Vec<String>> {
-    if let Value::Array(x) = value {
-        let mut strings = [].to_vec();
-        for ver in x {
-            if let Value::Text(s) = ver {
-                strings.push(s.to_string());
-            }
-        }
-        Ok(strings)
-    } else {
-        Err(anyhow!("Cast Error : Value is not Array."))
-    }
-}
-
-#[allow(dead_code)]
-pub(crate) fn cbor_value_to_vec_bytes(value: &Value) -> Result<Vec<Vec<u8>>> {
-    if let Value::Array(xs) = value {
-        let mut bytes = [].to_vec();
-        for x in xs {
-            if let Value::Bytes(b) = x {
-                bytes.push(b.to_vec());
-            }
-        }
-        Ok(bytes)
-    } else {
-        Err(anyhow!("Cast Error : Value is not Array."))
-    }
-}
-
-#[allow(dead_code)]
-pub(crate) fn cbor_bytes_to_map(bytes: &[u8]) -> Result<Vec<(Value, Value)>> {
-    if bytes.is_empty() {
-        return Ok(Vec::new());
-    }
-    match serde_cbor::from_slice(bytes) {
-        Ok(cbor) => {
-            if let Value::Map(n) = cbor {
-                let vec_map: Vec<(Value, Value)> = n.into_iter().collect();
-                Ok(vec_map)
-            } else {
-                Err(anyhow!("parse error 2"))
-            }
-        }
-        Err(_) => Err(anyhow!("parse error 1")),
-    }
-}
-
-
-#[allow(dead_code)]
-pub(crate) fn cbor_value_print(value: &Value) {
-    match value {
-        Value::Bytes(s) => print_typename(s),
-        Value::Text(s) => print_typename(s),
-        Value::Integer(s) => print_typename(s),
-        Value::Map(s) => print_typename(s),
-        Value::Array(s) => print_typename(s),
-        _ => println!("unknown Value type"),
-    };
 }
 
 pub(crate) fn create_clientdata_hash(challenge: Vec<u8>) -> Vec<u8> {
