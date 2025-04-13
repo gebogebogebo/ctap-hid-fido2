@@ -21,10 +21,9 @@ pub(crate) fn parse_cbor(
                 }
                 0x03 => {
                     // Convert ciborium Value to serde_cbor Value for entity methods
-                    let serde_val = util_ciborium::ciborium_to_serde(val.clone())?;
                     data.public_key_credential_rp_entity = PublicKeyCredentialRpEntity::default()
-                        .get_id(&serde_val)
-                        .get_name(&serde_val)
+                        .get_id(val)?
+                        .get_name(val)?
                 }
                 0x04 => data.rpid_hash = util_ciborium::cbor_value_to_vec_u8(val)?,
                 0x05 => data.total_rps = util_ciborium::cbor_value_to_num(val)?,
