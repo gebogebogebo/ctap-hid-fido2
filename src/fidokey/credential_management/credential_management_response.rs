@@ -35,10 +35,9 @@ pub(crate) fn parse_cbor(
                             .get_display_name(val)?
                 }
                 0x07 => {
-                    let serde_val = util_ciborium::ciborium_to_serde(val.clone())?;
                     data.public_key_credential_descriptor = PublicKeyCredentialDescriptor::default()
-                        .get_id(&serde_val)
-                        .get_type(&serde_val)
+                        .get_id(val)?
+                        .get_type(val)?
                 }
                 0x08 => {
                     data.public_key = PublicKey::new(val)?
