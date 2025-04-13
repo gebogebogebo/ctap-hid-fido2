@@ -2,7 +2,6 @@ use anyhow::{anyhow, Result};
 use std::io::Cursor;
 use ciborium::value::Value;
 use num::NumCast;
-use std::collections::BTreeMap;
 
 #[allow(dead_code)]
 pub(crate) trait ToValue {
@@ -257,58 +256,3 @@ pub(crate) fn extract_array_ref(value: &Value) -> Result<&Vec<Value>> {
         Err(anyhow!("Value is not an Array"))
     }
 }
-
-// TODO 最終的には削除する
-
-// ciborium::value::Value を serde_cbor::Value に変換する
-#[allow(dead_code)]
-pub fn ciborium_to_serde(cib_value: Value) -> Result<serde_cbor::Value> {
-    // ciborium の Value をバイト列にシリアライズ
-    let mut bytes = Vec::new();
-    ciborium::ser::into_writer(&cib_value, &mut bytes)?;
-    // シリアライズしたバイト列から serde_cbor の Value にデシリアライズ
-    let serde_value: serde_cbor::Value = serde_cbor::from_slice(&bytes)?;
-    Ok(serde_value)
-}
-
-#[allow(dead_code)]
-pub fn ciborium_to_serde_vec(map: Vec<(Value, Value)>) -> Result<Vec<(serde_cbor::Value, serde_cbor::Value)>> {
-    let mut result = Vec::new();
-    for (key, value) in map {
-        let serde_key = ciborium_to_serde(key)?;
-        let serde_value = ciborium_to_serde(value)?;
-        result.push((serde_key, serde_value));
-    }
-    Ok(result)
-}
-
-#[allow(dead_code)]
-pub fn vec_to_btree_map(vec: Vec<(Value, Value)>) -> Result<BTreeMap<serde_cbor::Value, serde_cbor::Value>> {
-    let serde_vec = ciborium_to_serde_vec(vec)?;
-    Ok(serde_vec.into_iter().collect::<BTreeMap<_, _>>())
-}
-
-// CBORデータの次の項目をスキップして、スキップしたバイト数を返す
-#[allow(dead_code)]
-pub(crate) fn skip_next_cbor_item(data: &[u8]) -> usize {
-    if data.is_empty() {
-        return 0;
-    }
-
-    // CBORデータをValueにパースして、そのバイト数を計算
-    let mut ser_bytes = Vec::new();
-    match ciborium::de::from_reader::<Value, _>(Cursor::new(data)) {
-        Ok(value) => {
-            // 再度シリアライズしてバイト数を計算
-            if let Ok(()) = ciborium::ser::into_writer(&value, &mut ser_bytes) {
-                // シリアライズしたバイト数を返す（元のデータとほぼ同じサイズ）
-                ser_bytes.len()
-            } else {
-                0
-            }
-        },
-        Err(_) => 0,
-    }
-}
-
-// TODO 最終的には削除する

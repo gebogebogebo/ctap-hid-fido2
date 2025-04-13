@@ -32,47 +32,6 @@ pub fn vec_to_btree_map(vec: Vec<(Value, Value)>) -> BTreeMap<Value, Value> {
 }
 
 // for cbor
-pub(crate) fn cbor_get_string_from_map(cbor_map: &Value, get_key: &str) -> Result<String> {
-    if let Value::Map(xs) = cbor_map {
-        for (key, val) in xs {
-            if let Value::Text(s) = key {
-                if s == get_key {
-                    if let Value::Text(v) = val {
-                        return Ok(v.to_string());
-                    }
-                }
-            } else if let Value::Integer(s) = key {
-                if s.to_string() == get_key {
-                    if let Value::Text(v) = val {
-                        return Ok(v.to_string());
-                    }
-                }
-            }
-        }
-        Ok("".to_string())
-    } else {
-        Err(anyhow!("Cast Error : Value is not a Map."))
-    }
-}
-
-pub(crate) fn cbor_get_bytes_from_map(cbor_map: &Value, get_key: &str) -> Result<Vec<u8>> {
-    if let Value::Map(xs) = cbor_map {
-        for (key, val) in xs {
-            if let Value::Text(s) = key {
-                if s == get_key {
-                    return cbor_value_to_vec_u8(val);
-                }
-            } else if let Value::Integer(s) = key {
-                if s.to_string() == get_key {
-                    return cbor_value_to_vec_u8(val);
-                }
-            }
-        }
-        Ok(vec![])
-    } else {
-        Err(anyhow!("Cast Error : Value is not a Map."))
-    }
-}
 
 #[allow(dead_code)]
 pub(crate) fn cbor_value_to_num<T: NumCast>(value: &Value) -> Result<T> {
