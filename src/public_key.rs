@@ -1,9 +1,7 @@
 use crate::encrypt::cose::CoseKey;
 use crate::util;
-use crate::util_ciborium;
 use anyhow::Result;
-use serde_cbor::Value;
-use ciborium::value::Value as CiboriumValue;
+use ciborium::value::Value;
 use std::fmt;
 
 #[derive(Debug, Default, Clone)]
@@ -22,11 +20,6 @@ pub struct PublicKey {
 }
 impl PublicKey {
     pub fn new(cbor: &Value) -> Result<Self> {
-        let ciborium_value = util_ciborium::serde_to_ciborium(cbor.clone())?;
-        Self::new_from_ciborium(&ciborium_value)
-    }
-
-    pub fn new_from_ciborium(cbor: &CiboriumValue) -> Result<Self> {
         let cose_key = CoseKey::new(cbor)?;
 
         let mut public_key = PublicKey::default();

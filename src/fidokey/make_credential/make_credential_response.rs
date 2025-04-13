@@ -78,7 +78,7 @@ fn parse_cbor_authdata(authdata: &[u8], attestation: &mut Attestation) -> Result
         let slice = &authdata[index..authdata.len()];
         match ciborium::de::from_reader(Cursor::new(slice)) {
             Ok(value) => {
-                attestation.credential_publickey = PublicKey::new_from_ciborium(&value)?;
+                attestation.credential_publickey = PublicKey::new(&value)?;
                 // Serialize to get the number of bytes of the public key part and the rest of the data
                 let mut bytes = Vec::new();
                 ciborium::ser::into_writer(&value, &mut bytes)?;

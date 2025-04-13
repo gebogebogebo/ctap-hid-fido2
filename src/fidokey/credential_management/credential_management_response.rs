@@ -46,8 +46,7 @@ pub(crate) fn parse_cbor(
                 }
                 0x08 => {
                     // Convert ciborium Value to serde_cbor Value for PublicKey
-                    let serde_val = util_ciborium::ciborium_to_serde(val.clone())?;
-                    data.public_key = PublicKey::new(&serde_val)?
+                    data.public_key = PublicKey::new(val)?
                 },
                 0x09 => data.total_credentials = util_ciborium::cbor_value_to_num(val)?,
                 0x0A => data.cred_protect = util_ciborium::cbor_value_to_num(val)?,

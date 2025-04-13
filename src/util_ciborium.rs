@@ -259,15 +259,6 @@ pub(crate) fn extract_array_ref(value: &Value) -> Result<&Vec<Value>> {
 }
 
 // TODO 最終的には削除する
-// serde_cbor::Value を ciborium::value::Value に変換する
-#[allow(dead_code)]
-pub(crate) fn serde_to_ciborium(serde_value: serde_cbor::Value) -> Result<Value> {
-    // serde_cbor::Value を CBOR のバイト列にシリアライズ
-    let bytes = serde_cbor::to_vec(&serde_value)?;
-    // バイト列から ciborium::value::Value にデシリアライズ
-    let cib_value: Value = ciborium::de::from_reader(bytes.as_slice())?;
-    Ok(cib_value)
-}
 
 // ciborium::value::Value を serde_cbor::Value に変換する
 #[allow(dead_code)]
