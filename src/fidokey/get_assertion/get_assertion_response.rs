@@ -103,12 +103,10 @@ pub fn parse_cbor(
                 }
                 0x03 => ass.signature = util_ciborium::cbor_value_to_vec_u8(val)?,
                 0x04 => {
-                    // PublicKeyCredentialUserEntityはまだserde_cbor::Valueを使用しているため、変換が必要
-                    let serde_val = util_ciborium::ciborium_to_serde(val.clone())?;
                     ass.user = PublicKeyCredentialUserEntity::default()
-                        .get_id(&serde_val)
-                        .get_name(&serde_val)
-                        .get_display_name(&serde_val)
+                        .get_id(val)?
+                        .get_name(val)?
+                        .get_display_name(val)?
                 }
                 0x05 => ass.number_of_credentials = util_ciborium::cbor_value_to_num(val)?,
                 0x06 => (), // TODO userSelected

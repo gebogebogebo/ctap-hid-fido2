@@ -28,23 +28,19 @@ pub(crate) fn parse_cbor(
                 0x04 => data.rpid_hash = util_ciborium::cbor_value_to_vec_u8(val)?,
                 0x05 => data.total_rps = util_ciborium::cbor_value_to_num(val)?,
                 0x06 => {
-                    // Convert ciborium Value to serde_cbor Value for entity methods
-                    let serde_val = util_ciborium::ciborium_to_serde(val.clone())?;
                     data.public_key_credential_user_entity =
                         PublicKeyCredentialUserEntity::default()
-                            .get_id(&serde_val)
-                            .get_name(&serde_val)
-                            .get_display_name(&serde_val)
+                            .get_id(val)?
+                            .get_name(val)?
+                            .get_display_name(val)?
                 }
                 0x07 => {
-                    // Convert ciborium Value to serde_cbor Value for entity methods
                     let serde_val = util_ciborium::ciborium_to_serde(val.clone())?;
                     data.public_key_credential_descriptor = PublicKeyCredentialDescriptor::default()
                         .get_id(&serde_val)
                         .get_type(&serde_val)
                 }
                 0x08 => {
-                    // Convert ciborium Value to serde_cbor Value for PublicKey
                     data.public_key = PublicKey::new(val)?
                 },
                 0x09 => data.total_credentials = util_ciborium::cbor_value_to_num(val)?,

@@ -1,6 +1,7 @@
-use crate::util;
-use serde_cbor::Value;
+use crate::{util, util_ciborium};
 use std::fmt;
+use ciborium::value::Value;
+use anyhow::Result;
 
 #[derive(Debug, Default, Clone, PartialEq)]
 pub struct PublicKeyCredentialUserEntity {
@@ -26,20 +27,22 @@ impl PublicKeyCredentialUserEntity {
         }
         ret
     }
-    pub fn get_id(self: &mut PublicKeyCredentialUserEntity, cbor: &Value) -> Self {
+    pub fn get_id(self: &mut PublicKeyCredentialUserEntity, cbor: &Value) -> Result<Self> {
         let mut ret = self.clone();
-        ret.id = util::cbor_get_bytes_from_map(cbor, "id").unwrap_or_default();
-        ret
+        ret.id = util_ciborium::cbor_get_bytes_from_map(cbor, "id")?;
+        Ok(ret)
     }
-    pub fn get_name(self: &mut PublicKeyCredentialUserEntity, cbor: &Value) -> Self {
+    
+    pub fn get_name(self: &mut PublicKeyCredentialUserEntity, cbor: &Value) -> Result<Self> {
         let mut ret = self.clone();
-        ret.name = util::cbor_get_string_from_map(cbor, "name").unwrap_or_default();
-        ret
+        ret.name = util_ciborium::cbor_get_string_from_map(cbor, "name")?;
+        Ok(ret)
     }
-    pub fn get_display_name(self: &mut PublicKeyCredentialUserEntity, cbor: &Value) -> Self {
+    
+    pub fn get_display_name(self: &mut PublicKeyCredentialUserEntity, cbor: &Value) -> Result<Self> {
         let mut ret = self.clone();
-        ret.display_name = util::cbor_get_string_from_map(cbor, "displayName").unwrap_or_default();
-        ret
+        ret.display_name = util_ciborium::cbor_get_string_from_map(cbor, "displayName")?;
+        Ok(ret)
     }
 }
 impl fmt::Display for PublicKeyCredentialUserEntity {
