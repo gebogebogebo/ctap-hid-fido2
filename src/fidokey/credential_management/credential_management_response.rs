@@ -20,7 +20,6 @@ pub(crate) fn parse_cbor(
                         util_ciborium::cbor_value_to_num(val)?
                 }
                 0x03 => {
-                    // Convert ciborium Value to serde_cbor Value for entity methods
                     data.public_key_credential_rp_entity = PublicKeyCredentialRpEntity::default()
                         .get_id(val)?
                         .get_name(val)?
