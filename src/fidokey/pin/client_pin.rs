@@ -30,7 +30,7 @@ impl FidoKeyHid {
             let send_payload = client_pin_command::create_payload_get_pin_token(
                 &shared_secret.public_key,
                 &pin_hash_enc,
-            );
+            )?;
 
             let response_cbor = ctaphid::ctaphid_cbor(self, cid, &send_payload)?;
 
@@ -67,7 +67,7 @@ impl FidoKeyHid {
                     &shared_secret.public_key,
                     &pin_hash_enc,
                     permission,
-                );
+                )?;
             let response_cbor = ctaphid::ctaphid_cbor(self, cid, &send_payload)?;
 
             // get pin_token (enc)
@@ -104,7 +104,7 @@ impl FidoKeyHid {
             &shared_secret.public_key,
             &pin_auth,
             &new_pin_enc,
-        );
+        )?;
 
         ctaphid::ctaphid_cbor(self, cid, &send_payload)?;
 
@@ -200,7 +200,7 @@ pub fn change_pin(device: &FidoKeyHid, cid: &[u8], current_pin: &str, new_pin: &
         &pin_auth,
         &new_pin_enc,
         &current_pin_hash_enc,
-    );
+    )?;
 
     ctaphid::ctaphid_cbor(device, cid, &send_payload)?;
 

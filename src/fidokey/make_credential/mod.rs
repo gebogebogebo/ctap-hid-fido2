@@ -65,7 +65,7 @@ impl FidoKeyHid {
                 None
             };
 
-            make_credential_command::create_payload(params, extensions)
+            make_credential_command::create_payload(params, extensions)?
         };
 
         // send & response
@@ -179,7 +179,7 @@ mod tests {
 
             params.pin_auth = pin_auth.to_vec();
 
-            make_credential_command::create_payload(params, None)
+            make_credential_command::create_payload(params, None).unwrap()
         };
 
         //println!(

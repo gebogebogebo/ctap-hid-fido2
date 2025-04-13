@@ -23,6 +23,7 @@ pub mod public_key_credential_rp_entity;
 pub mod public_key_credential_user_entity;
 pub mod str_buf;
 pub mod util;
+pub mod util_ciborium;
 pub mod verifier;
 
 use anyhow::{anyhow, Result};

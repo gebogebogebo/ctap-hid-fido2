@@ -1,6 +1,7 @@
+use anyhow::Result;
 use ctap_hid_fido2::{fidokey::get_info::InfoOption, Cfg, FidoKeyHidFactory};
 
-fn main() {
+fn main() -> Result<()> {
     println!("----- get-info start -----");
 
     println!("get_hid_devices()");
@@ -21,7 +22,7 @@ fn main() {
             info.vid, info.pid, info.info
         );
 
-        let dev = FidoKeyHidFactory::create_by_params(&[info.param], &Cfg::init()).unwrap();
+        let dev = FidoKeyHidFactory::create_by_params(&[info.param], &Cfg::init())?;
 
         println!("get_info()");
         match dev.get_info() {
@@ -49,4 +50,5 @@ fn main() {
     }
 
     println!("----- get-info end -----");
+    Ok(())
 }

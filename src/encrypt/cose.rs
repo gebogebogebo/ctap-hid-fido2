@@ -1,9 +1,8 @@
 use crate::str_buf::StrBuf;
-use crate::util;
+use crate::util_ciborium::{self, ToValue};
 use anyhow::{anyhow, Result};
-use num::NumCast;
-use serde_cbor::Value;
-use std::collections::{BTreeMap, HashMap};
+use ciborium::value::Value;
+use std::collections::HashMap;
 use std::fmt;
 
 #[derive(Debug, Default, Clone)]
@@ -20,9 +19,10 @@ impl fmt::Display for CoseKey {
             .append("- key_type", &self.key_type)
             .append("- algorithm", &self.algorithm);
         if let Some(Value::Integer(intval)) = self.parameters.get(&-1) {
-            strbuf.append("- crv", &intval);
+            let i32_value: i32 = i32::try_from(*intval).expect("Integer Conversion failed");
+            strbuf.append("- crv", &i32_value);
         }
-        if let Some(Value::Bytes(bytes)) = self.parameters.get(&-2) {
+        if let Some(Value::Bytes(bytes)) = self.parameters.get(&-2) { 
             strbuf.appenh("- x", bytes);
         }
         if let Some(Value::Bytes(bytes)) = self.parameters.get(&-3) {
@@ -37,19 +37,18 @@ impl CoseKey {
     pub fn new(cbor: &Value) -> Result<Self> {
         let mut cose = CoseKey::default();
 
-        if let Value::Map(xs) = cbor {
-            for (key, val) in xs {
-                // debug
-                //util::cbor_value_print(val);
-
-                if let Value::Integer(member) = key {
-                    match member {
+        if util_ciborium::is_map(cbor) {
+            let map = util_ciborium::extract_map_ref(cbor)?;
+            
+            for (key, val) in map {
+                if util_ciborium::is_integer(key) {
+                    match util_ciborium::integer_to_i64(key)? {
                         1 => {
                             // Table 21: Key Type Values
                             // 1: kty
                             //      1: OKP (Octet Key Pair) → need x
                             //      2: EC2 (Double Coordinate Curves) → need x&y
-                            cose.key_type = util::cbor_value_to_num(val)?;
+                            cose.key_type = util_ciborium::cbor_value_to_num(val)?;
                         }
                         // 2: kid
                         3 => {
@@ -59,7 +58,7 @@ impl CoseKey {
                             //      -25: ECDH-ES + HKDF-256
                             //      -35: ES384
                             //      -36: ES512
-                            cose.algorithm = util::cbor_value_to_num(val)?;
+                            cose.algorithm = util_ciborium::cbor_value_to_num(val)?;
                         }
                         // 4: key_ops
                         // 5: Base IV
@@ -68,44 +67,45 @@ impl CoseKey {
                             // -1: Curves
                             //      1: P-256(EC2)
                             //      6: Ed25519(OKP)
-                            //println!("member = {:?} , val = {:?}",member,val);
-                            cose.parameters.insert(
-                                NumCast::from(*member).ok_or(anyhow!("err"))?,
-                                Value::Integer(util::cbor_value_to_num(val)?),
-                            );
+                            let int_val: i64 = util_ciborium::cbor_value_to_num(val)?;
+                            cose.parameters.insert(-1, int_val.to_value());
                         }
-                        -2 | -3 => {
-                            //println!("member = {:?} , val = {:?}",member,val);
-                            cose.parameters.insert(
-                                NumCast::from(*member).ok_or(anyhow!("err"))?,
-                                Value::Bytes(util::cbor_value_to_vec_u8(val)?),
-                            );
+                        -2 => {
+                            let bytes = util_ciborium::cbor_value_to_vec_u8(val)?;
+                            cose.parameters.insert(-2, bytes.to_value());
+                        }
+                        -3 => {
+                            let bytes = util_ciborium::cbor_value_to_vec_u8(val)?;
+                            cose.parameters.insert(-3, bytes.to_value());
                         }
                         _ => {}
                     }
                 }
             }
         }
+
         Ok(cose)
     }
 
-    pub fn to_value(&self) -> Result<Value> {
-        let mut map = BTreeMap::new();
-        map.insert(Value::Integer(1), Value::Integer(self.key_type.into()));
-        map.insert(Value::Integer(3), Value::Integer(self.algorithm.into()));
-        map.insert(
-            Value::Integer(-1),
-            self.parameters.get(&-1).ok_or(anyhow!("err"))?.clone(),
-        );
-        map.insert(
-            Value::Integer(-2),
-            self.parameters.get(&-2).ok_or(anyhow!("err"))?.clone(),
-        );
-        map.insert(
-            Value::Integer(-3),
-            self.parameters.get(&-3).ok_or(anyhow!("err"))?.clone(),
-        );
-        Ok(Value::Map(map))
+    // TODO rename 
+    pub fn to_value_cib(&self) -> Result<Value> {
+        let map = vec![
+            (1.to_value() , self.key_type.to_value()),
+            (3.to_value() , self.algorithm.to_value()),
+            (
+                (-1).to_value(),
+                self.parameters.get(&-1).ok_or(anyhow!("err"))?.clone(),
+            ),
+            (
+                (-2).to_value(),
+                self.parameters.get(&-2).ok_or(anyhow!("err"))?.clone(),
+            ),
+            (
+                (-3).to_value(),
+                self.parameters.get(&-3).ok_or(anyhow!("err"))?.clone(),
+            ),
+        ];
+        Ok(map.to_value())
     }
 
     pub fn to_public_key_der(&self) -> Vec<u8> {

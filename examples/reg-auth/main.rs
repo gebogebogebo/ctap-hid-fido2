@@ -1,9 +1,10 @@
+use anyhow::{anyhow, Result};
 use ctap_hid_fido2::{
     fidokey::{GetAssertionArgsBuilder, MakeCredentialArgsBuilder},
     verifier, Cfg, FidoKeyHidFactory,
 };
 
-fn main() {
+fn main() -> Result<()> {
     let rpid = "reg-auth-example-app";
     let pin = get_input_with_message("input PIN:");
 
@@ -17,19 +18,18 @@ fn main() {
         .build();
 
     // create `FidoKeyHid`
-    let device = FidoKeyHidFactory::create(&Cfg::init()).unwrap();
+    let device = FidoKeyHidFactory::create(&Cfg::init())?;
 
     // get `Attestation` Object
     let attestation = device
-        .make_credential_with_args(&make_credential_args)
-        .unwrap();
+        .make_credential_with_args(&make_credential_args)?;
     println!("- Register Success");
 
     // verify `Attestation` Object
     let verify_result = verifier::verify_attestation(rpid, &challenge, &attestation);
     if !verify_result.is_success {
         println!("- ! Verify Failed");
-        return;
+        return Err(anyhow!("Attestation verification failed"));
     }
 
     // store Credential Id and Publickey
@@ -47,7 +47,7 @@ fn main() {
         .build();
 
     // get `Assertion` Object
-    let assertions = device.get_assertion_with_args(&get_assertion_args).unwrap();
+    let assertions = device.get_assertion_with_args(&get_assertion_args)?;
     println!("- Authenticate Success");
 
     // verify `Assertion` Object
@@ -58,7 +58,10 @@ fn main() {
         &assertions[0],
     ) {
         println!("- ! Verify Assertion Failed");
+        return Err(anyhow!("Assertion verification failed"));
     }
+    
+    Ok(())
 }
 
 pub fn get_input() -> String {

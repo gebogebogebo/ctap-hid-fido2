@@ -38,24 +38,23 @@ impl FidoKeyHid {
             }
         };
 
-        // create cmmand
-        let send_payload = {
-            let mut params = get_assertion_command::Params::new(
-                &args.rpid,
-                args.challenge.to_vec(),
-                credential_ids.to_vec(),
-            );
-            params.option_up = true;
-            params.option_uv = args.uv;
+        // create command
+        let mut params = get_assertion_command::Params::new(
+            &args.rpid,
+            args.challenge.to_vec(),
+            credential_ids.to_vec(),
+        );
+        params.option_up = true;
+        params.option_uv = args.uv;
 
-            // create pin auth
-            if let Some(pin_token) = pin_token {
-                let sig = enc_hmac_sha_256::authenticate(&pin_token.key, &params.client_data_hash);
-                params.pin_auth = sig[0..16].to_vec();
-            }
+        // create pin auth
+        if let Some(pin_token) = pin_token {
+            let sig = enc_hmac_sha_256::authenticate(&pin_token.key, &params.client_data_hash);
+            params.pin_auth = sig[0..16].to_vec();
+        }
 
-            get_assertion_command::create_payload(params, extensions, hmac_ext.clone())
-        };
+        // Get payload as Vec<u8>, not Result<Vec<u8>>
+        let send_payload = get_assertion_command::create_payload(params, extensions, hmac_ext.clone())?;
 
         // send & response
         let response_cbor = ctaphid::ctaphid_cbor(self, &cid, &send_payload)?;

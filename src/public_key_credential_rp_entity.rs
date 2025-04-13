@@ -1,6 +1,7 @@
-use crate::util;
-use serde_cbor::Value;
+use crate::util_ciborium;
 use std::fmt;
+use ciborium::value::Value;
+use anyhow::Result;
 
 #[derive(Debug, Default, Clone)]
 pub struct PublicKeyCredentialRpEntity {
@@ -8,15 +9,16 @@ pub struct PublicKeyCredentialRpEntity {
     pub name: String,
 }
 impl PublicKeyCredentialRpEntity {
-    pub fn get_id(self: &mut PublicKeyCredentialRpEntity, cbor: &Value) -> Self {
+    pub fn get_id(self: &mut PublicKeyCredentialRpEntity, cbor: &Value) -> Result<Self> {
         let mut ret = self.clone();
-        ret.id = util::cbor_get_string_from_map(cbor, "id").unwrap_or_default();
-        ret
+        ret.id = util_ciborium::cbor_get_string_from_map(cbor, "id")?;
+        Ok(ret)
     }
-    pub fn get_name(self: &mut PublicKeyCredentialRpEntity, cbor: &Value) -> Self {
+    
+    pub fn get_name(self: &mut PublicKeyCredentialRpEntity, cbor: &Value) -> Result<Self> {
         let mut ret = self.clone();
-        ret.name = util::cbor_get_string_from_map(cbor, "name").unwrap_or_default();
-        ret
+        ret.name = util_ciborium::cbor_get_string_from_map(cbor, "name")?;
+        Ok(ret)
     }
 }
 impl fmt::Display for PublicKeyCredentialRpEntity {

@@ -1,10 +1,10 @@
 use super::super::sub_command_base::SubCommandBase;
 use crate::public_key_credential_descriptor::PublicKeyCredentialDescriptor;
 use crate::public_key_credential_user_entity::PublicKeyCredentialUserEntity;
-use crate::{ctapdef, encrypt::enc_hmac_sha_256, pintoken};
+use crate::{ctapdef, encrypt::enc_hmac_sha_256, pintoken, fidokey::common};
+use crate::util_ciborium::ToValue;
 use anyhow::Result;
-use serde_cbor::{to_vec, Value};
-use std::collections::BTreeMap;
+use ciborium::value::Value;
 use strum_macros::EnumProperty;
 
 #[derive(Debug, Clone, PartialEq, EnumProperty)]
@@ -41,13 +41,11 @@ pub fn create_payload(
     sub_command: SubCommand,
     use_pre_credential_management: bool,
 ) -> Result<Vec<u8>> {
-    let mut map = BTreeMap::new();
+    let mut map = Vec::new();
 
     // subCommand(0x01)
-    {
-        let sub_cmd = Value::Integer(sub_command.id()? as i128);
-        map.insert(Value::Integer(0x01), sub_cmd);
-    }
+    let sub_cmd_id = sub_command.id()? as i64;
+    map.push((0x01.to_value(), sub_cmd_id.to_value()));
 
     // subCommandParams (0x02): Map containing following parameters
     let mut sub_command_params_cbor = Vec::new();
@@ -68,15 +66,16 @@ pub fn create_payload(
             _ => None,
         };
         if let Some(param) = param {
-            map.insert(Value::Integer(0x02), param.clone());
-            sub_command_params_cbor = to_vec(&param)?;
+            map.push((0x02.to_value(), param.clone()));
+            
+            // Serialize parameters to CBOR
+            ciborium::ser::into_writer(&param, &mut sub_command_params_cbor)?;
         }
     }
 
     if let Some(pin_token) = pin_token {
         // pinProtocol(0x03)
-        let pin_protocol = Value::Integer(1);
-        map.insert(Value::Integer(0x03), pin_protocol);
+        map.push((0x03.to_value(), 1.to_value()));
 
         // pinUvAuthParam (0x04):
         // - authenticate(pinUvAuthToken, getCredsMetadata (0x01)).
@@ -88,79 +87,54 @@ pub fn create_payload(
         let sig = enc_hmac_sha_256::authenticate(&pin_token.key, &message);
         let pin_uv_auth_param = sig[0..16].to_vec();
 
-        map.insert(Value::Integer(0x04), Value::Bytes(pin_uv_auth_param));
+        map.push((0x04.to_value(), pin_uv_auth_param.to_value()));
     }
 
-    // create cbor
-    let cbor = Value::Map(map);
-
-    // create payload
-    let mut payload = if use_pre_credential_management {
-        [ctapdef::AUTHENTICATOR_CREDENTIAL_MANAGEMENT_P].to_vec()
+    // Generate command payload
+    let command_byte = if use_pre_credential_management {
+        ctapdef::AUTHENTICATOR_CREDENTIAL_MANAGEMENT_P
     } else {
-        [ctapdef::AUTHENTICATOR_CREDENTIAL_MANAGEMENT].to_vec()
+        ctapdef::AUTHENTICATOR_CREDENTIAL_MANAGEMENT
     };
 
-    payload.append(&mut to_vec(&cbor)?);
-    Ok(payload)
+    // Use common::to_payload for serialization
+    common::to_payload(map, command_byte)
 }
 
 fn create_rpid_hash(rpid_hash: &[u8]) -> Value {
-    let mut param = BTreeMap::new();
-    param.insert(Value::Integer(0x01), Value::Bytes(rpid_hash.to_vec()));
-    Value::Map(param)
+    let param = vec![(0x01.to_value(), rpid_hash.to_vec().to_value())];
+    param.to_value()
 }
 
 fn create_public_key_credential_descriptor(in_param: &PublicKeyCredentialDescriptor) -> Value {
-    let mut map = BTreeMap::new();
-    map.insert(
-        Value::Text("id".to_string()),
-        Value::Bytes(in_param.id.clone()),
-    );
-    map.insert(
-        Value::Text("type".to_string()),
-        Value::Text(in_param.ctype.clone()),
-    );
+    let map = vec![
+        ("id".to_value(), in_param.id.clone().to_value()),
+        ("type".to_value(), in_param.ctype.clone().to_value()),
+    ];
 
-    let mut param = BTreeMap::new();
-    param.insert(Value::Integer(0x02), Value::Map(map));
-    Value::Map(param)
+    let param = vec![(0x02.to_value(), map.to_value())];
+    param.to_value()
 }
 
 fn create_public_key_credential_descriptor_pend(
     in_param: &PublicKeyCredentialDescriptor,
     pkcue: &PublicKeyCredentialUserEntity,
 ) -> Value {
-    let mut param = BTreeMap::new();
-    {
-        let mut map = BTreeMap::new();
-        map.insert(
-            Value::Text("id".to_string()),
-            Value::Bytes(in_param.id.clone()),
-        );
-        map.insert(
-            Value::Text("type".to_string()),
-            Value::Text(in_param.ctype.clone()),
-        );
-        param.insert(Value::Integer(0x02), Value::Map(map));
-    }
+    let map = vec![
+        ("id".to_value(), in_param.id.clone().to_value()),
+        ("type".to_value(), in_param.ctype.clone().to_value()),
+    ];
 
-    {
-        let mut user = BTreeMap::new();
-        user.insert(
-            Value::Text("id".to_string()),
-            Value::Bytes(pkcue.id.clone()),
-        );
-        user.insert(
-            Value::Text("name".to_string()),
-            Value::Text(pkcue.name.to_string()),
-        );
-        user.insert(
-            Value::Text("displayName".to_string()),
-            Value::Text(pkcue.display_name.to_string()),
-        );
-        param.insert(Value::Integer(0x03), Value::Map(user));
-    }
+    let user = vec![
+        ("id".to_value(), pkcue.id.clone().to_value()),
+        ("name".to_value(), pkcue.name.to_string().to_value()),
+        ("displayName".to_value(), pkcue.display_name.to_string().to_value()),
+    ];
 
-    Value::Map(param)
+    let param = vec![
+        (0x02.to_value(), map.to_value()),
+        (0x03.to_value(), user.to_value()),
+    ];
+
+    param.to_value()
 }
