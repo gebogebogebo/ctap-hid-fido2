@@ -2,9 +2,9 @@ use crate::ctapdef;
 use crate::encrypt::cose;
 use crate::fidokey::common;
 use crate::util_ciborium;
+use crate::util_ciborium::ToValue;
 use anyhow::{anyhow, Result};
 use ciborium::value::Value;
-use ciborium::cbor;
 
 #[allow(dead_code)]
 pub enum SubCommand {
@@ -19,7 +19,7 @@ pub enum SubCommand {
 }
 impl From<SubCommand> for Value {
     fn from(sub_command: SubCommand) -> Self {
-        cbor!(sub_command as i64).unwrap().into()
+        (sub_command as i64).to_value()
     }
 }
 
@@ -35,7 +35,7 @@ pub enum Permission {
 
 impl From<Permission> for Value {
     fn from(permission: Permission) -> Self {
-        Value::Integer((permission as i64).into())
+        (permission as i64).to_value()
     }
 }
 
@@ -113,11 +113,10 @@ pub fn create_payload_get_pin_uv_auth_token_using_pin_with_permissions(
     insert_key_agreement(&mut map, key_agreement)?;
 
     // pinHashEnc(0x06) - Byte String
-    let value = Value::Bytes(pin_hash_enc.to_vec());
-    map.push((cbor!(0x06)?, value));
+    map.push((0x06.to_value(), pin_hash_enc.to_vec().to_value()));
 
     // permission(0x09) - Unsigned Integer
-    map.push((cbor!(0x09)?, permission.into()));
+    map.push((0x09.to_value(), permission.into()));
 
     to_payload(map)
 }
@@ -133,10 +132,10 @@ pub fn create_payload_get_pin_uv_auth_token_using_uv_with_permissions(
     insert_key_agreement(&mut map, key_agreement)?;
 
     // permission(0x09) - Unsigned Integer
-    map.push((cbor!(0x09)?, permission.into()));
+    map.push((0x09.to_value(), permission.into()));
 
     // rpid(0x0A) - String
-    map.push((cbor!(0x0A)?, cbor!(rpid)?));
+    map.push((0x0A.to_value(), rpid.to_value()));
 
     to_payload(map)
 }
@@ -147,14 +146,13 @@ fn to_payload(map: Vec<(Value, Value)>) -> Result<Vec<u8>> {
 
 // 0x01 : pin_protocol
 fn insert_pin_protocol(map: &mut Vec<(Value, Value)>) -> Result<()> {
-    let pin_protocol = cbor!(1)?;
-    map.push((cbor!(0x01)?, pin_protocol));
+    map.push((0x01.to_value(), 1.to_value()));
     Ok(())
 }
 
 // 0x02 : sub_command
 fn insert_sub_command(map: &mut Vec<(Value, Value)>, cmd: SubCommand) -> Result<()> {
-    map.push((cbor!(0x02)?, cmd.into()));
+    map.push((0x02.to_value(), cmd.into()));
     Ok(())
 }
 
@@ -162,54 +160,56 @@ fn insert_sub_command(map: &mut Vec<(Value, Value)>, cmd: SubCommand) -> Result<
 fn insert_key_agreement(map: &mut Vec<(Value, Value)>, key_agreement: &cose::CoseKey) -> Result<()> {
     let mut ka_val = Vec::new();
     ka_val.push((
-        cbor!(1)?,
-        cbor!(key_agreement.key_type)?,
+        1.to_value(),
+        key_agreement.key_type.to_value(),
     ));
     ka_val.push((
-        cbor!(3)?,
-        cbor!(key_agreement.algorithm)?,
+        3.to_value(),
+        key_agreement.algorithm.to_value(),
     ));
 
     let param = key_agreement.parameters.get(&-1).unwrap().clone();
     if util_ciborium::is_integer(&param) {
-        ka_val.push((cbor!(-1)?, cbor!(param)?));
+        if let Ok(val) = util_ciborium::integer_to_i64(&param) {
+            ka_val.push(((-1).to_value(), val.to_value()));
+        }
     }
 
     let bval = key_agreement.parameters.get(&-2).unwrap().clone();
     if util_ciborium::is_bytes(&bval) {
-        ka_val.push((cbor!(-2)?, cbor!(bval)?));
+        if let Ok(val) = util_ciborium::cbor_value_to_vec_u8(&bval) {
+            ka_val.push(((-2).to_value(), val.to_value()));
+        }
     }
 
     let bval = key_agreement.parameters.get(&-3).unwrap().clone();
     if util_ciborium::is_bytes(&bval) {
-        ka_val.push((cbor!(-3)?, cbor!(bval)?));
+        if let Ok(val) = util_ciborium::cbor_value_to_vec_u8(&bval) {
+            ka_val.push(((-3).to_value(), val.to_value()));
+        }
     }
     
-    let tmp = util_ciborium::vec_to_btree_map(ka_val)?;
-    let ka = cbor!(tmp)?;
-
-    map.push((cbor!(0x03)?, ka));
+    // Create the CBOR map value directly
+    let ka = ka_val.to_value();
+    map.push((0x03.to_value(), ka));
     Ok(())
 }
 
 // 0x04 : pin_auth
 fn insert_pin_auth(map: &mut Vec<(Value, Value)>, pin_auth: &[u8]) -> Result<()> {
-    let pin_auth_val = Value::Bytes(pin_auth.to_vec());
-    map.push((cbor!(0x04)?, pin_auth_val));
+    map.push((0x04.to_value(), pin_auth.to_vec().to_value()));
     Ok(())
 }
 
 // 0x05 : new_pin_enc
 fn insert_new_pin_enc(map: &mut Vec<(Value, Value)>, new_pin_enc: &[u8]) -> Result<()> {
-    let new_pin_enc_val = Value::Bytes(new_pin_enc.to_vec());
-    map.push((cbor!(0x05)?, new_pin_enc_val));
+    map.push((0x05.to_value(), new_pin_enc.to_vec().to_value()));
     Ok(())
 }
 
 // 0x06 : pin_hash_enc
 fn insert_pin_hash_enc(map: &mut Vec<(Value, Value)>, pin_hash_enc: &[u8]) -> Result<()> {
-    let pin_hash_enc_val = Value::Bytes(pin_hash_enc.to_vec());
-    map.push((cbor!(0x06)?, pin_hash_enc_val));
+    map.push((0x06.to_value(), pin_hash_enc.to_vec().to_value()));
     Ok(())
 }
 
