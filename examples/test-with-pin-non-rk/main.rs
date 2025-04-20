@@ -1,6 +1,7 @@
 use anyhow::Result;
 use colored::Colorize;
 use log::{debug, log_enabled, Level};
+use std::cell::RefCell;
 
 use ctap_hid_fido2::{
     fidokey::{
@@ -9,6 +10,47 @@ use ctap_hid_fido2::{
     },
     get_fidokey_devices, util, verifier, Cfg, FidoKeyHid, FidoKeyHidFactory,
 };
+
+// Test Results Counter
+thread_local! {
+    static TEST_RESULTS: RefCell<TestResults> = RefCell::new(TestResults::new());
+}
+
+struct TestResults {
+    total: usize,
+    success: usize,
+    failure: usize,
+}
+
+impl TestResults {
+    fn new() -> Self {
+        Self {
+            total: 0,
+            success: 0,
+            failure: 0,
+        }
+    }
+
+    fn add_test_result(&mut self, success: bool) {
+        self.total += 1;
+        if success {
+            self.success += 1;
+        } else {
+            self.failure += 1;
+        }
+    }
+}
+
+fn print_test_summary() {
+    TEST_RESULTS.with(|results| {
+        let results = results.borrow();
+        println!();
+        print_section("===== Test Summary =====");
+        println!("Total Tests:   {}", results.total);
+        println!("Success Tests: {}", results.success.to_string().green().bold());
+        println!("Failed Tests:  {}", results.failure.to_string().red().bold());
+    });
+}
 
 // Helper functions: For colored output
 fn print_section(message: &str) {
@@ -21,10 +63,29 @@ fn print_step(message: &str) {
 
 fn print_success(message: &str) {
     println!("{}", message.green());
+    if message.contains("Verify") {
+        TEST_RESULTS.with(|results| {
+            results.borrow_mut().add_test_result(true);
+        });
+    }
 }
 
 fn print_error(message: &str) {
     println!("{}", message.red().bold());
+    if message.contains("Verify") {
+        TEST_RESULTS.with(|results| {
+            results.borrow_mut().add_test_result(false);
+        });
+    }
+}
+
+fn print_error_with_count(message: &str, count_as_failure: bool) {
+    println!("{}", message.red().bold());
+    if message.contains("Verify") || count_as_failure {
+        TEST_RESULTS.with(|results| {
+            results.borrow_mut().add_test_result(false);
+        });
+    }
 }
 
 fn print_info(message: &str) {
@@ -55,6 +116,7 @@ fn main() -> Result<()> {
 
     legacy_pattern_sample(&device, rpid, pin)?;
 
+    print_test_summary();
     print_section("----- test-with-pin-non-rk end -----");
     Ok(())
 }
@@ -64,26 +126,44 @@ fn main() -> Result<()> {
 //
 fn builder_pattern_sample(device: &FidoKeyHid, rpid: &str, pin: &str) -> Result<()> {
     non_discoverable_credentials(device, rpid, pin)
-        .unwrap_or_else(|err| eprintln!("{}\n", format!("Error => {}", err).red().bold()));
+        .unwrap_or_else(|err| {
+            print_error_with_count(&format!("Error => {}\n", err), true);
+        });
 
-    with_uv(device, rpid).unwrap_or_else(|err| eprintln!("{}\n", format!("Error => {}", err).red().bold()));
+    with_uv(device, rpid).unwrap_or_else(|err| {
+            print_error_with_count(&format!("Error => {}\n", err), true);
+        });
 
     with_key_types(device, rpid, pin, vec![CredentialSupportedKeyType::Ecdsa256])
-        .unwrap_or_else(|err| eprintln!("{}\n", format!("Error => {}", err).red().bold()));
+        .unwrap_or_else(|err| {
+            print_error_with_count(&format!("Error => {}\n", err), true);
+        });
 
     with_key_types(device, rpid, pin, vec![CredentialSupportedKeyType::Ed25519])
-        .unwrap_or_else(|err| eprintln!("{}\n", format!("Error => {}", err).red().bold()));
+        .unwrap_or_else(|err| {
+            print_error_with_count(&format!("Error => {}\n", err), true);
+        });
 
     with_key_types(device, rpid, pin, vec![CredentialSupportedKeyType::Ed25519, CredentialSupportedKeyType::Ecdsa256])
-    .unwrap_or_else(|err| eprintln!("{}\n", format!("Error => {}", err).red().bold()));
+        .unwrap_or_else(|err| {
+            print_error_with_count(&format!("Error => {}\n", err), true);
+        });
 
-    with_hmac(device, rpid, pin).unwrap_or_else(|err| eprintln!("{}\n", format!("Error => {}", err).red().bold()));
+    with_hmac(device, rpid, pin).unwrap_or_else(|err| {
+            print_error_with_count(&format!("Error => {}\n", err), true);
+        });
 
-    with_large_blob_key(device, rpid, pin).unwrap_or_else(|err| eprintln!("{}\n", format!("Error => {}", err).red().bold()));
+    with_large_blob_key(device, rpid, pin).unwrap_or_else(|err| {
+            print_error_with_count(&format!("Error => {}\n", err), true);
+        });
 
-    with_min_pin_length_ex(device, rpid, pin).unwrap_or_else(|err| eprintln!("{}\n", format!("Error => {}", err).red().bold()));
+    with_min_pin_length_ex(device, rpid, pin).unwrap_or_else(|err| {
+            print_error_with_count(&format!("Error => {}\n", err), true);
+        });
 
-    without_pin(device, rpid).unwrap_or_else(|err| eprintln!("{}\n", format!("Error => {}", err).red().bold()));
+    without_pin(device, rpid).unwrap_or_else(|err| {
+            print_error_with_count(&format!("Error => {}\n", err), true);
+        });
 
     Ok(())
 }
@@ -516,16 +596,24 @@ fn with_min_pin_length_ex(device: &FidoKeyHid, rpid: &str, pin: &str) -> Result<
 //
 fn legacy_pattern_sample(device: &FidoKeyHid, rpid: &str, pin: &str) -> Result<()> {
     legacy_non_discoverable_credentials(device, rpid, pin)
-        .unwrap_or_else(|err| eprintln!("{}\n", format!("Error => {}", err).red().bold()));
+        .unwrap_or_else(|err| {
+            print_error_with_count(&format!("Error => {}\n", err), true);
+        });
 
     legacy_with_key_type(device, rpid, pin, CredentialSupportedKeyType::Ecdsa256)
-        .unwrap_or_else(|err| eprintln!("{}\n", format!("Error => {}", err).red().bold()));
+        .unwrap_or_else(|err| {
+            print_error_with_count(&format!("Error => {}\n", err), true);
+        });
 
     // Verify Assertion in Ed25519 is always false because it is not yet implemented
     legacy_with_key_type(device, rpid, pin, CredentialSupportedKeyType::Ed25519)
-        .unwrap_or_else(|err| eprintln!("{}\n", format!("Error => {}", err).red().bold()));
+        .unwrap_or_else(|err| {
+            print_error_with_count(&format!("Error => {}\n", err), true);
+        });
 
-    legacy_with_uv(device, rpid).unwrap_or_else(|err| eprintln!("{}\n", format!("Error => {}", err).red().bold()));
+    legacy_with_uv(device, rpid).unwrap_or_else(|err| {
+            print_error_with_count(&format!("Error => {}\n", err), true);
+        });
 
     Ok(())
 }
