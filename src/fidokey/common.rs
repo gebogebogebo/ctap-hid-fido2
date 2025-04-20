@@ -1,16 +1,16 @@
 use anyhow::Result;
 use ciborium::value::Value;
 
-/// 共通のペイロード作成関数
+/// Common payload creation function
 /// 
 /// # Arguments
 ///
-/// * `map` - CBORマップとして使用するキーと値のペアのベクタ
-/// * `command` - 先頭に付加するコマンドバイト
+/// * `map` - Vector of key-value pairs used as a CBOR map
+/// * `command` - Command byte to prepend
 ///
 /// # Returns
 ///
-/// シリアライズされたペイロードのバイト列
+/// Byte sequence of serialized payload
 pub fn to_payload(map: Vec<(Value, Value)>, command: u8) -> Result<Vec<u8>> {
     let cbor = Value::Map(map);
     let mut payload = [command].to_vec();
