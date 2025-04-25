@@ -1,3 +1,5 @@
+use anyhow::Result;
+
 pub fn get_input() -> String {
     let mut word = String::new();
     std::io::stdin().read_line(&mut word).ok();
@@ -11,9 +13,8 @@ pub fn get_input_with_message(message: &str) -> String {
     input
 }
 
-pub fn get_pin() -> String {
-    let pin = rpassword::prompt_password("PIN: ").unwrap();
+pub fn get_pin() -> Result<String> {
+    let pin = rpassword::prompt_password("PIN: ")?;
     println!();
-    pin
-    //println!("Your password is {}", pass);
+    Ok(pin)
 }

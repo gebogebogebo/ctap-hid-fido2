@@ -33,7 +33,7 @@ pub fn memo(device: &FidoKeyHid, command: Command) -> Result<()> {
         Command::Get(_) => println!("Get a memo."),
     }
 
-    let pin = common::get_pin();
+    let pin = common::get_pin()?;
     let rpid = "ctapcli";
 
     // main

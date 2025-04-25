@@ -38,7 +38,7 @@ pub fn bio(device: &FidoKeyHid, command: Command) -> Result<()> {
         Command::Info => spec(device)?,
         Command::Test(log) => bio_test(device, log)?,
         _ => {
-            let pin = common::get_pin();
+            let pin = common::get_pin()?;
 
             match command {
                 Command::Del(template_id) => delete(device, &template_id, &pin)?,
