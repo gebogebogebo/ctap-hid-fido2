@@ -28,7 +28,7 @@ impl ToValue for Vec<u8> {
 
 impl ToValue for bool {
     fn to_value(&self) -> Value {
-        Value::Bool(self.clone())
+        Value::Bool(*self)
     }
 }
 

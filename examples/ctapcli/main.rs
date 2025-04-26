@@ -326,8 +326,8 @@ fn main() -> Result<()> {
                     bio::Command::Info
                 } else if enroll {
                     bio::Command::Enroll
-                } else if let Some(..) = delete_template_id {
-                    bio::Command::Del(delete_template_id.unwrap())
+                } else if let Some(template_id) = delete_template_id {
+                    bio::Command::Del(template_id)
                 } else if test {
                     bio::Command::Test(false)
                 } else if test_with_log {

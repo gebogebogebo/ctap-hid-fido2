@@ -50,7 +50,7 @@ pub fn create_payload(
             map.push((0x01.to_value(), 0x01.to_value()));
             
             // subCommand(0x02)
-            let sub_cmd_id = sub_command.id()? as u8;
+            let sub_cmd_id = sub_command.id()?;
             map.push((0x02.to_value(), sub_cmd_id.to_value()));
 
             // subCommandParams (0x03): Map containing following parameters
