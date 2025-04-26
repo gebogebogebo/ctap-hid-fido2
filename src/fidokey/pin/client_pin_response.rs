@@ -16,7 +16,7 @@ pub fn parse_cbor_client_pin_get_pin_token(bytes: &[u8]) -> Result<Vec<u8>> {
         }
         match util_ciborium::integer_to_i64(key)? {
             0x02 => {
-                return Ok(util_ciborium::cbor_value_to_vec_u8(val)?);
+                return util_ciborium::cbor_value_to_vec_u8(val);
             },
             _ => println!("parse_cbor_member - unknown info {:?}", val),
         }
@@ -33,7 +33,7 @@ pub fn parse_cbor_client_pin_get_keyagreement(bytes: &[u8]) -> Result<CoseKey> {
         }
         match util_ciborium::integer_to_i64(key)? {
             0x01 => {
-                return Ok(CoseKey::new(val)?);
+                return CoseKey::new(val);
             },
             _ => println!("parse_cbor_member - unknown info {:?}", val),
         }

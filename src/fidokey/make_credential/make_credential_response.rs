@@ -9,7 +9,7 @@ use ciborium::value::Value;
 use std::io::Cursor;
 
 fn parse_cbor_att_stmt(obj: &Value, att: &mut Attestation) -> Result<()> {
-    if let Some(map) = util_ciborium::extract_map_ref(obj).ok() {
+    if let Ok(map) = util_ciborium::extract_map_ref(obj) {
         for (key, val) in map {
             if util_ciborium::is_text(key) {
                 let key_text = util_ciborium::cbor_value_to_str(key)?;
