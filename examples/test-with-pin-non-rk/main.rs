@@ -346,11 +346,7 @@ fn with_hmac(device: &FidoKeyHid, rpid: &str, pin: &str) -> Result<()> {
     let attestation = device.make_credential_with_args(&make_credential_args)?;
     print_success("-- Register Success");
     let find = attestation.extensions.iter().find(|it| {
-        if let Mext::HmacSecret(_) = it {
-            true
-        } else {
-            false
-        }
+        matches!(it, Mext::HmacSecret(_))
     });
     if let Some(Mext::HmacSecret(is_hmac_secret)) = find {
         print_info(&format!("--- HMAC Secret = {:?}", is_hmac_secret.unwrap()));
@@ -382,11 +378,7 @@ fn with_hmac(device: &FidoKeyHid, rpid: &str, pin: &str) -> Result<()> {
     let assertions = device.get_assertion_with_args(&get_assertion_args)?;
     print_success("-- Authenticate Success");
     let find = assertions[0].extensions.iter().find(|it| {
-        if let Gext::HmacSecret(_) = it {
-            true
-        } else {
-            false
-        }
+        matches!(it, Gext::HmacSecret(_))
     });
     if let Some(Gext::HmacSecret(hmac_secret)) = find {
         print_info(&format!(
@@ -484,11 +476,7 @@ fn with_large_blob_key(device: &FidoKeyHid, rpid: &str, pin: &str) -> Result<()>
     let attestation = device.make_credential_with_args(&make_credential_args)?;
     print_success("-- Register Success");
     let find = attestation.extensions.iter().find(|it| {
-        if let Mext::LargeBlobKey((_, _)) = it {
-            true
-        } else {
-            false
-        }
+        matches!(it, Mext::LargeBlobKey((_, _)))
     });
     if let Some(Mext::LargeBlobKey((_, large_blob_key))) = find {
         print_info(&format!(
@@ -522,11 +510,7 @@ fn with_large_blob_key(device: &FidoKeyHid, rpid: &str, pin: &str) -> Result<()>
     let assertions = device.get_assertion_with_args(&get_assertion_args)?;
     print_success("-- Authenticate Success");
     let find = assertions[0].extensions.iter().find(|it| {
-        if let Gext::LargeBlobKey((_, _)) = it {
-            true
-        } else {
-            false
-        }
+        matches!(it, Gext::LargeBlobKey((_, _)))
     });
     if let Some(Gext::LargeBlobKey((_, large_blob_key))) = find {
         print_info(&format!(
@@ -573,11 +557,7 @@ fn with_min_pin_length_ex(device: &FidoKeyHid, rpid: &str, pin: &str) -> Result<
     let attestation = device.make_credential_with_args(&make_credential_args)?;
     print_success("-- Register Success");
     let find = attestation.extensions.iter().find(|it| {
-        if let Mext::MinPinLength((_, _)) = it {
-            true
-        } else {
-            false
-        }
+        matches!(it, Mext::MinPinLength((_, _)))
     });
     if let Some(Mext::MinPinLength((_, min_pin_length))) = find {
         print_info(&format!("--- Min Pin Length = {:?}", min_pin_length));
