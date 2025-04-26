@@ -234,11 +234,7 @@ fn with_cred_blob_ex(device: &FidoKeyHid, rpid: &str, pin: &str) -> Result<()> {
     let attestation = device.make_credential_with_args(&make_credential_args)?;
     print_success("-- Register Success");
     let find = attestation.extensions.iter().find(|it| {
-        if let Mext::CredProtect(_) = it {
-            true
-        } else {
-            false
-        }
+        matches!(it, Mext::CredProtect(_))
     });
 
     if let Some(Mext::CredProtect(cred_protect)) = find {
@@ -248,11 +244,7 @@ fn with_cred_blob_ex(device: &FidoKeyHid, rpid: &str, pin: &str) -> Result<()> {
     }
 
     let find = attestation.extensions.iter().find(|it| {
-        if let Mext::CredBlob((_, _)) = it {
-            true
-        } else {
-            false
-        }
+        matches!(it, Mext::CredBlob((_, _)))
     });
 
     if let Some(Mext::CredBlob((_, is_cred_blob))) = find {
@@ -283,11 +275,7 @@ fn with_cred_blob_ex(device: &FidoKeyHid, rpid: &str, pin: &str) -> Result<()> {
     print_success("-- Authenticate Success");
 
     let find = assertions[0].extensions.iter().find(|it| {
-        if let Gext::CredBlob((_, _)) = it {
-            true
-        } else {
-            false
-        }
+        matches!(it, Gext::CredBlob((_, _)))
     });
     if let Some(Gext::CredBlob((_, cred_blob))) = find {
         let val = cred_blob.clone().unwrap();
