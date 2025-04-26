@@ -20,7 +20,7 @@ pub fn pin(device: &FidoKeyHid, command: PinCommand) -> Result<()> {
             };
 
             println!("new PIN:");
-            let pin = common::get_input();
+            let pin = common::get_input()?;
             println!();
 
             device.set_new_pin(&pin)?;
@@ -35,10 +35,10 @@ pub fn pin(device: &FidoKeyHid, command: PinCommand) -> Result<()> {
             };
 
             println!("current PIN:");
-            let current_pin = common::get_input();
+            let current_pin = common::get_input()?;
             println!();
             println!("new PIN:");
-            let new_pin = common::get_input();
+            let new_pin = common::get_input()?;
             println!();
 
             device.change_pin(&current_pin, &new_pin)?;

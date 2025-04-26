@@ -1,16 +1,16 @@
 use anyhow::Result;
 
-pub fn get_input() -> String {
+pub fn get_input() -> Result<String> {
     let mut word = String::new();
-    std::io::stdin().read_line(&mut word).ok();
-    return word.trim().to_string();
+    std::io::stdin().read_line(&mut word)?;
+    Ok(word.trim().to_string())
 }
 
-pub fn get_input_with_message(message: &str) -> String {
+pub fn get_input_with_message(message: &str) -> Result<String> {
     println!("{}", message);
-    let input = get_input();
+    let input = get_input()?;
     println!();
-    input
+    Ok(input)
 }
 
 pub fn get_pin() -> Result<String> {
