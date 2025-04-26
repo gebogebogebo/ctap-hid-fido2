@@ -211,10 +211,11 @@ enum Action {
         #[clap(long = "get", help = "Get Large Blob Data.")]
         get: bool,
 
-        #[clap(long = "set", help = "Set Large Blob Data.")]
-        set: bool,
-
-        #[clap(long = "str", help = "String to set to Large Blob.")]
+        #[clap(
+            long = "set",
+            value_name = "string value",
+            help = "String to set to Large Blob."
+        )]
         str_val: Option<String>,
 
         #[clap(short = 'p')]
@@ -326,8 +327,8 @@ fn main() -> Result<()> {
                     bio::Command::Info
                 } else if enroll {
                     bio::Command::Enroll
-                } else if let Some(..) = delete_template_id {
-                    bio::Command::Del(delete_template_id.unwrap())
+                } else if let Some(template_id) = delete_template_id {
+                    bio::Command::Del(template_id)
                 } else if test {
                     bio::Command::Test(false)
                 } else if test_with_log {
@@ -392,13 +393,12 @@ fn main() -> Result<()> {
             }
             Action::Blob {
                 get,
-                set,
                 str_val,
                 pin,
             } => {
                 if get {
                     blob::blob(&device, blob::Command::Get, None)?;
-                } else if set {
+                } else {
                     if let Some(str_val) = str_val {
                         let command = blob::Command::Set(str_val.as_bytes().to_vec());
                         blob::blob(&device, command, pin)?;

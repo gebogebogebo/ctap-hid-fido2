@@ -22,7 +22,7 @@ pub fn cred(device: &FidoKeyHid, command: Command, pin: Option<String>) -> Resul
     let pin = if let Some(val) = pin {
         val
     } else {
-        common::get_pin()
+        common::get_pin()?
     };
 
     match command {

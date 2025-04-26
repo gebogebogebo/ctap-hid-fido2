@@ -33,13 +33,13 @@ pub fn memo(device: &FidoKeyHid, command: Command) -> Result<()> {
         Command::Get(_) => println!("Get a memo."),
     }
 
-    let pin = common::get_pin();
+    let pin = common::get_pin()?;
     let rpid = "ctapcli";
 
     // main
     match command {
         Command::Add => {
-            let tag = common::get_input_with_message("tag:");
+            let tag = common::get_input_with_message("tag:")?;
             add_tag(device, &tag, &pin, rpid)?;
         }
         Command::List => {
@@ -51,7 +51,7 @@ pub fn memo(device: &FidoKeyHid, command: Command) -> Result<()> {
         Command::Get(tag) => {
             if tag.is_empty() {
                 list_tag(device, &pin, rpid)?;
-                let tag = common::get_input_with_message("tag:");
+                let tag = common::get_input_with_message("tag:")?;
                 get(device, &tag, &pin, rpid)?;
             } else {
                 get(device, &tag, &pin, rpid)?;
@@ -64,10 +64,10 @@ pub fn memo(device: &FidoKeyHid, command: Command) -> Result<()> {
 
 fn add_tag(device: &FidoKeyHid, tag: &str, pin: &str, rpid: &str) -> Result<()> {
     if search_cred(device, pin, rpid, tag.as_bytes())?.is_none() {
-        let memo = common::get_input_with_message("memo:");
+        let memo = common::get_input_with_message("memo:")?;
 
         let challenge = verifier::create_challenge();
-        let rkparam = PublicKeyCredentialUserEntity::new(Some(tag.as_bytes()), Some(&memo), None);
+        let rkparam = PublicKeyCredentialUserEntity::new(Some(tag.as_bytes()), Some(memo.as_str()), None);
 
         let _att = device.make_credential_rk(rpid, &challenge, Some(pin), &rkparam)?;
 

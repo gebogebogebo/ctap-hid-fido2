@@ -1,6 +1,7 @@
 use crate::encrypt::cose;
+use crate::util_ciborium::ToValue;
 use anyhow::{anyhow, Result};
-use serde_cbor::Value;
+use ciborium::value::Value;
 
 #[derive(Debug, Default)]
 pub struct P256Key {
@@ -19,7 +20,7 @@ impl P256Key {
             cose.parameters.get(&-2),
             cose.parameters.get(&-3),
         ) {
-            if *curve != 1 {
+            if *curve != 1.into() {
                 return Err(anyhow!("Err KeyType"));
             }
             let mut key = P256Key::default();
@@ -45,13 +46,10 @@ impl P256Key {
             key_type: 2,
             algorithm: -25,
             parameters: [
-                (-1, Value::Integer(1)),
-                (-2, Value::Bytes(self.x.to_vec())),
-                (-3, Value::Bytes(self.y.to_vec())),
-            ]
-            .iter()
-            .cloned()
-            .collect(),
+                (-1, 1.to_value()),
+                (-2, self.x.to_vec().to_value()),
+                (-3, self.y.to_vec().to_value()),
+            ].into()
         }
     }
 

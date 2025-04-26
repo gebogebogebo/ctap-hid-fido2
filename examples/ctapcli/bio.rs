@@ -38,7 +38,7 @@ pub fn bio(device: &FidoKeyHid, command: Command) -> Result<()> {
         Command::Info => spec(device)?,
         Command::Test(log) => bio_test(device, log)?,
         _ => {
-            let pin = common::get_pin();
+            let pin = common::get_pin()?;
 
             match command {
                 Command::Del(template_id) => delete(device, &template_id, &pin)?,
@@ -59,7 +59,7 @@ fn rename(device: &FidoKeyHid, pin: &str, template_id: &[u8]) -> Result<()> {
     println!();
 
     println!("input name:");
-    let template_name = common::get_input();
+    let template_name = common::get_input()?;
     println!();
 
     device.bio_enrollment_set_friendly_name(pin, template_id, &template_name)?;
@@ -80,7 +80,7 @@ fn bio_enrollment(device: &FidoKeyHid, pin: &str) -> Result<Vec<u8>> {
     println!("Please follow the instructions to touch the sensor on the authenticator.");
     println!();
     println!("Press any key to start the registration.");
-    common::get_input();
+    common::get_input()?;
     println!();
 
     let (enroll_status1, enroll_status2) = device.bio_enrollment_begin(pin, Some(10000))?;

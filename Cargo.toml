@@ -1,6 +1,6 @@
 [package]
 name = "ctap-hid-fido2"
-version = "3.5.2"
+version = "3.5.3"
 authors = ["gebo <35388172+gebogebogebo@users.noreply.github.com>"]
 edition = "2021"
 
@@ -14,19 +14,18 @@ readme="README.md"
 
 [dependencies]
 aes="0.8.4"
-anyhow = "1.0.88"
+anyhow = "1.0.98"
 base64 = "0.22.1"
 byteorder = "1.5.0"
 cbc = "0.1.2"
 hex = "0.4.3"
 num = "0.4.3"
 pad = "0.1.6"
-ring = "0.17.8"
-serde = "1.0.210"
-serde_cbor = "0.11.2"
-strum = "0.26.3"
-strum_macros = "0.26.4"
-x509-parser = "0.16.0"
+ring = "0.17.14"
+ciborium = "0.2.2"
+strum = "0.27.1"
+strum_macros = "0.27.1"
+x509-parser = "0.17.0"
 
 [dependencies.hidapi]
 version = "2.6.3"
@@ -34,13 +33,12 @@ default-features = false
 features=["linux-static-hidraw"]
 
 [dev-dependencies]
-clap = { version = "4.5.17", features = ["derive"] }
-env_logger = "0.11.5"
-log = "0.4"
-rpassword = "7.3.1"
-
-# Used in ctapcli
-arboard = "3.4.1"
+clap = { version = "4.5.37", features = ["derive"] }
+env_logger = "0.11.8"
+log = "0.4.27"
+rpassword = "7.4.0"
+arboard = "3.5.0"
+colored = "3.0.0"
 
 [[example]]
 name = "ctapcli"
@@ -59,3 +57,6 @@ name = "test-with-pin-rk"
 
 [[example]]
 name = "wink"
+
+[[example]]
+name = "test-config"

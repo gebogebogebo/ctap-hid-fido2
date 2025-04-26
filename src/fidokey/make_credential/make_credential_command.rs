@@ -1,9 +1,10 @@
 use super::make_credential_params::{CredentialSupportedKeyType, Extension};
 use crate::ctapdef;
+use crate::fidokey::common;
 use crate::util;
-use serde_cbor::to_vec;
-use serde_cbor::Value;
-use std::collections::BTreeMap;
+use crate::util_ciborium::ToValue;
+use anyhow::Result;
+use ciborium::value::Value;
 
 #[derive(Debug, Default)]
 pub struct Params {
@@ -22,10 +23,10 @@ pub struct Params {
 }
 
 impl Params {
-    pub fn new(rp_id: &str, challenge: Vec<u8>, user_id: Vec<u8>) -> Params {
-        Params {
+    pub fn new(rp_id: &str, challenge: Vec<u8>, user_id: Vec<u8>) -> Self {
+        Self {
             rp_id: rp_id.to_string(),
-            user_id: user_id.to_vec(),
+            user_id,
             client_data_hash: util::create_clientdata_hash(challenge),
             key_types: vec![CredentialSupportedKeyType::Ecdsa256],
             ..Default::default()
@@ -33,184 +34,135 @@ impl Params {
     }
 }
 
-pub fn create_payload(params: Params, extensions: Option<&Vec<Extension>>) -> Vec<u8> {
+pub fn create_payload(params: Params, extensions: Option<&Vec<Extension>>) -> Result<Vec<u8>> {
     // 0x01 : clientDataHash
-    let cdh = Value::Bytes(params.client_data_hash);
+    let cdh = params.client_data_hash.to_value();
 
     // 0x02 : rp
-    let mut rp_val = BTreeMap::new();
-    rp_val.insert(
-        Value::Text("id".to_string()),
-        Value::Text(params.rp_id.to_string()),
-    );
-    rp_val.insert(
-        Value::Text("name".to_string()),
-        Value::Text(params.rp_name.to_string()),
-    );
-    let rp = Value::Map(rp_val);
+    let rp = vec![
+        ("id".to_value(), params.rp_id.to_value()),
+        ("name".to_value(), params.rp_name.to_value()),
+    ]
+    .to_value();
 
     // 0x03 : user
-    let mut user_val = BTreeMap::new();
-    // user id
-    {
-        let user_id = {
-            if !params.user_id.is_empty() {
-                params.user_id.to_vec()
-            } else {
-                vec![0x00]
-            }
-        };
-        user_val.insert(Value::Text("id".to_string()), Value::Bytes(user_id));
-    }
-    // user name
-    {
-        let user_name = {
-            if !params.user_name.is_empty() {
-                params.user_name.to_string()
-            } else {
-                " ".to_string()
-            }
-        };
-        user_val.insert(Value::Text("name".to_string()), Value::Text(user_name));
-    }
-    // displayName
-    {
-        let display_name = {
-            if !params.user_display_name.is_empty() {
-                params.user_display_name.to_string()
-            } else {
-                " ".to_string()
-            }
-        };
-        user_val.insert(
-            Value::Text("displayName".to_string()),
-            Value::Text(display_name),
-        );
-    }
-    let user = Value::Map(user_val);
+    let user_id = if params.user_id.is_empty() {
+        vec![0x00]
+    } else {
+        params.user_id
+    };
+    let user_name = if params.user_name.is_empty() {
+        " ".to_string()
+    } else {
+        params.user_name
+    };
+    let display_name = if params.user_display_name.is_empty() {
+        " ".to_string()
+    } else {
+        params.user_display_name
+    };
+    let user = vec![
+        ("id".to_value(), user_id.to_value()),
+        ("name".to_value(), user_name.to_value()),
+        ("displayName".to_value(), display_name.to_value()),
+    ]
+    .to_value();
 
     // 0x04 : pubKeyCredParams
-    let pub_key_cred_params_vec = params
-        .key_types
+    let pub_key_cred_params = create_pub_key_cred_params(&params.key_types);
+    // 0x05 : excludeList
+    let exclude_list = create_exclude_list(&params.exclude_list);
+    // 0x06 : extensions
+    let ext_val = create_extensions(extensions);
+    // 0x07 : options
+    let options = create_options(params.option_rk, params.option_up, params.option_uv);
+    // 0x08 : pinAuth
+    let pin_auth = if params.pin_auth.is_empty() {
+        None
+    } else {
+        Some(params.pin_auth.to_value())
+    };
+
+    let mut make_credential = vec![
+        (0x01.to_value(), cdh),
+        (0x02.to_value(), rp),
+        (0x03.to_value(), user),
+        (0x04.to_value(), pub_key_cred_params),
+    ];
+
+    if !params.exclude_list.is_empty() {
+        make_credential.push((0x05.to_value(), exclude_list));
+    }
+    if let Some(ext) = ext_val {
+        make_credential.push((0x06.to_value(), ext));
+    }
+    make_credential.push((0x07.to_value(), options));
+    if let Some(pin) = pin_auth {
+        make_credential.push((0x08.to_value(), pin));
+        // 0x09: pinProtocol
+        make_credential.push((0x09.to_value(), 1.to_value()));
+    }
+
+    common::to_payload(make_credential, ctapdef::AUTHENTICATOR_MAKE_CREDENTIAL)
+}
+
+fn create_pub_key_cred_params(key_types: &[CredentialSupportedKeyType]) -> Value {
+    let params_vec: Vec<Value> = key_types
         .iter()
-        .map(|key_type| {
-            let mut pub_key_cred_params_val = BTreeMap::new();
-            pub_key_cred_params_val.insert(
-                Value::Text("alg".to_string()),
-                Value::Integer(*key_type as i128),
-            );
-            pub_key_cred_params_val.insert(
-                Value::Text("type".to_string()),
-                Value::Text("public-key".to_string()),
-            );
-            Value::Map(pub_key_cred_params_val)
+        .map(|&key_type| {
+            vec![
+                ("alg".to_value(), (key_type as i64).to_value()),
+                ("type".to_value(), "public-key".to_value()),
+            ]
+            .to_value()
         })
         .collect();
+    params_vec.to_value()
+}
 
-    let pub_key_cred_params = Value::Array(pub_key_cred_params_vec);
+fn create_exclude_list(credential_ids: &[Vec<u8>]) -> Value {
+    let list: Vec<Value> = credential_ids
+        .iter()
+        .map(|id| {
+            vec![
+                ("id".to_value(), id.to_value()),
+                ("type".to_value(), "public-key".to_value()),
+            ]
+            .to_value()
+        })
+        .collect();
+    list.to_value()
+}
 
-    // 0x05 : excludeList
-    let exclude_list = Value::Array(
-        params
-            .exclude_list
+fn create_extensions(extensions: Option<&Vec<Extension>>) -> Option<Value> {
+    extensions.map(|exts| {
+        let map: Vec<(Value, Value)> = exts
             .iter()
-            .cloned()
-            .map(|credential_id| {
-                let mut exclude_list_val = BTreeMap::new();
-                exclude_list_val.insert(Value::Text("id".to_string()), Value::Bytes(credential_id));
-                exclude_list_val.insert(
-                    Value::Text("type".to_string()),
-                    Value::Text("public-key".to_string()),
-                );
-                Value::Map(exclude_list_val)
-            })
-            .collect(),
-    );
-
-    // 0x06 : extensions
-    let extensions = if let Some(extensions) = extensions {
-        let mut map = BTreeMap::new();
-        for ext in extensions {
-            match *ext {
-                Extension::CredBlob((ref n, _)) => {
-                    let x = n.clone().unwrap();
-                    map.insert(Value::Text(ext.to_string()), Value::Bytes(x));
+            .map(|ext| match ext {
+                Extension::CredBlob((n, _)) => {
+                    (ext.to_string().to_value(), n.clone().unwrap().to_value())
                 }
                 Extension::CredProtect(n) => {
-                    map.insert(
-                        Value::Text(ext.to_string()),
-                        Value::Integer(n.unwrap() as i128),
-                    );
+                    (ext.to_string().to_value(), (n.unwrap() as i64).to_value())
                 }
                 Extension::HmacSecret(n)
                 | Extension::LargeBlobKey((n, _))
                 | Extension::MinPinLength((n, _)) => {
-                    map.insert(Value::Text(ext.to_string()), Value::Bool(n.unwrap()));
+                    (ext.to_string().to_value(), n.unwrap().to_value())
                 }
-            };
-        }
-        Some(Value::Map(map))
-    } else {
-        None
-    };
+            })
+            .collect();
+        map.to_value()
+    })
+}
 
-    /*
-    let user_id = {
-        if let Some(rkp) = user_entity {
-            rkp.id.to_vec()
-        } else {
-            [].to_vec()
-        }
-    };
-    */
-
-    // 0x07 : options
-    let options = {
-        let mut options_val = BTreeMap::new();
-        options_val.insert(Value::Text("rk".to_string()), Value::Bool(params.option_rk));
-        if let Some(v) = params.option_up {
-            options_val.insert(Value::Text("up".to_string()), Value::Bool(v));
-        }
-        if let Some(v) = params.option_uv {
-            options_val.insert(Value::Text("uv".to_string()), Value::Bool(v));
-        }
-        Value::Map(options_val)
-    };
-
-    // pinAuth(0x08)
-    let pin_auth = {
-        if !params.pin_auth.is_empty() {
-            Some(Value::Bytes(params.pin_auth))
-        } else {
-            None
-        }
-    };
-
-    // 0x09:pinProtocol
-    let pin_protocol = Value::Integer(1);
-
-    // create cbor object
-    let mut make_credential = BTreeMap::new();
-    make_credential.insert(Value::Integer(0x01), cdh);
-    make_credential.insert(Value::Integer(0x02), rp);
-    make_credential.insert(Value::Integer(0x03), user);
-    make_credential.insert(Value::Integer(0x04), pub_key_cred_params);
-    if !params.exclude_list.is_empty() {
-        make_credential.insert(Value::Integer(0x05), exclude_list);
+fn create_options(rk: bool, up: Option<bool>, uv: Option<bool>) -> Value {
+    let mut options = vec![("rk".to_value(), rk.to_value())];
+    if let Some(v) = up {
+        options.push(("up".to_value(), v.to_value()));
     }
-    if let Some(x) = extensions {
-        make_credential.insert(Value::Integer(0x06), x);
+    if let Some(v) = uv {
+        options.push(("uv".to_value(), v.to_value()));
     }
-    make_credential.insert(Value::Integer(0x07), options);
-    if let Some(x) = pin_auth {
-        make_credential.insert(Value::Integer(0x08), x);
-        make_credential.insert(Value::Integer(0x09), pin_protocol);
-    }
-    let cbor = Value::Map(make_credential);
-
-    // Command - authenticatorMakeCredential (0x01)
-    let mut payload = [ctapdef::AUTHENTICATOR_MAKE_CREDENTIAL].to_vec();
-    payload.append(&mut to_vec(&cbor).unwrap());
-
-    payload
+    options.to_value()
 }
