@@ -236,7 +236,7 @@ pub(crate) fn cbor_get_bytes_from_map(cbor_map: &Value, get_key: &str) -> Result
             }
         }        
     }
-    Ok(Vec::new()) // キーが見つからない場合は空の配列を返す
+    Ok(Vec::new())
 }
 
 #[allow(dead_code)]
