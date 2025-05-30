@@ -22,7 +22,7 @@ const CTAPHID_KEEPALIVE: u8 = CTAP_FRAME_INIT | 0x3B;
 //const CTAPHID_KEEPALIVE_STATUS_PROCESSING = 1;     // The authenticator is still processing the current request.
 //const CTAPHID_KEEPALIVE_STATUS_UPNEEDED = 2;       // The authenticator is waiting for user presence.
 
-// ランダムなnonceを生成する関数
+// Function to generate random nonce
 fn generate_random_nonce() -> [u8; 8] {
     let mut rng = rng();
     let mut nonce = [0u8; 8];
@@ -50,7 +50,7 @@ pub fn ctaphid_init(device: &FidoKeyHid) -> Result<[u8; 4]> {
     cmd[6] = 0x00;
     cmd[7] = 0x08;
 
-    // ランダムなnonceを生成
+    // Generate random nonce
     let nonce = generate_random_nonce();
     cmd[8..16].copy_from_slice(&nonce);
 
@@ -65,12 +65,12 @@ pub fn ctaphid_init(device: &FidoKeyHid) -> Result<[u8; 4]> {
         println!("CTAPHID_INIT response = {}", util::to_hex_str(&buf));
     }
 
-    // 受信バッファに Report ID (0x00) が含まれるか判定
+    // Check if the received buffer includes Report ID (0x00)
     let has_report_id = buf.len() == 65 && buf[0] == 0x00;
-    // データ部 (nonce 先頭) の開始オフセットを決定
+    // Determine the starting offset for the data section (nonce start)
     let data_offset = if has_report_id { 8 } else { 7 };
 
-    // レスポンスからnonceを抽出して検証
+    // Extract and verify nonce from the response
     let response_nonce = &buf[data_offset..data_offset + 8];
     
     if device.enable_log {
@@ -83,7 +83,7 @@ pub fn ctaphid_init(device: &FidoKeyHid) -> Result<[u8; 4]> {
         return Err(anyhow!("Nonce verification failed"));
     }
 
-    // nonceの直後にCIDが続く
+    // CID follows immediately after the nonce
     let cid_offset = data_offset + 8;
     let cid = [
         buf[cid_offset],
@@ -96,7 +96,7 @@ pub fn ctaphid_init(device: &FidoKeyHid) -> Result<[u8; 4]> {
         println!("CID: {}", util::to_hex_str(&cid));
     }
 
-    // 動的に調整されたCIDを返す
+    // Return the dynamically adjusted CID
     Ok(cid)
 }
 
@@ -378,10 +378,10 @@ fn ctaphid_cbormsg(
 
                 let mut p2 = ctaphid_cbor_responce_get_payload_2(&buf);
 
-                // payloadに連結
+                // Append to payload
                 payload.append(&mut p2);
 
-                // 次のパケットがある?
+                // Is there another packet?
                 if (payload.len() as u16) >= payload_size {
                     break;
                 }
