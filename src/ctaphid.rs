@@ -1,6 +1,7 @@
 use crate::{ctapdef, fidokey::FidoKeyHid, util};
 use anyhow::{anyhow, Error, Result};
 use std::{thread, time};
+use rand::{rng, Rng};
 
 //pub const USAGE_PAGE_FIDO: u16 = 0xf1d0;
 
@@ -21,6 +22,14 @@ const CTAPHID_KEEPALIVE: u8 = CTAP_FRAME_INIT | 0x3B;
 //const CTAPHID_KEEPALIVE_STATUS_PROCESSING = 1;     // The authenticator is still processing the current request.
 //const CTAPHID_KEEPALIVE_STATUS_UPNEEDED = 2;       // The authenticator is waiting for user presence.
 
+// ランダムなnonceを生成する関数
+fn generate_random_nonce() -> [u8; 8] {
+    let mut rng = rng();
+    let mut nonce = [0u8; 8];
+    rng.fill(&mut nonce);
+    nonce
+}
+
 pub fn ctaphid_init(device: &FidoKeyHid) -> Result<[u8; 4]> {
     // CTAPHID_INIT
     let mut cmd: [u8; 65] = [0; 65];
@@ -28,7 +37,7 @@ pub fn ctaphid_init(device: &FidoKeyHid) -> Result<[u8; 4]> {
     // Report ID
     cmd[0] = 0x00;
 
-    // cid-dmy
+    // cid-dmy (broadcast channel ID)
     cmd[1] = 0xff;
     cmd[2] = 0xff;
     cmd[3] = 0xff;
@@ -41,23 +50,54 @@ pub fn ctaphid_init(device: &FidoKeyHid) -> Result<[u8; 4]> {
     cmd[6] = 0x00;
     cmd[7] = 0x08;
 
-    // nonce
-    cmd[8] = 0xfc;
-    cmd[9] = 0x8c;
-    cmd[10] = 0xc9;
-    cmd[11] = 0x91;
-    cmd[12] = 0x14;
-    cmd[13] = 0xb5;
-    cmd[14] = 0x3b;
-    cmd[15] = 0x12;
+    // ランダムなnonceを生成
+    let nonce = generate_random_nonce();
+    cmd[8..16].copy_from_slice(&nonce);
 
-    //println!("CTAPHID_INIT = {}", util::to_hex_str(&cmd));
+    if device.enable_log {
+        println!("CTAPHID_INIT = {}", util::to_hex_str(&cmd));
+    }
 
     device.write(&cmd).map_err(Error::msg)?;
     let buf = device.read().map_err(Error::msg)?;
 
-    // CID
-    Ok([buf[15], buf[16], buf[17], buf[18]])
+    if device.enable_log {
+        println!("CTAPHID_INIT response = {}", util::to_hex_str(&buf));
+    }
+
+    // 受信バッファに Report ID (0x00) が含まれるか判定
+    let has_report_id = buf.len() == 65 && buf[0] == 0x00;
+    // データ部 (nonce 先頭) の開始オフセットを決定
+    let data_offset = if has_report_id { 8 } else { 7 };
+
+    // レスポンスからnonceを抽出して検証
+    let response_nonce = &buf[data_offset..data_offset + 8];
+    
+    if device.enable_log {
+        println!("=== NONCE INFO ===");
+        println!("SENT NONCE: {}", util::to_hex_str(&nonce));
+        println!("RECV NONCE: {}", util::to_hex_str(response_nonce));
+    }
+    
+    if nonce != response_nonce {
+        return Err(anyhow!("Nonce verification failed"));
+    }
+
+    // nonceの直後にCIDが続く
+    let cid_offset = data_offset + 8;
+    let cid = [
+        buf[cid_offset],
+        buf[cid_offset + 1],
+        buf[cid_offset + 2],
+        buf[cid_offset + 3],
+    ];
+
+    if device.enable_log {
+        println!("CID: {}", util::to_hex_str(&cid));
+    }
+
+    // 動的に調整されたCIDを返す
+    Ok(cid)
 }
 
 fn get_responce_status(packet: &[u8]) -> Result<(u8, u16, u8)> {
