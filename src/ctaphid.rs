@@ -279,7 +279,7 @@ pub fn ctaphid_wink(device: &FidoKeyHid, cid: &[u8]) -> Result<()> {
 
 fn ctaphid_cbormsg(
     device: &FidoKeyHid,
-    cid: &[u8],
+    _cid_unused: &[u8], // TODO delete
     command: u8,
     payload: &[u8],
 ) -> Result<Vec<u8>> {
@@ -290,8 +290,11 @@ fn ctaphid_cbormsg(
         println!("--");
     }
 
+    // Get CID
+    let cid = device.get_cid()?;
+
     // initialization_packet
-    let res = create_initialization_packet(cid, command, payload);
+    let res = create_initialization_packet(&cid, command, payload);
     //println!("CTAPHID_CBOR(0) = {}", util::to_hex_str(&res.0));
 
     // Write data to device
@@ -301,7 +304,7 @@ fn ctaphid_cbormsg(
     // next
     if res.1 {
         for seqno in 0..100 {
-            let res = create_continuation_packet(seqno, cid, payload);
+            let res = create_continuation_packet(seqno, &cid, payload);
             //println!("CTAPHID_CBOR(1) = {}", util::to_hex_str(&res.0));
             let _res = device.write(&res.0).map_err(Error::msg)?;
             if !res.1 {

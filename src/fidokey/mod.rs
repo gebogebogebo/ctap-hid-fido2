@@ -2,6 +2,7 @@ use crate::HidParam;
 use anyhow::{anyhow, Result};
 use hidapi::HidApi;
 use std::ffi::CString;
+use std::cell::Cell;
 
 // Complex Submodules
 pub mod authenticator_config;
@@ -31,6 +32,7 @@ pub struct FidoKeyHid {
     pub use_pre_bio_enrollment: bool,
     pub use_pre_credential_management: bool,
     pub keep_alive_msg: String,
+    cid: Cell<Option<[u8; 4]>>,
 }
 
 impl FidoKeyHid {
@@ -49,6 +51,7 @@ impl FidoKeyHid {
                     use_pre_bio_enrollment: cfg.use_pre_bio_enrollment,
                     use_pre_credential_management: cfg.use_pre_credential_management,
                     keep_alive_msg: cfg.keep_alive_msg.to_string(),
+                    cid: Cell::new(None),
                 };
                 return Ok(result);
             }
@@ -69,6 +72,19 @@ impl FidoKeyHid {
             Ok(_) => Ok(buf),
             Err(_) => Err("read error".into()),
         }
+    }
+    
+    // init or get CID
+    pub fn get_cid(&self) -> Result<[u8; 4]> {
+        // get
+        if let Some(cid) = self.cid.get() {
+            return Ok(cid);
+        }
+
+        // init
+        let cid = crate::ctaphid::ctaphid_init(self)?;
+        self.cid.set(Some(cid));
+        Ok(cid)
     }
 }
 
