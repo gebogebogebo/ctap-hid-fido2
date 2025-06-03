@@ -279,7 +279,6 @@ pub fn ctaphid_wink(device: &FidoKeyHid, cid: &[u8]) -> Result<()> {
 
 fn ctaphid_cbormsg(
     device: &FidoKeyHid,
-    _cid_unused: &[u8], // TODO delete
     command: u8,
     payload: &[u8],
 ) -> Result<Vec<u8>> {
@@ -405,17 +404,17 @@ fn ctaphid_cbormsg(
     }
 }
 
-pub fn ctaphid_cbor(device: &FidoKeyHid, cid: &[u8], payload: &[u8]) -> Result<Vec<u8>> {
-    ctaphid_cbormsg(device, cid, CTAPHID_CBOR, payload)
+pub fn ctaphid_cbor(device: &FidoKeyHid, payload: &[u8]) -> Result<Vec<u8>> {
+    ctaphid_cbormsg(device, CTAPHID_CBOR, payload)
 }
 
-pub fn ctaphid_msg(device: &FidoKeyHid, cid: &[u8], payload: &[u8]) -> Result<Vec<u8>> {
-    ctaphid_cbormsg(device, cid, CTAPHID_MSG, payload)
+pub fn ctaphid_msg(device: &FidoKeyHid, payload: &[u8]) -> Result<Vec<u8>> {
+    ctaphid_cbormsg(device, CTAPHID_MSG, payload)
 }
 
 pub fn send_apdu(
     device: &FidoKeyHid,
-    cid: &[u8],
+    _cid: &[u8], // This cid is no longer used directly by ctaphid_msg
     cla: u8,
     ins: u8,
     p1: u8,
@@ -457,7 +456,7 @@ pub fn send_apdu(
     let size = data.len();
     apdu[7..(size + 7)].clone_from_slice(&data[..size]);
 
-    ctaphid_msg(device, cid, &apdu)
+    ctaphid_msg(device, &apdu)
 }
 
 /*

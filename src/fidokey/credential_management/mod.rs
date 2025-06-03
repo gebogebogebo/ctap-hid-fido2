@@ -120,7 +120,7 @@ impl FidoKeyHid {
             println!("send(cbor) = {}", util::to_hex_str(&send_payload));
         }
 
-        let response_cbor = ctaphid::ctaphid_cbor(self, &cid, &send_payload)?;
+        let response_cbor = ctaphid::ctaphid_cbor(self, &send_payload)?;
 
         if self.enable_log {
             println!("response(cbor) = {}", util::to_hex_str(&response_cbor));

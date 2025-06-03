@@ -69,7 +69,7 @@ impl FidoKeyHid {
         };
 
         // send & response
-        let response_cbor = ctaphid::ctaphid_cbor(self, &cid, &send_payload)?;
+        let response_cbor = ctaphid::ctaphid_cbor(self, &send_payload)?;
 
         let att = make_credential_response::parse_cbor(&response_cbor)?;
         Ok(att)

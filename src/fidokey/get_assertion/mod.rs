@@ -57,7 +57,7 @@ impl FidoKeyHid {
         let send_payload = get_assertion_command::create_payload(params, extensions, hmac_ext.clone())?;
 
         // send & response
-        let response_cbor = ctaphid::ctaphid_cbor(self, &cid, &send_payload)?;
+        let response_cbor = ctaphid::ctaphid_cbor(self, &send_payload)?;
 
         let ass = get_assertion_response::parse_cbor(
             &response_cbor,
@@ -133,21 +133,25 @@ impl FidoKeyHid {
     }
 }
 
-fn get_next_assertion(device: &FidoKeyHid, cid: &[u8]) -> Result<Assertion> {
+fn get_next_assertion(device: &FidoKeyHid, _cid: &[u8]) -> Result<Assertion> {
     let send_payload = get_next_assertion_command::create_payload();
-    let response_cbor = ctaphid::ctaphid_cbor(device, cid, &send_payload)?;
+    let response_cbor = ctaphid::ctaphid_cbor(device, &send_payload)?;
     get_assertion_response::parse_cbor(&response_cbor, None)
 }
 
 fn create_hmacext(
     device: &FidoKeyHid,
-    cid: &[u8; 4],
+    _cid: &[u8; 4], // This cid is no longer used directly by hmac_ext.create
     extensions: Option<&Vec<Gext>>,
 ) -> Result<Option<HmacExt>> {
     if let Some(extensions) = extensions {
         if let Some(Gext::HmacSecret(n)) = extensions.iter().next() {
             let mut hmac_ext = HmacExt::default();
-            hmac_ext.create(device, cid, &n.unwrap(), None)?;
+            // Pass a dummy cid to hmac_ext.create as it's not used anymore
+            // but the function signature still expects it.
+            // Consider refactoring hmac_ext.create to remove the cid parameter
+            // if it's truly unused there as well.
+            hmac_ext.create(device, &[0;4], &n.unwrap(), None)?;
             return Ok(Some(hmac_ext));
         }
         Ok(None)

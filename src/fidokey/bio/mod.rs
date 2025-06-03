@@ -184,7 +184,7 @@ impl FidoKeyHid {
 
     fn bio_enrollment(
         &self,
-        cid: &[u8; 4],
+        _cid: &[u8; 4],
         pin_token: Option<&PinToken>,
         sub_command: Option<bio_enrollment_command::SubCommand>,
     ) -> Result<BioEnrollmentData> {
@@ -198,7 +198,7 @@ impl FidoKeyHid {
             println!("send(cbor) = {}", util::to_hex_str(&send_payload));
         }
 
-        let response_cbor = ctaphid::ctaphid_cbor(self, cid, &send_payload)?;
+        let response_cbor = ctaphid::ctaphid_cbor(self, &send_payload)?;
         if self.enable_log {
             println!("response(cbor) = {}", util::to_hex_str(&response_cbor));
         }
