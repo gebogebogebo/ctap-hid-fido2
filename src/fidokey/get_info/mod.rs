@@ -73,7 +73,6 @@ pub enum InfoParam {
 
 impl FidoKeyHid {
     pub fn get_info(&self) -> Result<get_info_params::Info> {
-        let _cid = ctaphid::ctaphid_init(self)?;
         let send_payload = get_info_command::create_payload();
         let response_cbor = ctaphid::ctaphid_cbor(self, &send_payload)?;
         let info = get_info_response::parse_cbor(&response_cbor)?;
@@ -81,12 +80,10 @@ impl FidoKeyHid {
     }
 
     pub fn get_info_u2f(&self) -> Result<String> {
-        let cid = ctaphid::ctaphid_init(self)?;
-
         let _data: Vec<u8> = Vec::new();
 
         // CTAP1_INS.Version = 3
-        match ctaphid::send_apdu(self, &cid, 0, 3, 0, 0, &_data) {
+        match ctaphid::send_apdu(self, 0, 3, 0, 0, &_data) {
             Ok(result) => {
                 let version: String = String::from_utf8(result).unwrap();
                 Ok(version)

@@ -414,7 +414,6 @@ pub fn ctaphid_msg(device: &FidoKeyHid, payload: &[u8]) -> Result<Vec<u8>> {
 
 pub fn send_apdu(
     device: &FidoKeyHid,
-    _cid: &[u8], // This cid is no longer used directly by ctaphid_msg
     cla: u8,
     ins: u8,
     p1: u8,
