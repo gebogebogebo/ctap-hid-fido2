@@ -15,6 +15,7 @@ const CTAPHID_MSG: u8 = CTAP_FRAME_INIT | 0x03;
 const CTAPHID_INIT: u8 = CTAP_FRAME_INIT | 0x06;
 const CTAPHID_WINK: u8 = CTAP_FRAME_INIT | 0x08;
 const CTAPHID_CBOR: u8 = CTAP_FRAME_INIT | 0x10;
+const CTAPHID_CANCEL: u8 = CTAP_FRAME_INIT | 0x11;
 //This command code is used in response messages only.
 const CTAPHID_ERROR: u8 = CTAP_FRAME_INIT | 0x3F;
 const CTAPHID_KEEPALIVE: u8 = CTAP_FRAME_INIT | 0x3B;
@@ -274,6 +275,37 @@ pub fn ctaphid_wink(device: &FidoKeyHid, cid: &[u8]) -> Result<()> {
         );
     }
 
+    Ok(())
+}
+
+pub fn ctaphid_cancel(device: &FidoKeyHid, cid: &[u8]) -> Result<()> {
+    // CTAPHID_CANCEL
+    let mut cmd: [u8; 65] = [0; 65];
+
+    // Report ID
+    cmd[0] = 0x00;
+
+    // cid
+    cmd[1] = cid[0];
+    cmd[2] = cid[1];
+    cmd[3] = cid[2];
+    cmd[4] = cid[3];
+
+    // command
+    cmd[5] = CTAPHID_CANCEL;
+
+    // len (0)
+    cmd[6] = 0x00;
+    cmd[7] = 0x00;
+
+    if device.enable_log {
+        println!("CTAPHID_CANCEL = {}", util::to_hex_str(&cmd));
+    }
+
+    device.write(&cmd).map_err(Error::msg)?;
+    // Cancel command may not return a response or may return an error if no operation to cancel.
+    // For now, we don't expect a specific response, just that the command was sent.
+    // If a response is read here, it might block indefinitely if the authenticator doesn't send one.
     Ok(())
 }
 
