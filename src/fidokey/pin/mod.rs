@@ -11,8 +11,6 @@ pub use client_pin_response::*;
 impl FidoKeyHid {
     /// Get PIN retry count
     pub fn get_pin_retries(&self) -> Result<i32> {
-        let _cid = ctaphid::ctaphid_init(self)?;
-
         let send_payload = client_pin_command::create_payload(PinCmd::GetRetries)?;
 
         // The cid is obtained internally by ctaphid_cbor
@@ -25,8 +23,6 @@ impl FidoKeyHid {
 
     /// Get UV retry count
     pub fn get_uv_retries(&self) -> Result<i32> {
-        let _cid = ctaphid::ctaphid_init(self)?;
-
         let send_payload = client_pin_command::create_payload(PinCmd::GetUVRetries)?;
 
         let response_cbor = ctaphid::ctaphid_cbor(self, &send_payload)?;
@@ -64,7 +60,6 @@ mod tests {
     fn test_client_pin_get_keyagreement() {
         let hid_params = HidParam::get();
         let device = FidoKeyHid::new(&hid_params, &Cfg::init()).unwrap();
-        let _cid = ctaphid::ctaphid_init(&device).unwrap();
 
         let send_payload = create_payload(PinCmd::GetKeyAgreement).unwrap();
         // The cid is obtained internally by ctaphid_cbor

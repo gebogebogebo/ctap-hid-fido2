@@ -12,7 +12,7 @@ use crate::pintoken::PinToken;
 use anyhow::{anyhow, Result};
 
 impl FidoKeyHid {
-    pub fn get_authenticator_key_agreement(&self, _cid: &[u8]) -> Result<cose::CoseKey> {
+    pub fn get_authenticator_key_agreement(&self) -> Result<cose::CoseKey> {
         let send_payload = client_pin_command::create_payload(PinCmd::GetKeyAgreement)?;
         let response_cbor = ctaphid::ctaphid_cbor(self, &send_payload)?;
         let authenticator_key_agreement =
@@ -20,9 +20,9 @@ impl FidoKeyHid {
         Ok(authenticator_key_agreement)
     }
 
-    pub fn get_pin_token(&self, cid: &[u8], pin: &str) -> Result<PinToken> {
+    pub fn get_pin_token(&self, pin: &str) -> Result<PinToken> {
         if !pin.is_empty() {
-            let authenticator_key_agreement = self.get_authenticator_key_agreement(cid)?;
+            let authenticator_key_agreement = self.get_authenticator_key_agreement()?;
 
             let shared_secret = SharedSecret::new(&authenticator_key_agreement)?;
             let pin_hash_enc = shared_secret.encrypt_pin(pin)?;
@@ -49,12 +49,12 @@ impl FidoKeyHid {
 
     pub fn get_pinuv_auth_token_with_permission(
         &self,
-        cid: &[u8],
+        _cid: &[u8],
         pin: &str,
         permission: Permission,
     ) -> Result<PinToken> {
         if !pin.is_empty() {
-            let authenticator_key_agreement = self.get_authenticator_key_agreement(cid)?;
+            let authenticator_key_agreement = self.get_authenticator_key_agreement()?;
 
             // Get pinHashEnc
             // - shared_secret.public_key -> platform KeyAgreement

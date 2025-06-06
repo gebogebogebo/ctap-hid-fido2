@@ -19,7 +19,6 @@ impl HmacExt {
     pub fn create(
         &mut self,
         device: &FidoKeyHid,
-        _cid: &[u8],
         salt1: &[u8; 32],
         _salt2: Option<&[u8; 32]>,
     ) -> Result<()> {

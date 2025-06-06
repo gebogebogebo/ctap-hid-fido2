@@ -12,16 +12,14 @@ pub use bio_enrollment_params::*;
 impl FidoKeyHid {
     /// BioEnrollment - getFingerprintSensorInfo (CTAP 2.1-PRE)
     pub fn bio_enrollment_get_fingerprint_sensor_info(&self) -> Result<BioSensorInfo> {
-        let init = self.bio_enrollment_init(None)?;
-
         // 6.7.2. Get bio modality
-        let data1 = self.bio_enrollment(&init.0, None, None)?;
+        let data1 = self.bio_enrollment(None, None)?;
         if self.enable_log {
             println!("{}", data1);
         }
 
         // 6.7.3. Get fingerprint sensor info
-        let data2 = self.bio_enrollment(&init.0, None, Some(BioCmd::GetFingerprintSensorInfo))?;
+        let data2 = self.bio_enrollment(None, Some(BioCmd::GetFingerprintSensorInfo))?;
 
         if self.enable_log {
             println!("{}", data2);
@@ -44,7 +42,6 @@ impl FidoKeyHid {
         let init = self.bio_enrollment_init(Some(pin))?;
 
         let data = self.bio_enrollment(
-            &init.0,
             init.1.as_ref(),
             Some(BioCmd::EnrollBegin(timeout_milliseconds)),
         )?;
@@ -79,7 +76,6 @@ impl FidoKeyHid {
     ) -> Result<EnrollStatus2> {
         let template_info = TemplateInfo::new(&enroll_status.template_id, None);
         let data = self.bio_enrollment(
-            &enroll_status.cid,
             enroll_status.pin_token.as_ref(),
             Some(BioCmd::EnrollCaptureNextSample(
                 template_info,
@@ -106,7 +102,6 @@ impl FidoKeyHid {
     /// BioEnrollment - Cancel current enrollment
     pub fn bio_enrollment_cancel(&self, enroll_status: &EnrollStatus1) -> Result<()> {
         let data = self.bio_enrollment(
-            &enroll_status.cid,
             enroll_status.pin_token.as_ref(),
             Some(BioCmd::CancelCurrentEnrollment),
         )?;
@@ -125,7 +120,6 @@ impl FidoKeyHid {
         let pin_token = init.1.unwrap();
 
         let data = self.bio_enrollment(
-            &init.0,
             Some(&pin_token),
             Some(BioCmd::EnumerateEnrollments),
         )?;
@@ -151,7 +145,6 @@ impl FidoKeyHid {
         let pin_token = init.1.unwrap();
 
         let data = self.bio_enrollment(
-            &init.0,
             Some(&pin_token),
             Some(BioCmd::SetFriendlyName(template_info)),
         )?;
@@ -170,7 +163,6 @@ impl FidoKeyHid {
 
         let template_info = TemplateInfo::new(template_id, None);
         let data = self.bio_enrollment(
-            &init.0,
             Some(&pin_token),
             Some(BioCmd::RemoveEnrollment(template_info)),
         )?;
@@ -184,7 +176,6 @@ impl FidoKeyHid {
 
     fn bio_enrollment(
         &self,
-        _cid: &[u8; 4],
         pin_token: Option<&PinToken>,
         sub_command: Option<bio_enrollment_command::SubCommand>,
     ) -> Result<BioEnrollmentData> {
@@ -215,7 +206,7 @@ impl FidoKeyHid {
         let pin_token = {
             if let Some(pin) = pin {
                 if self.use_pre_bio_enrollment {
-                    Some(self.get_pin_token(&cid, pin)?)
+                    Some(self.get_pin_token(pin)?)
                 } else {
                     Some(self.get_pinuv_auth_token_with_permission(&cid, pin, BioEnrollment)?)
                 }

@@ -17,7 +17,7 @@ pub use make_credential_params::{
 impl FidoKeyHid {
     pub fn make_credential_with_args(&self, args: &MakeCredentialArgs) -> Result<Attestation> {
         // init
-        let cid = ctaphid::ctaphid_init(self)?;
+        let _cid = ctaphid::ctaphid_init(self)?;
 
         let user_id = {
             if let Some(rkp) = &args.user_entity {
@@ -50,12 +50,10 @@ impl FidoKeyHid {
 
             // get pintoken & create pin auth
             if let Some(pin) = args.pin {
-                if !pin.is_empty() {
-                    let pin_token = self.get_pin_token(&cid, pin)?;
-                    let sig =
-                        enc_hmac_sha_256::authenticate(&pin_token.key, &params.client_data_hash);
-                    params.pin_auth = sig[0..16].to_vec();
-                }
+                let pin_token = self.get_pin_token(pin)?;
+                let sig =
+                    enc_hmac_sha_256::authenticate(&pin_token.key, &params.client_data_hash);
+                params.pin_auth = sig[0..16].to_vec();
             }
 
             // TODO
