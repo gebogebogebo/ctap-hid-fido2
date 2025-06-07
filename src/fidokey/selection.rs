@@ -16,7 +16,7 @@ impl FidoKeyHid {
         Ok((cid, "".to_string()))
     }
 
-    pub fn cancel_selection(&self, cid_to_cancel: &[u8]) -> Result<()> {
-        ctaphid::ctaphid_cancel(self, cid_to_cancel)
+    pub fn cancel_selection(&self) -> Result<()> {
+        ctaphid::ctaphid_cancel(self)
     }
 }

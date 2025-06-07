@@ -419,8 +419,8 @@ pub fn up(device: &FidoKeyHid) -> Result<()> {
     }
     let (cid, _selection_result_str) = device.selection()?;
 
-    // If you need to cancel the selection, you can use cid with device.cancel_selection(&cid)?;
-    device.cancel_selection(&cid)?;
+    // If you need to cancel the selection, you can use cid with device.cancel_selection()?;
+    device.cancel_selection()?;
     
     Ok(())
 }

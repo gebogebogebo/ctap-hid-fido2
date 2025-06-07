@@ -281,12 +281,15 @@ pub fn ctaphid_wink(device: &FidoKeyHid) -> Result<()> {
     Ok(())
 }
 
-pub fn ctaphid_cancel(device: &FidoKeyHid, cid: &[u8]) -> Result<()> {
+pub fn ctaphid_cancel(device: &FidoKeyHid) -> Result<()> {
     // CTAPHID_CANCEL
     let mut cmd: [u8; 65] = [0; 65];
 
     // Report ID
     cmd[0] = 0x00;
+
+    // Get CID from device
+    let cid = device.get_cid()?;
 
     // cid
     cmd[1] = cid[0];
