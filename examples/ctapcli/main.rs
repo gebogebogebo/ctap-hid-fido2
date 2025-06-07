@@ -398,13 +398,11 @@ fn main() -> Result<()> {
             } => {
                 if get {
                     blob::blob(&device, blob::Command::Get, None)?;
+                } else if let Some(str_val) = str_val {
+                    let command = blob::Command::Set(str_val.as_bytes().to_vec());
+                    blob::blob(&device, command, pin)?;
                 } else {
-                    if let Some(str_val) = str_val {
-                        let command = blob::Command::Set(str_val.as_bytes().to_vec());
-                        blob::blob(&device, command, pin)?;
-                    } else {
-                        println!("need str.");
-                    }
+                    println!("need str.");
                 }
             }
         }
