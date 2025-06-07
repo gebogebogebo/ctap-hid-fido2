@@ -39,10 +39,10 @@ impl FidoKeyHid {
         pin: &str,
         timeout_milliseconds: Option<u16>,
     ) -> Result<(EnrollStatus1, EnrollStatus2)> {
-        let init = self.bio_enrollment_init(Some(pin))?;
+        let pin_token_option = self.bio_enrollment_init(Some(pin))?;
 
         let data = self.bio_enrollment(
-            init.1.as_ref(),
+            pin_token_option.as_ref(),
             Some(BioCmd::EnrollBegin(timeout_milliseconds)),
         )?;
 
@@ -51,8 +51,7 @@ impl FidoKeyHid {
         }
 
         let result1 = EnrollStatus1 {
-            cid: init.0,
-            pin_token: init.1,
+            pin_token: pin_token_option,
             template_id: data.template_id.to_vec(),
         };
 
@@ -100,9 +99,9 @@ impl FidoKeyHid {
     }
 
     /// BioEnrollment - Cancel current enrollment
-    pub fn bio_enrollment_cancel(&self, enroll_status: &EnrollStatus1) -> Result<()> {
+    pub fn bio_enrollment_cancel(&self) -> Result<()> {
         let data = self.bio_enrollment(
-            enroll_status.pin_token.as_ref(),
+            None,
             Some(BioCmd::CancelCurrentEnrollment),
         )?;
 
@@ -116,8 +115,8 @@ impl FidoKeyHid {
     /// BioEnrollment - enumerateEnrollments (CTAP 2.1-PRE)
     /// 6.7.6. Enumerate enrollments
     pub fn bio_enrollment_enumerate_enrollments(&self, pin: &str) -> Result<Vec<TemplateInfo>> {
-        let init = self.bio_enrollment_init(Some(pin))?;
-        let pin_token = init.1.unwrap();
+        let pin_token_option = self.bio_enrollment_init(Some(pin))?;
+        let pin_token = pin_token_option.unwrap();
 
         let data = self.bio_enrollment(
             Some(&pin_token),
@@ -141,8 +140,8 @@ impl FidoKeyHid {
     ) -> Result<()> {
         let template_info = TemplateInfo::new(template_id, Some(template_name));
 
-        let init = self.bio_enrollment_init(Some(pin))?;
-        let pin_token = init.1.unwrap();
+        let pin_token_option = self.bio_enrollment_init(Some(pin))?;
+        let pin_token = pin_token_option.unwrap();
 
         let data = self.bio_enrollment(
             Some(&pin_token),
@@ -158,8 +157,8 @@ impl FidoKeyHid {
 
     /// 6.7.8. Remove enrollment
     pub fn bio_enrollment_remove(&self, pin: &str, template_id: &[u8]) -> Result<()> {
-        let init = self.bio_enrollment_init(Some(pin))?;
-        let pin_token = init.1.unwrap();
+        let pin_token_option = self.bio_enrollment_init(Some(pin))?;
+        let pin_token = pin_token_option.unwrap();
 
         let template_info = TemplateInfo::new(template_id, None);
         let data = self.bio_enrollment(
@@ -198,10 +197,7 @@ impl FidoKeyHid {
         Ok(ret)
     }
 
-    fn bio_enrollment_init(&self, pin: Option<&str>) -> Result<([u8; 4], Option<PinToken>)> {
-        // init
-        let cid = ctaphid::ctaphid_init(self)?;
-
+    fn bio_enrollment_init(&self, pin: Option<&str>) -> Result<Option<PinToken>> {
         // pin token
         let pin_token = {
             if let Some(pin) = pin {
@@ -215,6 +211,6 @@ impl FidoKeyHid {
             }
         };
 
-        Ok((cid, pin_token))
+        Ok(pin_token)
     }
 }
