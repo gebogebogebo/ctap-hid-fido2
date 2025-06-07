@@ -417,7 +417,7 @@ pub fn up(device: &FidoKeyHid) -> Result<()> {
             "This authenticator is not supported for this functions."
         ));
     }
-    let (cid, _selection_result_str) = device.selection()?;
+    device.selection()?;
 
     // If you need to cancel the selection, you can use cid with device.cancel_selection()?;
     device.cancel_selection()?;
