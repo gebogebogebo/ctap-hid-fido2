@@ -208,7 +208,7 @@ impl FidoKeyHid {
                 if self.use_pre_bio_enrollment {
                     Some(self.get_pin_token(pin)?)
                 } else {
-                    Some(self.get_pinuv_auth_token_with_permission(&cid, pin, BioEnrollment)?)
+                    Some(self.get_pinuv_auth_token_with_permission(pin, BioEnrollment)?)
                 }
             } else {
                 None

@@ -49,7 +49,6 @@ impl FidoKeyHid {
 
     pub fn get_pinuv_auth_token_with_permission(
         &self,
-        _cid: &[u8],
         pin: &str,
         permission: Permission,
     ) -> Result<PinToken> {
@@ -83,7 +82,7 @@ impl FidoKeyHid {
         }
     }
 
-    pub fn set_pin(&self, _cid: &[u8], pin: &str) -> Result<()> {
+    pub fn set_pin(&self, pin: &str) -> Result<()> {
         if pin.is_empty() {
             return Err(anyhow!("new pin not set"));
         }
@@ -172,7 +171,7 @@ fn create_new_pin_enc(shared_secret: &SharedSecret, new_pin: &str) -> Result<Vec
     Ok(new_pin_enc)
 }
 
-pub fn change_pin(device: &FidoKeyHid, _cid: &[u8], current_pin: &str, new_pin: &str) -> Result<()> {
+pub fn change_pin(device: &FidoKeyHid, current_pin: &str, new_pin: &str) -> Result<()> {
     if current_pin.is_empty() {
         return Err(anyhow!("current pin not set"));
     }

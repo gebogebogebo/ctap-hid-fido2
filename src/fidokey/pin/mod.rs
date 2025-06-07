@@ -34,15 +34,13 @@ impl FidoKeyHid {
 
     /// Set New PIN
     pub fn set_new_pin(&self, pin: &str) -> Result<()> {
-        let cid = ctaphid::ctaphid_init(self)?;
-        self.set_pin(&cid, pin)?;
+        self.set_pin(pin)?;
         Ok(())
     }
 
     /// Change PIN
     pub fn change_pin(&self, current_pin: &str, new_pin: &str) -> Result<()> {
-        let cid = ctaphid::ctaphid_init(self)?;
-        client_pin::change_pin(self, &cid, current_pin, new_pin)?;
+        client_pin::change_pin(self, current_pin, new_pin)?;
         Ok(())
     }
 }
