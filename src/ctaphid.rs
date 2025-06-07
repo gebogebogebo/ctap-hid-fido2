@@ -225,7 +225,7 @@ fn create_continuation_packet(seqno: u8, cid: &[u8], payload: &[u8]) -> (Vec<u8>
     cmd[5] = seqno;
 
     let index: usize =
-        PAYLOAD_SIZE_AN_INITIALIZATION_PACKET + PAYLOAD_SIZE_A_CONTINUATION_PACKET * seqno as usize;
+        PAYLOAD_SIZE_AN_INITIALIZATION_PACKET + PAYLOAD_SIZE_A_CONTINUATION_PACKET * (seqno as usize);
 
     // payload
     let mut size: usize = payload.len() - index;
@@ -239,12 +239,15 @@ fn create_continuation_packet(seqno: u8, cid: &[u8], payload: &[u8]) -> (Vec<u8>
     (cmd, next)
 }
 
-pub fn ctaphid_wink(device: &FidoKeyHid, cid: &[u8]) -> Result<()> {
+pub fn ctaphid_wink(device: &FidoKeyHid) -> Result<()> {
     // CTAPHID_WINK
     let mut cmd: [u8; 65] = [0; 65];
 
     // Report ID
     cmd[0] = 0x00;
+
+    // Get CID from device
+    let cid = device.get_cid()?;
 
     // cid-dmy
     cmd[1] = cid[0];
