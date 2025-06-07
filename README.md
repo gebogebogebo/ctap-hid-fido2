@@ -17,6 +17,11 @@ Authentication using FIDO2-compliant security keys (e.g. Yubikey) is possible.
 - Management of credentials recorded in security keys.
 
 ## Version
+### Ver 3.5.4
+
+- Changed the management method of CID (Channel identifier).
+- Dependency Updates.
+
 ### Ver 3.5.3
 
 - Dependency Updates.
