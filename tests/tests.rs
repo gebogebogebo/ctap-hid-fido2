@@ -18,10 +18,10 @@ fn is_my_test_key() -> Result<bool> {
 
     if keys[0].vid == 0x1050 && keys[0].pid == 0x0402 {
         println!("Yubikey Bio");
-        return Ok(true);
+        Ok(true)
     } else {
         println!("Unexpected key {}", keys[0].info);
-        return Ok(false);
+        Ok(false)
     }
 }
 
@@ -36,7 +36,7 @@ fn do_test<F>(f: F) where F: FnOnce() -> Result<()> {
             println!("- {:?}", e);
         }
       };    
-    println!("");
+    println!();
 }
 
 #[test]
@@ -61,7 +61,7 @@ fn test_main() {
 #[test]
 fn test_get_hid_devices() -> Result<()> {
     get_hid_devices();
-    return Ok(());
+    Ok(())
 }
 
 #[test]
@@ -148,7 +148,7 @@ fn test_get_info() -> Result<()> {
         assert_eq!(info.max_serialized_large_blob_array, 1024);
         
         println!("- force_pin_change = {}", info.force_pin_change);
-        assert_eq!(info.force_pin_change, false);
+        assert!(!info.force_pin_change);
         
         println!("- min_pin_length = {}", info.min_pin_length);
         assert_eq!(info.min_pin_length, 4);
@@ -242,7 +242,7 @@ fn test_make_credential_with_pin_non_rk_exclude_authenticator() -> Result<()> {
 
     let device = FidoKeyHidFactory::create(&Cfg::init()).unwrap();
 
-    let make_credential_args = MakeCredentialArgsBuilder::new(&rpid, &challenge)
+    let make_credential_args = MakeCredentialArgsBuilder::new(rpid, &challenge)
         .pin(pin)
         .build();
 
@@ -253,7 +253,7 @@ fn test_make_credential_with_pin_non_rk_exclude_authenticator() -> Result<()> {
     let verify_result = verifier::verify_attestation(rpid, &challenge, &att);
     assert!(verify_result.is_success);
 
-    let make_credential_args = MakeCredentialArgsBuilder::new(&rpid, &challenge)
+    let make_credential_args = MakeCredentialArgsBuilder::new(rpid, &challenge)
         .pin(pin)
         .exclude_authenticator(&verify_result.credential_id)
         .build();
@@ -361,5 +361,5 @@ fn test_bio_enrollment_enumerate_enrollments() -> Result<()> {
         Err(_) => assert!(false),
     };
 
-    return Ok(())
+    Ok(())
 }

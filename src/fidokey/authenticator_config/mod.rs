@@ -31,14 +31,12 @@ impl FidoKeyHid {
             return Err(anyhow!("need PIN."));
         };
 
-        let cid = ctaphid::ctaphid_init(self)?;
-
         // get pintoken
         let pin_token =
-            self.get_pinuv_auth_token_with_permission(&cid, pin, AuthenticatorConfiguration)?;
+            self.get_pinuv_auth_token_with_permission(pin, AuthenticatorConfiguration)?;
 
         let send_payload = authenticator_config_command::create_payload(pin_token, sub_command)?;
-        let _response_cbor = ctaphid::ctaphid_cbor(self, &cid, &send_payload)?;
+        let _response_cbor = ctaphid::ctaphid_cbor(self, &send_payload)?;
         Ok(())
     }
 }

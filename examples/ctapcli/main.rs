@@ -398,13 +398,11 @@ fn main() -> Result<()> {
             } => {
                 if get {
                     blob::blob(&device, blob::Command::Get, None)?;
+                } else if let Some(str_val) = str_val {
+                    let command = blob::Command::Set(str_val.as_bytes().to_vec());
+                    blob::blob(&device, command, pin)?;
                 } else {
-                    if let Some(str_val) = str_val {
-                        let command = blob::Command::Set(str_val.as_bytes().to_vec());
-                        blob::blob(&device, command, pin)?;
-                    } else {
-                        println!("need str.");
-                    }
+                    println!("need str.");
                 }
             }
         }
@@ -420,5 +418,9 @@ pub fn up(device: &FidoKeyHid) -> Result<()> {
         ));
     }
     device.selection()?;
+
+    // If you need to cancel the selection, you can use cid with device.cancel_selection()?;
+    device.cancel_selection()?;
+    
     Ok(())
 }

@@ -11,11 +11,10 @@ pub use client_pin_response::*;
 impl FidoKeyHid {
     /// Get PIN retry count
     pub fn get_pin_retries(&self) -> Result<i32> {
-        let cid = ctaphid::ctaphid_init(self)?;
-
         let send_payload = client_pin_command::create_payload(PinCmd::GetRetries)?;
 
-        let response_cbor = ctaphid::ctaphid_cbor(self, &cid, &send_payload)?;
+        // The cid is obtained internally by ctaphid_cbor
+        let response_cbor = ctaphid::ctaphid_cbor(self, &send_payload)?;
 
         let pin = client_pin_response::parse_cbor_client_pin_get_retries(&response_cbor)?;
 
@@ -24,11 +23,9 @@ impl FidoKeyHid {
 
     /// Get UV retry count
     pub fn get_uv_retries(&self) -> Result<i32> {
-        let cid = ctaphid::ctaphid_init(self)?;
-
         let send_payload = client_pin_command::create_payload(PinCmd::GetUVRetries)?;
 
-        let response_cbor = ctaphid::ctaphid_cbor(self, &cid, &send_payload)?;
+        let response_cbor = ctaphid::ctaphid_cbor(self, &send_payload)?;
 
         let pin = client_pin_response::parse_cbor_client_pin_get_retries(&response_cbor)?;
 
@@ -37,15 +34,13 @@ impl FidoKeyHid {
 
     /// Set New PIN
     pub fn set_new_pin(&self, pin: &str) -> Result<()> {
-        let cid = ctaphid::ctaphid_init(self)?;
-        self.set_pin(&cid, pin)?;
+        self.set_pin(pin)?;
         Ok(())
     }
 
     /// Change PIN
     pub fn change_pin(&self, current_pin: &str, new_pin: &str) -> Result<()> {
-        let cid = ctaphid::ctaphid_init(self)?;
-        client_pin::change_pin(self, &cid, current_pin, new_pin)?;
+        client_pin::change_pin(self, current_pin, new_pin)?;
         Ok(())
     }
 }
@@ -63,10 +58,10 @@ mod tests {
     fn test_client_pin_get_keyagreement() {
         let hid_params = HidParam::get();
         let device = FidoKeyHid::new(&hid_params, &Cfg::init()).unwrap();
-        let cid = ctaphid::ctaphid_init(&device).unwrap();
 
         let send_payload = create_payload(PinCmd::GetKeyAgreement).unwrap();
-        let response_cbor = ctaphid::ctaphid_cbor(&device, &cid, &send_payload).unwrap();
+        // The cid is obtained internally by ctaphid_cbor
+        let response_cbor = ctaphid::ctaphid_cbor(&device, &send_payload).unwrap();
 
         let key_agreement =
             client_pin_response::parse_cbor_client_pin_get_keyagreement(&response_cbor).unwrap();

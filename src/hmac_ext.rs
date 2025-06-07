@@ -19,7 +19,6 @@ impl HmacExt {
     pub fn create(
         &mut self,
         device: &FidoKeyHid,
-        cid: &[u8],
         salt1: &[u8; 32],
         _salt2: Option<&[u8; 32]>,
     ) -> Result<()> {
@@ -27,7 +26,7 @@ impl HmacExt {
         //println!("{}", StrBuf::bufh("salt1", salt1));
 
         let send_payload = create_payload(PinCmd::GetKeyAgreement)?;
-        let response_cbor = ctaphid::ctaphid_cbor(device, cid, &send_payload)?;
+        let response_cbor = ctaphid::ctaphid_cbor(device, &send_payload)?;
 
         let key_agreement = parse_cbor_client_pin_get_keyagreement(&response_cbor)?;
 
