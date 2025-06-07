@@ -24,9 +24,6 @@ impl FidoKeyHid {
             None
         };
 
-        // init
-        let _cid = ctaphid::ctaphid_init(self)?;
-
         let hmac_ext = create_hmacext(self, extensions)?;
 
         // pin token

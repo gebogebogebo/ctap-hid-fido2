@@ -31,8 +31,6 @@ impl FidoKeyHid {
             return Err(anyhow!("need PIN."));
         };
 
-        let _cid = ctaphid::ctaphid_init(self)?;
-
         // get pintoken
         let pin_token =
             self.get_pinuv_auth_token_with_permission(pin, AuthenticatorConfiguration)?;

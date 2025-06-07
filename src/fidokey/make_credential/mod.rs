@@ -16,9 +16,6 @@ pub use make_credential_params::{
 
 impl FidoKeyHid {
     pub fn make_credential_with_args(&self, args: &MakeCredentialArgs) -> Result<Attestation> {
-        // init
-        let _cid = ctaphid::ctaphid_init(self)?;
-
         let user_id = {
             if let Some(rkp) = &args.user_entity {
                 rkp.id.to_vec()

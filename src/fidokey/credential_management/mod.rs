@@ -91,7 +91,6 @@ impl FidoKeyHid {
         pin: Option<&str>,
         sub_command: SubCommand,
     ) -> Result<CredentialManagementData> {
-        let _cid = ctaphid::ctaphid_init(self)?;
 
         // pin token
         let pin_token = {
