@@ -10,7 +10,6 @@ fn create_payload() -> Vec<u8> {
 impl FidoKeyHid {
     /// Selection (CTAP 2.1)
     pub fn selection(&self) -> Result<()> {
-        let _cid = ctaphid::ctaphid_init(self)?;
         let send_payload = create_payload();
         let _response_cbor = ctaphid::ctaphid_cbor(self, &send_payload)?;
         Ok(())
