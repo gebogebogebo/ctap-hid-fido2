@@ -61,3 +61,6 @@ name = "wink"
 
 [[example]]
 name = "test-config"
+
+[[example]]
+name = "selection"
