@@ -1,6 +1,7 @@
 use crate::{ctapdef, fidokey::FidoKeyHid, util};
 use anyhow::{anyhow, Error, Result};
 use std::{thread, time};
+use rand::{rng, Rng};
 
 //pub const USAGE_PAGE_FIDO: u16 = 0xf1d0;
 
@@ -14,12 +15,21 @@ const CTAPHID_MSG: u8 = CTAP_FRAME_INIT | 0x03;
 const CTAPHID_INIT: u8 = CTAP_FRAME_INIT | 0x06;
 const CTAPHID_WINK: u8 = CTAP_FRAME_INIT | 0x08;
 const CTAPHID_CBOR: u8 = CTAP_FRAME_INIT | 0x10;
+const CTAPHID_CANCEL: u8 = CTAP_FRAME_INIT | 0x11;
 //This command code is used in response messages only.
 const CTAPHID_ERROR: u8 = CTAP_FRAME_INIT | 0x3F;
 const CTAPHID_KEEPALIVE: u8 = CTAP_FRAME_INIT | 0x3B;
 
 //const CTAPHID_KEEPALIVE_STATUS_PROCESSING = 1;     // The authenticator is still processing the current request.
 //const CTAPHID_KEEPALIVE_STATUS_UPNEEDED = 2;       // The authenticator is waiting for user presence.
+
+// Function to generate random nonce
+fn generate_random_nonce() -> [u8; 8] {
+    let mut rng = rng();
+    let mut nonce = [0u8; 8];
+    rng.fill(&mut nonce);
+    nonce
+}
 
 pub fn ctaphid_init(device: &FidoKeyHid) -> Result<[u8; 4]> {
     // CTAPHID_INIT
@@ -28,7 +38,7 @@ pub fn ctaphid_init(device: &FidoKeyHid) -> Result<[u8; 4]> {
     // Report ID
     cmd[0] = 0x00;
 
-    // cid-dmy
+    // cid-dmy (broadcast channel ID)
     cmd[1] = 0xff;
     cmd[2] = 0xff;
     cmd[3] = 0xff;
@@ -41,23 +51,54 @@ pub fn ctaphid_init(device: &FidoKeyHid) -> Result<[u8; 4]> {
     cmd[6] = 0x00;
     cmd[7] = 0x08;
 
-    // nonce
-    cmd[8] = 0xfc;
-    cmd[9] = 0x8c;
-    cmd[10] = 0xc9;
-    cmd[11] = 0x91;
-    cmd[12] = 0x14;
-    cmd[13] = 0xb5;
-    cmd[14] = 0x3b;
-    cmd[15] = 0x12;
+    // Generate random nonce
+    let nonce = generate_random_nonce();
+    cmd[8..16].copy_from_slice(&nonce);
 
-    //println!("CTAPHID_INIT = {}", util::to_hex_str(&cmd));
+    if device.enable_log {
+        println!("CTAPHID_INIT = {}", util::to_hex_str(&cmd));
+    }
 
     device.write(&cmd).map_err(Error::msg)?;
     let buf = device.read().map_err(Error::msg)?;
 
-    // CID
-    Ok([buf[15], buf[16], buf[17], buf[18]])
+    if device.enable_log {
+        println!("CTAPHID_INIT response = {}", util::to_hex_str(&buf));
+    }
+
+    // Check if the received buffer includes Report ID (0x00)
+    let has_report_id = buf.len() == 65 && buf[0] == 0x00;
+    // Determine the starting offset for the data section (nonce start)
+    let data_offset = if has_report_id { 8 } else { 7 };
+
+    // Extract and verify nonce from the response
+    let response_nonce = &buf[data_offset..data_offset + 8];
+    
+    if device.enable_log {
+        println!("=== NONCE INFO ===");
+        println!("SENT NONCE: {}", util::to_hex_str(&nonce));
+        println!("RECV NONCE: {}", util::to_hex_str(response_nonce));
+    }
+    
+    if nonce != response_nonce {
+        return Err(anyhow!("Nonce verification failed"));
+    }
+
+    // CID follows immediately after the nonce
+    let cid_offset = data_offset + 8;
+    let cid = [
+        buf[cid_offset],
+        buf[cid_offset + 1],
+        buf[cid_offset + 2],
+        buf[cid_offset + 3],
+    ];
+
+    if device.enable_log {
+        println!("CID: {}", util::to_hex_str(&cid));
+    }
+
+    // Return the dynamically adjusted CID
+    Ok(cid)
 }
 
 fn get_responce_status(packet: &[u8]) -> Result<(u8, u16, u8)> {
@@ -184,7 +225,7 @@ fn create_continuation_packet(seqno: u8, cid: &[u8], payload: &[u8]) -> (Vec<u8>
     cmd[5] = seqno;
 
     let index: usize =
-        PAYLOAD_SIZE_AN_INITIALIZATION_PACKET + PAYLOAD_SIZE_A_CONTINUATION_PACKET * seqno as usize;
+        PAYLOAD_SIZE_AN_INITIALIZATION_PACKET + PAYLOAD_SIZE_A_CONTINUATION_PACKET * (seqno as usize);
 
     // payload
     let mut size: usize = payload.len() - index;
@@ -198,12 +239,15 @@ fn create_continuation_packet(seqno: u8, cid: &[u8], payload: &[u8]) -> (Vec<u8>
     (cmd, next)
 }
 
-pub fn ctaphid_wink(device: &FidoKeyHid, cid: &[u8]) -> Result<()> {
+pub fn ctaphid_wink(device: &FidoKeyHid) -> Result<()> {
     // CTAPHID_WINK
     let mut cmd: [u8; 65] = [0; 65];
 
     // Report ID
     cmd[0] = 0x00;
+
+    // Get CID from device
+    let cid = device.get_cid()?;
 
     // cid-dmy
     cmd[1] = cid[0];
@@ -237,9 +281,42 @@ pub fn ctaphid_wink(device: &FidoKeyHid, cid: &[u8]) -> Result<()> {
     Ok(())
 }
 
+pub fn ctaphid_cancel(device: &FidoKeyHid) -> Result<()> {
+    // CTAPHID_CANCEL
+    let mut cmd: [u8; 65] = [0; 65];
+
+    // Report ID
+    cmd[0] = 0x00;
+
+    // Get CID from device
+    let cid = device.get_cid()?;
+
+    // cid
+    cmd[1] = cid[0];
+    cmd[2] = cid[1];
+    cmd[3] = cid[2];
+    cmd[4] = cid[3];
+
+    // command
+    cmd[5] = CTAPHID_CANCEL;
+
+    // len (0)
+    cmd[6] = 0x00;
+    cmd[7] = 0x00;
+
+    if device.enable_log {
+        println!("CTAPHID_CANCEL = {}", util::to_hex_str(&cmd));
+    }
+
+    device.write(&cmd).map_err(Error::msg)?;
+    // Cancel command may not return a response or may return an error if no operation to cancel.
+    // For now, we don't expect a specific response, just that the command was sent.
+    // If a response is read here, it might block indefinitely if the authenticator doesn't send one.
+    Ok(())
+}
+
 fn ctaphid_cbormsg(
     device: &FidoKeyHid,
-    cid: &[u8],
     command: u8,
     payload: &[u8],
 ) -> Result<Vec<u8>> {
@@ -250,8 +327,11 @@ fn ctaphid_cbormsg(
         println!("--");
     }
 
+    // Get CID
+    let cid = device.get_cid()?;
+
     // initialization_packet
-    let res = create_initialization_packet(cid, command, payload);
+    let res = create_initialization_packet(&cid, command, payload);
     //println!("CTAPHID_CBOR(0) = {}", util::to_hex_str(&res.0));
 
     // Write data to device
@@ -261,7 +341,7 @@ fn ctaphid_cbormsg(
     // next
     if res.1 {
         for seqno in 0..100 {
-            let res = create_continuation_packet(seqno, cid, payload);
+            let res = create_continuation_packet(seqno, &cid, payload);
             //println!("CTAPHID_CBOR(1) = {}", util::to_hex_str(&res.0));
             let _res = device.write(&res.0).map_err(Error::msg)?;
             if !res.1 {
@@ -338,10 +418,10 @@ fn ctaphid_cbormsg(
 
                 let mut p2 = ctaphid_cbor_responce_get_payload_2(&buf);
 
-                // payloadに連結
+                // Append to payload
                 payload.append(&mut p2);
 
-                // 次のパケットがある?
+                // Is there another packet?
                 if (payload.len() as u16) >= payload_size {
                     break;
                 }
@@ -362,17 +442,16 @@ fn ctaphid_cbormsg(
     }
 }
 
-pub fn ctaphid_cbor(device: &FidoKeyHid, cid: &[u8], payload: &[u8]) -> Result<Vec<u8>> {
-    ctaphid_cbormsg(device, cid, CTAPHID_CBOR, payload)
+pub fn ctaphid_cbor(device: &FidoKeyHid, payload: &[u8]) -> Result<Vec<u8>> {
+    ctaphid_cbormsg(device, CTAPHID_CBOR, payload)
 }
 
-pub fn ctaphid_msg(device: &FidoKeyHid, cid: &[u8], payload: &[u8]) -> Result<Vec<u8>> {
-    ctaphid_cbormsg(device, cid, CTAPHID_MSG, payload)
+pub fn ctaphid_msg(device: &FidoKeyHid, payload: &[u8]) -> Result<Vec<u8>> {
+    ctaphid_cbormsg(device, CTAPHID_MSG, payload)
 }
 
 pub fn send_apdu(
     device: &FidoKeyHid,
-    cid: &[u8],
     cla: u8,
     ins: u8,
     p1: u8,
@@ -414,7 +493,7 @@ pub fn send_apdu(
     let size = data.len();
     apdu[7..(size + 7)].clone_from_slice(&data[..size]);
 
-    ctaphid_msg(device, cid, &apdu)
+    ctaphid_msg(device, &apdu)
 }
 
 /*

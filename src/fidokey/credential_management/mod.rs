@@ -91,16 +91,14 @@ impl FidoKeyHid {
         pin: Option<&str>,
         sub_command: SubCommand,
     ) -> Result<CredentialManagementData> {
-        let cid = ctaphid::ctaphid_init(self)?;
 
         // pin token
         let pin_token = {
             if let Some(pin) = pin {
                 if self.use_pre_credential_management {
-                    Some(self.get_pin_token(&cid, pin)?)
+                    Some(self.get_pin_token(pin)?)
                 } else {
                     Some(self.get_pinuv_auth_token_with_permission(
-                        &cid,
                         pin,
                         CredentialManagement,
                     )?)
@@ -120,7 +118,7 @@ impl FidoKeyHid {
             println!("send(cbor) = {}", util::to_hex_str(&send_payload));
         }
 
-        let response_cbor = ctaphid::ctaphid_cbor(self, &cid, &send_payload)?;
+        let response_cbor = ctaphid::ctaphid_cbor(self, &send_payload)?;
 
         if self.enable_log {
             println!("response(cbor) = {}", util::to_hex_str(&response_cbor));

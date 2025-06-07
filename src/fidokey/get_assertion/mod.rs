@@ -24,15 +24,12 @@ impl FidoKeyHid {
             None
         };
 
-        // init
-        let cid = ctaphid::ctaphid_init(self)?;
-
-        let hmac_ext = create_hmacext(self, &cid, extensions)?;
+        let hmac_ext = create_hmacext(self, extensions)?;
 
         // pin token
         let pin_token = {
             if let Some(pin) = args.pin {
-                Some(self.get_pin_token(&cid, pin)?)
+                Some(self.get_pin_token(pin)?)
             } else {
                 None
             }
@@ -57,7 +54,7 @@ impl FidoKeyHid {
         let send_payload = get_assertion_command::create_payload(params, extensions, hmac_ext.clone())?;
 
         // send & response
-        let response_cbor = ctaphid::ctaphid_cbor(self, &cid, &send_payload)?;
+        let response_cbor = ctaphid::ctaphid_cbor(self, &send_payload)?;
 
         let ass = get_assertion_response::parse_cbor(
             &response_cbor,
@@ -66,7 +63,7 @@ impl FidoKeyHid {
 
         let mut asss = vec![ass];
         for _ in 0..(asss[0].number_of_credentials - 1) {
-            let ass = get_next_assertion(self, &cid)?;
+            let ass = get_next_assertion(self)?;
             asss.push(ass);
         }
 
@@ -133,21 +130,24 @@ impl FidoKeyHid {
     }
 }
 
-fn get_next_assertion(device: &FidoKeyHid, cid: &[u8]) -> Result<Assertion> {
+fn get_next_assertion(device: &FidoKeyHid) -> Result<Assertion> {
     let send_payload = get_next_assertion_command::create_payload();
-    let response_cbor = ctaphid::ctaphid_cbor(device, cid, &send_payload)?;
+    let response_cbor = ctaphid::ctaphid_cbor(device, &send_payload)?;
     get_assertion_response::parse_cbor(&response_cbor, None)
 }
 
 fn create_hmacext(
     device: &FidoKeyHid,
-    cid: &[u8; 4],
     extensions: Option<&Vec<Gext>>,
 ) -> Result<Option<HmacExt>> {
     if let Some(extensions) = extensions {
         if let Some(Gext::HmacSecret(n)) = extensions.iter().next() {
             let mut hmac_ext = HmacExt::default();
-            hmac_ext.create(device, cid, &n.unwrap(), None)?;
+            // Pass a dummy cid to hmac_ext.create as it's not used anymore
+            // but the function signature still expects it.
+            // Consider refactoring hmac_ext.create to remove the cid parameter
+            // if it's truly unused there as well.
+            hmac_ext.create(device, &n.unwrap(), None)?;
             return Ok(Some(hmac_ext));
         }
         Ok(None)

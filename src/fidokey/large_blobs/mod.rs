@@ -29,12 +29,9 @@ impl FidoKeyHid {
         get: Option<u32>,
         set: Option<Vec<u8>>,
     ) -> Result<LargeBlobData> {
-        let cid = ctaphid::ctaphid_init(self)?;
-
         // get pintoken
         let pin_token = if let Some(pin) = pin {
             Some(self.get_pinuv_auth_token_with_permission(
-                &cid,
                 pin,
                 super::pin::Permission::LargeBlobWrite,
             )?)
@@ -43,7 +40,7 @@ impl FidoKeyHid {
         };
 
         let send_payload = large_blobs_command::create_payload(pin_token, offset, get, set)?;
-        let response_cbor = ctaphid::ctaphid_cbor(self, &cid, &send_payload)?;
+        let response_cbor = ctaphid::ctaphid_cbor(self, &send_payload)?;
 
         large_blobs_response::parse_cbor(&response_cbor)
     }

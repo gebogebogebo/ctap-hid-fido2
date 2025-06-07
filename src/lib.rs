@@ -128,7 +128,7 @@ mod tests {
     #[test]
     fn test_enc_hmac_sha_256() {
         let key_str = "this is key.";
-        let hasher = digest::digest(&digest::SHA256, &key_str.as_bytes());
+        let hasher = digest::digest(&digest::SHA256, key_str.as_bytes());
         let key = <[u8; 32]>::try_from(hasher.as_ref()).unwrap();
 
         let message = "this is message.";
@@ -143,7 +143,7 @@ mod tests {
     #[test]
     fn test_enc_aes256_cbc() {
         let key_str = "this is key.";
-        let hasher = digest::digest(&digest::SHA256, &key_str.as_bytes());
+        let hasher = digest::digest(&digest::SHA256, key_str.as_bytes());
         let key = <[u8; 32]>::try_from(hasher.as_ref()).unwrap();
 
         let message = "this is message.";

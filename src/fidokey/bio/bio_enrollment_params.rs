@@ -2,7 +2,6 @@ use crate::{pintoken::PinToken, str_buf::StrBuf, util};
 use std::fmt;
 
 pub struct EnrollStatus1 {
-    pub cid: [u8; 4],
     pub pin_token: Option<PinToken>,
     pub template_id: Vec<u8>,
 }

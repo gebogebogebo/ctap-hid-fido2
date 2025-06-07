@@ -1,6 +1,6 @@
 [package]
 name = "ctap-hid-fido2"
-version = "3.5.3"
+version = "3.5.4"
 authors = ["gebo <35388172+gebogebogebo@users.noreply.github.com>"]
 edition = "2021"
 
@@ -26,6 +26,7 @@ ciborium = "0.2.2"
 strum = "0.27.1"
 strum_macros = "0.27.1"
 x509-parser = "0.17.0"
+rand = "0.9.1"
 
 [dependencies.hidapi]
 version = "2.6.3"
@@ -33,7 +34,7 @@ default-features = false
 features=["linux-static-hidraw"]
 
 [dev-dependencies]
-clap = { version = "4.5.37", features = ["derive"] }
+clap = { version = "4.5.39", features = ["derive"] }
 env_logger = "0.11.8"
 log = "0.4.27"
 rpassword = "7.4.0"
