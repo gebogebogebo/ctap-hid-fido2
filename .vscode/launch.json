@@ -138,6 +138,23 @@
             },
             "args": [],
             "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "selection: Debug Example",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--example=selection"
+                ],
+                "filter": {
+                    "name": "selection",
+                    "kind": "example"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
         }
     ]
 }
