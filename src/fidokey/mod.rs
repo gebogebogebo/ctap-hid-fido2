@@ -2,7 +2,7 @@ use crate::HidParam;
 use anyhow::{anyhow, Result};
 use hidapi::HidApi;
 use std::ffi::CString;
-use std::cell::Cell;
+use std::sync::Mutex; // Import Mutex
 
 // Complex Submodules
 pub mod authenticator_config;
@@ -27,12 +27,12 @@ pub use make_credential::{
 };
 
 pub struct FidoKeyHid {
-    device_internal: hidapi::HidDevice,
+    device_internal: Mutex<hidapi::HidDevice>, // Changed to Mutex
     pub enable_log: bool,
     pub use_pre_bio_enrollment: bool,
     pub use_pre_credential_management: bool,
     pub keep_alive_msg: String,
-    cid: Cell<Option<[u8; 4]>>,
+    cid: Mutex<Option<[u8; 4]>>, // Changed to Mutex
 }
 
 impl FidoKeyHid {
@@ -46,12 +46,12 @@ impl FidoKeyHid {
 
             if let Ok(dev) = api.open_path(&path.unwrap()) {
                 let result = FidoKeyHid {
-                    device_internal: dev,
+                    device_internal: Mutex::new(dev), // Wrap in Mutex
                     enable_log: cfg.enable_log,
                     use_pre_bio_enrollment: cfg.use_pre_bio_enrollment,
                     use_pre_credential_management: cfg.use_pre_credential_management,
                     keep_alive_msg: cfg.keep_alive_msg.to_string(),
-                    cid: Cell::new(None),
+                    cid: Mutex::new(None), // Wrap in Mutex
                 };
                 return Ok(result);
             }
@@ -60,7 +60,8 @@ impl FidoKeyHid {
     }
 
     pub(crate) fn write(&self, cmd: &[u8]) -> Result<usize, String> {
-        match self.device_internal.write(cmd) {
+        let device = self.device_internal.lock().map_err(|e| e.to_string())?;
+        match device.write(cmd) {
             Ok(size) => Ok(size),
             Err(_) => Err("write error".into()),
         }
@@ -68,7 +69,8 @@ impl FidoKeyHid {
 
     pub(crate) fn read(&self) -> Result<Vec<u8>, String> {
         let mut buf: Vec<u8> = vec![0; 64];
-        match self.device_internal.read(&mut buf[..]) {
+        let device = self.device_internal.lock().map_err(|e| e.to_string())?;
+        match device.read(&mut buf[..]) {
             Ok(_) => Ok(buf),
             Err(_) => Err("read error".into()),
         }
@@ -76,15 +78,26 @@ impl FidoKeyHid {
     
     // init or get CID
     pub fn get_cid(&self) -> Result<[u8; 4]> {
+        let mut cid_guard = self.cid.lock().map_err(|e| anyhow!(e.to_string()))?;
         // get
-        if let Some(cid) = self.cid.get() {
-            return Ok(cid);
+        if let Some(cid_val) = *cid_guard {
+            return Ok(cid_val);
         }
 
         // init
-        let cid = crate::ctaphid::ctaphid_init(self)?;
-        self.cid.set(Some(cid));
-        Ok(cid)
+        // Temporarily unlock to call ctaphid_init, which might call get_cid again (though unlikely here)
+        // or other methods on self that also lock cid.
+        // A more robust solution might involve passing the locked guard or restructuring.
+        // However, for this specific case, ctaphid_init doesn't seem to re-enter get_cid.
+        // Drop(cid_guard); // Explicitly drop before re-acquiring or calling other methods that might lock
+        
+        // Since ctaphid_init takes &self, and self.cid is already locked,
+        // we need to be careful. However, ctaphid_init itself doesn't use self.cid.
+        // It uses self.write and self.read which lock device_internal.
+        // So, this should be fine.
+        let new_cid = crate::ctaphid::ctaphid_init(self)?;
+        *cid_guard = Some(new_cid);
+        Ok(new_cid)
     }
 }
 
