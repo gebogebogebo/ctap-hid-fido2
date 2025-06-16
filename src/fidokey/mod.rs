@@ -2,7 +2,7 @@ use crate::HidParam;
 use anyhow::{anyhow, Result};
 use hidapi::HidApi;
 use std::ffi::CString;
-use std::sync::Mutex; // Import Mutex
+use std::sync::Mutex;
 
 // Complex Submodules
 pub mod authenticator_config;
@@ -27,12 +27,12 @@ pub use make_credential::{
 };
 
 pub struct FidoKeyHid {
-    device_internal: Mutex<hidapi::HidDevice>, // Changed to Mutex
+    device_internal: Mutex<hidapi::HidDevice>,
     pub enable_log: bool,
     pub use_pre_bio_enrollment: bool,
     pub use_pre_credential_management: bool,
     pub keep_alive_msg: String,
-    cid: Mutex<Option<[u8; 4]>>, // Changed to Mutex
+    cid: Mutex<Option<[u8; 4]>>,
 }
 
 impl FidoKeyHid {
