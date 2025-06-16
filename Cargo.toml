@@ -1,6 +1,6 @@
 [package]
 name = "ctap-hid-fido2"
-version = "3.5.4"
+version = "3.5.5"
 authors = ["gebo <35388172+gebogebogebo@users.noreply.github.com>"]
 edition = "2021"
 
