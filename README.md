@@ -100,7 +100,7 @@ pub fn get_input_with_message(message: &str) -> String {
 }
 ```
 
-- See [How to use](#How to use) and [Examples](#Examples) for detailed instructions.
+- See [How to use](#How-to-use) and [Examples](#Examples) for detailed instructions.
 
 
 
@@ -227,13 +227,82 @@ for dev in devs {
 ```
 
 
+**Async support**
+
+The `tokio` feature must be enabled in your Cargo.toml
+
+### Enumerating devices:
+
+```rust
+#[tokio::main]async fn main() {
+    let devs = ctap_hid_fido2::get_hid_devices_async().await;
+    for info in devs {
+        println!(
+            "- vid=0x{:04x} , pid=0x{:04x} , info={:?}",
+            info.vid, info.pid, info.info
+        );
+    }
+}
+```
+
+You need to call these functions inside of a tokio runtime. You can use the tokio::main macro if you enable the macro feature, Or you can spawn a Thread-pool to handle async tasks.
+
+### Creating a FidoKeyHid:
+
+```rust
+let dev = FidoKeyHidFactory::create_async(&Cfg::init()).await?;
+```
+
+OR to create by id:
+
+```rust
+let devs = ctap_hid_fido2::get_fidokey_devices_async().await;
+for info in devs {
+    let dev = FidoKeyHidFactory::create_by_params_async(&[info.param], &Cfg::init()).await?;
+}
+```
+
+### API usage:
+
+The api for the async FidoKeyHid is exactly the same as the non async one.
+
+```rust
+match dev.get_info().await {
+    Ok(info) => println!("{}", info),
+    Err(e) => println!("error: {:?}", e),
+}
+```
+
+The only different is the `.await` at the end to call the future:
+
+```rust
+match dev.get_info() {
+    Ok(info) => println!("{}", info),
+    Err(e) => println!("error: {:?}", e),
+}
+```
+
+The async version is the right choice if you are building a GUI app, The sync version will cause the UI thread to freeze, Meaning its right for cli based tools.
+
+
+#### Async examples:
+
+- [ctapcli-async](examples/ctapcli-async)
+- [get-info-async](examples/get-info-async)
+- [reg-auth-async](examples/reg-auth-async)
+- [selection-async](examples/selection-async)
+- [test-config-async](examples/test-config-async)
+- [test-with-pin-non-rk-async](examples/test-with-pin-non-rk-async)
+- [test-with-pin-rk-async](examples/test-with-pin-rk-async)
+- [wink-async](examples/wink-async)
+
+
 
 ## Examples
 
 See the following links for examples of various patterns.
 
 - [Register and Authenticate Examples](README_Register_and_Authenticate.md)
-
 - [Get Authenticator info and Util Examples](README_Get_Info.md)
 - [Credential management (CTAP 2.1)](README_Credential_management.md)
 - [Biometric management (CTAP 2.1)](README_Biometric_management.md)
