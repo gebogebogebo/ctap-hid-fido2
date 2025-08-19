@@ -17,6 +17,8 @@ jobs:
     - uses: actions/checkout@v2
     - name: Build
       run: cargo build --examples --verbose
+    - name: Build async
+      run: cargo build --examples --features tokio --verbose
 
   ubuntu-build:
     runs-on: ubuntu-latest
@@ -29,6 +31,8 @@ jobs:
         sudo apt install -y libusb-1.0-0-dev libudev-dev
     - name: Build
       run: cargo build --examples --verbose
+    - name: Build async
+      run: cargo build --examples --features tokio --verbose
 
   windows-build:
     runs-on: windows-latest
@@ -37,3 +41,5 @@ jobs:
     - uses: actions/checkout@v2
     - name: Build
       run: cargo build --examples --verbose
+    - name: Build async
+      run: cargo build --examples --features tokio --verbose

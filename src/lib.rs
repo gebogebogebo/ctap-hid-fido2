@@ -30,6 +30,7 @@ use anyhow::{anyhow, Result};
 
 pub mod fidokey;
 pub use fidokey::FidoKeyHid;
+#[cfg(feature = "tokio")]pub use fidokey::FidoKeyHidAsync;
 
 mod hid;
 pub use hid::{HidInfo, HidParam};
@@ -60,9 +61,25 @@ pub fn get_hid_devices() -> Vec<HidInfo> {
     hid::get_hid_devices(None)
 }
 
+#[cfg(feature = "tokio")]pub async fn get_hid_devices_async() -> Vec<HidInfo> {
+    if let Ok(hid_devices) = tokio::task::spawn_blocking(||get_hid_devices()).await {
+        hid_devices
+    } else {
+        Vec::new()
+    }
+}
+
 /// Get HID FIDO devices
 pub fn get_fidokey_devices() -> Vec<HidInfo> {
     hid::get_hid_devices(Some(0xf1d0))
+}
+
+#[cfg(feature = "tokio")]pub async fn get_fidokey_devices_async() -> Vec<HidInfo> {
+    if let Ok(hid_devices) = tokio::task::spawn_blocking(||get_fidokey_devices()).await {
+        hid_devices
+    } else {
+        Vec::new()
+    }
 }
 
 /// Simple factory to create FidoKeyHid
@@ -87,8 +104,30 @@ impl FidoKeyHidFactory {
         Ok(device)
     }
 
+    #[cfg(feature = "tokio")]pub async fn create_async(cfg: &LibCfg) -> Result<FidoKeyHidAsync> {
+        let device = {
+            let mut devs = get_fidokey_devices_async().await;
+            if devs.is_empty() {
+                return Err(anyhow!("FIDO device not found."));
+            }
+            if devs.len() > 1 {
+                return Err(anyhow!("Multiple FIDO devices found."));
+            }
+
+            let device = devs.pop().unwrap().param;
+
+            let params = vec![device];
+            FidoKeyHidAsync::new(&params, cfg).await?
+        };
+        Ok(device)
+    }
+
     pub fn create_by_params(params: &[HidParam], cfg: &LibCfg) -> Result<FidoKeyHid> {
         FidoKeyHid::new(params, cfg)
+    }
+
+    #[cfg(feature = "tokio")]pub async fn create_by_params_async(params: &[HidParam], cfg: &LibCfg) -> Result<FidoKeyHidAsync> {
+        FidoKeyHidAsync::new(params, cfg).await
     }
 }
 

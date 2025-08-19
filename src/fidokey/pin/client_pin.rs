@@ -3,6 +3,7 @@ use super::client_pin_command::Permission;
 use super::client_pin_command::SubCommand as PinCmd;
 use super::client_pin_response;
 use super::FidoKeyHid;
+#[cfg(feature = "tokio")]use super::FidoKeyHidAsync;
 use crate::ctaphid;
 use crate::encrypt::cose;
 use crate::encrypt::enc_aes256_cbc;
@@ -111,6 +112,106 @@ impl FidoKeyHid {
     }
 }
 
+#[cfg(feature = "tokio")]impl FidoKeyHidAsync {
+    pub async fn get_authenticator_key_agreement(&self) -> Result<cose::CoseKey> {
+        let send_payload = client_pin_command::create_payload(PinCmd::GetKeyAgreement)?;
+        let response_cbor = ctaphid::ctaphid_cbor_async(self, &send_payload).await?;
+        let authenticator_key_agreement =
+            client_pin_response::parse_cbor_client_pin_get_keyagreement(&response_cbor)?;
+        Ok(authenticator_key_agreement)
+    }
+
+    pub async fn get_pin_token(&self, pin: &str) -> Result<PinToken> {
+        if !pin.is_empty() {
+            let authenticator_key_agreement = self.get_authenticator_key_agreement().await?;
+
+            let shared_secret = SharedSecret::new(&authenticator_key_agreement)?;
+            let pin_hash_enc = shared_secret.encrypt_pin(pin)?;
+
+            let send_payload = client_pin_command::create_payload_get_pin_token(
+                &shared_secret.public_key,
+                &pin_hash_enc,
+            )?;
+
+            let response_cbor = ctaphid::ctaphid_cbor_async(self, &send_payload).await?;
+
+            // get pin_token (enc)
+            let mut pin_token_enc =
+                client_pin_response::parse_cbor_client_pin_get_pin_token(&response_cbor)?;
+
+            // pintoken -> dec(pintoken)
+            let pin_token_dec = shared_secret.decrypt_token(&mut pin_token_enc)?;
+
+            Ok(pin_token_dec)
+        } else {
+            Err(anyhow!("pin not set"))
+        }
+    }
+
+    pub async fn get_pinuv_auth_token_with_permission(
+        &self,
+        pin: &str,
+        permission: Permission,
+    ) -> Result<PinToken> {
+        if !pin.is_empty() {
+            let authenticator_key_agreement = self.get_authenticator_key_agreement().await?;
+
+            // Get pinHashEnc
+            // - shared_secret.public_key -> platform KeyAgreement
+            let shared_secret = SharedSecret::new(&authenticator_key_agreement)?;
+            let pin_hash_enc = shared_secret.encrypt_pin(pin)?;
+
+            // Get pin token
+            let send_payload =
+                client_pin_command::create_payload_get_pin_uv_auth_token_using_pin_with_permissions(
+                    &shared_secret.public_key,
+                    &pin_hash_enc,
+                    permission,
+                )?;
+            let response_cbor = ctaphid::ctaphid_cbor_async(self, &send_payload).await?;
+
+            // get pin_token (enc)
+            let mut pin_token_enc =
+                client_pin_response::parse_cbor_client_pin_get_pin_token(&response_cbor)?;
+
+            // pintoken -> dec(pintoken)
+            let pin_token_dec = shared_secret.decrypt_token(&mut pin_token_enc)?;
+
+            Ok(pin_token_dec)
+        } else {
+            Err(anyhow!("pin not set"))
+        }
+    }
+
+    pub async fn set_pin(&self, pin: &str) -> Result<()> {
+        if pin.is_empty() {
+            return Err(anyhow!("new pin not set"));
+        }
+
+        let send_payload = client_pin_command::create_payload(PinCmd::GetKeyAgreement)?;
+        let response_cbor = ctaphid::ctaphid_cbor_async(self, &send_payload).await?;
+
+        let key_agreement =
+            client_pin_response::parse_cbor_client_pin_get_keyagreement(&response_cbor)?;
+
+        let shared_secret = SharedSecret::new(&key_agreement)?;
+
+        let new_pin_enc = create_new_pin_enc(&shared_secret, pin)?;
+
+        let pin_auth = create_pin_auth_for_set_pin(&shared_secret, &new_pin_enc)?;
+
+        let send_payload = client_pin_command::create_payload_set_pin(
+            &shared_secret.public_key,
+            &pin_auth,
+            &new_pin_enc,
+        )?;
+
+        ctaphid::ctaphid_cbor_async(self, &send_payload).await?;
+
+        Ok(())
+    }
+}
+
 // pinAuth = LEFT(HMAC-SHA-256(sharedSecret, newPinEnc), 16)
 fn create_pin_auth_for_set_pin(
     shared_secret: &SharedSecret,
@@ -202,6 +303,41 @@ pub fn change_pin(device: &FidoKeyHid, current_pin: &str, new_pin: &str) -> Resu
     )?;
 
     ctaphid::ctaphid_cbor(device, &send_payload)?;
+
+    Ok(())
+}
+
+#[cfg(feature = "tokio")]pub async fn change_pin_async(device: &FidoKeyHidAsync, current_pin: &str, new_pin: &str) -> Result<()> {
+    if current_pin.is_empty() {
+        return Err(anyhow!("current pin not set"));
+    }
+    if new_pin.is_empty() {
+        return Err(anyhow!("new pin not set"));
+    }
+
+    let send_payload = client_pin_command::create_payload(PinCmd::GetKeyAgreement)?;
+    let response_cbor = ctaphid::ctaphid_cbor_async(device, &send_payload).await?;
+
+    let key_agreement =
+        client_pin_response::parse_cbor_client_pin_get_keyagreement(&response_cbor)?;
+
+    let shared_secret = SharedSecret::new(&key_agreement)?;
+
+    let new_pin_enc = create_new_pin_enc(&shared_secret, new_pin)?;
+
+    let current_pin_hash_enc = shared_secret.encrypt_pin(current_pin)?;
+
+    let pin_auth =
+        create_pin_auth_for_change_pin(&shared_secret, &new_pin_enc, &current_pin_hash_enc)?;
+
+    let send_payload = client_pin_command::create_payload_change_pin(
+        &shared_secret.public_key,
+        &pin_auth,
+        &new_pin_enc,
+        &current_pin_hash_enc,
+    )?;
+
+    ctaphid::ctaphid_cbor_async(device, &send_payload).await?;
 
     Ok(())
 }
