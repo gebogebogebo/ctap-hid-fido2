@@ -1,5 +1,5 @@
 use crate::{ctapdef, fidokey::FidoKeyHid, util};
-#[cfg(feature = "tokio")]#[cfg(feature = "tokio")]use crate::fidokey::FidoKeyHidAsync;
+#[cfg(feature = "tokio")]use crate::fidokey::FidoKeyHidAsync;
 use anyhow::{anyhow, Error, Result};
 use std::{thread, time};
 use rand::{rng, Rng};
