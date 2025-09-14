@@ -11,7 +11,10 @@ pub fn info(device: &FidoKeyHid, item: &str) -> Result<()> {
     if item.is_empty() {
         println!("Get all data.");
         match device.get_info() {
-            Ok(info) => println!("{}", info),
+            Ok(info) => {
+                println!("{}", info);
+                return Ok(());
+            },
             Err(err) => return Err(err),
         };
     }
