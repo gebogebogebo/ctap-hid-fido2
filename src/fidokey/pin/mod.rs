@@ -2,6 +2,7 @@ mod client_pin;
 mod client_pin_command;
 mod client_pin_response;
 use super::FidoKeyHid;
+#[cfg(feature = "tokio")]use super::FidoKeyHidAsync;
 use crate::ctaphid;
 use anyhow::Result;
 use client_pin_command::SubCommand as PinCmd;
@@ -41,6 +42,43 @@ impl FidoKeyHid {
     /// Change PIN
     pub fn change_pin(&self, current_pin: &str, new_pin: &str) -> Result<()> {
         client_pin::change_pin(self, current_pin, new_pin)?;
+        Ok(())
+    }
+}
+
+#[cfg(feature = "tokio")]impl FidoKeyHidAsync {
+    /// Get PIN retry count
+    pub async fn get_pin_retries(&self) -> Result<i32> {
+        let send_payload = client_pin_command::create_payload(PinCmd::GetRetries)?;
+
+        // The cid is obtained internally by ctaphid_cbor
+        let response_cbor = ctaphid::ctaphid_cbor_async(self, &send_payload).await?;
+
+        let pin = client_pin_response::parse_cbor_client_pin_get_retries(&response_cbor)?;
+
+        Ok(pin.retries)
+    }
+
+    /// Get UV retry count
+    pub async fn get_uv_retries(&self) -> Result<i32> {
+        let send_payload = client_pin_command::create_payload(PinCmd::GetUVRetries)?;
+
+        let response_cbor = ctaphid::ctaphid_cbor_async(self, &send_payload).await?;
+
+        let pin = client_pin_response::parse_cbor_client_pin_get_retries(&response_cbor)?;
+
+        Ok(pin.uv_retries)
+    }
+
+    /// Set New PIN
+    pub async fn set_new_pin(&self, pin: &str) -> Result<()> {
+        self.set_pin(pin).await?;
+        Ok(())
+    }
+
+    /// Change PIN
+    pub async fn change_pin(&self, current_pin: &str, new_pin: &str) -> Result<()> {
+        client_pin::change_pin_async(self, current_pin, new_pin).await?;
         Ok(())
     }
 }

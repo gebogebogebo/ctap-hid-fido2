@@ -2,6 +2,7 @@ pub mod large_blobs_command;
 pub mod large_blobs_params;
 pub mod large_blobs_response;
 use super::FidoKeyHid;
+#[cfg(feature = "tokio")]use super::FidoKeyHidAsync;
 use crate::ctaphid;
 use anyhow::Result;
 use large_blobs_params::LargeBlobData;
@@ -41,6 +42,46 @@ impl FidoKeyHid {
 
         let send_payload = large_blobs_command::create_payload(pin_token, offset, get, set)?;
         let response_cbor = ctaphid::ctaphid_cbor(self, &send_payload)?;
+
+        large_blobs_response::parse_cbor(&response_cbor)
+    }
+}
+
+#[cfg(feature = "tokio")]impl FidoKeyHidAsync {
+    pub async fn get_large_blob(&self) -> Result<LargeBlobData> {
+        let offset = 0; // TODO
+        let read_bytes = 1024; // TODO
+        self.large_blobs(None, offset, Some(read_bytes), None).await
+    }
+
+    pub async fn write_large_blob(
+        &self,
+        pin: Option<&str>,
+        write_datas: Vec<u8>,
+    ) -> Result<LargeBlobData> {
+        let offset = 0; // TODO
+        self.large_blobs(pin, offset, None, Some(write_datas)).await
+    }
+
+    async fn large_blobs(
+        &self,
+        pin: Option<&str>,
+        offset: u32,
+        get: Option<u32>,
+        set: Option<Vec<u8>>,
+    ) -> Result<LargeBlobData> {
+        // get pintoken
+        let pin_token = if let Some(pin) = pin {
+            Some(self.get_pinuv_auth_token_with_permission(
+                pin,
+                super::pin::Permission::LargeBlobWrite,
+            ).await?)
+        } else {
+            None
+        };
+
+        let send_payload = large_blobs_command::create_payload(pin_token, offset, get, set)?;
+        let response_cbor = ctaphid::ctaphid_cbor_async(self, &send_payload).await?;
 
         large_blobs_response::parse_cbor(&response_cbor)
     }

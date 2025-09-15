@@ -1,4 +1,5 @@
 use super::FidoKeyHid;
+#[cfg(feature = "tokio")]use super::FidoKeyHidAsync;
 use crate::{ctapdef, ctaphid};
 use anyhow::Result;
 
@@ -17,5 +18,18 @@ impl FidoKeyHid {
 
     pub fn cancel_selection(&self) -> Result<()> {
         ctaphid::ctaphid_cancel(self)
+    }
+}
+
+#[cfg(feature = "tokio")]impl FidoKeyHidAsync {
+    /// Selection (CTAP 2.1)
+    pub async fn selection(&self) -> Result<()> {
+        let send_payload = create_payload();
+        let _response_cbor = ctaphid::ctaphid_cbor_async(self, &send_payload).await?;
+        Ok(())
+    }
+
+    pub async fn cancel_selection(&self) -> Result<()> {
+        ctaphid::ctaphid_cancel_async(self).await
     }
 }

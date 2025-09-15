@@ -3,6 +3,7 @@ mod get_info_command;
 mod get_info_params;
 mod get_info_response;
 use super::FidoKeyHid;
+#[cfg(feature = "tokio")]use super::FidoKeyHidAsync;
 use anyhow::{anyhow, Result};
 
 #[derive(Debug, Clone, PartialEq, strum_macros::AsRefStr)]
@@ -107,6 +108,54 @@ impl FidoKeyHid {
 
     pub fn enable_info_option(&self, info_option: &InfoOption) -> Result<Option<bool>> {
         let info = self.get_info()?;
+        let ret = info.options.iter().find(|v| (v).0 == info_option.as_ref());
+        if let Some(v) = ret {
+            // v.1 == true or false
+            // - present and set to true.
+            // - present and set to false.
+            return Ok(Some(v.1));
+        }
+        // absent.
+        Ok(None)
+    }
+}
+
+#[cfg(feature = "tokio")]impl FidoKeyHidAsync {
+    pub async fn get_info(&self) -> Result<get_info_params::Info> {
+        let send_payload = get_info_command::create_payload();
+        let response_cbor = ctaphid::ctaphid_cbor_async(self, &send_payload).await?;
+        let info = get_info_response::parse_cbor(&response_cbor)?;
+        Ok(info)
+    }
+
+    pub async fn get_info_u2f(&self) -> Result<String> {
+        let _data: Vec<u8> = Vec::new();
+
+        // CTAP1_INS.Version = 3
+        match ctaphid::send_apdu_async(self, 0, 3, 0, 0, &_data).await {
+            Ok(result) => {
+                let version: String = String::from_utf8(result).unwrap();
+                Ok(version)
+            }
+            Err(error) => Err(anyhow!(error)),
+        }
+    }
+
+    pub async fn enable_info_param(&self, info_param: &InfoParam) -> Result<bool> {
+        let info = self.get_info().await?;
+        let ret = info.versions.iter().find(|v| *v == info_param.as_ref());
+        if ret.is_some() {
+            return Ok(true);
+        }
+        let ret = info.extensions.iter().find(|v| *v == info_param.as_ref());
+        if ret.is_some() {
+            return Ok(true);
+        }
+        Ok(false)
+    }
+
+    pub async fn enable_info_option(&self, info_option: &InfoOption) -> Result<Option<bool>> {
+        let info = self.get_info().await?;
         let ret = info.options.iter().find(|v| (v).0 == info_option.as_ref());
         if let Some(v) = ret {
             // v.1 == true or false

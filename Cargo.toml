@@ -33,6 +33,12 @@ version = "2.6.3"
 default-features = false
 features=["linux-static-hidraw"]
 
+[dependencies.tokio]
+version = "1.47.1"
+default-features = false
+features=["rt","sync","time"]
+optional = true
+
 [dev-dependencies]
 clap = { version = "4.5.39", features = ["derive"] }
 env_logger = "0.11.8"
@@ -41,26 +47,66 @@ rpassword = "7.4.0"
 arboard = "3.5.0"
 colored = "3.0.0"
 
+[dev-dependencies.tokio]
+version = "1.47.1"
+default-features = false
+features=["macros","io-std","io-util"]
+
+[features]
+tokio = ["dep:tokio"]
+
 [[example]]
 name = "ctapcli"
+
+[[example]]
+name = "ctapcli-async"
+required-features = ["tokio"]
 
 [[example]]
 name = "get-info"
 
 [[example]]
+name = "get-info-async"
+required-features = ["tokio"]
+
+[[example]]
 name = "reg-auth"
+
+[[example]]
+name = "reg-auth-async"
+required-features = ["tokio"]
 
 [[example]]
 name = "test-with-pin-non-rk"
 
 [[example]]
+name = "test-with-pin-non-rk-async"
+required-features = ["tokio"]
+
+[[example]]
 name = "test-with-pin-rk"
+
+[[example]]
+name = "test-with-pin-rk-async"
+required-features = ["tokio"]
 
 [[example]]
 name = "wink"
 
 [[example]]
+name = "wink-async"
+required-features = ["tokio"]
+
+[[example]]
 name = "test-config"
 
 [[example]]
+name = "test-config-async"
+required-features = ["tokio"]
+
+[[example]]
 name = "selection"
+
+[[example]]
+name = "selection-async"
+required-features = ["tokio"]

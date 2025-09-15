@@ -1,4 +1,5 @@
 use crate::{ctapdef, fidokey::FidoKeyHid, util};
+#[cfg(feature = "tokio")]use crate::fidokey::FidoKeyHidAsync;
 use anyhow::{anyhow, Error, Result};
 use std::{thread, time};
 use rand::{rng, Rng};
@@ -32,6 +33,62 @@ fn generate_random_nonce() -> [u8; 8] {
 }
 
 pub fn ctaphid_init(device: &FidoKeyHid) -> Result<[u8; 4]> {
+    // Generate random nonce
+    let nonce = generate_random_nonce();
+    
+    // CTAPHID_INIT
+    let cmd = ctaphid_init_cmd(&nonce);
+
+    if device.enable_log {
+        println!("CTAPHID_INIT = {}", util::to_hex_str(&cmd));
+    }
+
+    device.write(&cmd).map_err(Error::msg)?;
+    let buf = device.read().map_err(Error::msg)?;
+
+    if device.enable_log {
+        println!("CTAPHID_INIT response = {}", util::to_hex_str(&buf));
+    }
+
+    let cid = validate_and_get_cid(device.enable_log, &nonce, &buf)?;
+
+    if device.enable_log {
+        println!("CID: {}", util::to_hex_str(&cid));
+    }
+
+    // Return the dynamically adjusted CID
+    Ok(cid)
+}
+
+#[cfg(feature = "tokio")]pub async fn ctaphid_init_async(device: &FidoKeyHidAsync) -> Result<[u8; 4]> {
+    // Generate random nonce
+    let nonce = generate_random_nonce();
+    
+    // CTAPHID_INIT
+    let cmd = ctaphid_init_cmd(&nonce);
+
+    if device.enable_log {
+        println!("CTAPHID_INIT = {}", util::to_hex_str(&cmd));
+    }
+
+    device.write(&cmd).await.map_err(Error::msg)?;
+    let buf = device.read().await.map_err(Error::msg)?;
+
+    if device.enable_log {
+        println!("CTAPHID_INIT response = {}", util::to_hex_str(&buf));
+    }
+
+    let cid = validate_and_get_cid(device.enable_log, &nonce, &buf)?;
+
+    if device.enable_log {
+        println!("CID: {}", util::to_hex_str(&cid));
+    }
+
+    // Return the dynamically adjusted CID
+    Ok(cid)
+}
+
+fn ctaphid_init_cmd(nonce: &[u8; 8]) -> [u8; 65] {
     // CTAPHID_INIT
     let mut cmd: [u8; 65] = [0; 65];
 
@@ -51,21 +108,14 @@ pub fn ctaphid_init(device: &FidoKeyHid) -> Result<[u8; 4]> {
     cmd[6] = 0x00;
     cmd[7] = 0x08;
 
-    // Generate random nonce
-    let nonce = generate_random_nonce();
-    cmd[8..16].copy_from_slice(&nonce);
+    // Add random nonce
+    cmd[8..16].copy_from_slice(nonce);
 
-    if device.enable_log {
-        println!("CTAPHID_INIT = {}", util::to_hex_str(&cmd));
-    }
+    // Return cmd
+    cmd
+}
 
-    device.write(&cmd).map_err(Error::msg)?;
-    let buf = device.read().map_err(Error::msg)?;
-
-    if device.enable_log {
-        println!("CTAPHID_INIT response = {}", util::to_hex_str(&buf));
-    }
-
+fn validate_and_get_cid(enable_log: bool, nonce: &[u8; 8], buf: &Vec<u8>) -> Result<[u8; 4]> {
     // Check if the received buffer includes Report ID (0x00)
     let has_report_id = buf.len() == 65 && buf[0] == 0x00;
     // Determine the starting offset for the data section (nonce start)
@@ -74,9 +124,9 @@ pub fn ctaphid_init(device: &FidoKeyHid) -> Result<[u8; 4]> {
     // Extract and verify nonce from the response
     let response_nonce = &buf[data_offset..data_offset + 8];
     
-    if device.enable_log {
+    if enable_log {
         println!("=== NONCE INFO ===");
-        println!("SENT NONCE: {}", util::to_hex_str(&nonce));
+        println!("SENT NONCE: {}", util::to_hex_str(nonce));
         println!("RECV NONCE: {}", util::to_hex_str(response_nonce));
     }
     
@@ -86,19 +136,12 @@ pub fn ctaphid_init(device: &FidoKeyHid) -> Result<[u8; 4]> {
 
     // CID follows immediately after the nonce
     let cid_offset = data_offset + 8;
-    let cid = [
+    Ok([
         buf[cid_offset],
         buf[cid_offset + 1],
         buf[cid_offset + 2],
         buf[cid_offset + 3],
-    ];
-
-    if device.enable_log {
-        println!("CID: {}", util::to_hex_str(&cid));
-    }
-
-    // Return the dynamically adjusted CID
-    Ok(cid)
+    ])
 }
 
 fn get_responce_status(packet: &[u8]) -> Result<(u8, u16, u8)> {
@@ -241,26 +284,7 @@ fn create_continuation_packet(seqno: u8, cid: &[u8], payload: &[u8]) -> (Vec<u8>
 
 pub fn ctaphid_wink(device: &FidoKeyHid) -> Result<()> {
     // CTAPHID_WINK
-    let mut cmd: [u8; 65] = [0; 65];
-
-    // Report ID
-    cmd[0] = 0x00;
-
-    // Get CID from device
-    let cid = device.get_cid()?;
-
-    // cid-dmy
-    cmd[1] = cid[0];
-    cmd[2] = cid[1];
-    cmd[3] = cid[2];
-    cmd[4] = cid[3];
-
-    // command
-    cmd[5] = CTAPHID_WINK;
-
-    // len
-    cmd[6] = 0x00;
-    cmd[7] = 0x00;
+    let cmd = ctaphid_wink_cmd(device.get_cid()?);
 
     if device.enable_log {
         println!("- wink({:02})    = {:?}", cmd.len(), util::to_hex_str(&cmd));
@@ -281,15 +305,88 @@ pub fn ctaphid_wink(device: &FidoKeyHid) -> Result<()> {
     Ok(())
 }
 
-pub fn ctaphid_cancel(device: &FidoKeyHid) -> Result<()> {
-    // CTAPHID_CANCEL
+#[cfg(feature = "tokio")]pub async fn ctaphid_wink_async(device: &FidoKeyHidAsync) -> Result<()> {
+    // CTAPHID_WINK
+    let cmd = ctaphid_wink_cmd(device.get_cid().await?);
+
+    if device.enable_log {
+        println!("- wink({:02})    = {:?}", cmd.len(), util::to_hex_str(&cmd));
+    }
+
+    device.write(&cmd).await.map_err(Error::msg)?;
+
+    let _buf = device.read().await.map_err(Error::msg)?;
+
+    if device.enable_log {
+        println!(
+            "- response wink({:02})    = {:?}",
+            _buf.len(),
+            util::to_hex_str(&_buf)
+        );
+    }
+
+    Ok(())
+}
+
+fn ctaphid_wink_cmd(cid: [u8; 4]) -> [u8; 65] {
+    // CTAPHID_WINK
     let mut cmd: [u8; 65] = [0; 65];
 
     // Report ID
     cmd[0] = 0x00;
 
-    // Get CID from device
-    let cid = device.get_cid()?;
+    // cid-dmy
+    cmd[1] = cid[0];
+    cmd[2] = cid[1];
+    cmd[3] = cid[2];
+    cmd[4] = cid[3];
+
+    // command
+    cmd[5] = CTAPHID_WINK;
+
+    // len
+    cmd[6] = 0x00;
+    cmd[7] = 0x00;
+
+    cmd
+}
+
+pub fn ctaphid_cancel(device: &FidoKeyHid) -> Result<()> {
+    // CTAPHID_CANCEL
+    let cmd = ctaphid_cancel_cmd(device.get_cid()?);
+
+    if device.enable_log {
+        println!("CTAPHID_CANCEL = {}", util::to_hex_str(&cmd));
+    }
+
+    device.write(&cmd).map_err(Error::msg)?;
+    // Cancel command may not return a response or may return an error if no operation to cancel.
+    // For now, we don't expect a specific response, just that the command was sent.
+    // If a response is read here, it might block indefinitely if the authenticator doesn't send one.
+    Ok(())
+}
+
+#[cfg(feature = "tokio")]pub async fn ctaphid_cancel_async(device: &FidoKeyHidAsync) -> Result<()> {
+    // CTAPHID_CANCEL
+    let cmd = ctaphid_cancel_cmd(device.get_cid().await?);
+
+    if device.enable_log {
+        println!("CTAPHID_CANCEL = {}", util::to_hex_str(&cmd));
+    }
+
+    device.write(&cmd).await.map_err(Error::msg)?;
+    // Cancel command may not return a response or may return an error if no operation to cancel.
+    // For now, we don't expect a specific response, just that the command was sent.
+    // If a response is read here, it might block indefinitely if the authenticator doesn't send one.
+    Ok(())
+}
+
+fn ctaphid_cancel_cmd(cid: [u8; 4]) -> [u8; 65] {
+    // CTAPHID_CANCEL
+    let mut cmd: [u8; 65] = [0; 65];
+
+    // Report ID
+    cmd[0] = 0x00;
 
     // cid
     cmd[1] = cid[0];
@@ -304,15 +401,7 @@ pub fn ctaphid_cancel(device: &FidoKeyHid) -> Result<()> {
     cmd[6] = 0x00;
     cmd[7] = 0x00;
 
-    if device.enable_log {
-        println!("CTAPHID_CANCEL = {}", util::to_hex_str(&cmd));
-    }
-
-    device.write(&cmd).map_err(Error::msg)?;
-    // Cancel command may not return a response or may return an error if no operation to cancel.
-    // For now, we don't expect a specific response, just that the command was sent.
-    // If a response is read here, it might block indefinitely if the authenticator doesn't send one.
-    Ok(())
+    cmd
 }
 
 fn ctaphid_cbormsg(
@@ -442,12 +531,148 @@ fn ctaphid_cbormsg(
     }
 }
 
+#[cfg(feature = "tokio")]async fn ctaphid_cbormsg_async(
+    device: &FidoKeyHidAsync,
+    command: u8,
+    payload: &[u8],
+) -> Result<Vec<u8>> {
+    if device.enable_log {
+        println!();
+        println!("-- send cbor({:02})", payload.len());
+        println!("{}", util::to_hex_str(payload));
+        println!("--");
+    }
+
+    // Get CID
+    let cid = device.get_cid().await?;
+
+    // initialization_packet
+    let res = create_initialization_packet(&cid, command, payload);
+
+    //println!("CTAPHID_CBOR(0) = {}", util::to_hex_str(&res.0));
+
+    // Write data to device
+    let _res = device.write(&res.0).await.map_err(Error::msg)?;
+    //println!("Wrote: {:?} byte", res);
+
+    // next
+    if res.1 {
+        for seqno in 0..100 {
+            let res = create_continuation_packet(seqno, &cid, payload);
+            //println!("CTAPHID_CBOR(1) = {}", util::to_hex_str(&res.0));
+            let _res = device.write(&res.0).await.map_err(Error::msg)?;
+            if !res.1 {
+                break;
+            }
+        }
+    }
+
+    // read - 1st packet
+    let mut keep_alive_msg_flag = false;
+    let mut st: (u8, u16, u8) = (0, 0, 0);
+    let mut packet_1st = vec![];
+    for _counter in 0..500 {
+        // println!("counter: {:?}", _counter);
+
+        let buf = match device.read().await {
+            Ok(res) => res,
+            Err(_error) => {
+                let msg = format!("read err = {}", ctapdef::get_ctap_status_message(0xfe));
+                return Err(anyhow!(msg));
+            }
+        };
+        //println!("Read: {:?} byte", res);
+
+        if command != CTAPHID_CBOR && command != CTAPHID_MSG {
+            return Ok(buf);
+        }
+
+        st = get_responce_status(&buf)?;
+        if st.0 == CTAPHID_CBOR || st.0 == CTAPHID_MSG {
+            packet_1st = buf;
+            break;
+        } else if st.0 == CTAPHID_KEEPALIVE {
+            if !keep_alive_msg_flag {
+                if !device.keep_alive_msg.is_empty() {
+                    println!("{}", device.keep_alive_msg);
+                }
+                keep_alive_msg_flag = true;
+            }
+            tokio::time::sleep(time::Duration::from_millis(100)).await;
+        } else if st.0 == CTAPHID_ERROR {
+            println!("CTAPHID_ERROR Error code = 0x{:02x}", st.2);
+            break;
+        } else {
+            println!("err");
+            break;
+        }
+    }
+
+    //println!("payload_size = {:?} byte", payload_size);
+    //println!("response_status = 0x{:02X}", st.2);
+
+    if is_responce_error(st) {
+        Err(anyhow!(format!(
+            "response_status err = {}",
+            get_status_message(st)
+        )))
+    } else {
+        let mut payload = ctaphid_cbor_responce_get_payload_1(&packet_1st);
+
+        // Is Exists Next Packet?
+        let payload_size = st.1;
+        if (payload.len() as u16) < payload_size {
+            for _ in 1..=100 {
+                // read next packet
+                let buf = match device.read().await {
+                    Ok(res) => res,
+                    Err(_error) => {
+                        let msg = format!("read err = {}", ctapdef::get_ctap_status_message(0xfe));
+                        return Err(anyhow!(msg));
+                    }
+                };
+                //println!("Read: {:?} byte", &buf[..res]);
+
+                let mut p2 = ctaphid_cbor_responce_get_payload_2(&buf);
+
+                // Append to payload
+                payload.append(&mut p2);
+
+                // Is there another packet?
+                if (payload.len() as u16) >= payload_size {
+                    break;
+                }
+            }
+        }
+
+        // get data
+        let data = get_data(st, payload);
+
+        if device.enable_log {
+            println!();
+            println!("## response cbor({:02})", data.len());
+            println!("{}", util::to_hex_str(&data));
+            println!("##");
+        }
+
+        Ok(data)
+    }
+}
+
 pub fn ctaphid_cbor(device: &FidoKeyHid, payload: &[u8]) -> Result<Vec<u8>> {
     ctaphid_cbormsg(device, CTAPHID_CBOR, payload)
 }
 
+#[cfg(feature = "tokio")]pub async fn ctaphid_cbor_async(device: &FidoKeyHidAsync, payload: &[u8]) -> Result<Vec<u8>> {
+    ctaphid_cbormsg_async(device, CTAPHID_CBOR, payload).await
+}
+
 pub fn ctaphid_msg(device: &FidoKeyHid, payload: &[u8]) -> Result<Vec<u8>> {
     ctaphid_cbormsg(device, CTAPHID_MSG, payload)
+}
+
+#[cfg(feature = "tokio")]pub async fn ctaphid_msg_async(device: &FidoKeyHidAsync, payload: &[u8]) -> Result<Vec<u8>> {
+    ctaphid_cbormsg_async(device, CTAPHID_MSG, payload).await
 }
 
 pub fn send_apdu(
@@ -494,6 +719,52 @@ pub fn send_apdu(
     apdu[7..(size + 7)].clone_from_slice(&data[..size]);
 
     ctaphid_msg(device, &apdu)
+}
+
+#[cfg(feature = "tokio")]pub async fn send_apdu_async(
+    device: &FidoKeyHidAsync,
+    cla: u8,
+    ins: u8,
+    p1: u8,
+    p2: u8,
+    data: &[u8],
+) -> Result<Vec<u8>> {
+    /*
+    Packs and sends an APDU for use in CTAP1 commands.
+    This is a low-level method mainly used internally. Avoid calling it
+    directly if possible, and use the get_version, register, and
+    authenticate methods if possible instead.
+    :param cla: The CLA parameter of the request.
+    :param ins: The INS parameter of the request.
+    :param p1: The P1 parameter of the request.
+    :param p2: The P2 parameter of the request.
+    :param data: The body of the request.
+    :return: The response APDU data of a successful request.
+    :raise: ApduError
+    */
+
+    let mut apdu: Vec<u8> = vec![0; 7 + data.len()];
+    // reserved
+    apdu[0] = cla;
+    // U2F Command
+    apdu[1] = ins;
+    // param-1
+    apdu[2] = p1;
+    // param-2
+    apdu[3] = p2;
+
+    // data-len(3byte)
+    apdu[4] = 0;
+    // High part of payload length
+    apdu[5] = ((data.len() as u16) >> 8) as u8;
+    // Low part of payload length
+    apdu[6] = data.len() as u8;
+
+    // data
+    let size = data.len();
+    apdu[7..(size + 7)].clone_from_slice(&data[..size]);
+
+    ctaphid_msg_async(device, &apdu).await
 }
 
 /*

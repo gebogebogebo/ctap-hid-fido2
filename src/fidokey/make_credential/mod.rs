@@ -4,6 +4,7 @@ pub mod make_credential_response;
 use super::{
     credential_management::credential_management_params::CredentialProtectionPolicy, FidoKeyHid,
 };
+#[cfg(feature = "tokio")]use super::FidoKeyHidAsync;
 use crate::{
     ctaphid, encrypt::enc_hmac_sha_256,
     public_key_credential_user_entity::PublicKeyCredentialUserEntity,
@@ -141,6 +142,136 @@ impl FidoKeyHid {
         }
         let arg = builder.build();
         self.make_credential_with_args(&arg)
+    }
+}
+
+#[cfg(feature = "tokio")]impl FidoKeyHidAsync {
+    pub async fn make_credential_with_args(&self, args: &MakeCredentialArgs<'_>) -> Result<Attestation> {
+        let user_id = {
+            if let Some(rkp) = &args.user_entity {
+                rkp.id.to_vec()
+            } else {
+                [].to_vec()
+            }
+        };
+
+        // create cmmand
+        let send_payload = {
+            let mut params =
+                make_credential_command::Params::new(&args.rpid, args.challenge.to_vec(), user_id);
+
+            params.option_rk = args.rk.unwrap_or(false);
+
+            params.option_uv = args.uv;
+
+            params.exclude_list = args.exclude_list.to_vec();
+            params.key_types = if args.key_types.is_empty() {
+                vec![CredentialSupportedKeyType::Ecdsa256]
+            } else {
+                args.key_types.clone()
+            };
+
+            if let Some(rkp) = &args.user_entity {
+                params.user_name = rkp.name.to_string();
+                params.user_display_name = rkp.display_name.to_string();
+            }
+
+            // get pintoken & create pin auth
+            if let Some(pin) = args.pin {
+                let pin_token = self.get_pin_token(pin).await?;
+                let sig =
+                    enc_hmac_sha_256::authenticate(&pin_token.key, &params.client_data_hash);
+                params.pin_auth = sig[0..16].to_vec();
+            }
+
+            // TODO
+            let extensions = if args.extensions.is_some() {
+                Some(args.extensions.as_ref().unwrap())
+            } else {
+                None
+            };
+
+            make_credential_command::create_payload(params, extensions)?
+        };
+
+        // send & response
+        let response_cbor = ctaphid::ctaphid_cbor_async(self, &send_payload).await?;
+
+        let att = make_credential_response::parse_cbor(&response_cbor)?;
+        Ok(att)
+    }
+
+    /// Registration command.Generate credentials(with PIN,non Resident Key)
+    pub async fn make_credential(
+        &self,
+        rpid: &str,
+        challenge: &[u8],
+        pin: Option<&str>,
+    ) -> Result<Attestation> {
+        let mut builder = MakeCredentialArgsBuilder::new(rpid, challenge);
+        if let Some(pin) = pin {
+            builder = builder.pin(pin);
+        }
+        let arg = builder.build();
+        self.make_credential_with_args(&arg).await
+    }
+
+    /// Registration command. Generate credentials (with PIN, non Resident Key) while also
+    /// specifying the type of key you'd like to create.
+    pub async fn make_credential_with_key_type(
+        &self,
+        rpid: &str,
+        challenge: &[u8],
+        pin: Option<&str>,
+        key_type: Option<CredentialSupportedKeyType>,
+    ) -> Result<Attestation> {
+        let mut builder = MakeCredentialArgsBuilder::new(rpid, challenge);
+        if let Some(pin) = pin {
+            builder = builder.pin(pin);
+        }
+        if let Some(key_type) = key_type {
+            builder = builder.key_type(key_type);
+        }
+        let arg = builder.build();
+        self.make_credential_with_args(&arg).await
+    }
+
+    /// Registration command.Generate credentials(with PIN and extensions,non Resident Key)
+    pub async fn make_credential_with_extensions(
+        &self,
+        rpid: &str,
+        challenge: &[u8],
+        pin: Option<&str>,
+        extensions: Option<&Vec<Mext>>,
+    ) -> Result<Attestation> {
+        let mut builder = MakeCredentialArgsBuilder::new(rpid, challenge);
+        if let Some(pin) = pin {
+            builder = builder.pin(pin);
+        }
+        if let Some(extensions) = extensions {
+            builder = builder.extensions(extensions);
+        }
+        let arg = builder.build();
+        self.make_credential_with_args(&arg).await
+    }
+
+    /// Registration command.Generate credentials(with PIN ,Resident Key)
+    pub async fn make_credential_rk(
+        &self,
+        rpid: &str,
+        challenge: &[u8],
+        pin: Option<&str>,
+        user_entity: &PublicKeyCredentialUserEntity,
+    ) -> Result<Attestation> {
+        let mut builder = MakeCredentialArgsBuilder::new(rpid, challenge)
+            .user_entity(user_entity)
+            .resident_key();
+
+        if let Some(pin) = pin {
+            builder = builder.pin(pin);
+        }
+        let arg = builder.build();
+        self.make_credential_with_args(&arg).await
     }
 }
 //
