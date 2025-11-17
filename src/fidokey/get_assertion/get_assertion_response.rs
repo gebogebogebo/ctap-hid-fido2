@@ -52,7 +52,7 @@ fn parse_cbor_authdata(
                 let member = util_ciborium::cbor_value_to_str(key)?;
                 if member == Extension::HmacSecret(None).to_string() {
                     if shared_secret.is_none() {
-                        continue
+                        continue;
                     }
 
                     // 12.5. HMAC Secret Extension (hmac-secret)
