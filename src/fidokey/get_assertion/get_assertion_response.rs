@@ -51,6 +51,11 @@ fn parse_cbor_authdata(
             if util_ciborium::is_text(key) {
                 let member = util_ciborium::cbor_value_to_str(key)?;
                 if member == Extension::HmacSecret(None).to_string() {
+                    if shared_secret.is_none() {
+                        eprintln!("Warning: hmac-secret extension ignored (shared_secret is None)");                        
+                        continue;
+                    }
+
                     // 12.5. HMAC Secret Extension (hmac-secret)
                     // https://fidoalliance.org/specs/fido-v2.1-ps-20210615/fido-client-to-authenticator-protocol-v2.1-ps-20210615.html#sctn-hmac-secret-extension
 
