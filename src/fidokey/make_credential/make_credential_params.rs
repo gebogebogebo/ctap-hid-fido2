@@ -64,16 +64,13 @@ pub enum Extension {
 }
 
 #[derive(Debug, Copy, Clone)]
+#[derive(Default)]
 pub enum CredentialSupportedKeyType {
+    #[default]
     Ecdsa256 = -7,
     Ed25519 = -8,
 }
 
-impl std::default::Default for CredentialSupportedKeyType {
-    fn default() -> Self {
-        Self::Ecdsa256
-    }
-}
 
 #[derive(Debug)]
 pub struct MakeCredentialArgs<'a> {
