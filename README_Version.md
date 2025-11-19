@@ -1,4 +1,9 @@
 ## Version
+### Ver 3.5.6
+
+- Bugfix.
+- Dependency Updates.
+
 ### Ver 3.5.5
 
 - Minor updates.
