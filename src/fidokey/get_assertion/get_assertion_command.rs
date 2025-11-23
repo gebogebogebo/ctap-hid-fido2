@@ -56,21 +56,18 @@ pub fn create_payload(
     };
 
     // create cbor object
-    let mut get_assertion = vec![
-        (1.to_value(), rpid),
-        (2.to_value(), cdh),
-    ];
-    
+    let mut get_assertion = vec![(1.to_value(), rpid), (2.to_value(), cdh)];
+
     if !params.allowlist_credential_ids.is_empty() {
         get_assertion.push((3.to_value(), allow_list));
     }
-    
+
     if let Some(ext) = ext_val {
         get_assertion.push((4.to_value(), ext));
     }
-    
+
     get_assertion.push((5.to_value(), options));
-    
+
     if let Some(pin) = pin_auth {
         get_assertion.push((6.to_value(), pin));
         // pinProtocol(0x07)
@@ -94,7 +91,10 @@ fn create_allow_list(credential_ids: &[Vec<u8>]) -> Value {
     list.to_value()
 }
 
-fn create_extensions(extensions: Option<&Vec<Extension>>, hmac_ext: Option<HmacExt>) -> Option<Value> {
+fn create_extensions(
+    extensions: Option<&Vec<Extension>>,
+    hmac_ext: Option<HmacExt>,
+) -> Option<Value> {
     let mut ext_val = Vec::new();
 
     // HMAC Secret Extension
@@ -118,14 +118,14 @@ fn create_extensions(extensions: Option<&Vec<Extension>>, hmac_ext: Option<HmacE
     if let Some(extensions) = extensions {
         for ext in extensions {
             match *ext {
-                Extension::HmacSecret(_) => (),
+                Extension::HmacSecret(_) | Extension::HmacSecret2(_) => (),
                 Extension::LargeBlobKey((n, _)) | Extension::CredBlob((n, _)) => {
                     ext_val.push((ext.to_string().to_value(), n.unwrap().to_value()));
                 }
             };
         }
     }
-    
+
     if ext_val.is_empty() {
         None
     } else {
