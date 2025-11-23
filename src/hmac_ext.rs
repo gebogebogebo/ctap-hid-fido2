@@ -20,9 +20,9 @@ impl HmacExt {
         &mut self,
         device: &FidoKeyHid,
         salt1: &[u8; 32],
-        _salt2: Option<&[u8; 32]>,
+        salt2: Option<&[u8; 32]>,
     ) -> Result<()> {
-        //println!("----------");
+        println!("----------");
         //println!("{}", StrBuf::bufh("salt1", salt1));
 
         let send_payload = create_payload(PinCmd::GetKeyAgreement)?;
@@ -34,6 +34,11 @@ impl HmacExt {
         //println!("{}", self.key_agreement);
 
         self.shared_secret = SharedSecret::new(&key_agreement)?;
+        let mut salt = salt1.to_vec();
+        if let Some(s) = salt2 {
+            println!("second salt");
+            salt.extend_from_slice(s);
+        }
 
         // saltEnc
         //  Encryption of the one or two salts (called salt1 (32 bytes)
@@ -43,7 +48,7 @@ impl HmacExt {
         //  encrypt(key, demPlaintext) → ciphertext
         //      Encrypts a plaintext to produce a ciphertext, which may be longer than the plaintext.
         //      The plaintext is restricted to being a multiple of the AES block size (16 bytes) in length.
-        self.salt_enc = enc_aes256_cbc::encrypt_message(&self.shared_secret.secret, salt1);
+        self.salt_enc = enc_aes256_cbc::encrypt_message(&self.shared_secret.secret, &salt);
         //println!("{}", StrBuf::bufh("salt_enc", &self.salt_enc));
 
         // saltAuth

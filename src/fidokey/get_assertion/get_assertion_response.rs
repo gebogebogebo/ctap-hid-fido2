@@ -52,7 +52,7 @@ fn parse_cbor_authdata(
                 let member = util_ciborium::cbor_value_to_str(key)?;
                 if member == Extension::HmacSecret(None).to_string() {
                     if shared_secret.is_none() {
-                        eprintln!("Warning: hmac-secret extension ignored (shared_secret is None)");                        
+                        eprintln!("Warning: hmac-secret extension ignored (shared_secret is None)");
                         continue;
                     }
 
@@ -66,17 +66,26 @@ fn parse_cbor_authdata(
                     // decrypt hmac_secret -> output1
                     let output1 = enc_aes256_cbc::decrypt_message(
                         &shared_secret.as_ref().unwrap().secret,
-                        &hmac_secret[0..32],
+                        &hmac_secret,
                     );
+
+                    if output1.len() == 32 {
+                        let mut hmac_secret_0 = [0u8; 32];
+                        hmac_secret_0.copy_from_slice(&output1[0..32]);
+                        ass.extensions
+                            .push(Extension::HmacSecret(Some(hmac_secret_0)));
+                    } else if output1.len() == 64 {
+                        let mut hmac_secret_0 = [0u8; 32];
+                        let mut hmac_secret_1 = [0u8; 32];
+                        hmac_secret_0.copy_from_slice(&output1[0..32]);
+                        hmac_secret_1.copy_from_slice(&output1[32..64]);
+                        ass.extensions
+                            .push(Extension::HmacSecret2(Some((hmac_secret_0, hmac_secret_1))));
+                    }
 
                     // The output1 is created in Authenticator as follows.
                     // >output1: HMAC-SHA-256(CredRandom, salt1)
                     // Can't access CredRandom since that is the secret the authenticator uses to derive credential specific private/public keys
-
-                    let mut hmac_secret_0 = [0u8; 32];
-                    hmac_secret_0.copy_from_slice(&output1[0..32]);
-                    ass.extensions
-                        .push(Extension::HmacSecret(Some(hmac_secret_0)));
                 } else if member == Extension::CredBlob((None, None)).to_string() {
                     let cred_blob = util_ciborium::cbor_value_to_vec_u8(val)?;
                     ass.extensions
