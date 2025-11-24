@@ -62,6 +62,16 @@ impl Extension {
         let hasher = digest::digest(&digest::SHA256, message.as_bytes());
         Extension::HmacSecret(Some(<[u8; 32]>::try_from(hasher.as_ref()).unwrap()))
     }
+
+    pub fn create_hmac_secret_2_from_string(message1: &str, message2: &str) -> Extension {
+        let hasher1 = digest::digest(&digest::SHA256, message1.as_bytes());
+        let salt1 = <[u8; 32]>::try_from(hasher1.as_ref()).unwrap();
+
+        let hasher2 = digest::digest(&digest::SHA256, message2.as_bytes());
+        let salt2 = <[u8; 32]>::try_from(hasher2.as_ref()).unwrap();
+
+        Extension::HmacSecret2(Some((salt1, salt2)))
+    }
 }
 
 #[derive(Debug)]
