@@ -649,7 +649,7 @@ fn with_min_pin_length_ex(device: &FidoKeyHid, rpid: &str, pin: &str) -> Result<
     if let Some(Mext::MinPinLength((_, min_pin_length))) = find {
         print_info(&format!("--- Min Pin Length = {:?}", min_pin_length));
     } else {
-        print_error("--- Min Pin Length Not Found");
+        print_info("--- Min Pin Length Not Found");
     }
     debug!("Attestation");
     debug!("{}", attestation);
