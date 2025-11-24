@@ -114,7 +114,7 @@ fn main() -> Result<()> {
 
     builder_pattern_sample(&device, rpid, pin)?;
 
-    // legacy_pattern_sample(&device, rpid, pin)?;
+    legacy_pattern_sample(&device, rpid, pin)?;
 
     print_test_summary();
     print_section("----- test-with-pin-non-rk end -----");
@@ -125,49 +125,49 @@ fn main() -> Result<()> {
 // Builder Pattern Sample
 //
 fn builder_pattern_sample(device: &FidoKeyHid, rpid: &str, pin: &str) -> Result<()> {
-    // non_discoverable_credentials(device, rpid, pin)
-    //     .unwrap_or_else(|err| {
-    //         print_error_with_count(&format!("Error => {}\n", err), true);
-    //     });
+    non_discoverable_credentials(device, rpid, pin)
+        .unwrap_or_else(|err| {
+            print_error_with_count(&format!("Error => {}\n", err), true);
+        });
 
-    // with_uv(device, rpid).unwrap_or_else(|err| {
-    //         print_error_with_count(&format!("Error => {}\n", err), true);
-    //     });
+    with_uv(device, rpid).unwrap_or_else(|err| {
+            print_error_with_count(&format!("Error => {}\n", err), true);
+        });
 
-    // with_key_types(device, rpid, pin, vec![CredentialSupportedKeyType::Ecdsa256])
-    //     .unwrap_or_else(|err| {
-    //         print_error_with_count(&format!("Error => {}\n", err), true);
-    //     });
+    with_key_types(device, rpid, pin, vec![CredentialSupportedKeyType::Ecdsa256])
+        .unwrap_or_else(|err| {
+            print_error_with_count(&format!("Error => {}\n", err), true);
+        });
 
-    // with_key_types(device, rpid, pin, vec![CredentialSupportedKeyType::Ed25519])
-    //     .unwrap_or_else(|err| {
-    //         print_error_with_count(&format!("Error => {}\n", err), true);
-    //     });
+    with_key_types(device, rpid, pin, vec![CredentialSupportedKeyType::Ed25519])
+        .unwrap_or_else(|err| {
+            print_error_with_count(&format!("Error => {}\n", err), true);
+        });
 
-    // with_key_types(device, rpid, pin, vec![CredentialSupportedKeyType::Ed25519, CredentialSupportedKeyType::Ecdsa256])
-    //     .unwrap_or_else(|err| {
-    //         print_error_with_count(&format!("Error => {}\n", err), true);
-    //     });
+    with_key_types(device, rpid, pin, vec![CredentialSupportedKeyType::Ed25519, CredentialSupportedKeyType::Ecdsa256])
+        .unwrap_or_else(|err| {
+            print_error_with_count(&format!("Error => {}\n", err), true);
+        });
 
-    // with_hmac(device, rpid, pin).unwrap_or_else(|err| {
-    //         print_error_with_count(&format!("Error => {}\n", err), true);
-    //     });
+    with_hmac(device, rpid, pin).unwrap_or_else(|err| {
+            print_error_with_count(&format!("Error => {}\n", err), true);
+        });
 
-    // with_hmac2(device, rpid, pin).unwrap_or_else(|err| {
-    //         print_error_with_count(&format!("Error => {}\n", err), true);
-    //     });
+    with_hmac2(device, rpid, pin).unwrap_or_else(|err| {
+            print_error_with_count(&format!("Error => {}\n", err), true);
+        });
 
     with_large_blob_key(device, rpid, pin).unwrap_or_else(|err| {
             print_error_with_count(&format!("Error => {}\n", err), true);
         });
 
-    // with_min_pin_length_ex(device, rpid, pin).unwrap_or_else(|err| {
-    //         print_error_with_count(&format!("Error => {}\n", err), true);
-    //     });
+    with_min_pin_length_ex(device, rpid, pin).unwrap_or_else(|err| {
+            print_error_with_count(&format!("Error => {}\n", err), true);
+        });
 
-    // without_pin(device, rpid).unwrap_or_else(|err| {
-    //         print_error_with_count(&format!("Error => {}\n", err), true);
-    //     });
+    without_pin(device, rpid).unwrap_or_else(|err| {
+            print_error_with_count(&format!("Error => {}\n", err), true);
+        });
 
     Ok(())
 }

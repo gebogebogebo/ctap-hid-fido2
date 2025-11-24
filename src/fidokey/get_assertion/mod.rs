@@ -139,7 +139,7 @@ fn get_next_assertion(device: &FidoKeyHid) -> Result<Assertion> {
 
 fn create_hmacext(device: &FidoKeyHid, extensions: Option<&Vec<Gext>>) -> Result<Option<HmacExt>> {
     if let Some(extensions) = extensions {
-        while let Some(e) = extensions.iter().next() {
+        for e in extensions {
             match e {
                 Gext::HmacSecret(n) => {
                     let mut hmac_ext = HmacExt::default();
