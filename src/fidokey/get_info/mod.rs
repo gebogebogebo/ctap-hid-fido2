@@ -182,5 +182,50 @@ mod tests {
         assert_eq!(info.preferred_platform_uv_attempts, 3);
         assert_eq!(info.uv_modality, 2);
         assert_eq!(info.remaining_discoverable_credentials, 21);
+        assert_eq!(info.attestation_formats, vec![] as Vec<String>);
     }
+
+    #[test]
+    fn test_get_info_response_parse_cbor_2() {
+        let hex_data = "AA0183665532465F5632684649444F5F325F30684649444F5F325F3102836B6372656450726F746563746B686D61632D73656372657471746869726450617274795061796D656E740350EC99DB19CD1F4C06A2A9940F17A6A30B04A862726BF5627570F564706C6174F468637265644D676D74F569636C69656E7450696EF56A6C61726765426C6F6273F46E70696E557641757468546F6B656EF5706D616B654372656455764E6F74527164F505190C0006820201070A0818FF0982636E6663637573621682667061636B6564646E6F6E65";
+        let bytes = hex::decode(hex_data).unwrap();
+        let info = get_info_response::parse_cbor(&bytes).unwrap();
+
+        assert_eq!(info.versions, vec!["U2F_V2", "FIDO_2_0", "FIDO_2_1"]);
+        assert_eq!(info.extensions, vec!["credProtect", "hmac-secret", "thirdPartyPayment"]);
+        assert_eq!(hex::encode(&info.aaguid), "ec99db19cd1f4c06a2a9940f17a6a30b");
+
+        let expected_options = vec![
+            ("rk".to_string(), true),
+            ("up".to_string(), true),
+            ("plat".to_string(), false),
+            ("credMgmt".to_string(), true),
+            ("clientPin".to_string(), true),
+            ("largeBlobs".to_string(), false),
+            ("pinUvAuthToken".to_string(), true),
+            ("makeCredUvNotRqd".to_string(), true),
+        ];
+        assert_eq!(info.options.len(), expected_options.len());
+        for option in expected_options {
+            assert!(info.options.contains(&option));
+        }
+
+        assert_eq!(info.max_msg_size, 3072);
+        assert_eq!(info.pin_uv_auth_protocols, vec![2, 1]);
+        assert_eq!(info.max_credential_count_in_list, 10);
+        assert_eq!(info.max_credential_id_length, 255);
+        assert_eq!(info.transports, vec!["nfc", "usb"]);
+        assert_eq!(info.algorithms.len(), 0);
+        assert_eq!(info.max_serialized_large_blob_array, 0);
+        assert_eq!(info.force_pin_change, false);
+        assert_eq!(info.min_pin_length, 0);
+        assert_eq!(info.firmware_version, 0);
+        assert_eq!(info.max_cred_blob_length, 0);
+        assert_eq!(info.max_rpids_for_set_min_pin_length, 0);
+        assert_eq!(info.preferred_platform_uv_attempts, 0);
+        assert_eq!(info.uv_modality, 0);
+        assert_eq!(info.remaining_discoverable_credentials, 0);
+        assert_eq!(info.attestation_formats, vec!["packed", "none"]);
+    }
+
 }

@@ -9,7 +9,6 @@ pub struct Info {
     pub aaguid: Vec<u8>,
     pub options: Vec<(String, bool)>,
     pub max_msg_size: i32,
-    //pub pin_protocols: Vec<i32>,
     // CTAP 2.1
     pub pin_uv_auth_protocols: Vec<u32>,
     pub max_credential_count_in_list: u32,
@@ -25,6 +24,8 @@ pub struct Info {
     pub preferred_platform_uv_attempts: u32,
     pub uv_modality: u32,
     pub remaining_discoverable_credentials: u32,
+    // CTAP 2.2
+    pub attestation_formats: Vec<String>,
 }
 
 impl fmt::Display for Info {
@@ -76,7 +77,9 @@ impl fmt::Display for Info {
             .append(
                 "- remaining_discoverable_credentials",
                 &format!("{:?}", self.remaining_discoverable_credentials),
-            );
+            )
+            .append("- attestation_formats", &format!("{:?}", self.attestation_formats));
+
 
         write!(f, "{}", strbuf.build())
     }
