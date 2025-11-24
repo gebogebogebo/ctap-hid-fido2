@@ -153,6 +153,10 @@ fn builder_pattern_sample(device: &FidoKeyHid, rpid: &str, pin: &str) -> Result<
             print_error_with_count(&format!("Error => {}\n", err), true);
         });
 
+    with_hmac2(device, rpid, pin).unwrap_or_else(|err| {
+            print_error_with_count(&format!("Error => {}\n", err), true);
+        });
+
     with_large_blob_key(device, rpid, pin).unwrap_or_else(|err| {
             print_error_with_count(&format!("Error => {}\n", err), true);
         });
@@ -408,6 +412,89 @@ fn with_hmac(device: &FidoKeyHid, rpid: &str, pin: &str) -> Result<()> {
     Ok(())
 }
 
+fn with_hmac2(device: &FidoKeyHid, rpid: &str, pin: &str) -> Result<()> {
+    print_section("----- with hmac2 -----");
+
+    print_step("- Register");
+    let challenge = verifier::create_challenge();
+    let ext = Mext::HmacSecret(Some(true));
+
+    let make_credential_args = MakeCredentialArgsBuilder::new(rpid, &challenge)
+        .pin(pin)
+        .extensions(&[ext])
+        .build();
+
+    let attestation = device.make_credential_with_args(&make_credential_args)?;
+    print_success("-- Register Success");
+    let find = attestation.extensions.iter().find(|it| {
+        matches!(it, Mext::HmacSecret(_))
+    });
+    if let Some(Mext::HmacSecret(is_hmac_secret)) = find {
+        print_info(&format!("--- HMAC Secret = {:?}", is_hmac_secret.unwrap()));
+    } else {
+        print_error("--- HMAC Secret Not Found");
+    }
+    debug!("Attestation");
+    debug!("{}", attestation);
+    print_step("-- Verify Attestation");
+    let verify_result = verifier::verify_attestation(rpid, &challenge, &attestation);
+    if verify_result.is_success {
+        print_success("-- Verify Attestation Success");
+    } else {
+        print_error("-- ! Verify Attestation Failed");
+    }
+
+    print_step("- Authenticate");
+    let challenge = verifier::create_challenge();
+
+    // Create a HMCSecret2 with two specified salts.
+    let ext = Gext::create_hmac_secret_2_from_string("this is test-1", "this is test-2");
+
+    let get_assertion_args = GetAssertionArgsBuilder::new(rpid, &challenge)
+        .pin(pin)
+        .credential_id(&verify_result.credential_id)
+        .extensions(&[ext])
+        .build();
+
+    let assertions = device.get_assertion_with_args(&get_assertion_args)?;
+    print_success("-- Authenticate Success");
+    
+    let find = assertions[0].extensions.iter().find(|it| {
+        matches!(it, Gext::HmacSecret2(_))
+    });
+    if let Some(Gext::HmacSecret2(hmac_secret)) = find {
+        let (res1, res2) = hmac_secret.as_ref().unwrap();
+        print_info(&format!(
+            "--- HMAC Secret 1 = {}",
+            util::to_hex_str(res1)
+        ));
+        print_info(&format!(
+            "--- HMAC Secret 2 = {}",
+            util::to_hex_str(res2)
+        ));
+    } else {
+        print_error("--- HMAC Secret 2 Not Found");
+    }
+    debug!("Assertion");
+    debug!("{}", assertions[0]);
+
+    print_step("-- Verify Assertion");
+    let is_success = verifier::verify_assertion(
+        rpid,
+        &verify_result.credential_public_key,
+        &challenge,
+        &assertions[0],
+    );
+    if is_success {
+        print_success("-- Verify Assertion Success");
+    } else {
+        print_error("-- ! Verify Assertion Failed");
+    }
+
+    println!();
+    Ok(())
+}
+
 fn without_pin(device: &FidoKeyHid, rpid: &str) -> Result<()> {
     print_section("----- without pin -----");
 
@@ -562,7 +649,7 @@ fn with_min_pin_length_ex(device: &FidoKeyHid, rpid: &str, pin: &str) -> Result<
     if let Some(Mext::MinPinLength((_, min_pin_length))) = find {
         print_info(&format!("--- Min Pin Length = {:?}", min_pin_length));
     } else {
-        print_error("--- Min Pin Length Not Found");
+        print_info("--- Min Pin Length Not Found");
     }
     debug!("Attestation");
     debug!("{}", attestation);
