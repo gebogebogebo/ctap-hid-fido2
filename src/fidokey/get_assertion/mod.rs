@@ -143,19 +143,11 @@ fn create_hmacext(device: &FidoKeyHid, extensions: Option<&Vec<Gext>>) -> Result
             match e {
                 Gext::HmacSecret(n) => {
                     let mut hmac_ext = HmacExt::default();
-                    // Pass a dummy cid to hmac_ext.create as it's not used anymore
-                    // but the function signature still expects it.
-                    // Consider refactoring hmac_ext.create to remove the cid parameter
-                    // if it's truly unused there as well.
                     hmac_ext.create(device, &n.unwrap(), None)?;
                     return Ok(Some(hmac_ext));
                 }
                 Gext::HmacSecret2(n) => {
                     let mut hmac_ext = HmacExt::default();
-                    // Pass a dummy cid to hmac_ext.create as it's not used anymore
-                    // but the function signature still expects it.
-                    // Consider refactoring hmac_ext.create to remove the cid parameter
-                    // if it's truly unused there as well.
                     let h = &n.unwrap();
                     hmac_ext.create(device, &h.0, Some(&h.1))?;
                     return Ok(Some(hmac_ext));

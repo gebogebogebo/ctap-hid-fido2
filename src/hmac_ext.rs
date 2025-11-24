@@ -22,21 +22,15 @@ impl HmacExt {
         salt1: &[u8; 32],
         salt2: Option<&[u8; 32]>,
     ) -> Result<()> {
-        println!("----------");
-        //println!("{}", StrBuf::bufh("salt1", salt1));
-
         let send_payload = create_payload(PinCmd::GetKeyAgreement)?;
         let response_cbor = ctaphid::ctaphid_cbor(device, &send_payload)?;
 
         let key_agreement = parse_cbor_client_pin_get_keyagreement(&response_cbor)?;
 
-        //println!("key_agreement");
-        //println!("{}", self.key_agreement);
-
         self.shared_secret = SharedSecret::new(&key_agreement)?;
         let mut salt = salt1.to_vec();
         if let Some(s) = salt2 {
-            println!("second salt");
+            // println!("second salt");
             salt.extend_from_slice(s);
         }
 
