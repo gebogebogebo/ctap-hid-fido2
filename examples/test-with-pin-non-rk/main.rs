@@ -7,6 +7,7 @@ use ctap_hid_fido2::{
     fidokey::{
         AssertionExtension as Gext, CredentialExtension as Mext, CredentialSupportedKeyType,
         GetAssertionArgsBuilder, MakeCredentialArgsBuilder,
+        get_info::InfoOption,
     },
     get_fidokey_devices, util, verifier, Cfg, FidoKeyHid, FidoKeyHidFactory,
 };
@@ -125,6 +126,18 @@ fn main() -> Result<()> {
 // Builder Pattern Sample
 //
 fn builder_pattern_sample(device: &FidoKeyHid, rpid: &str, pin: &str) -> Result<()> {
+
+    let is_pin = device.enable_info_option(&InfoOption::ClientPin)?;
+    if !is_pin.unwrap_or(true) {
+        
+        without_pin(device, rpid).unwrap_or_else(|err| {
+                print_error_with_count(&format!("Error => {}\n", err), true);
+            });
+
+        println!();
+        return Ok(());
+    }
+
     non_discoverable_credentials(device, rpid, pin)
         .unwrap_or_else(|err| {
             print_error_with_count(&format!("Error => {}\n", err), true);
@@ -162,10 +175,6 @@ fn builder_pattern_sample(device: &FidoKeyHid, rpid: &str, pin: &str) -> Result<
         });
 
     with_min_pin_length_ex(device, rpid, pin).unwrap_or_else(|err| {
-            print_error_with_count(&format!("Error => {}\n", err), true);
-        });
-
-    without_pin(device, rpid).unwrap_or_else(|err| {
             print_error_with_count(&format!("Error => {}\n", err), true);
         });
 
@@ -227,6 +236,13 @@ fn non_discoverable_credentials(device: &FidoKeyHid, rpid: &str, pin: &str) -> R
 
 fn with_uv(device: &FidoKeyHid, rpid: &str) -> Result<()> {
     print_section("----- with_uv -----");
+
+    let is_supported = device.enable_info_option(&InfoOption::Uv)?;
+    if !is_supported.unwrap_or(false) {
+        print_info("UV not supported, skipping test.");
+        println!();
+        return Ok(());
+    }
 
     print_step("- Register");
     let challenge = verifier::create_challenge();
@@ -498,6 +514,13 @@ fn with_hmac2(device: &FidoKeyHid, rpid: &str, pin: &str) -> Result<()> {
 fn without_pin(device: &FidoKeyHid, rpid: &str) -> Result<()> {
     print_section("----- without pin -----");
 
+    let is_pin = device.enable_info_option(&InfoOption::ClientPin)?;
+    if is_pin.unwrap_or(true) {
+        print_info("ClientPin Enabled, skipping test.");
+        println!();
+        return Ok(());
+    }
+
     print_step("- Register");
     let challenge = verifier::create_challenge();
 
@@ -550,6 +573,13 @@ fn without_pin(device: &FidoKeyHid, rpid: &str) -> Result<()> {
 
 fn with_large_blob_key(device: &FidoKeyHid, rpid: &str, pin: &str) -> Result<()> {
     print_section("----- with large_blob_key -----");
+
+    let is_supported = device.enable_info_option(&InfoOption::LargeBlobs)?;
+    if !is_supported.unwrap_or(false) {
+        print_info("LargeBlobs not supported, skipping test.");
+        println!();
+        return Ok(());
+    }
 
     print_step("- Register");
     let challenge = verifier::create_challenge();
@@ -662,6 +692,12 @@ fn with_min_pin_length_ex(device: &FidoKeyHid, rpid: &str, pin: &str) -> Result<
 // Legacy Pattern Sample
 //
 fn legacy_pattern_sample(device: &FidoKeyHid, rpid: &str, pin: &str) -> Result<()> {
+    let is_pin = device.enable_info_option(&InfoOption::ClientPin)?;
+    if !is_pin.unwrap_or(true) {
+        println!();
+        return Ok(());
+    }
+
     legacy_non_discoverable_credentials(device, rpid, pin)
         .unwrap_or_else(|err| {
             print_error_with_count(&format!("Error => {}\n", err), true);
@@ -781,6 +817,13 @@ fn legacy_with_key_type(
 
 fn legacy_with_uv(device: &FidoKeyHid, rpid: &str) -> Result<()> {
     print_section("----- legacy_with_uv -----");
+
+    let is_supported = device.enable_info_option(&InfoOption::Uv)?;
+    if !is_supported.unwrap_or(false) {
+        print_info("UV not supported, skipping test.");
+        println!();
+        return Ok(());
+    }
 
     print_step("- Register");
     let challenge = verifier::create_challenge();
