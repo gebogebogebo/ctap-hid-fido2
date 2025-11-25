@@ -1,4 +1,8 @@
 ## Version
+### Ver 3.5.7
+
+- Support for the optional salt.
+
 ### Ver 3.5.6
 
 - Bugfix.
