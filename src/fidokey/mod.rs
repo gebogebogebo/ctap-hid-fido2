@@ -32,10 +32,16 @@ pub struct FidoKeyHid {
     pub use_pre_bio_enrollment: bool,
     pub use_pre_credential_management: bool,
     pub keep_alive_msg: String,
+    pub pin_protocol_version: u8,
     cid: Mutex<Option<[u8; 4]>>,
 }
 
 impl FidoKeyHid {
+    pub fn with_pin_protocol_version(mut self, version: u8) -> Self {
+        self.pin_protocol_version = version;
+        self
+    }
+
     pub fn new(params: &[crate::HidParam], cfg: &crate::LibCfg) -> Result<Self> {
         let api = HidApi::new().expect("Failed to create HidApi instance");
         for param in params {
@@ -51,6 +57,7 @@ impl FidoKeyHid {
                     use_pre_bio_enrollment: cfg.use_pre_bio_enrollment,
                     use_pre_credential_management: cfg.use_pre_credential_management,
                     keep_alive_msg: cfg.keep_alive_msg.to_string(),
+                    pin_protocol_version: 1,
                     cid: Mutex::new(None), // Wrap in Mutex
                 };
                 return Ok(result);
