@@ -34,7 +34,7 @@ impl Params {
     }
 }
 
-pub fn create_payload(params: Params, extensions: Option<&Vec<Extension>>) -> Result<Vec<u8>> {
+pub fn create_payload(params: Params, extensions: Option<&Vec<Extension>>, pin_protocol_version: u8) -> Result<Vec<u8>> {
     // 0x01 : clientDataHash
     let cdh = params.client_data_hash.to_value();
 
@@ -100,7 +100,7 @@ pub fn create_payload(params: Params, extensions: Option<&Vec<Extension>>) -> Re
     if let Some(pin) = pin_auth {
         make_credential.push((0x08.to_value(), pin));
         // 0x09: pinProtocol
-        make_credential.push((0x09.to_value(), 1.to_value()));      // TODO
+        make_credential.push((0x09.to_value(), pin_protocol_version.to_value()));
     }
 
     common::to_payload(make_credential, ctapdef::AUTHENTICATOR_MAKE_CREDENTIAL)

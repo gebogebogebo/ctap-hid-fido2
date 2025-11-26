@@ -59,7 +59,7 @@ impl FidoKeyHid {
                 None
             };
 
-            make_credential_command::create_payload(params, extensions)?
+            make_credential_command::create_payload(params, extensions, self.pin_protocol_version)?
         };
 
         // send & response
