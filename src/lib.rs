@@ -11,6 +11,7 @@ mod ctaphid;
 mod encrypt {
     pub mod cose;
     pub mod enc_aes256_cbc;
+    pub mod enc_aes256_gcm;
     pub mod enc_hmac_sha_256;
     pub mod p256;
     pub mod shared_secret;
