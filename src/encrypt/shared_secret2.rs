@@ -93,27 +93,20 @@ impl SharedSecret2 {
 
     pub fn decrypt_token(&self, data: &[u8]) -> Result<PinToken> {
         // Length check
-
         if data.len() < 16 {
             return Err(anyhow!("demCiphertext must be at least 16 bytes"));
         }
 
         // IV and Ciphertext split
-
         let iv = &data[0..16];
-
         let ciphertext = &data[16..];
 
         // Get AES key
-
         let aes_key = &self.secret[32..];
 
         // Decrypt
-
         type Aes256CbcDec = cbc::Decryptor<aes::Aes256>;
-
         let cipher = Aes256CbcDec::new(aes_key.into(), iv.into());
-
         if ciphertext.len() % 16 != 0 {
             return Err(anyhow!(
                 "ciphertext length is not a multiple of the block size"
@@ -121,7 +114,6 @@ impl SharedSecret2 {
         }
 
         let mut buf = ciphertext.to_vec();
-
         cipher
             .decrypt_padded_mut::<block_padding::NoPadding>(&mut buf)
             .map_err(|e| anyhow!(e))?;
@@ -133,88 +125,57 @@ impl SharedSecret2 {
 }
 
 #[cfg(test)]
-
 mod tests {
-
     use super::{kdf, CoseKey, PinToken, SharedSecret2};
 
     #[test]
-
     fn test_kdf_concatenation() {
         let z = [1u8; 32];
-
         let shared_secret = kdf(&z).unwrap();
-
         use hkdf::Hkdf;
-
         use sha2::Sha256;
-
         let salt = [0u8; 32];
-
         let hk = Hkdf::<Sha256>::new(Some(&salt), &z);
-
         let mut hmac_key = [0u8; 32];
-
         hk.expand(b"CTAP2 HMAC key", &mut hmac_key).unwrap();
-
         let mut aes_key = [0u8; 32];
-
         hk.expand(b"CTAP2 AES key", &mut aes_key).unwrap();
-
         let mut expected_secret = [0u8; 64];
-
         expected_secret[..32].copy_from_slice(&hmac_key);
-
         expected_secret[32..].copy_from_slice(&aes_key);
-
         assert_eq!(shared_secret, expected_secret);
     }
 
     #[test]
-
     fn test_encrypt_pin_and_decrypt_token() {
         use aes::cipher::generic_array::GenericArray;
-
         let mut secret = [0u8; 64];
-
         secret[32..].copy_from_slice(&[1u8; 32]); // Use a known key for the test
-
         let ss2 = SharedSecret2 {
             secret,
-
             public_key: CoseKey::default(),
         };
 
         let pin = "1234";
-
         let encrypted_data = ss2.encrypt_pin(pin).unwrap();
 
         // Decrypt and verify
-
         let pin_token = ss2.decrypt_token(&encrypted_data).unwrap();
-
         use ring::digest;
-
         let hash = digest::digest(&digest::SHA256, pin.as_bytes());
-
         let expected_plaintext = &hash.as_ref()[0..16];
-
         assert_eq!(pin_token.key, expected_plaintext);
     }
 
     #[test]
-
     fn test_decrypt_token_invalid_length() {
         let ss2 = SharedSecret2 {
             secret: [0u8; 64],
 
             public_key: CoseKey::default(),
         };
-
         let data = vec![0u8; 15]; // Less than 16 bytes
-
         let result = ss2.decrypt_token(&data);
-
         assert!(result.is_err());
     }
 }
