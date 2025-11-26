@@ -1,8 +1,13 @@
+use crate::{pintoken::PinToken};
+
 use anyhow::{anyhow, Error, Result};
 use hkdf::Hkdf;
 use sha2::Sha256;
-use ring::{agreement, rand};
-use crate::{encrypt::cose::CoseKey, encrypt::p256};
+use ring::{agreement, digest, rand};
+use ring::rand::SecureRandom;
+use super::{cose::CoseKey, p256};
+use aes::cipher::{BlockDecryptMut, BlockEncryptMut, KeyIvInit};
+use aes::cipher::generic_array::GenericArray;
 
 pub struct SharedSecret2 {
     pub secret: [u8; 64],
@@ -53,17 +58,48 @@ impl SharedSecret2 {
         Ok(SharedSecret2 { secret, public_key })
     }
 
+    pub fn encrypt_pin(&self, pin: &str) -> Result<Vec<u8>, String> {
+        // Generate demPlaintext from pin
+        let hash = digest::digest(&digest::SHA256, pin.as_bytes());
+        let dem_plaintext = &hash.as_ref()[0..16];
+
+        // Get AES key from the second half of self.secret
+        let aes_key = &self.secret[32..];
+
+        // Generate random 16-byte IV
+        let mut iv = [0u8; 16];
+        let rng = rand::SystemRandom::new();
+        rng.fill(&mut iv).map_err(|e| e.to_string())?;
+
+        // Encrypt with AES-256-CBC, no padding
+        type Aes256CbcEnc = cbc::Encryptor<aes::Aes256>;
+
+        let mut cipher = Aes256CbcEnc::new(aes_key.into(), &iv.into());
+        
+        let mut block = *GenericArray::from_slice(dem_plaintext);
+        cipher.encrypt_block_mut(&mut block);
+        let ciphertext = block.to_vec();
+
+        // Concatenate IV and ciphertext
+        let mut result = vec![];
+        result.extend_from_slice(&iv);
+        result.extend_from_slice(&ciphertext);
+
+        Ok(result)
+    }
+
+    pub fn decrypt_token(&self, data: &mut [u8]) -> Result<PinToken> {
+        // TODO
+    }
+
 }
 
 #[cfg(test)]
 mod tests {
-    use super::kdf;
+    use super::{kdf, SharedSecret2, CoseKey};
 
     #[test]
     fn test_kdf_concatenation() {
-        // This test ensures the kdf function correctly concatenates the two derived keys.
-        // It does not validate the cryptographic correctness of the keys themselves, as
-        // the test vectors used previously were found to be unreliable.
         let z = [1u8; 32];
         let shared_secret = kdf(&z).unwrap();
 
@@ -82,5 +118,46 @@ mod tests {
         expected_secret[32..].copy_from_slice(&aes_key);
 
         assert_eq!(shared_secret, expected_secret);
+    }
+
+    #[test]
+    fn test_encrypt_pin() {
+        use aes::cipher::generic_array::GenericArray;
+        let mut secret = [0u8; 64];
+        secret[32..].copy_from_slice(&[1u8; 32]); // Use a known key for the test
+
+        let ss2 = SharedSecret2 {
+            secret,
+            public_key: CoseKey::default(),
+        };
+
+        let pin = "1234";
+        let encrypted_data1 = ss2.encrypt_pin(pin).unwrap();
+        let encrypted_data2 = ss2.encrypt_pin(pin).unwrap();
+
+        // 1. Check for random IV: outputs should be different
+        assert_ne!(encrypted_data1, encrypted_data2);
+
+        // 2. Check length: IV (16) + demPlaintext (16) = 32
+        assert_eq!(encrypted_data1.len(), 32);
+
+        // 3. Decrypt and verify
+        let iv = &encrypted_data1[0..16];
+        let ciphertext = &encrypted_data1[16..];
+        let key = &ss2.secret[32..];
+
+        type Aes256CbcDec = cbc::Decryptor<aes::Aes256>;
+        use aes::cipher::{KeyIvInit, BlockDecryptMut};
+
+        let mut cipher = Aes256CbcDec::new(key.into(), iv.into());
+        let mut block = *GenericArray::from_slice(ciphertext);
+        cipher.decrypt_block_mut(&mut block);
+        let decrypted_plaintext = block.to_vec();
+
+        use ring::digest;
+        let hash = digest::digest(&digest::SHA256, pin.as_bytes());
+        let expected_plaintext = &hash.as_ref()[0..16];
+
+        assert_eq!(decrypted_plaintext, expected_plaintext);
     }
 }

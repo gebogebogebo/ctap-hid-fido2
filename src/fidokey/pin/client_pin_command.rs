@@ -60,9 +60,9 @@ fn create_payload_get_keyagreement(pin_protocol_version: u8) -> Result<Vec<u8>> 
     to_payload(map)
 }
 
-pub fn create_payload_get_pin_token(key_agreement: &cose::CoseKey, pin_hash_enc: &[u8]) -> Result<Vec<u8>> {
+pub fn create_payload_get_pin_token(key_agreement: &cose::CoseKey, pin_hash_enc: &[u8], pin_protocol_version: u8) -> Result<Vec<u8>> {
     let mut map = Vec::new();
-    insert_pin_protocol(&mut map, 1)?;
+    insert_pin_protocol(&mut map, pin_protocol_version)?;
     insert_sub_command(&mut map, SubCommand::GetPinToken)?;
     insert_key_agreement(&mut map, key_agreement)?;
     insert_pin_hash_enc(&mut map, pin_hash_enc)?;
