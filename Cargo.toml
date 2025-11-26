@@ -27,6 +27,10 @@ strum = "0.27.2"
 strum_macros = "0.27.2"
 x509-parser = "0.18.0"
 rand = "0.9.2"
+aes-gcm = "0.10.3"
+aead = "0.5.2"
+hkdf = "0.12.3"
+sha2 = "0.10.6"
 
 [dependencies.hidapi]
 version = "2.6.3"
@@ -40,6 +44,7 @@ log = "0.4.28"
 rpassword = "7.4.0"
 arboard = "3.6.1"
 colored = "3.0.0"
+hex-literal = "0.4.1"
 
 [[example]]
 name = "ctapcli"

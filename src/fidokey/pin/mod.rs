@@ -59,7 +59,7 @@ mod tests {
         let hid_params = HidParam::get();
         let device = FidoKeyHid::new(&hid_params, &Cfg::init()).unwrap();
 
-        let send_payload = create_payload(PinCmd::GetKeyAgreement).unwrap();
+        let send_payload = create_payload(PinCmd::GetKeyAgreement, device.pin_protocol_version).unwrap();
         // The cid is obtained internally by ctaphid_cbor
         let response_cbor = ctaphid::ctaphid_cbor(&device, &send_payload).unwrap();
 
