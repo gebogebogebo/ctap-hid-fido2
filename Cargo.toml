@@ -31,6 +31,7 @@ aes-gcm = "0.10.3"
 aead = "0.5.2"
 hkdf = "0.12.3"
 sha2 = "0.10.6"
+block-padding = "0.3.2"
 
 [dependencies.hidapi]
 version = "2.6.3"
