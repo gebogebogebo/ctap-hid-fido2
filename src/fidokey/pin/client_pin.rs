@@ -13,7 +13,7 @@ use anyhow::{anyhow, Result};
 
 impl FidoKeyHid {
     pub fn get_authenticator_key_agreement(&self) -> Result<cose::CoseKey> {
-        let send_payload = client_pin_command::create_payload(PinCmd::GetKeyAgreement)?;
+        let send_payload = client_pin_command::create_payload(PinCmd::GetKeyAgreement, self.pin_protocol_version)?;
         let response_cbor = ctaphid::ctaphid_cbor(self, &send_payload)?;
         let authenticator_key_agreement =
             client_pin_response::parse_cbor_client_pin_get_keyagreement(&response_cbor)?;
@@ -87,7 +87,7 @@ impl FidoKeyHid {
             return Err(anyhow!("new pin not set"));
         }
 
-        let send_payload = client_pin_command::create_payload(PinCmd::GetKeyAgreement)?;
+        let send_payload = client_pin_command::create_payload(PinCmd::GetKeyAgreement, self.pin_protocol_version)?;
         let response_cbor = ctaphid::ctaphid_cbor(self, &send_payload)?;
 
         let key_agreement =
@@ -179,7 +179,7 @@ pub fn change_pin(device: &FidoKeyHid, current_pin: &str, new_pin: &str) -> Resu
         return Err(anyhow!("new pin not set"));
     }
 
-    let send_payload = client_pin_command::create_payload(PinCmd::GetKeyAgreement)?;
+    let send_payload = client_pin_command::create_payload(PinCmd::GetKeyAgreement, device.pin_protocol_version)?;
     let response_cbor = ctaphid::ctaphid_cbor(device, &send_payload)?;
 
     let key_agreement =
