@@ -229,12 +229,8 @@ fn bio_test(device: &FidoKeyHid, log: bool) -> Result<()> {
     }
 
     println!("Verify");
-    let is_success = verifier::verify_assertion(
-        rpid,
-        &verify_result.credential_public_key,
-        &challenge,
-        &ass,
-    );
+    let is_success =
+        verifier::verify_assertion(rpid, &verify_result.credential_public_key, &challenge, &ass);
     if is_success {
         println!("Authenticate Success !!\n");
     } else {

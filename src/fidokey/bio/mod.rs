@@ -100,10 +100,7 @@ impl FidoKeyHid {
 
     /// BioEnrollment - Cancel current enrollment
     pub fn bio_enrollment_cancel(&self) -> Result<()> {
-        let data = self.bio_enrollment(
-            None,
-            Some(BioCmd::CancelCurrentEnrollment),
-        )?;
+        let data = self.bio_enrollment(None, Some(BioCmd::CancelCurrentEnrollment))?;
 
         if self.enable_log {
             println!("{}", data);
@@ -118,10 +115,7 @@ impl FidoKeyHid {
         let pin_token_option = self.bio_enrollment_init(Some(pin))?;
         let pin_token = pin_token_option.unwrap();
 
-        let data = self.bio_enrollment(
-            Some(&pin_token),
-            Some(BioCmd::EnumerateEnrollments),
-        )?;
+        let data = self.bio_enrollment(Some(&pin_token), Some(BioCmd::EnumerateEnrollments))?;
 
         if self.enable_log {
             println!("{}", data);

@@ -1,7 +1,7 @@
 use crate::fidokey::get_assertion::get_assertion_params;
 use crate::fidokey::make_credential::make_credential_params;
-use crate::util;
 use crate::public_key::{PublicKey, PublicKeyType};
+use crate::util;
 use ring::digest;
 use ring::rand::SecureRandom;
 use ring::signature;
@@ -99,9 +99,14 @@ fn verify_sig(public_key: &PublicKey, challenge: &[u8], auth_data: &[u8], sig: &
     };
 
     let peer_public_key = match public_key.key_type {
-        PublicKeyType::Ecdsa256 => signature::UnparsedPublicKey::new(&signature::ECDSA_P256_SHA256_ASN1, public_key.der.to_vec()),
-        PublicKeyType::Ed25519 => signature::UnparsedPublicKey::new(&signature::ED25519, public_key.der.to_vec()),
-        _ => return false
+        PublicKeyType::Ecdsa256 => signature::UnparsedPublicKey::new(
+            &signature::ECDSA_P256_SHA256_ASN1,
+            public_key.der.to_vec(),
+        ),
+        PublicKeyType::Ed25519 => {
+            signature::UnparsedPublicKey::new(&signature::ED25519, public_key.der.to_vec())
+        }
+        _ => return false,
     };
 
     let result = peer_public_key.verify(&message, sig);

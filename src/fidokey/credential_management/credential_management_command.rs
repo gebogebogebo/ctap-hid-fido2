@@ -1,8 +1,8 @@
 use super::super::sub_command_base::SubCommandBase;
 use crate::public_key_credential_descriptor::PublicKeyCredentialDescriptor;
 use crate::public_key_credential_user_entity::PublicKeyCredentialUserEntity;
-use crate::{ctapdef, encrypt::enc_hmac_sha_256, pintoken, fidokey::common};
 use crate::util_ciborium::ToValue;
+use crate::{ctapdef, encrypt::enc_hmac_sha_256, fidokey::common, pintoken};
 use anyhow::Result;
 use ciborium::value::Value;
 use strum_macros::EnumProperty;
@@ -67,7 +67,7 @@ pub fn create_payload(
         };
         if let Some(param) = param {
             map.push((0x02.to_value(), param.clone()));
-            
+
             // Serialize parameters to CBOR
             ciborium::ser::into_writer(&param, &mut sub_command_params_cbor)?;
         }
@@ -128,7 +128,10 @@ fn create_public_key_credential_descriptor_pend(
     let user = vec![
         ("id".to_value(), pkcue.id.clone().to_value()),
         ("name".to_value(), pkcue.name.to_string().to_value()),
-        ("displayName".to_value(), pkcue.display_name.to_string().to_value()),
+        (
+            "displayName".to_value(),
+            pkcue.display_name.to_string().to_value(),
+        ),
     ];
 
     let param = vec![

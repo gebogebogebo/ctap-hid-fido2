@@ -48,8 +48,7 @@ impl FidoKeyHid {
             // get pintoken & create pin auth
             if let Some(pin) = args.pin {
                 let pin_token = self.get_pin_token(pin)?;
-                let sig =
-                    enc_hmac_sha_256::authenticate(&pin_token.key, &params.client_data_hash);
+                let sig = enc_hmac_sha_256::authenticate(&pin_token.key, &params.client_data_hash);
                 params.pin_auth = sig[0..16].to_vec();
             }
 

@@ -1,9 +1,8 @@
-use anyhow::{anyhow, Result};
 use aes_gcm::{
     aead::{Aead, AeadCore, KeyInit, OsRng},
-    Aes256Gcm,
-    Nonce,
+    Aes256Gcm, Nonce,
 };
+use anyhow::{anyhow, Result};
 
 pub fn encrypt_message(key: &[u8], message: &[u8]) -> Result<Vec<u8>> {
     let key = key.into();

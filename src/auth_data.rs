@@ -18,7 +18,7 @@ impl Flags {
 
             // bit[1]: Reserved for future use (RFU1)
 
-            // bit[2]: User Verified (UV) 
+            // bit[2]: User Verified (UV)
             user_verified_result: matches!(byte & 0x04, 0x04),
 
             // bit[3]-[5]: 3-5: Reserved for future use (RFU2)

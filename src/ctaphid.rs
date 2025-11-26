@@ -1,7 +1,7 @@
 use crate::{ctapdef, fidokey::FidoKeyHid, util};
 use anyhow::{anyhow, Error, Result};
-use std::{thread, time};
 use rand::{rng, Rng};
+use std::{thread, time};
 
 //pub const USAGE_PAGE_FIDO: u16 = 0xf1d0;
 
@@ -73,13 +73,13 @@ pub fn ctaphid_init(device: &FidoKeyHid) -> Result<[u8; 4]> {
 
     // Extract and verify nonce from the response
     let response_nonce = &buf[data_offset..data_offset + 8];
-    
+
     if device.enable_log {
         println!("=== NONCE INFO ===");
         println!("SENT NONCE: {}", util::to_hex_str(&nonce));
         println!("RECV NONCE: {}", util::to_hex_str(response_nonce));
     }
-    
+
     if nonce != response_nonce {
         return Err(anyhow!("Nonce verification failed"));
     }
@@ -224,8 +224,8 @@ fn create_continuation_packet(seqno: u8, cid: &[u8], payload: &[u8]) -> (Vec<u8>
     // seq
     cmd[5] = seqno;
 
-    let index: usize =
-        PAYLOAD_SIZE_AN_INITIALIZATION_PACKET + PAYLOAD_SIZE_A_CONTINUATION_PACKET * (seqno as usize);
+    let index: usize = PAYLOAD_SIZE_AN_INITIALIZATION_PACKET
+        + PAYLOAD_SIZE_A_CONTINUATION_PACKET * (seqno as usize);
 
     // payload
     let mut size: usize = payload.len() - index;
@@ -315,11 +315,7 @@ pub fn ctaphid_cancel(device: &FidoKeyHid) -> Result<()> {
     Ok(())
 }
 
-fn ctaphid_cbormsg(
-    device: &FidoKeyHid,
-    command: u8,
-    payload: &[u8],
-) -> Result<Vec<u8>> {
+fn ctaphid_cbormsg(device: &FidoKeyHid, command: u8, payload: &[u8]) -> Result<Vec<u8>> {
     if device.enable_log {
         println!();
         println!("-- send cbor({:02})", payload.len());

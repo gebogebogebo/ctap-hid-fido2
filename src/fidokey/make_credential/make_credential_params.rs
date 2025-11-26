@@ -63,14 +63,12 @@ pub enum Extension {
     MinPinLength((Option<bool>, Option<u8>)),
 }
 
-#[derive(Debug, Copy, Clone)]
-#[derive(Default)]
+#[derive(Debug, Copy, Clone, Default)]
 pub enum CredentialSupportedKeyType {
     #[default]
     Ecdsa256 = -7,
     Ed25519 = -8,
 }
-
 
 #[derive(Debug)]
 pub struct MakeCredentialArgs<'a> {

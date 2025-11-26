@@ -22,7 +22,7 @@ impl fmt::Display for CoseKey {
             let i32_value: i32 = i32::try_from(*intval).expect("Integer Conversion failed");
             strbuf.append("- crv", &i32_value);
         }
-        if let Some(Value::Bytes(bytes)) = self.parameters.get(&-2) { 
+        if let Some(Value::Bytes(bytes)) = self.parameters.get(&-2) {
             strbuf.appenh("- x", bytes);
         }
         if let Some(Value::Bytes(bytes)) = self.parameters.get(&-3) {
@@ -39,7 +39,7 @@ impl CoseKey {
 
         if util_ciborium::is_map(cbor) {
             let map = util_ciborium::extract_map_ref(cbor)?;
-            
+
             for (key, val) in map {
                 if util_ciborium::is_integer(key) {
                     match util_ciborium::integer_to_i64(key)? {
@@ -87,11 +87,11 @@ impl CoseKey {
         Ok(cose)
     }
 
-    // TODO rename 
+    // TODO rename
     pub fn to_value_cib(&self) -> Result<Value> {
         let map = vec![
-            (1.to_value() , self.key_type.to_value()),
-            (3.to_value() , self.algorithm.to_value()),
+            (1.to_value(), self.key_type.to_value()),
+            (3.to_value(), self.algorithm.to_value()),
             (
                 (-1).to_value(),
                 self.parameters.get(&-1).ok_or(anyhow!("err"))?.clone(),

@@ -82,7 +82,7 @@ impl FidoKeyHid {
             Err(_) => Err("read error".into()),
         }
     }
-    
+
     // init or get CID
     pub fn get_cid(&self) -> Result<[u8; 4]> {
         let mut cid_guard = self.cid.lock().map_err(|e| anyhow!(e.to_string()))?;
@@ -97,7 +97,7 @@ impl FidoKeyHid {
         // A more robust solution might involve passing the locked guard or restructuring.
         // However, for this specific case, ctaphid_init doesn't seem to re-enter get_cid.
         // Drop(cid_guard); // Explicitly drop before re-acquiring or calling other methods that might lock
-        
+
         // Since ctaphid_init takes &self, and self.cid is already locked,
         // we need to be careful. However, ctaphid_init itself doesn't use self.cid.
         // It uses self.write and self.read which lock device_internal.

@@ -1,6 +1,6 @@
 use anyhow::{anyhow, Result};
-use ctap_hid_fido2::{Cfg, FidoKeyHidFactory};
 use ctap_hid_fido2::fidokey::get_info::InfoParam;
+use ctap_hid_fido2::{Cfg, FidoKeyHidFactory};
 use std::sync::Arc;
 use std::thread;
 use std::time::Duration;
