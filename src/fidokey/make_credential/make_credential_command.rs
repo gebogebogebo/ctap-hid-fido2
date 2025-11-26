@@ -100,7 +100,7 @@ pub fn create_payload(params: Params, extensions: Option<&Vec<Extension>>) -> Re
     if let Some(pin) = pin_auth {
         make_credential.push((0x08.to_value(), pin));
         // 0x09: pinProtocol
-        make_credential.push((0x09.to_value(), 1.to_value()));
+        make_credential.push((0x09.to_value(), 1.to_value()));      // TODO
     }
 
     common::to_payload(make_credential, ctapdef::AUTHENTICATOR_MAKE_CREDENTIAL)

@@ -68,7 +68,9 @@ impl SharedSecret2 {
 
         //
         // https://fidoalliance.org/specs/fido-v2.1-ps-20210615/fido-client-to-authenticator-protocol-v2.1-ps-20210615.html#pinProto2
-        // encrypt(key, demPlaintext) → ciphertext
+        //
+        // 6.5.7. PIN/UV Auth Protocol Two
+        // [encrypt(key, demPlaintext) → ciphertext]
         //
 
         // 1. Discard the first 32 bytes of key. (This selects the AES-key portion of the shared secret.)
@@ -88,7 +90,7 @@ impl SharedSecret2 {
         let ciphertext = block.to_vec();
 
         // 4. Return iv || ct.
-        // Concatenate IV and ciphertext
+        // Concatenate iv and ct(ciphertext)
         let mut result = vec![];
         result.extend_from_slice(&iv);
         result.extend_from_slice(&ciphertext);
@@ -96,35 +98,45 @@ impl SharedSecret2 {
         Ok(result)
     }
 
-    pub fn decrypt_token(&self, data: &[u8]) -> Result<PinToken> {
-        // Length check
-        if data.len() < 16 {
-            return Err(anyhow!("demCiphertext must be at least 16 bytes"));
-        }
+    pub fn decrypt_token(&self, dem_cipher_text: &[u8]) -> Result<PinToken> {
+        //
+        // https://fidoalliance.org/specs/fido-v2.1-ps-20210615/fido-client-to-authenticator-protocol-v2.1-ps-20210615.html#pinProto2
+        //
+        // 6.5.7. PIN/UV Auth Protocol Two
+        // decrypt(key, demCiphertext) → plaintext | error
+        //
 
-        // IV and Ciphertext split
-        let iv = &data[0..16];
-        let ciphertext = &data[16..];
-
+        // 1. Discard the first 32 bytes of key. (This selects the AES-key portion of the shared secret.)
         // Get AES key
         let aes_key = &self.secret[32..];
 
-        // Decrypt
-        type Aes256CbcDec = cbc::Decryptor<aes::Aes256>;
-        let cipher = Aes256CbcDec::new(aes_key.into(), iv.into());
+        // 2. If demPlaintext is less than 16 bytes in length, return an error
+        // (Specify demCiphertext instead of demPlaintext)
+        if dem_cipher_text.len() < 16 {
+            return Err(anyhow!("demCiphertext must be at least 16 bytes"));
+        }
+
+        // 3. Split demPlaintext after the 16th byte to produce two subspans, iv and ct.
+        // (Specify demCiphertext instead of demPlaintext)
+        let iv = &dem_cipher_text[0..16];
+        let ciphertext = &dem_cipher_text[16..];
         if ciphertext.len() % 16 != 0 {
             return Err(anyhow!(
                 "ciphertext length is not a multiple of the block size"
             ));
         }
 
+        // 4. Return the AES-256-CBC decryption of ct using key and iv.
+        type Aes256CbcDec = cbc::Decryptor<aes::Aes256>;
+        let cipher = Aes256CbcDec::new(aes_key.into(), iv.into());
+
         let mut buf = ciphertext.to_vec();
         cipher
             .decrypt_padded_mut::<block_padding::NoPadding>(&mut buf)
             .map_err(|e| anyhow!(e))?;
 
+        // return
         let pin_token = PinToken::new(&buf);
-
         Ok(pin_token)
     }
 }
