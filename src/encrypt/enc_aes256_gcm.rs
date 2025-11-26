@@ -5,6 +5,7 @@ use aes_gcm::{
 };
 use anyhow::{anyhow, Result};
 
+// TODO WIP:これはいらないかも
 pub fn encrypt_message(key: &[u8], message: &[u8]) -> Result<Vec<u8>> {
     let key = key.into();
     let cipher = Aes256Gcm::new(key);
