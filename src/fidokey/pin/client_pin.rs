@@ -52,13 +52,13 @@ impl FidoKeyHid {
                     .encrypt_pin(pin)
                     .map_err(|e| anyhow::anyhow!(e))?;
 
-                let send_payload2 = client_pin_command::create_payload_get_pin_token(
+                let send_payload = client_pin_command::create_payload_get_pin_token(
                     &shared_secret.public_key,
                     &pin_hash_enc,
                     self.pin_protocol_version,
                 )?;
 
-                let response_cbor = ctaphid::ctaphid_cbor(self, &send_payload2)?;
+                let response_cbor = ctaphid::ctaphid_cbor(self, &send_payload)?;
 
                 // get pin_token (enc)
                 let mut pin_token_enc =

@@ -66,23 +66,28 @@ impl SharedSecret2 {
         let hash = digest::digest(&digest::SHA256, pin.as_bytes());
         let dem_plaintext = &hash.as_ref()[0..16];
 
+        //
+        // https://fidoalliance.org/specs/fido-v2.1-ps-20210615/fido-client-to-authenticator-protocol-v2.1-ps-20210615.html#pinProto2
+        // encrypt(key, demPlaintext) → ciphertext
+        //
+
+        // 1. Discard the first 32 bytes of key. (This selects the AES-key portion of the shared secret.)
         // Get AES key from the second half of self.secret
         let aes_key = &self.secret[32..];
 
-        // Generate random 16-byte IV
+        // 2. Let iv be a 16-byte, random bytestring.
         let mut iv = [0u8; 16];
         let rng = rand::SystemRandom::new();
         rng.fill(&mut iv).map_err(|e| e.to_string())?;
 
-        // Encrypt with AES-256-CBC, no padding
+        // 3. Let ct be the AES-256-CBC encryption of demPlaintext using key and iv. (No padding is performed as the size of demPlaintext is required to be a multiple of the AES block length.)
         type Aes256CbcEnc = cbc::Encryptor<aes::Aes256>;
-
         let mut cipher = Aes256CbcEnc::new(aes_key.into(), &iv.into());
-
         let mut block = *GenericArray::from_slice(dem_plaintext);
         cipher.encrypt_block_mut(&mut block);
         let ciphertext = block.to_vec();
 
+        // 4. Return iv || ct.
         // Concatenate IV and ciphertext
         let mut result = vec![];
         result.extend_from_slice(&iv);
