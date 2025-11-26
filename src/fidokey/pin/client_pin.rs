@@ -47,14 +47,14 @@ impl FidoKeyHid {
 
                 Ok(pin_token_dec)
             } else if self.pin_protocol_version == 2 {
-                let shared_secret2 = SharedSecret2::new(&authenticator_key_agreement)?;
-                let pin_hash_enc2 = shared_secret2
+                let shared_secret = SharedSecret2::new(&authenticator_key_agreement)?;
+                let pin_hash_enc = shared_secret
                     .encrypt_pin(pin)
                     .map_err(|e| anyhow::anyhow!(e))?;
 
                 let send_payload2 = client_pin_command::create_payload_get_pin_token(
-                    &shared_secret2.public_key,
-                    &pin_hash_enc2,
+                    &shared_secret.public_key,
+                    &pin_hash_enc,
                     self.pin_protocol_version,
                 )?;
 
@@ -65,7 +65,7 @@ impl FidoKeyHid {
                     client_pin_response::parse_cbor_client_pin_get_pin_token(&response_cbor)?;
 
                 // pintoken -> dec(pintoken)
-                let pin_token_dec = shared_secret2.decrypt_token(&mut pin_token_enc)?;
+                let pin_token_dec = shared_secret.decrypt_token(&mut pin_token_enc)?;
 
                 Ok(pin_token_dec)
             } else {
