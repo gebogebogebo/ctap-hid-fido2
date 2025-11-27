@@ -92,9 +92,10 @@ pub fn create_payload_change_pin(
     pin_auth: &[u8],
     new_pin_enc: &[u8],
     pin_hash_enc: &[u8],
+    pin_protocol_version: u8,
 ) -> Result<Vec<u8>> {
     let mut map = Vec::new();
-    insert_pin_protocol(&mut map, 1)?;
+    insert_pin_protocol(&mut map, pin_protocol_version)?;
     insert_sub_command(&mut map, SubCommand::ChangePin)?;
     insert_key_agreement(&mut map, key_agreement)?;
     insert_pin_auth(&mut map, pin_auth)?;
@@ -107,9 +108,10 @@ pub fn create_payload_get_pin_uv_auth_token_using_pin_with_permissions(
     key_agreement: &cose::CoseKey,
     pin_hash_enc: &[u8],
     permission: Permission,
+    pin_protocol_version: u8,
 ) -> Result<Vec<u8>> {
     let mut map = Vec::new();
-    insert_pin_protocol(&mut map, 1)?; // TODO
+    insert_pin_protocol(&mut map, pin_protocol_version)?;
     insert_sub_command(
         &mut map,
         SubCommand::GetPinUvAuthTokenUsingPinWithPermissions,
@@ -129,9 +131,10 @@ pub fn create_payload_get_pin_uv_auth_token_using_uv_with_permissions(
     key_agreement: &cose::CoseKey,
     permission: Permission,
     rpid: &str,
+    pin_protocol_version: u8,
 ) -> Result<Vec<u8>> {
     let mut map = Vec::new();
-    insert_pin_protocol(&mut map, 1)?;
+    insert_pin_protocol(&mut map, pin_protocol_version)?;
     insert_sub_command(
         &mut map,
         SubCommand::GetPinUvAuthTokenUsingUvWithPermissions,

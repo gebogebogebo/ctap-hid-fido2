@@ -113,6 +113,7 @@ impl FidoKeyHid {
                     &shared_secret.public_key,
                     &pin_hash_enc,
                     permission,
+                    self.pin_protocol_version,
                 )?;
             let response_cbor = ctaphid::ctaphid_cbor(self, &send_payload)?;
 
@@ -248,6 +249,7 @@ pub fn change_pin(device: &FidoKeyHid, current_pin: &str, new_pin: &str) -> Resu
         &pin_auth,
         &new_pin_enc,
         &current_pin_hash_enc,
+        device.pin_protocol_version,
     )?;
 
     ctaphid::ctaphid_cbor(device, &send_payload)?;

@@ -8,6 +8,7 @@ pub fn create_payload(
     offset: u32,
     get: Option<u32>,
     set: Option<Vec<u8>>,
+    pin_protocol_version: u8,
 ) -> Result<Vec<u8>> {
     // Create parameter map
     let mut map = Vec::new();
@@ -55,7 +56,7 @@ pub fn create_payload(
             };
 
             map.push((0x05.to_value(), pin_uv_auth_param.to_value()));
-            map.push((0x06.to_value(), 1.to_value()));      // TODO
+            map.push((0x06.to_value(), pin_protocol_version.to_value()));
         }
     }
 
