@@ -1,14 +1,12 @@
-use crate::pintoken::PinToken;
 use crate::encrypt::enc_aes256_cbc;
+use crate::pintoken::PinToken;
 
 use super::{cose::CoseKey, p256};
 
 use anyhow::{anyhow, Error, Result};
-
-use hkdf::Hkdf;
 use ring::rand::SecureRandom;
-use ring::{agreement, digest, rand};
-use sha2::Sha256;
+
+use ring::{agreement, digest, hkdf, rand};
 
 pub struct SharedSecret2 {
     pub secret: [u8; 64],
@@ -16,16 +14,18 @@ pub struct SharedSecret2 {
 }
 
 fn kdf(z: &[u8; 32]) -> Result<[u8; 64]> {
-    let salt = [0u8; 32];
-    let hk = Hkdf::<Sha256>::new(Some(&salt), z);
+    let salt = hkdf::Salt::new(hkdf::HKDF_SHA256, &[0u8; 32]);
+    let prk = salt.extract(z);
 
     let mut hmac_key = [0u8; 32];
-    hk.expand(b"CTAP2 HMAC key", &mut hmac_key)
-        .map_err(|e| anyhow!("HKDF expand for HMAC key failed: {:?}", e))?;
+    prk.expand(&[b"CTAP2 HMAC key"], hkdf::HKDF_SHA256)
+        .and_then(|okm| okm.fill(&mut hmac_key))
+        .map_err(|_| anyhow!("HKDF expand for HMAC key failed"))?;
 
     let mut aes_key = [0u8; 32];
-    hk.expand(b"CTAP2 AES key", &mut aes_key)
-        .map_err(|e| anyhow!("HKDF expand for AES key failed: {:?}", e))?;
+    prk.expand(&[b"CTAP2 AES key"], hkdf::HKDF_SHA256)
+        .and_then(|okm| okm.fill(&mut aes_key))
+        .map_err(|_| anyhow!("HKDF expand for AES key failed"))?;
 
     let mut secret = [0u8; 64];
     secret[..32].copy_from_slice(&hmac_key);
@@ -134,19 +134,26 @@ impl SharedSecret2 {
 #[cfg(test)]
 mod tests {
     use super::{kdf, CoseKey, SharedSecret2};
+    use ring::hkdf;
 
     #[test]
     fn test_kdf_concatenation() {
         let z = [1u8; 32];
         let shared_secret = kdf(&z).unwrap();
-        use hkdf::Hkdf;
-        use sha2::Sha256;
-        let salt = [0u8; 32];
-        let hk = Hkdf::<Sha256>::new(Some(&salt), &z);
+
+        let salt = hkdf::Salt::new(hkdf::HKDF_SHA256, &[0u8; 32]);
+        let prk = salt.extract(&z);
+
         let mut hmac_key = [0u8; 32];
-        hk.expand(b"CTAP2 HMAC key", &mut hmac_key).unwrap();
+        prk.expand(&[b"CTAP2 HMAC key"], hkdf::HKDF_SHA256)
+            .and_then(|okm| okm.fill(&mut hmac_key))
+            .unwrap();
+
         let mut aes_key = [0u8; 32];
-        hk.expand(b"CTAP2 AES key", &mut aes_key).unwrap();
+        prk.expand(&[b"CTAP2 AES key"], hkdf::HKDF_SHA256)
+            .and_then(|okm| okm.fill(&mut aes_key))
+            .unwrap();
+
         let mut expected_secret = [0u8; 64];
         expected_secret[..32].copy_from_slice(&hmac_key);
         expected_secret[32..].copy_from_slice(&aes_key);

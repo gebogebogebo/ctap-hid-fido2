@@ -27,8 +27,7 @@ strum = "0.27.2"
 strum_macros = "0.27.2"
 x509-parser = "0.18.0"
 rand = "0.9.2"
-hkdf = "0.12.3"
-sha2 = "0.10.6"
+
 
 [dependencies.hidapi]
 version = "2.6.3"
