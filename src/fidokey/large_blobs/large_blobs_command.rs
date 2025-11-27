@@ -55,7 +55,7 @@ pub fn create_payload(
             };
 
             map.push((0x05.to_value(), pin_uv_auth_param.to_value()));
-            map.push((0x06.to_value(), 1.to_value()));
+            map.push((0x06.to_value(), 1.to_value()));      // TODO
         }
     }
 

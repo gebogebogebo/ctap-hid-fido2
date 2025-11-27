@@ -43,7 +43,7 @@ pub fn create_payload(pin_token: pintoken::PinToken, sub_command: SubCommand) ->
     // Create CBOR map
     let mut auth_config = vec![
         (0x01.to_value(), sub_cmd_id.to_value()),
-        (0x03.to_value(), 1.to_value()), // pinProtocol is always 1
+        (0x03.to_value(), 1.to_value()), // pinProtocol is always 1     // TODO
         (0x04.to_value(), pin_uv_auth_param.to_value()),
     ];
 

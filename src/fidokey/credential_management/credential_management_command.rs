@@ -75,7 +75,7 @@ pub fn create_payload(
 
     if let Some(pin_token) = pin_token {
         // pinProtocol(0x03)
-        map.push((0x03.to_value(), 1.to_value()));
+        map.push((0x03.to_value(), 1.to_value()));          // TODO
 
         // pinUvAuthParam (0x04):
         // - authenticate(pinUvAuthToken, getCredsMetadata (0x01)).
