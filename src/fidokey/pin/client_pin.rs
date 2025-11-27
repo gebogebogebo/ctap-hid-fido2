@@ -11,6 +11,8 @@ use crate::encrypt::shared_secret::SharedSecret;
 use crate::encrypt::shared_secret2::SharedSecret2;
 use crate::pintoken::PinToken;
 use anyhow::{anyhow, Result};
+use ring::{rand};
+use ring::rand::SecureRandom;
 
 impl FidoKeyHid {
     pub fn get_authenticator_key_agreement(&self) -> Result<cose::CoseKey> {
@@ -66,9 +68,7 @@ impl FidoKeyHid {
                 Ok(pin_token_dec)
             } else if self.pin_protocol_version == 2 {
                 let shared_secret = SharedSecret2::new(&authenticator_key_agreement)?;
-                let pin_hash_enc = shared_secret
-                    .encrypt_pin(pin)
-                    .map_err(|e| anyhow::anyhow!(e))?;
+                let pin_hash_enc = shared_secret.encrypt_pin(pin)?;
 
                 let send_payload = client_pin_command::create_payload_get_pin_token(
                     &shared_secret.public_key,
@@ -102,29 +102,57 @@ impl FidoKeyHid {
         if !pin.is_empty() {
             let authenticator_key_agreement = self.get_authenticator_key_agreement()?;
 
-            // Get pinHashEnc
-            // - shared_secret.public_key -> platform KeyAgreement
-            let shared_secret = SharedSecret::new(&authenticator_key_agreement)?;
-            let pin_hash_enc = shared_secret.encrypt_pin(pin)?;
+            if self.pin_protocol_version == 1 {
+                // Get pinHashEnc
+                // - shared_secret.public_key -> platform KeyAgreement
+                let shared_secret = SharedSecret::new(&authenticator_key_agreement)?;
+                let pin_hash_enc = shared_secret.encrypt_pin(pin)?;
 
-            // Get pin token
-            let send_payload =
-                client_pin_command::create_payload_get_pin_uv_auth_token_using_pin_with_permissions(
-                    &shared_secret.public_key,
-                    &pin_hash_enc,
-                    permission,
-                    self.pin_protocol_version,
-                )?;
-            let response_cbor = ctaphid::ctaphid_cbor(self, &send_payload)?;
+                // Get pin token
+                let send_payload =
+                    client_pin_command::create_payload_get_pin_uv_auth_token_using_pin_with_permissions(
+                        &shared_secret.public_key,
+                        &pin_hash_enc,
+                        permission,
+                        self.pin_protocol_version,
+                    )?;
+                let response_cbor = ctaphid::ctaphid_cbor(self, &send_payload)?;
 
-            // get pin_token (enc)
-            let mut pin_token_enc =
-                client_pin_response::parse_cbor_client_pin_get_pin_token(&response_cbor)?;
+                // get pin_token (enc)
+                let mut pin_token_enc =
+                    client_pin_response::parse_cbor_client_pin_get_pin_token(&response_cbor)?;
 
-            // pintoken -> dec(pintoken)
-            let pin_token_dec = shared_secret.decrypt_token(&mut pin_token_enc)?;
+                // pintoken -> dec(pintoken)
+                let pin_token_dec = shared_secret.decrypt_token(&mut pin_token_enc)?;
 
-            Ok(pin_token_dec)
+                Ok(pin_token_dec)
+            } else if self.pin_protocol_version == 2 {
+                // Get pinHashEnc
+                // - shared_secret.public_key -> platform KeyAgreement
+                let shared_secret = SharedSecret2::new(&authenticator_key_agreement)?;
+                let pin_hash_enc = shared_secret.encrypt_pin(pin)?;
+
+                // Get pin token
+                let send_payload =
+                    client_pin_command::create_payload_get_pin_uv_auth_token_using_pin_with_permissions(
+                        &shared_secret.public_key,
+                        &pin_hash_enc,
+                        permission,
+                        self.pin_protocol_version,
+                    )?;
+                let response_cbor = ctaphid::ctaphid_cbor(self, &send_payload)?;
+
+                // get pin_token (enc)
+                let mut pin_token_enc =
+                    client_pin_response::parse_cbor_client_pin_get_pin_token(&response_cbor)?;
+
+                // pintoken -> dec(pintoken)
+                let pin_token_dec = shared_secret.decrypt_token(&mut pin_token_enc)?;
+
+                Ok(pin_token_dec)
+            } else {
+                Err(anyhow!("unknown pin_protocol_version"))
+            }
         } else {
             Err(anyhow!("pin not set"))
         }
@@ -175,7 +203,7 @@ fn create_pin_auth_for_set_pin(
 }
 
 fn create_pin_auth_for_change_pin(
-    shared_secret: &SharedSecret,
+    shared_secret_key: &[u8],
     new_pin_enc: &[u8],
     current_pin_hash_enc: &[u8],
 ) -> Result<Vec<u8>> {
@@ -185,7 +213,7 @@ fn create_pin_auth_for_change_pin(
     message.append(&mut current_pin_hash_enc.to_vec());
 
     // HMAC-SHA-256(sharedSecret, message)
-    let sig = enc_hmac_sha_256::authenticate(&shared_secret.secret, &message);
+    let sig = enc_hmac_sha_256::authenticate(shared_secret_key, &message);
 
     // left 16
     let pin_auth = sig[0..16].to_vec();
@@ -219,6 +247,26 @@ fn create_new_pin_enc(shared_secret: &SharedSecret, new_pin: &str) -> Result<Vec
 
     Ok(new_pin_enc)
 }
+fn create_new_pin_enc2(shared_secret: &SharedSecret2, new_pin: &str) -> Result<Vec<u8>> {
+    let new_pin_64 = padding_pin_64(new_pin)?;
+
+    let aes_key: &[u8; 32] = shared_secret.secret[32..].try_into()?;
+
+    // Let iv be a 16-byte, random bytestring.
+    let mut iv = [0u8; 16];
+    let rng = rand::SystemRandom::new();
+    rng.fill(&mut iv).map_err(|_| anyhow!("Failed to generate random IV"))?;
+
+    let ciphertext = enc_aes256_cbc::encrypt_message_with_iv(aes_key, &iv, &new_pin_64);
+
+    // Return iv || ct.
+    // Concatenate iv and ct(ciphertext)
+    let mut new_pin_enc = vec![];
+    new_pin_enc.extend_from_slice(&iv);
+    new_pin_enc.extend_from_slice(&ciphertext);
+
+    Ok(new_pin_enc)
+}
 
 pub fn change_pin(device: &FidoKeyHid, current_pin: &str, new_pin: &str) -> Result<()> {
     if current_pin.is_empty() {
@@ -235,24 +283,49 @@ pub fn change_pin(device: &FidoKeyHid, current_pin: &str, new_pin: &str) -> Resu
     let key_agreement =
         client_pin_response::parse_cbor_client_pin_get_keyagreement(&response_cbor)?;
 
-    let shared_secret = SharedSecret::new(&key_agreement)?;
+    if device.pin_protocol_version == 1 {
+        let shared_secret = SharedSecret::new(&key_agreement)?;
 
-    let new_pin_enc = create_new_pin_enc(&shared_secret, new_pin)?;
+        let new_pin_enc = create_new_pin_enc(&shared_secret, new_pin)?;
 
-    let current_pin_hash_enc = shared_secret.encrypt_pin(current_pin)?;
+        let current_pin_hash_enc = shared_secret.encrypt_pin(current_pin)?;
 
-    let pin_auth =
-        create_pin_auth_for_change_pin(&shared_secret, &new_pin_enc, &current_pin_hash_enc)?;
+        let pin_auth =
+            create_pin_auth_for_change_pin(&shared_secret.secret, &new_pin_enc, &current_pin_hash_enc)?;
 
-    let send_payload = client_pin_command::create_payload_change_pin(
-        &shared_secret.public_key,
-        &pin_auth,
-        &new_pin_enc,
-        &current_pin_hash_enc,
-        device.pin_protocol_version,
-    )?;
+        let send_payload = client_pin_command::create_payload_change_pin(
+            &shared_secret.public_key,
+            &pin_auth,
+            &new_pin_enc,
+            &current_pin_hash_enc,
+            device.pin_protocol_version,
+        )?;
 
-    ctaphid::ctaphid_cbor(device, &send_payload)?;
+        ctaphid::ctaphid_cbor(device, &send_payload)?;
 
-    Ok(())
+        Ok(())
+    } else if device.pin_protocol_version == 2 {
+        let shared_secret = SharedSecret2::new(&key_agreement)?;
+
+        let new_pin_enc = create_new_pin_enc2(&shared_secret, new_pin)?;
+
+        let current_pin_hash_enc = shared_secret.encrypt_pin(current_pin)?;
+
+        let pin_auth =
+            create_pin_auth_for_change_pin(&shared_secret.secret, &new_pin_enc, &current_pin_hash_enc)?;
+
+        let send_payload = client_pin_command::create_payload_change_pin(
+            &shared_secret.public_key,
+            &pin_auth,
+            &new_pin_enc,
+            &current_pin_hash_enc,
+            device.pin_protocol_version,
+        )?;
+
+        ctaphid::ctaphid_cbor(device, &send_payload)?;
+
+        Ok(())
+    } else {
+        Err(anyhow!("unknown pin_protocol_version"))
+    }
 }
