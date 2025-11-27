@@ -80,7 +80,8 @@ impl SharedSecret2 {
         // 2. Let iv be a 16-byte, random bytestring.
         let mut iv = [0u8; 16];
         let rng = rand::SystemRandom::new();
-        rng.fill(&mut iv).map_err(|_| anyhow!("Failed to generate random IV"))?;
+        rng.fill(&mut iv)
+            .map_err(|_| anyhow!("Failed to generate random IV"))?;
 
         // 3. Let ct be the AES-256-CBC encryption of demPlaintext using key and iv. (No padding is performed as the size of demPlaintext is required to be a multiple of the AES block length.)
         let ciphertext = enc_aes256_cbc::encrypt_message_with_iv(aes_key, &iv, dem_plaintext);
