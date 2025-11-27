@@ -34,7 +34,11 @@ impl Params {
     }
 }
 
-pub fn create_payload(params: Params, extensions: Option<&Vec<Extension>>, pin_protocol_version: u8) -> Result<Vec<u8>> {
+pub fn create_payload(
+    params: Params,
+    extensions: Option<&Vec<Extension>>,
+    pin_protocol_version: u8,
+) -> Result<Vec<u8>> {
     // 0x01 : clientDataHash
     let cdh = params.client_data_hash.to_value();
 

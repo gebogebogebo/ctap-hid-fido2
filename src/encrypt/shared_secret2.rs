@@ -120,7 +120,7 @@ impl SharedSecret2 {
         // (Specify demCiphertext instead of demPlaintext)
         let iv = &dem_cipher_text[0..16];
         let ciphertext = &dem_cipher_text[16..];
-        if ciphertext.len() % 16 != 0 {
+        if !ciphertext.len().is_multiple_of(16) {
             return Err(anyhow!(
                 "ciphertext length is not a multiple of the block size"
             ));

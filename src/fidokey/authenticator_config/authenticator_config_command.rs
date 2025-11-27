@@ -29,7 +29,11 @@ impl SubCommandBase for SubCommand {
     }
 }
 
-pub fn create_payload(pin_token: pintoken::PinToken, sub_command: SubCommand, pin_protocol_version: u8) -> Result<Vec<u8>> {
+pub fn create_payload(
+    pin_token: pintoken::PinToken,
+    sub_command: SubCommand,
+    pin_protocol_version: u8,
+) -> Result<Vec<u8>> {
     // 0x01: subCommand
     let sub_cmd_id = sub_command.id()? as i32;
 

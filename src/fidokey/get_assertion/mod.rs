@@ -37,12 +37,16 @@ impl FidoKeyHid {
 
         // create pin auth
         if let Some(pin) = args.pin {
-             params.pin_auth = self.create_pin_auth(pin, &params.client_data_hash)?;
+            params.pin_auth = self.create_pin_auth(pin, &params.client_data_hash)?;
         }
 
         // Get payload as Vec<u8>, not Result<Vec<u8>>
-        let send_payload =
-            get_assertion_command::create_payload(params, extensions, hmac_ext.clone(), self.pin_protocol_version)?;
+        let send_payload = get_assertion_command::create_payload(
+            params,
+            extensions,
+            hmac_ext.clone(),
+            self.pin_protocol_version,
+        )?;
 
         // send & response
         let response_cbor = ctaphid::ctaphid_cbor(self, &send_payload)?;

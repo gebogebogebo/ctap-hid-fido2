@@ -36,7 +36,7 @@ impl FidoKeyHid {
         // skip
 
         // 2. Return the result of computing HMAC-SHA-256 on key and message.
-        let sig = enc_hmac_sha_256::authenticate(&pin_token.key, &client_data_hash);
+        let sig = enc_hmac_sha_256::authenticate(&pin_token.key, client_data_hash);
         Ok(sig[0..16].to_vec())
     }
 
@@ -79,11 +79,11 @@ impl FidoKeyHid {
                 let response_cbor = ctaphid::ctaphid_cbor(self, &send_payload)?;
 
                 // get pin_token (enc)
-                let mut pin_token_enc =
+                let pin_token_enc =
                     client_pin_response::parse_cbor_client_pin_get_pin_token(&response_cbor)?;
 
                 // pintoken -> dec(pintoken)
-                let pin_token_dec = shared_secret.decrypt_token(&mut pin_token_enc)?;
+                let pin_token_dec = shared_secret.decrypt_token(&pin_token_enc)?;
 
                 Ok(pin_token_dec)
             } else {

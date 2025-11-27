@@ -4,10 +4,7 @@ pub mod make_credential_response;
 use super::{
     credential_management::credential_management_params::CredentialProtectionPolicy, FidoKeyHid,
 };
-use crate::{
-    ctaphid,
-    public_key_credential_user_entity::PublicKeyCredentialUserEntity,
-};
+use crate::{ctaphid, public_key_credential_user_entity::PublicKeyCredentialUserEntity};
 use anyhow::Result;
 pub use make_credential_params::{
     Attestation, CredentialSupportedKeyType, Extension, Extension as Mext, MakeCredentialArgs,
