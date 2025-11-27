@@ -163,6 +163,7 @@ impl FidoKeyHid {
             return Err(anyhow!("new pin not set"));
         }
 
+        // get key_agreement
         let send_payload =
             client_pin_command::create_payload(PinCmd::GetKeyAgreement, self.pin_protocol_version)?;
         let response_cbor = ctaphid::ctaphid_cbor(self, &send_payload)?;
@@ -170,16 +171,33 @@ impl FidoKeyHid {
         let key_agreement =
             client_pin_response::parse_cbor_client_pin_get_keyagreement(&response_cbor)?;
 
-        let shared_secret = SharedSecret::new(&key_agreement)?;
+        // get public_key, pin_auth, new_pin_enc
+        let (public_key, pin_auth, new_pin_enc) = if self.pin_protocol_version == 1 {
+            let shared_secret = SharedSecret::new(&key_agreement)?;
 
-        let new_pin_enc = create_new_pin_enc(&shared_secret, pin)?;
+            let new_pin_enc = create_new_pin_enc(&shared_secret, pin)?;
 
-        let pin_auth = create_pin_auth_for_set_pin(&shared_secret, &new_pin_enc)?;
+            let pin_auth = create_pin_auth_for_set_pin(&shared_secret, &new_pin_enc)?;
+            
+            (shared_secret.public_key, pin_auth, new_pin_enc)
+        } else if self.pin_protocol_version == 2 {
+            let shared_secret = SharedSecret2::new(&key_agreement)?;
 
+            let new_pin_enc = create_new_pin_enc2(&shared_secret, pin)?;
+
+            let pin_auth = create_pin_auth_for_set_pin2(&shared_secret, &new_pin_enc)?;
+
+            (shared_secret.public_key, pin_auth, new_pin_enc)
+        } else {
+            return Err(anyhow!("unknown pin_protocol_version"))
+        };
+
+        // set new pin
         let send_payload = client_pin_command::create_payload_set_pin(
-            &shared_secret.public_key,
+            &public_key,
             &pin_auth,
             &new_pin_enc,
+            self.pin_protocol_version,
         )?;
 
         ctaphid::ctaphid_cbor(self, &send_payload)?;
@@ -198,6 +216,22 @@ fn create_pin_auth_for_set_pin(
 
     // left 16
     let pin_auth = sig[0..16].to_vec();
+
+    Ok(pin_auth)
+}
+
+fn create_pin_auth_for_set_pin2(
+    shared_secret: &SharedSecret2,
+    new_pin_enc: &[u8],
+) -> Result<Vec<u8>> {
+    // HMAC-SHA-256(sharedSecret, message)
+    // If key is longer than 32 bytes, discard the excess. (This selects the HMAC-key portion of the shared secret. When key is the pinUvAuthToken, it is exactly 32 bytes long and thus this step has no effect.)
+    let key = shared_secret.secret[0..32].to_vec();
+    let sig = enc_hmac_sha_256::authenticate(&key, new_pin_enc);
+
+    // Return the result of computing HMAC-SHA-256 on key and message.
+    // 32byte
+    let pin_auth = sig.to_vec();
 
     Ok(pin_auth)
 }
@@ -291,6 +325,7 @@ fn create_new_pin_enc2(shared_secret: &SharedSecret2, new_pin: &str) -> Result<V
     Ok(new_pin_enc)
 }
 
+// TODO この device は self でいいのでは
 pub fn change_pin(device: &FidoKeyHid, current_pin: &str, new_pin: &str) -> Result<()> {
     if current_pin.is_empty() {
         return Err(anyhow!("current pin not set"));

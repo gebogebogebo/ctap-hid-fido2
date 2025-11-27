@@ -77,9 +77,10 @@ pub fn create_payload_set_pin(
     key_agreement: &cose::CoseKey,
     pin_auth: &[u8],
     new_pin_enc: &[u8],
+    pin_protocol_version: u8,
 ) -> Result<Vec<u8>> {
     let mut map = Vec::new();
-    insert_pin_protocol(&mut map, 1)?;
+    insert_pin_protocol(&mut map, pin_protocol_version)?;
     insert_sub_command(&mut map, SubCommand::SetPin)?;
     insert_key_agreement(&mut map, key_agreement)?;
     insert_pin_auth(&mut map, pin_auth)?;
