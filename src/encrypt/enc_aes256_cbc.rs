@@ -52,3 +52,15 @@ pub fn decrypt_message(key: &[u8; 32], message: &[u8]) -> Vec<u8> {
         .unwrap();
     plaintext.to_vec()
 }
+
+pub fn decrypt_message_with_iv(key: &[u8], iv: &[u8], message: &[u8]) -> Vec<u8> {
+    if message.len() > 4096 {
+        panic!("Message too long");
+    }
+
+    let mut buffer = message.to_vec();
+    let plaintext = Aes256CbcDec::new(key.into(), iv.into())
+        .decrypt_padded_mut::<NoPadding>(&mut buffer)
+        .unwrap();
+    plaintext.to_vec()
+}

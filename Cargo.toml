@@ -29,7 +29,6 @@ x509-parser = "0.18.0"
 rand = "0.9.2"
 hkdf = "0.12.3"
 sha2 = "0.10.6"
-block-padding = "0.3.2"
 
 [dependencies.hidapi]
 version = "2.6.3"

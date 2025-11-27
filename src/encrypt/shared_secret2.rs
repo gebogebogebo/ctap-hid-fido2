@@ -2,8 +2,7 @@ use crate::pintoken::PinToken;
 use crate::encrypt::enc_aes256_cbc;
 
 use super::{cose::CoseKey, p256};
-use aes::cipher::generic_array::GenericArray;
-use aes::cipher::{BlockDecryptMut, KeyIvInit};
+
 use anyhow::{anyhow, Error, Result};
 
 use hkdf::Hkdf;
@@ -124,14 +123,7 @@ impl SharedSecret2 {
         }
 
         // 4. Return the AES-256-CBC decryption of ct using key and iv.
-        type Aes256CbcDec = cbc::Decryptor<aes::Aes256>;
-        let mut cipher = Aes256CbcDec::new(aes_key.into(), iv.into());
-
-        let mut buf = ciphertext.to_vec();
-        for chunk in buf.chunks_exact_mut(16) {
-            let mut block = GenericArray::from_mut_slice(chunk);
-            cipher.decrypt_block_mut(&mut block);
-        }
+        let buf = enc_aes256_cbc::decrypt_message_with_iv(aes_key, iv, ciphertext);
 
         // return
         let pin_token = PinToken::new(&buf);
