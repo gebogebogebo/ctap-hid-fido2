@@ -1,10 +1,11 @@
 use crate::pintoken::PinToken;
+use crate::encrypt::enc_aes256_cbc;
 
 use super::{cose::CoseKey, p256};
 use aes::cipher::generic_array::GenericArray;
-use aes::cipher::{BlockDecryptMut, BlockEncryptMut, KeyIvInit};
+use aes::cipher::{BlockDecryptMut, KeyIvInit};
 use anyhow::{anyhow, Error, Result};
-use block_padding;
+
 use hkdf::Hkdf;
 use ring::rand::SecureRandom;
 use ring::{agreement, digest, rand};
@@ -83,11 +84,7 @@ impl SharedSecret2 {
         rng.fill(&mut iv).map_err(|e| e.to_string())?;
 
         // 3. Let ct be the AES-256-CBC encryption of demPlaintext using key and iv. (No padding is performed as the size of demPlaintext is required to be a multiple of the AES block length.)
-        type Aes256CbcEnc = cbc::Encryptor<aes::Aes256>;
-        let mut cipher = Aes256CbcEnc::new(aes_key.into(), &iv.into());
-        let mut block = *GenericArray::from_slice(dem_plaintext);
-        cipher.encrypt_block_mut(&mut block);
-        let ciphertext = block.to_vec();
+        let ciphertext = enc_aes256_cbc::encrypt_message_with_iv(aes_key, &iv, dem_plaintext);
 
         // 4. Return iv || ct.
         // Concatenate iv and ct(ciphertext)
@@ -128,12 +125,13 @@ impl SharedSecret2 {
 
         // 4. Return the AES-256-CBC decryption of ct using key and iv.
         type Aes256CbcDec = cbc::Decryptor<aes::Aes256>;
-        let cipher = Aes256CbcDec::new(aes_key.into(), iv.into());
+        let mut cipher = Aes256CbcDec::new(aes_key.into(), iv.into());
 
         let mut buf = ciphertext.to_vec();
-        cipher
-            .decrypt_padded_mut::<block_padding::NoPadding>(&mut buf)
-            .map_err(|e| anyhow!(e))?;
+        for chunk in buf.chunks_exact_mut(16) {
+            let mut block = GenericArray::from_mut_slice(chunk);
+            cipher.decrypt_block_mut(&mut block);
+        }
 
         // return
         let pin_token = PinToken::new(&buf);

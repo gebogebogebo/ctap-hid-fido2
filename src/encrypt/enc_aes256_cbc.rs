@@ -22,6 +22,19 @@ pub fn encrypt_message(key: &[u8; 32], message: &[u8]) -> Vec<u8> {
     ciphertext.to_vec()
 }
 
+pub fn encrypt_message_with_iv(key: &[u8], iv: &[u8], message: &[u8]) -> Vec<u8> {
+    if message.len() > 4096 {
+        panic!("Message too long");
+    }
+
+    let mut buffer = message.to_vec();
+    let pt_len = message.len();
+    let ciphertext = Aes256CbcEnc::new(key.into(), iv.into())
+        .encrypt_padded_mut::<NoPadding>(&mut buffer, pt_len)
+        .unwrap();
+    ciphertext.to_vec()
+}
+
 #[allow(dead_code)]
 pub fn decrypt_message_str(key: &[u8; 32], message: &[u8]) -> String {
     let bytes = decrypt_message(key, message);
