@@ -143,7 +143,7 @@ impl SharedSecret2 {
 
 #[cfg(test)]
 mod tests {
-    use super::{kdf, CoseKey, PinToken, SharedSecret2};
+    use super::{kdf, CoseKey, SharedSecret2};
 
     #[test]
     fn test_kdf_concatenation() {
@@ -165,7 +165,6 @@ mod tests {
 
     #[test]
     fn test_encrypt_pin_and_decrypt_token() {
-        use aes::cipher::generic_array::GenericArray;
         let mut secret = [0u8; 64];
         secret[32..].copy_from_slice(&[1u8; 32]); // Use a known key for the test
         let ss2 = SharedSecret2 {

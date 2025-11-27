@@ -173,7 +173,7 @@ mod tests {
 
             params.pin_auth = pin_auth.to_vec();
 
-            make_credential_command::create_payload(params, None).unwrap()
+            make_credential_command::create_payload(params, None, 1).unwrap()
         };
 
         //println!(
