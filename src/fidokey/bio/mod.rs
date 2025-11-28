@@ -176,6 +176,7 @@ impl FidoKeyHid {
             pin_token,
             sub_command,
             self.use_pre_bio_enrollment,
+            self.pin_protocol_version,
         )?;
 
         if self.enable_log {

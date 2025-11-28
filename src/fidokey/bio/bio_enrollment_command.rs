@@ -41,6 +41,7 @@ pub fn create_payload(
     pin_token: Option<&PinToken>,
     sub_command: Option<SubCommand>,
     use_pre_bio_enrollment: bool,
+    pin_protocol_version: u8,
 ) -> Result<Vec<u8>> {
     let mut map = Vec::new();
 
@@ -62,7 +63,7 @@ pub fn create_payload(
 
             if let Some(pin_token) = pin_token {
                 // pinUvAuthProtocol(0x04)
-                map.push((0x04.to_value(), 0x01.to_value()));
+                map.push((0x04.to_value(), pin_protocol_version.to_value()));
 
                 // pinUvAuthParam (0x05)
                 let pin_uv_auth_param =
