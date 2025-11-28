@@ -334,6 +334,7 @@ pub fn change_pin(device: &FidoKeyHid, current_pin: &str, new_pin: &str) -> Resu
         return Err(anyhow!("new pin not set"));
     }
 
+    // get key_agreement
     let send_payload =
         client_pin_command::create_payload(PinCmd::GetKeyAgreement, device.pin_protocol_version)?;
     let response_cbor = ctaphid::ctaphid_cbor(device, &send_payload)?;
@@ -341,7 +342,8 @@ pub fn change_pin(device: &FidoKeyHid, current_pin: &str, new_pin: &str) -> Resu
     let key_agreement =
         client_pin_response::parse_cbor_client_pin_get_keyagreement(&response_cbor)?;
 
-    if device.pin_protocol_version == 1 {
+    // get public_key, pin_auth, new_pin_enc, current_pin_hash_enc
+    let (public_key, pin_auth, new_pin_enc, current_pin_hash_enc) = if device.pin_protocol_version == 1 {
         let shared_secret = SharedSecret::new(&key_agreement)?;
 
         let current_pin_hash_enc = shared_secret.encrypt_pin(current_pin)?;
@@ -351,17 +353,7 @@ pub fn change_pin(device: &FidoKeyHid, current_pin: &str, new_pin: &str) -> Resu
         let pin_auth =
             create_pin_auth_for_change_pin(&shared_secret, &new_pin_enc, &current_pin_hash_enc)?;
 
-        let send_payload = client_pin_command::create_payload_change_pin(
-            &shared_secret.public_key,
-            &pin_auth,
-            &new_pin_enc,
-            &current_pin_hash_enc,
-            device.pin_protocol_version,
-        )?;
-
-        ctaphid::ctaphid_cbor(device, &send_payload)?;
-
-        Ok(())
+        (shared_secret.public_key, pin_auth, new_pin_enc, current_pin_hash_enc.into())
     } else if device.pin_protocol_version == 2 {
         // https://fidoalliance.org/specs/fido-v2.1-ps-20210615/fido-client-to-authenticator-protocol-v2.1-ps-20210615.html#changingExistingPin
         // 6.5.5.6. Changing existing PIN
@@ -378,18 +370,20 @@ pub fn change_pin(device: &FidoKeyHid, current_pin: &str, new_pin: &str) -> Resu
         let pin_auth =
             create_pin_auth_for_change_pin2(&shared_secret, &new_pin_enc, &current_pin_hash_enc)?;
 
-        let send_payload = client_pin_command::create_payload_change_pin(
-            &shared_secret.public_key,
-            &pin_auth,
-            &new_pin_enc,
-            &current_pin_hash_enc,
-            device.pin_protocol_version,
-        )?;
-
-        ctaphid::ctaphid_cbor(device, &send_payload)?;
-
-        Ok(())
+        (shared_secret.public_key, pin_auth, new_pin_enc, current_pin_hash_enc)
     } else {
-        Err(anyhow!("unknown pin_protocol_version"))
-    }
+        return Err(anyhow!("unknown pin_protocol_version"))
+    };
+
+    let send_payload = client_pin_command::create_payload_change_pin(
+        &public_key,
+        &pin_auth,
+        &new_pin_enc,
+        &current_pin_hash_enc,
+        device.pin_protocol_version,
+    )?;
+
+    ctaphid::ctaphid_cbor(device, &send_payload)?;
+
+    Ok(())
 }
