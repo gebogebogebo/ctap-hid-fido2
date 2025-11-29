@@ -65,8 +65,8 @@ impl CoseKey {
                         -1 => {
                             // Table 22: Elliptic Curves
                             // -1: Curves
-                            //      1: P-256(EC2)
-                            //      6: Ed25519(OKP)
+                            //      1: P-256(EC2) <- ES256(-7)
+                            //      6: Ed25519(OKP) <- EdDSA(-8)
                             let int_val: i64 = util_ciborium::cbor_value_to_num(val)?;
                             cose.parameters.insert(-1, int_val.to_value());
                         }

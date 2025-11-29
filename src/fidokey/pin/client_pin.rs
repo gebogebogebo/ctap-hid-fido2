@@ -178,7 +178,7 @@ impl FidoKeyHid {
             let new_pin_enc = create_new_pin_enc(&shared_secret, pin)?;
 
             let pin_auth = create_pin_auth_for_set_pin(&shared_secret, &new_pin_enc)?;
-            
+
             (shared_secret.public_key, pin_auth, new_pin_enc)
         } else if self.pin_protocol_version == 2 {
             let shared_secret = SharedSecret2::new(&key_agreement)?;
@@ -189,7 +189,7 @@ impl FidoKeyHid {
 
             (shared_secret.public_key, pin_auth, new_pin_enc)
         } else {
-            return Err(anyhow!("unknown pin_protocol_version"))
+            return Err(anyhow!("unknown pin_protocol_version"));
         };
 
         // set new pin
@@ -222,37 +222,54 @@ impl FidoKeyHid {
             client_pin_response::parse_cbor_client_pin_get_keyagreement(&response_cbor)?;
 
         // get public_key, pin_auth, new_pin_enc, current_pin_hash_enc
-        let (public_key, pin_auth, new_pin_enc, current_pin_hash_enc) = if self.pin_protocol_version == 1 {
-            let shared_secret = SharedSecret::new(&key_agreement)?;
+        let (public_key, pin_auth, new_pin_enc, current_pin_hash_enc) =
+            if self.pin_protocol_version == 1 {
+                let shared_secret = SharedSecret::new(&key_agreement)?;
 
-            let current_pin_hash_enc = shared_secret.encrypt_pin(current_pin)?;
+                let current_pin_hash_enc = shared_secret.encrypt_pin(current_pin)?;
 
-            let new_pin_enc = create_new_pin_enc(&shared_secret, new_pin)?;
+                let new_pin_enc = create_new_pin_enc(&shared_secret, new_pin)?;
 
-            let pin_auth =
-                create_pin_auth_for_change_pin(&shared_secret, &new_pin_enc, &current_pin_hash_enc)?;
+                let pin_auth = create_pin_auth_for_change_pin(
+                    &shared_secret,
+                    &new_pin_enc,
+                    &current_pin_hash_enc,
+                )?;
 
-            (shared_secret.public_key, pin_auth, new_pin_enc, current_pin_hash_enc.into())
-        } else if self.pin_protocol_version == 2 {
-            // https://fidoalliance.org/specs/fido-v2.1-ps-20210615/fido-client-to-authenticator-protocol-v2.1-ps-20210615.html#changingExistingPin
-            // 6.5.5.6. Changing existing PIN
+                (
+                    shared_secret.public_key,
+                    pin_auth,
+                    new_pin_enc,
+                    current_pin_hash_enc.into(),
+                )
+            } else if self.pin_protocol_version == 2 {
+                // https://fidoalliance.org/specs/fido-v2.1-ps-20210615/fido-client-to-authenticator-protocol-v2.1-ps-20210615.html#changingExistingPin
+                // 6.5.5.6. Changing existing PIN
 
-            let shared_secret = SharedSecret2::new(&key_agreement)?;
+                let shared_secret = SharedSecret2::new(&key_agreement)?;
 
-            // 4. pinHashEnc: The result of calling encrypt(shared secret, LEFT(SHA-256(curPin), 16)).
-            let current_pin_hash_enc = shared_secret.encrypt_pin(current_pin)?;
+                // 4. pinHashEnc: The result of calling encrypt(shared secret, LEFT(SHA-256(curPin), 16)).
+                let current_pin_hash_enc = shared_secret.encrypt_pin(current_pin)?;
 
-            // 5. newPinEnc: the result of calling encrypt(shared secret, paddedPin) where paddedPin is newPin padded on the right with 0x00 bytes to make it 64 bytes long. (Since the maximum length of newPin is 63 bytes, there is always at least one byte of padding.)
-            let new_pin_enc = create_new_pin_enc2(&shared_secret, new_pin)?;
+                // 5. newPinEnc: the result of calling encrypt(shared secret, paddedPin) where paddedPin is newPin padded on the right with 0x00 bytes to make it 64 bytes long. (Since the maximum length of newPin is 63 bytes, there is always at least one byte of padding.)
+                let new_pin_enc = create_new_pin_enc2(&shared_secret, new_pin)?;
 
-            // 6. pinUvAuthParam: the result of calling authenticate(shared secret, newPinEnc || pinHashEnc).
-            let pin_auth =
-                create_pin_auth_for_change_pin2(&shared_secret, &new_pin_enc, &current_pin_hash_enc)?;
+                // 6. pinUvAuthParam: the result of calling authenticate(shared secret, newPinEnc || pinHashEnc).
+                let pin_auth = create_pin_auth_for_change_pin2(
+                    &shared_secret,
+                    &new_pin_enc,
+                    &current_pin_hash_enc,
+                )?;
 
-            (shared_secret.public_key, pin_auth, new_pin_enc, current_pin_hash_enc)
-        } else {
-            return Err(anyhow!("unknown pin_protocol_version"))
-        };
+                (
+                    shared_secret.public_key,
+                    pin_auth,
+                    new_pin_enc,
+                    current_pin_hash_enc,
+                )
+            } else {
+                return Err(anyhow!("unknown pin_protocol_version"));
+            };
 
         let send_payload = client_pin_command::create_payload_change_pin(
             &public_key,
@@ -266,7 +283,6 @@ impl FidoKeyHid {
 
         Ok(())
     }
-
 }
 
 // pinAuth = LEFT(HMAC-SHA-256(sharedSecret, newPinEnc), 16)
@@ -387,4 +403,3 @@ fn create_new_pin_enc2(shared_secret: &SharedSecret2, new_pin: &str) -> Result<V
 
     Ok(new_pin_enc)
 }
-

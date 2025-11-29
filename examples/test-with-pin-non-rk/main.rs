@@ -254,7 +254,11 @@ fn non_discoverable_credentials(device: &FidoKeyHid, rpid: &str, pin: &str) -> R
     Ok(())
 }
 
-fn non_discoverable_credentials_pin_protocol_two(device: &mut FidoKeyHid, rpid: &str, pin: &str) -> Result<()> {
+fn non_discoverable_credentials_pin_protocol_two(
+    device: &mut FidoKeyHid,
+    rpid: &str,
+    pin: &str,
+) -> Result<()> {
     print_section("----- non_discoverable_credentials with pin_protocol_two -----");
 
     if !device.set_pin_uv_auth_protocol_two()? {
