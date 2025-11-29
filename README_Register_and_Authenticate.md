@@ -139,6 +139,7 @@ if is_success {
 
 
 - [with HMAC Secret Extension](https://github.com/gebogebogebo/ctap-hid-fido2/blob/4554732f4647b0bce0d7674c554a7a33dabf099a/examples/test-with-pin-non-rk/main.rs#L232-L315)
+- [with HMAC Secret Extension (use optional salt)](https://github.com/gebogebogebo/ctap-hid-fido2/blob/769d2770ac4a1796ce018e3aa0d50c06f9db15f7/examples/test-with-pin-non-rk/main.rs#L431-L512)
   - I do not know the correct use of this option.
 - [with Large Blob Key Extension](https://github.com/gebogebogebo/ctap-hid-fido2/blob/4554732f4647b0bce0d7674c554a7a33dabf099a/examples/test-with-pin-non-rk/main.rs#L370-L455)
   - Used with Large Blob Command.
