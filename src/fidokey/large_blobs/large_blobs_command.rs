@@ -1,5 +1,5 @@
-use crate::{ctapdef, encrypt::enc_hmac_sha_256, pintoken::PinToken, fidokey::common};
 use crate::util_ciborium::ToValue;
+use crate::{ctapdef, encrypt::enc_hmac_sha_256, fidokey::common, pintoken::PinToken};
 use anyhow::Result;
 use ring::digest;
 
@@ -8,10 +8,11 @@ pub fn create_payload(
     offset: u32,
     get: Option<u32>,
     set: Option<Vec<u8>>,
+    pin_protocol_version: u8,
 ) -> Result<Vec<u8>> {
     // Create parameter map
     let mut map = Vec::new();
-    
+
     // 0x03: offset (required)
     map.push((0x03.to_value(), offset.to_value()));
 
@@ -53,9 +54,9 @@ pub fn create_payload(
                 let sig = enc_hmac_sha_256::authenticate(&pin_token.key, &message);
                 sig[0..16].to_vec()
             };
-            
+
             map.push((0x05.to_value(), pin_uv_auth_param.to_value()));
-            map.push((0x06.to_value(), 1.to_value()));
+            map.push((0x06.to_value(), pin_protocol_version.to_value()));
         }
     }
 

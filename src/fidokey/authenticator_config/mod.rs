@@ -35,7 +35,11 @@ impl FidoKeyHid {
         let pin_token =
             self.get_pinuv_auth_token_with_permission(pin, AuthenticatorConfiguration)?;
 
-        let send_payload = authenticator_config_command::create_payload(pin_token, sub_command)?;
+        let send_payload = authenticator_config_command::create_payload(
+            pin_token,
+            sub_command,
+            self.pin_protocol_version,
+        )?;
         let _response_cbor = ctaphid::ctaphid_cbor(self, &send_payload)?;
         Ok(())
     }

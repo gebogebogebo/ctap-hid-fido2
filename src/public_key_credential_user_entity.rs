@@ -1,7 +1,7 @@
 use crate::{util, util_ciborium};
-use std::fmt;
-use ciborium::value::Value;
 use anyhow::Result;
+use ciborium::value::Value;
+use std::fmt;
 
 #[derive(Debug, Default, Clone, PartialEq)]
 pub struct PublicKeyCredentialUserEntity {
@@ -32,14 +32,17 @@ impl PublicKeyCredentialUserEntity {
         ret.id = util_ciborium::cbor_get_bytes_from_map(cbor, "id")?;
         Ok(ret)
     }
-    
+
     pub fn get_name(self: &mut PublicKeyCredentialUserEntity, cbor: &Value) -> Result<Self> {
         let mut ret = self.clone();
         ret.name = util_ciborium::cbor_get_string_from_map(cbor, "name")?;
         Ok(ret)
     }
-    
-    pub fn get_display_name(self: &mut PublicKeyCredentialUserEntity, cbor: &Value) -> Result<Self> {
+
+    pub fn get_display_name(
+        self: &mut PublicKeyCredentialUserEntity,
+        cbor: &Value,
+    ) -> Result<Self> {
         let mut ret = self.clone();
         ret.display_name = util_ciborium::cbor_get_string_from_map(cbor, "displayName")?;
         Ok(ret)

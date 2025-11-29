@@ -32,10 +32,16 @@ pub struct FidoKeyHid {
     pub use_pre_bio_enrollment: bool,
     pub use_pre_credential_management: bool,
     pub keep_alive_msg: String,
+    pub pin_protocol_version: u8,
     cid: Mutex<Option<[u8; 4]>>,
 }
 
 impl FidoKeyHid {
+    pub fn with_pin_protocol_version(mut self, version: u8) -> Self {
+        self.pin_protocol_version = version;
+        self
+    }
+
     pub fn new(params: &[crate::HidParam], cfg: &crate::LibCfg) -> Result<Self> {
         let api = HidApi::new().expect("Failed to create HidApi instance");
         for param in params {
@@ -51,6 +57,7 @@ impl FidoKeyHid {
                     use_pre_bio_enrollment: cfg.use_pre_bio_enrollment,
                     use_pre_credential_management: cfg.use_pre_credential_management,
                     keep_alive_msg: cfg.keep_alive_msg.to_string(),
+                    pin_protocol_version: 1,
                     cid: Mutex::new(None), // Wrap in Mutex
                 };
                 return Ok(result);
@@ -75,7 +82,7 @@ impl FidoKeyHid {
             Err(_) => Err("read error".into()),
         }
     }
-    
+
     // init or get CID
     pub fn get_cid(&self) -> Result<[u8; 4]> {
         let mut cid_guard = self.cid.lock().map_err(|e| anyhow!(e.to_string()))?;
@@ -90,7 +97,7 @@ impl FidoKeyHid {
         // A more robust solution might involve passing the locked guard or restructuring.
         // However, for this specific case, ctaphid_init doesn't seem to re-enter get_cid.
         // Drop(cid_guard); // Explicitly drop before re-acquiring or calling other methods that might lock
-        
+
         // Since ctaphid_init takes &self, and self.cid is already locked,
         // we need to be careful. However, ctaphid_init itself doesn't use self.cid.
         // It uses self.write and self.read which lock device_internal.

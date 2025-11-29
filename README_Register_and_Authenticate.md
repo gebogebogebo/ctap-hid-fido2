@@ -160,6 +160,9 @@ if is_success {
   - Get whether PIN is set in Authenticator with `enable_info_option()`
     - [Example](https://github.com/gebogebogebo/ctap-hid-fido2/blob/0791003c87b5d36392868a26247fca0b36ed9d5c/examples/get-info/main.rs#L44-L49)
 
+- [with PIN/UV Auth Protocol Two](https://github.com/gebogebogebo/ctap-hid-fido2/blob/ad3f21c763adeb4ee98fc607f5987f76572b6a41/examples/test-with-pin-non-rk/main.rs#L257-L320)
+  - use `device.set_pin_uv_auth_protocol_two()`.
+
 ### discoverable credentials/resident-key
 
 - [discoverable credentials/resident-key](https://github.com/gebogebogebo/ctap-hid-fido2/blob/4554732f4647b0bce0d7674c554a7a33dabf099a/examples/test-with-pin-rk/main.rs#L53-L118)

@@ -1,7 +1,7 @@
 use super::super::sub_command_base::SubCommandBase;
 use super::bio_enrollment_params::TemplateInfo;
-use crate::{ctapdef, encrypt::enc_hmac_sha_256, pintoken::PinToken, fidokey::common};
 use crate::util_ciborium::ToValue;
+use crate::{ctapdef, encrypt::enc_hmac_sha_256, fidokey::common, pintoken::PinToken};
 use anyhow::Result;
 use ciborium::value::Value;
 use strum_macros::EnumProperty;
@@ -41,6 +41,7 @@ pub fn create_payload(
     pin_token: Option<&PinToken>,
     sub_command: Option<SubCommand>,
     use_pre_bio_enrollment: bool,
+    pin_protocol_version: u8,
 ) -> Result<Vec<u8>> {
     let mut map = Vec::new();
 
@@ -48,26 +49,28 @@ pub fn create_payload(
         Some(sub_command) => {
             // modality (0x01) = fingerprint (0x01)
             map.push((0x01.to_value(), 0x01.to_value()));
-            
+
             // subCommand(0x02)
             let sub_cmd_id = sub_command.id()?;
             map.push((0x02.to_value(), sub_cmd_id.to_value()));
 
             // subCommandParams (0x03): Map containing following parameters
-            let (sub_command_params, sub_command_params_cbor) = create_sub_command_params(&sub_command)?;
+            let (sub_command_params, sub_command_params_cbor) =
+                create_sub_command_params(&sub_command)?;
             if let Some(param) = &sub_command_params {
                 map.push((0x03.to_value(), param.clone()));
             }
 
             if let Some(pin_token) = pin_token {
                 // pinUvAuthProtocol(0x04)
-                map.push((0x04.to_value(), 0x01.to_value()));
+                map.push((0x04.to_value(), pin_protocol_version.to_value()));
 
                 // pinUvAuthParam (0x05)
-                let pin_uv_auth_param = create_pin_auth_param(pin_token, sub_cmd_id, &sub_command_params_cbor);
+                let pin_uv_auth_param =
+                    create_pin_auth_param(pin_token, sub_cmd_id, &sub_command_params_cbor);
                 map.push((0x05.to_value(), pin_uv_auth_param.to_value()));
             }
-        },
+        }
         None => {
             // getModality (0x06)
             map.push((0x06.to_value(), true.to_value()));
@@ -90,15 +93,16 @@ fn create_sub_command_params(sub_command: &SubCommand) -> Result<(Option<Value>,
     if !sub_command.has_param() {
         return Ok((None, Vec::new()));
     }
-    
+
     let param = match sub_command {
         SubCommand::EnrollBegin(timeout_milliseconds) => {
             Some(create_timeout_param(None, *timeout_milliseconds))
         }
-        SubCommand::EnrollCaptureNextSample(template_info, timeout_milliseconds) => {
-            Some(create_timeout_param(Some(template_info), *timeout_milliseconds))
-        }
-        SubCommand::SetFriendlyName(template_info) | SubCommand::RemoveEnrollment(template_info) => {
+        SubCommand::EnrollCaptureNextSample(template_info, timeout_milliseconds) => Some(
+            create_timeout_param(Some(template_info), *timeout_milliseconds),
+        ),
+        SubCommand::SetFriendlyName(template_info)
+        | SubCommand::RemoveEnrollment(template_info) => {
             Some(create_template_info_param(template_info))
         }
         _ => None,
@@ -115,8 +119,12 @@ fn create_sub_command_params(sub_command: &SubCommand) -> Result<(Option<Value>,
 }
 
 /// Create PIN authentication parameter
-fn create_pin_auth_param(pin_token: &PinToken, sub_cmd_id: u8, sub_command_params_cbor: &[u8]) -> Vec<u8> {
-    let mut message = vec![0x01_u8];  // fingerprint modality
+fn create_pin_auth_param(
+    pin_token: &PinToken,
+    sub_cmd_id: u8,
+    sub_command_params_cbor: &[u8],
+) -> Vec<u8> {
+    let mut message = vec![0x01_u8]; // fingerprint modality
     message.push(sub_cmd_id);
     message.extend_from_slice(sub_command_params_cbor);
     let sig = enc_hmac_sha_256::authenticate(&pin_token.key, &message);
@@ -127,11 +135,11 @@ fn create_pin_auth_param(pin_token: &PinToken, sub_cmd_id: u8, sub_command_param
 fn create_template_info_param(template_info: &TemplateInfo) -> Value {
     let mut param = Vec::new();
     param.push((0x01.to_value(), template_info.template_id.to_value()));
-    
+
     if let Some(friendly_name) = &template_info.template_friendly_name {
         param.push((0x02.to_value(), friendly_name.to_value()));
     }
-    
+
     param.to_value()
 }
 
@@ -141,14 +149,14 @@ fn create_timeout_param(
     timeout_milliseconds: Option<u16>,
 ) -> Value {
     let mut param = Vec::new();
-    
+
     if let Some(template_info) = template_info {
         param.push((0x01.to_value(), template_info.template_id.to_value()));
     }
-    
+
     if let Some(timeout) = timeout_milliseconds {
         param.push((0x03.to_value(), timeout.to_value()));
     }
-    
+
     param.to_value()
 }

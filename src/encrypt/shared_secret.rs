@@ -21,14 +21,12 @@ impl SharedSecret {
             agreement::UnparsedPublicKey::new(&agreement::ECDH_P256, peer_public_key)
         };
 
-        let shared_secret = agreement::agree_ephemeral(
-            my_private_key,
-            &peer_public_key,
-            |material| {
+        let shared_secret =
+            agreement::agree_ephemeral(my_private_key, &peer_public_key, |material| {
                 digest::digest(&digest::SHA256, material)
-            }
-        ).map_err(Error::msg)?;
-        
+            })
+            .map_err(Error::msg)?;
+
         let mut res = SharedSecret {
             public_key: p256::P256Key::from_bytes(my_public_key.as_ref())?.to_cose(),
             secret: [0; 32],

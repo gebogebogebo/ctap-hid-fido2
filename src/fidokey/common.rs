@@ -2,7 +2,7 @@ use anyhow::Result;
 use ciborium::value::Value;
 
 /// Common payload creation function
-/// 
+///
 /// # Arguments
 ///
 /// * `map` - Vector of key-value pairs used as a CBOR map

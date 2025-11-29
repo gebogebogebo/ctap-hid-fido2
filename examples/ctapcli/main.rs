@@ -163,16 +163,10 @@ enum Action {
         )]
         update: bool,
 
-        #[clap(
-            long = "rpid",
-            help = "rpid to be deleted(or updated)."
-        )]
+        #[clap(long = "rpid", help = "rpid to be deleted(or updated).")]
         rpid: Option<String>,
 
-        #[clap(
-            long = "userid",
-            help = "user-id to be deleted(or updated)."
-        )]
+        #[clap(long = "userid", help = "user-id to be deleted(or updated).")]
         userid: Option<String>,
 
         #[clap(short = 'p')]
@@ -190,9 +184,7 @@ enum Action {
         )]
         new_min_pin_length: Option<u8>,
 
-        #[clap(
-            long = "rpid", 
-            help = "xxx.")]
+        #[clap(long = "rpid", help = "xxx.")]
         rpids: Option<Vec<String>>,
 
         #[clap(
@@ -351,15 +343,9 @@ fn main() -> Result<()> {
                 let command = if metadata {
                     cred::Command::Metadata
                 } else if delete {
-                    cred::Command::Del((
-                        rpid.unwrap_or_default(),
-                        userid.unwrap_or_default(),
-                    ))
+                    cred::Command::Del((rpid.unwrap_or_default(), userid.unwrap_or_default()))
                 } else if update {
-                    cred::Command::Update((
-                        rpid.unwrap_or_default(),
-                        userid.unwrap_or_default(),
-                    ))
+                    cred::Command::Update((rpid.unwrap_or_default(), userid.unwrap_or_default()))
                 } else {
                     cred::Command::List
                 };
@@ -391,11 +377,7 @@ fn main() -> Result<()> {
                     cfg::config(&device, cfg::Command::ForceChangePin, pin)?;
                 }
             }
-            Action::Blob {
-                get,
-                str_val,
-                pin,
-            } => {
+            Action::Blob { get, str_val, pin } => {
                 if get {
                     blob::blob(&device, blob::Command::Get, None)?;
                 } else if let Some(str_val) = str_val {
@@ -421,6 +403,6 @@ pub fn up(device: &FidoKeyHid) -> Result<()> {
 
     // If you need to cancel the selection, you can use cid with device.cancel_selection()?;
     device.cancel_selection()?;
-    
+
     Ok(())
 }

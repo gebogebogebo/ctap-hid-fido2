@@ -67,7 +67,8 @@ fn add_tag(device: &FidoKeyHid, tag: &str, pin: &str, rpid: &str) -> Result<()> 
         let memo = common::get_input_with_message("memo:")?;
 
         let challenge = verifier::create_challenge();
-        let rkparam = PublicKeyCredentialUserEntity::new(Some(tag.as_bytes()), Some(memo.as_str()), None);
+        let rkparam =
+            PublicKeyCredentialUserEntity::new(Some(tag.as_bytes()), Some(memo.as_str()), None);
 
         let _att = device.make_credential_rk(rpid, &challenge, Some(pin), &rkparam)?;
 

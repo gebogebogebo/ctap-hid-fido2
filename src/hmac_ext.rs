@@ -22,7 +22,7 @@ impl HmacExt {
         salt1: &[u8; 32],
         salt2: Option<&[u8; 32]>,
     ) -> Result<()> {
-        let send_payload = create_payload(PinCmd::GetKeyAgreement)?;
+        let send_payload = create_payload(PinCmd::GetKeyAgreement, device.pin_protocol_version)?;
         let response_cbor = ctaphid::ctaphid_cbor(device, &send_payload)?;
 
         let key_agreement = parse_cbor_client_pin_get_keyagreement(&response_cbor)?;

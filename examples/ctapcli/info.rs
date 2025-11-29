@@ -14,7 +14,7 @@ pub fn info(device: &FidoKeyHid, item: &str) -> Result<()> {
             Ok(info) => {
                 println!("{}", info);
                 return Ok(());
-            },
+            }
             Err(err) => return Err(err),
         };
     }
