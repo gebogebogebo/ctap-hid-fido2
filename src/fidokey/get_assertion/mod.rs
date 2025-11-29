@@ -2,7 +2,7 @@ pub mod get_assertion_command;
 pub mod get_assertion_params;
 pub mod get_assertion_response;
 pub mod get_next_assertion_command;
-use crate::{ctaphid, encrypt::enc_hmac_sha_256, hmac_ext::HmacExt, FidoKeyHid};
+use crate::{ctaphid, hmac_ext::HmacExt, FidoKeyHid};
 use anyhow::Result;
 use get_assertion_params::{Assertion, Extension as Gext, GetAssertionArgs};
 pub use get_assertion_params::{Extension, GetAssertionArgsBuilder};
@@ -26,15 +26,6 @@ impl FidoKeyHid {
 
         let hmac_ext = create_hmacext(self, extensions)?;
 
-        // pin token
-        let pin_token = {
-            if let Some(pin) = args.pin {
-                Some(self.get_pin_token(pin)?)
-            } else {
-                None
-            }
-        };
-
         // create command
         let mut params = get_assertion_command::Params::new(
             &args.rpid,
@@ -45,14 +36,17 @@ impl FidoKeyHid {
         params.option_uv = args.uv;
 
         // create pin auth
-        if let Some(pin_token) = pin_token {
-            let sig = enc_hmac_sha_256::authenticate(&pin_token.key, &params.client_data_hash);
-            params.pin_auth = sig[0..16].to_vec();
+        if let Some(pin) = args.pin {
+            params.pin_auth = self.create_pin_auth(pin, &params.client_data_hash)?;
         }
 
         // Get payload as Vec<u8>, not Result<Vec<u8>>
-        let send_payload =
-            get_assertion_command::create_payload(params, extensions, hmac_ext.clone())?;
+        let send_payload = get_assertion_command::create_payload(
+            params,
+            extensions,
+            hmac_ext.clone(),
+            self.pin_protocol_version,
+        )?;
 
         // send & response
         let response_cbor = ctaphid::ctaphid_cbor(self, &send_payload)?;

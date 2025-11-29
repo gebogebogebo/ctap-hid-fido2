@@ -1,8 +1,8 @@
 use super::make_credential_params::{Attestation, Extension};
 use super::CredentialProtectionPolicy;
+use crate::auth_data::Flags;
 use crate::public_key::PublicKey;
 use crate::util_ciborium;
-use crate::auth_data::Flags;
 use anyhow::Result;
 use byteorder::{BigEndian, ReadBytesExt};
 use ciborium::value::Value;
@@ -83,7 +83,7 @@ fn parse_cbor_authdata(authdata: &[u8], attestation: &mut Attestation) -> Result
                 let mut bytes = Vec::new();
                 ciborium::ser::into_writer(&value, &mut bytes)?;
                 slice[bytes.len()..].to_vec()
-            },
+            }
             Err(_) => authdata[index..authdata.len()].to_vec(),
         }
     } else {
@@ -131,7 +131,10 @@ pub fn parse_cbor(bytes: &[u8]) -> Result<Attestation> {
         if util_ciborium::is_integer(key) {
             match util_ciborium::integer_to_i64(key)? {
                 0x01 => attestation.fmt = util_ciborium::cbor_value_to_str(val)?,
-                0x02 => parse_cbor_authdata(&util_ciborium::cbor_value_to_vec_u8(val)?, &mut attestation)?,
+                0x02 => parse_cbor_authdata(
+                    &util_ciborium::cbor_value_to_vec_u8(val)?,
+                    &mut attestation,
+                )?,
                 0x03 => parse_cbor_att_stmt(val, &mut attestation)?,
                 0x05 => {
                     let lbk = util_ciborium::cbor_value_to_vec_u8(val)?;

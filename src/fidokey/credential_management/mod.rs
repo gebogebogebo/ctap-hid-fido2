@@ -91,17 +91,13 @@ impl FidoKeyHid {
         pin: Option<&str>,
         sub_command: SubCommand,
     ) -> Result<CredentialManagementData> {
-
         // pin token
         let pin_token = {
             if let Some(pin) = pin {
                 if self.use_pre_credential_management {
                     Some(self.get_pin_token(pin)?)
                 } else {
-                    Some(self.get_pinuv_auth_token_with_permission(
-                        pin,
-                        CredentialManagement,
-                    )?)
+                    Some(self.get_pinuv_auth_token_with_permission(pin, CredentialManagement)?)
                 }
             } else {
                 None
@@ -112,6 +108,7 @@ impl FidoKeyHid {
             pin_token,
             sub_command,
             self.use_pre_credential_management,
+            self.pin_protocol_version,
         )?;
 
         if self.enable_log {

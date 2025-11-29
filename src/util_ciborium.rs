@@ -1,7 +1,7 @@
 use anyhow::{anyhow, Result};
-use std::io::Cursor;
 use ciborium::value::Value;
 use num::NumCast;
+use std::io::Cursor;
 
 #[allow(dead_code)]
 pub(crate) trait ToValue {
@@ -87,7 +87,7 @@ pub(crate) fn cbor_bytes_to_map(bytes: &[u8]) -> Result<Vec<(Value, Value)>> {
             } else {
                 Err(anyhow!("ciborium parse error: Value is not a Map"))
             }
-        },
+        }
         Err(_) => Err(anyhow!("ciborium parse error")),
     }
 }
@@ -198,7 +198,7 @@ pub(crate) fn integer_to_i64(value: &Value) -> Result<i64> {
 #[allow(dead_code)]
 pub(crate) fn cbor_get_string_from_map(cbor_map: &Value, get_key: &str) -> Result<String> {
     if !is_map(cbor_map) {
-        return Err(anyhow!("Cast Error : Value is not a Map."))
+        return Err(anyhow!("Cast Error : Value is not a Map."));
     }
     let map: &Vec<(Value, Value)> = extract_map_ref(cbor_map)?;
     for (key, val) in map {
@@ -220,7 +220,7 @@ pub(crate) fn cbor_get_string_from_map(cbor_map: &Value, get_key: &str) -> Resul
 #[allow(dead_code)]
 pub(crate) fn cbor_get_bytes_from_map(cbor_map: &Value, get_key: &str) -> Result<Vec<u8>> {
     if !is_map(cbor_map) {
-        return Ok(Vec::new())
+        return Ok(Vec::new());
     }
     let map: &Vec<(Value, Value)> = extract_map_ref(cbor_map)?;
     for (key, val) in map {
@@ -234,7 +234,7 @@ pub(crate) fn cbor_get_bytes_from_map(cbor_map: &Value, get_key: &str) -> Result
             if n.to_string() == get_key {
                 return cbor_value_to_vec_u8(val);
             }
-        }        
+        }
     }
     Ok(Vec::new())
 }

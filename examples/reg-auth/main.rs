@@ -6,7 +6,9 @@ use ctap_hid_fido2::{
 
 fn main() -> Result<()> {
     let rpid = "reg-auth-example-app";
-    let pin = get_input_with_message("input PIN:");
+    // let pin = get_input_with_message("input PIN:");
+    let pin = "1234";
+    let pin_protocol_version = 1;
 
     println!("Register");
     // create `challenge`
@@ -18,11 +20,11 @@ fn main() -> Result<()> {
         .build();
 
     // create `FidoKeyHid`
-    let device = FidoKeyHidFactory::create(&Cfg::init())?;
+    let device = FidoKeyHidFactory::create(&Cfg::init().with_enable_log(true))?
+        .with_pin_protocol_version(pin_protocol_version);
 
     // get `Attestation` Object
-    let attestation = device
-        .make_credential_with_args(&make_credential_args)?;
+    let attestation = device.make_credential_with_args(&make_credential_args)?;
     println!("- Register Success");
 
     // verify `Attestation` Object
@@ -60,7 +62,7 @@ fn main() -> Result<()> {
         println!("- ! Verify Assertion Failed");
         return Err(anyhow!("Assertion verification failed"));
     }
-    
+
     Ok(())
 }
 

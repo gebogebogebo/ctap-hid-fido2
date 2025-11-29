@@ -1,8 +1,8 @@
 use super::super::sub_command_base::SubCommandBase;
 use crate::public_key_credential_descriptor::PublicKeyCredentialDescriptor;
 use crate::public_key_credential_user_entity::PublicKeyCredentialUserEntity;
-use crate::{ctapdef, encrypt::enc_hmac_sha_256, pintoken, fidokey::common};
 use crate::util_ciborium::ToValue;
+use crate::{ctapdef, encrypt::enc_hmac_sha_256, fidokey::common, pintoken};
 use anyhow::Result;
 use ciborium::value::Value;
 use strum_macros::EnumProperty;
@@ -40,6 +40,7 @@ pub fn create_payload(
     pin_token: Option<pintoken::PinToken>,
     sub_command: SubCommand,
     use_pre_credential_management: bool,
+    pin_protocol_version: u8,
 ) -> Result<Vec<u8>> {
     let mut map = Vec::new();
 
@@ -67,7 +68,7 @@ pub fn create_payload(
         };
         if let Some(param) = param {
             map.push((0x02.to_value(), param.clone()));
-            
+
             // Serialize parameters to CBOR
             ciborium::ser::into_writer(&param, &mut sub_command_params_cbor)?;
         }
@@ -75,7 +76,7 @@ pub fn create_payload(
 
     if let Some(pin_token) = pin_token {
         // pinProtocol(0x03)
-        map.push((0x03.to_value(), 1.to_value()));
+        map.push((0x03.to_value(), pin_protocol_version.to_value()));
 
         // pinUvAuthParam (0x04):
         // - authenticate(pinUvAuthToken, getCredsMetadata (0x01)).
@@ -128,7 +129,10 @@ fn create_public_key_credential_descriptor_pend(
     let user = vec![
         ("id".to_value(), pkcue.id.clone().to_value()),
         ("name".to_value(), pkcue.name.to_string().to_value()),
-        ("displayName".to_value(), pkcue.display_name.to_string().to_value()),
+        (
+            "displayName".to_value(),
+            pkcue.display_name.to_string().to_value(),
+        ),
     ];
 
     let param = vec![

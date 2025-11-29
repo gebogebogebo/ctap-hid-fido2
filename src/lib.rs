@@ -14,6 +14,7 @@ mod encrypt {
     pub mod enc_hmac_sha_256;
     pub mod p256;
     pub mod shared_secret;
+    pub mod shared_secret2;
 }
 mod hmac_ext;
 mod pintoken;
@@ -52,6 +53,11 @@ impl LibCfg {
             use_pre_credential_management: true,
             keep_alive_msg: "- Touch the sensor on the authenticator".to_string(),
         }
+    }
+
+    pub fn with_enable_log(mut self, enable: bool) -> Self {
+        self.enable_log = enable;
+        self
     }
 }
 

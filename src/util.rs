@@ -1,6 +1,6 @@
 use crate::str_buf::StrBuf;
+use base64::{engine::general_purpose, Engine as _};
 use ring::digest;
-use base64::{Engine as _, engine::general_purpose};
 
 pub fn to_hex_str(bytes: &[u8]) -> String {
     bytes.iter().fold(String::new(), |mut acc, n| {

@@ -49,7 +49,8 @@ impl P256Key {
                 (-1, 1.to_value()),
                 (-2, self.x.to_vec().to_value()),
                 (-3, self.y.to_vec().to_value()),
-            ].into()
+            ]
+            .into(),
         }
     }
 

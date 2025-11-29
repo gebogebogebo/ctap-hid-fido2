@@ -11,7 +11,8 @@ pub use client_pin_response::*;
 impl FidoKeyHid {
     /// Get PIN retry count
     pub fn get_pin_retries(&self) -> Result<i32> {
-        let send_payload = client_pin_command::create_payload(PinCmd::GetRetries)?;
+        let send_payload =
+            client_pin_command::create_payload(PinCmd::GetRetries, self.pin_protocol_version)?;
 
         // The cid is obtained internally by ctaphid_cbor
         let response_cbor = ctaphid::ctaphid_cbor(self, &send_payload)?;
@@ -23,7 +24,8 @@ impl FidoKeyHid {
 
     /// Get UV retry count
     pub fn get_uv_retries(&self) -> Result<i32> {
-        let send_payload = client_pin_command::create_payload(PinCmd::GetUVRetries)?;
+        let send_payload =
+            client_pin_command::create_payload(PinCmd::GetUVRetries, self.pin_protocol_version)?;
 
         let response_cbor = ctaphid::ctaphid_cbor(self, &send_payload)?;
 
@@ -34,13 +36,13 @@ impl FidoKeyHid {
 
     /// Set New PIN
     pub fn set_new_pin(&self, pin: &str) -> Result<()> {
-        self.set_pin(pin)?;
+        self.set_new_pin_cmd(pin)?;
         Ok(())
     }
 
     /// Change PIN
     pub fn change_pin(&self, current_pin: &str, new_pin: &str) -> Result<()> {
-        client_pin::change_pin(self, current_pin, new_pin)?;
+        self.change_pin_cmd(current_pin, new_pin)?;
         Ok(())
     }
 }
@@ -59,7 +61,8 @@ mod tests {
         let hid_params = HidParam::get();
         let device = FidoKeyHid::new(&hid_params, &Cfg::init()).unwrap();
 
-        let send_payload = create_payload(PinCmd::GetKeyAgreement).unwrap();
+        let send_payload =
+            create_payload(PinCmd::GetKeyAgreement, device.pin_protocol_version).unwrap();
         // The cid is obtained internally by ctaphid_cbor
         let response_cbor = ctaphid::ctaphid_cbor(&device, &send_payload).unwrap();
 

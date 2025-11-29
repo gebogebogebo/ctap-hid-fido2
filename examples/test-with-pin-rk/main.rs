@@ -39,8 +39,14 @@ fn print_test_summary() {
         println!();
         print_section("===== Test Summary =====");
         println!("Total Tests:   {}", results.total);
-        println!("Success Tests: {}", results.success.to_string().green().bold());
-        println!("Failed Tests:  {}", results.failure.to_string().red().bold());
+        println!(
+            "Success Tests: {}",
+            results.success.to_string().green().bold()
+        );
+        println!(
+            "Failed Tests:  {}",
+            results.failure.to_string().red().bold()
+        );
     });
 }
 
@@ -148,7 +154,7 @@ fn discoverable_credentials(device: &FidoKeyHid, rpid: &str, pin: &str) -> Resul
             .append("- rpid", &rpid)
             .appenh("- challenge", &challenge)
             .append("- user_entity", &user_entity)
-            .build()
+            .build(),
     );
 
     let make_credential_args = MakeCredentialArgsBuilder::new(rpid, &challenge)
@@ -221,7 +227,7 @@ fn with_cred_blob_ex(device: &FidoKeyHid, rpid: &str, pin: &str) -> Result<()> {
             .append("- rpid", &rpid)
             .appenh("- challenge", &challenge)
             .append("- user_entity", &user_entity)
-            .build()
+            .build(),
     );
 
     let make_credential_args = MakeCredentialArgsBuilder::new(rpid, &challenge)
@@ -233,9 +239,10 @@ fn with_cred_blob_ex(device: &FidoKeyHid, rpid: &str, pin: &str) -> Result<()> {
 
     let attestation = device.make_credential_with_args(&make_credential_args)?;
     print_success("-- Register Success");
-    let find = attestation.extensions.iter().find(|it| {
-        matches!(it, Mext::CredProtect(_))
-    });
+    let find = attestation
+        .extensions
+        .iter()
+        .find(|it| matches!(it, Mext::CredProtect(_)));
 
     if let Some(Mext::CredProtect(cred_protect)) = find {
         print_info(&format!("--- Cred Protect = {:?}", cred_protect.unwrap()));
@@ -243,9 +250,10 @@ fn with_cred_blob_ex(device: &FidoKeyHid, rpid: &str, pin: &str) -> Result<()> {
         print_error("--- Cred Protect Not Found");
     }
 
-    let find = attestation.extensions.iter().find(|it| {
-        matches!(it, Mext::CredBlob((_, _)))
-    });
+    let find = attestation
+        .extensions
+        .iter()
+        .find(|it| matches!(it, Mext::CredBlob((_, _))));
 
     if let Some(Mext::CredBlob((_, is_cred_blob))) = find {
         print_info(&format!("--- Cred Blob = {:?}", is_cred_blob.unwrap()));
@@ -274,12 +282,16 @@ fn with_cred_blob_ex(device: &FidoKeyHid, rpid: &str, pin: &str) -> Result<()> {
     let assertions = device.get_assertion_with_args(&get_assertion_args)?;
     print_success("-- Authenticate Success");
 
-    let find = assertions[0].extensions.iter().find(|it| {
-        matches!(it, Gext::CredBlob((_, _)))
-    });
+    let find = assertions[0]
+        .extensions
+        .iter()
+        .find(|it| matches!(it, Gext::CredBlob((_, _))));
     if let Some(Gext::CredBlob((_, cred_blob))) = find {
         let val = cred_blob.clone().unwrap();
-        print_info(&format!("--- Cred Blob = {}", String::from_utf8(val).unwrap()));
+        print_info(&format!(
+            "--- Cred Blob = {}",
+            String::from_utf8(val).unwrap()
+        ));
     } else {
         print_error("--- Cred Blob Not Found");
     }
@@ -323,7 +335,7 @@ fn legacy_discoverable_credentials(device: &FidoKeyHid, rpid: &str, pin: &str) -
             .append("- rpid", &rpid)
             .appenh("- challenge", &challenge)
             .append("- user_entity", &user_entity)
-            .build()
+            .build(),
     );
 
     let attestation = device.make_credential_rk(rpid, &challenge, Some(pin), &user_entity)?;

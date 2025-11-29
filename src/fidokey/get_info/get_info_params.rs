@@ -78,8 +78,10 @@ impl fmt::Display for Info {
                 "- remaining_discoverable_credentials",
                 &format!("{:?}", self.remaining_discoverable_credentials),
             )
-            .append("- attestation_formats", &format!("{:?}", self.attestation_formats));
-
+            .append(
+                "- attestation_formats",
+                &format!("{:?}", self.attestation_formats),
+            );
 
         write!(f, "{}", strbuf.build())
     }

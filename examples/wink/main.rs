@@ -11,6 +11,6 @@ fn main() -> Result<()> {
     device.wink()?;
     device.wink()?;
     println!("----- wink end -----");
-    
+
     Ok(())
 }

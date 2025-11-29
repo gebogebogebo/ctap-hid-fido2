@@ -11,7 +11,8 @@ pub(crate) fn parse_cbor(bytes: &[u8]) -> Result<BioEnrollmentData> {
                 0x01 => data.modality = util_ciborium::cbor_value_to_num(val)?,
                 0x02 => data.fingerprint_kind = util_ciborium::cbor_value_to_num(val)?,
                 0x03 => {
-                    data.max_capture_samples_required_for_enroll = util_ciborium::cbor_value_to_num(val)?
+                    data.max_capture_samples_required_for_enroll =
+                        util_ciborium::cbor_value_to_num(val)?
                 }
                 0x04 => data.template_id = util_ciborium::cbor_value_to_vec_u8(val)?,
                 0x05 => data.last_enroll_sample_status = util_ciborium::cbor_value_to_num(val)?,
@@ -22,15 +23,18 @@ pub(crate) fn parse_cbor(bytes: &[u8]) -> Result<BioEnrollmentData> {
                         for x in array_ref {
                             data.template_infos.push(TemplateInfo {
                                 template_id: util_ciborium::cbor_get_bytes_from_map(x, "1")?,
-                                template_friendly_name: Some(util_ciborium::cbor_get_string_from_map(
-                                    x, "2",
-                                )?),
+                                template_friendly_name: Some(
+                                    util_ciborium::cbor_get_string_from_map(x, "2")?,
+                                ),
                             });
                         }
                     }
                 }
                 0x08 => data.max_template_friendly_name = util_ciborium::cbor_value_to_num(val)?,
-                _ => println!("parse_cbor_member - unknown info {:?}", util_ciborium::integer_to_i64(key)?),
+                _ => println!(
+                    "parse_cbor_member - unknown info {:?}",
+                    util_ciborium::integer_to_i64(key)?
+                ),
             }
         }
     }

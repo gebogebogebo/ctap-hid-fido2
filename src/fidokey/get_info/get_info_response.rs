@@ -21,20 +21,21 @@ pub fn parse_cbor(bytes: &[u8]) -> Result<get_info_params::Info> {
                     for (key, val) in elements {
                         info.options.push((
                             util_ciborium::cbor_value_to_str(key)?,
-                            util_ciborium::cbor_value_to_bool(val)?
+                            util_ciborium::cbor_value_to_bool(val)?,
                         ));
                     }
                 }
-            },
+            }
             0x05 => info.max_msg_size = util_ciborium::cbor_value_to_num(val)?,
             0x06 => {
                 if util_ciborium::is_array(val) {
                     let elements = util_ciborium::extract_array_ref(val)?;
                     for element in elements {
-                        info.pin_uv_auth_protocols.push(util_ciborium::cbor_value_to_num(element)?);
+                        info.pin_uv_auth_protocols
+                            .push(util_ciborium::cbor_value_to_num(element)?);
                     }
                 }
-            },
+            }
             0x07 => info.max_credential_count_in_list = util_ciborium::cbor_value_to_num(val)?,
             0x08 => info.max_credential_id_length = util_ciborium::cbor_value_to_num(val)?,
             0x09 => info.transports = util_ciborium::cbor_value_to_vec_string(val)?,
@@ -47,12 +48,14 @@ pub fn parse_cbor(bytes: &[u8]) -> Result<get_info_params::Info> {
             0x10 => info.max_rpids_for_set_min_pin_length = util_ciborium::cbor_value_to_num(val)?,
             0x11 => info.preferred_platform_uv_attempts = util_ciborium::cbor_value_to_num(val)?,
             0x12 => info.uv_modality = util_ciborium::cbor_value_to_num(val)?,
-            0x14 => info.remaining_discoverable_credentials = util_ciborium::cbor_value_to_num(val)?,
+            0x14 => {
+                info.remaining_discoverable_credentials = util_ciborium::cbor_value_to_num(val)?
+            }
             0x16 => info.attestation_formats = util_ciborium::cbor_value_to_vec_string(val)?,
             _ => println!("parse_cbor_member - unknown info {:?}", val),
         }
     }
-    
+
     Ok(info)
 }
 
@@ -60,7 +63,7 @@ fn parse_algorithms(val: &ciborium::value::Value, info: &mut get_info_params::In
     if !util_ciborium::is_array(val) {
         return Ok(());
     }
-    
+
     let algorithm_entries = util_ciborium::extract_array_ref(val)?;
     for entry in algorithm_entries {
         if !util_ciborium::is_map(entry) {
@@ -83,4 +86,3 @@ fn parse_algorithms(val: &ciborium::value::Value, info: &mut get_info_params::In
     }
     Ok(())
 }
-

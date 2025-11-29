@@ -39,7 +39,13 @@ impl FidoKeyHid {
             None
         };
 
-        let send_payload = large_blobs_command::create_payload(pin_token, offset, get, set)?;
+        let send_payload = large_blobs_command::create_payload(
+            pin_token,
+            offset,
+            get,
+            set,
+            self.pin_protocol_version,
+        )?;
         let response_cbor = ctaphid::ctaphid_cbor(self, &send_payload)?;
 
         large_blobs_response::parse_cbor(&response_cbor)

@@ -4,10 +4,7 @@ pub mod make_credential_response;
 use super::{
     credential_management::credential_management_params::CredentialProtectionPolicy, FidoKeyHid,
 };
-use crate::{
-    ctaphid, encrypt::enc_hmac_sha_256,
-    public_key_credential_user_entity::PublicKeyCredentialUserEntity,
-};
+use crate::{ctaphid, public_key_credential_user_entity::PublicKeyCredentialUserEntity};
 use anyhow::Result;
 pub use make_credential_params::{
     Attestation, CredentialSupportedKeyType, Extension, Extension as Mext, MakeCredentialArgs,
@@ -45,12 +42,9 @@ impl FidoKeyHid {
                 params.user_display_name = rkp.display_name.to_string();
             }
 
-            // get pintoken & create pin auth
+            // create pin auth
             if let Some(pin) = args.pin {
-                let pin_token = self.get_pin_token(pin)?;
-                let sig =
-                    enc_hmac_sha_256::authenticate(&pin_token.key, &params.client_data_hash);
-                params.pin_auth = sig[0..16].to_vec();
+                params.pin_auth = self.create_pin_auth(pin, &params.client_data_hash)?;
             }
 
             // TODO
@@ -60,7 +54,7 @@ impl FidoKeyHid {
                 None
             };
 
-            make_credential_command::create_payload(params, extensions)?
+            make_credential_command::create_payload(params, extensions, self.pin_protocol_version)?
         };
 
         // send & response
@@ -174,7 +168,7 @@ mod tests {
 
             params.pin_auth = pin_auth.to_vec();
 
-            make_credential_command::create_payload(params, None).unwrap()
+            make_credential_command::create_payload(params, None, 1).unwrap()
         };
 
         //println!(

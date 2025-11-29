@@ -32,6 +32,7 @@ pub fn create_payload(
     params: Params,
     extensions: Option<&Vec<Extension>>,
     hmac_ext: Option<HmacExt>,
+    pin_protocol_version: u8,
 ) -> Result<Vec<u8>> {
     // 0x01 : rpid
     let rpid = params.rp_id.to_value();
@@ -71,7 +72,7 @@ pub fn create_payload(
     if let Some(pin) = pin_auth {
         get_assertion.push((6.to_value(), pin));
         // pinProtocol(0x07)
-        get_assertion.push((7.to_value(), 1.to_value()));
+        get_assertion.push((7.to_value(), pin_protocol_version.to_value()));
     }
 
     common::to_payload(get_assertion, ctapdef::AUTHENTICATOR_GET_ASSERTION)

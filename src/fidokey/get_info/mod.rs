@@ -117,6 +117,15 @@ impl FidoKeyHid {
         // absent.
         Ok(None)
     }
+
+    pub fn set_pin_uv_auth_protocol_two(&mut self) -> Result<bool> {
+        let info = self.get_info()?;
+        if info.pin_uv_auth_protocols.contains(&2) {
+            self.pin_protocol_version = 2;
+            return Ok(true);
+        }
+        Ok(false)
+    }
 }
 
 #[cfg(test)]
@@ -129,9 +138,24 @@ mod tests {
         let bytes = hex::decode(hex_data).unwrap();
         let info = get_info_response::parse_cbor(&bytes).unwrap();
 
-        assert_eq!(info.versions, vec!["U2F_V2", "FIDO_2_0", "FIDO_2_1_PRE", "FIDO_2_1"]);
-        assert_eq!(info.extensions, vec!["credProtect", "hmac-secret", "largeBlobKey", "credBlob", "minPinLength"]);
-        assert_eq!(hex::encode(&info.aaguid), "d8522d9f575b486688a9ba99fa02f35b");
+        assert_eq!(
+            info.versions,
+            vec!["U2F_V2", "FIDO_2_0", "FIDO_2_1_PRE", "FIDO_2_1"]
+        );
+        assert_eq!(
+            info.extensions,
+            vec![
+                "credProtect",
+                "hmac-secret",
+                "largeBlobKey",
+                "credBlob",
+                "minPinLength"
+            ]
+        );
+        assert_eq!(
+            hex::encode(&info.aaguid),
+            "d8522d9f575b486688a9ba99fa02f35b"
+        );
 
         let expected_options = vec![
             ("rk".to_string(), true),
@@ -192,8 +216,14 @@ mod tests {
         let info = get_info_response::parse_cbor(&bytes).unwrap();
 
         assert_eq!(info.versions, vec!["U2F_V2", "FIDO_2_0", "FIDO_2_1"]);
-        assert_eq!(info.extensions, vec!["credProtect", "hmac-secret", "thirdPartyPayment"]);
-        assert_eq!(hex::encode(&info.aaguid), "ec99db19cd1f4c06a2a9940f17a6a30b");
+        assert_eq!(
+            info.extensions,
+            vec!["credProtect", "hmac-secret", "thirdPartyPayment"]
+        );
+        assert_eq!(
+            hex::encode(&info.aaguid),
+            "ec99db19cd1f4c06a2a9940f17a6a30b"
+        );
 
         let expected_options = vec![
             ("rk".to_string(), true),
@@ -227,5 +257,4 @@ mod tests {
         assert_eq!(info.remaining_discoverable_credentials, 0);
         assert_eq!(info.attestation_formats, vec!["packed", "none"]);
     }
-
 }
