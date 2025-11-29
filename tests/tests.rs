@@ -199,7 +199,7 @@ fn test_get_info() -> Result<()> {
             "- remaining_discoverable_credentials = {}",
             info.remaining_discoverable_credentials
         );
-        assert_eq!(info.remaining_discoverable_credentials, 21);
+        assert_eq!(info.remaining_discoverable_credentials, 22);
     } else {
         let device = FidoKeyHidFactory::create(&Cfg::init()).unwrap();
         device.get_info()?;
