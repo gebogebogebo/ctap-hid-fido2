@@ -117,6 +117,15 @@ impl FidoKeyHid {
         // absent.
         Ok(None)
     }
+
+    pub fn set_pin_uv_auth_protocol_two(&mut self) -> Result<bool> {
+        let info = self.get_info()?;
+        if info.pin_uv_auth_protocols.contains(&2) {
+            self.pin_protocol_version = 2;
+            return Ok(true);
+        }
+        Ok(false)
+    }
 }
 
 #[cfg(test)]

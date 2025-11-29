@@ -116,9 +116,9 @@ fn main() -> Result<()> {
         return Ok(());
     }
 
-    let device = FidoKeyHidFactory::create(&cfg)?;
+    let mut device = FidoKeyHidFactory::create(&cfg)?;
 
-    builder_pattern_sample(&device, rpid, pin)?;
+    builder_pattern_sample(&mut device, rpid, pin)?;
 
     legacy_pattern_sample(&device, rpid, pin)?;
 
@@ -130,7 +130,7 @@ fn main() -> Result<()> {
 //
 // Builder Pattern Sample
 //
-fn builder_pattern_sample(device: &FidoKeyHid, rpid: &str, pin: &str) -> Result<()> {
+fn builder_pattern_sample(device: &mut FidoKeyHid, rpid: &str, pin: &str) -> Result<()> {
     let is_pin = device.enable_info_option(&InfoOption::ClientPin)?;
     if !is_pin.unwrap_or(true) {
         without_pin(device, rpid).unwrap_or_else(|err| {
@@ -142,6 +142,10 @@ fn builder_pattern_sample(device: &FidoKeyHid, rpid: &str, pin: &str) -> Result<
     }
 
     non_discoverable_credentials(device, rpid, pin).unwrap_or_else(|err| {
+        print_error_with_count(&format!("Error => {}\n", err), true);
+    });
+
+    non_discoverable_credentials_pin_protocol_two(device, rpid, pin).unwrap_or_else(|err| {
         print_error_with_count(&format!("Error => {}\n", err), true);
     });
 
@@ -245,6 +249,67 @@ fn non_discoverable_credentials(device: &FidoKeyHid, rpid: &str, pin: &str) -> R
     } else {
         print_error("-- ! Verify Assertion Failed");
     }
+
+    println!();
+    Ok(())
+}
+
+fn non_discoverable_credentials_pin_protocol_two(device: &mut FidoKeyHid, rpid: &str, pin: &str) -> Result<()> {
+    print_section("----- non_discoverable_credentials with pin_protocol_two -----");
+
+    if !device.set_pin_uv_auth_protocol_two()? {
+        print_info("pin_protocol_two not supported, skipping test.");
+        println!();
+        return Ok(());
+    }
+
+    print_step("- Register");
+    let challenge = verifier::create_challenge();
+
+    let make_credential_args = MakeCredentialArgsBuilder::new(rpid, &challenge)
+        .pin(pin)
+        .build();
+
+    let attestation = device.make_credential_with_args(&make_credential_args)?;
+    print_success("-- Register Success");
+    debug!("Attestation");
+    debug!("{}", attestation);
+
+    print_step("-- Verify Attestation");
+    let verify_result = verifier::verify_attestation(rpid, &challenge, &attestation);
+    if verify_result.is_success {
+        print_success("-- Verify Attestation Success");
+    } else {
+        print_error("-- ! Verify Attestation Failed");
+    }
+
+    print_step("- Authenticate");
+    let challenge = verifier::create_challenge();
+
+    let get_assertion_args = GetAssertionArgsBuilder::new(rpid, &challenge)
+        .pin(pin)
+        .credential_id(&verify_result.credential_id)
+        .build();
+
+    let assertions = device.get_assertion_with_args(&get_assertion_args)?;
+    print_success("-- Authenticate Success");
+    debug!("Assertion");
+    debug!("{}", assertions[0]);
+
+    print_step("-- Verify Assertion");
+    let is_success = verifier::verify_assertion(
+        rpid,
+        &verify_result.credential_public_key,
+        &challenge,
+        &assertions[0],
+    );
+    if is_success {
+        print_success("-- Verify Assertion Success");
+    } else {
+        print_error("-- ! Verify Assertion Failed");
+    }
+
+    device.pin_protocol_version = 1;
 
     println!();
     Ok(())
