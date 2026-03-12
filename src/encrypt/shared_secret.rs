@@ -1,6 +1,6 @@
+use crate::crypto::{agreement, digest, rand};
 use crate::{encrypt::cose::CoseKey, encrypt::enc_aes256_cbc, encrypt::p256, pintoken::PinToken};
 use anyhow::{Error, Result};
-use ring::{agreement, digest, rand};
 
 #[derive(Debug, Default, Clone)]
 pub struct SharedSecret {
@@ -22,7 +22,7 @@ impl SharedSecret {
         };
 
         let shared_secret =
-            agreement::agree_ephemeral(my_private_key, &peer_public_key, |material| {
+            crate::crypto::agree_ephemeral(my_private_key, &peer_public_key, |material| {
                 digest::digest(&digest::SHA256, material)
             })
             .map_err(Error::msg)?;

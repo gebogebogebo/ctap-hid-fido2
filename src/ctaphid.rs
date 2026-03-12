@@ -1,6 +1,6 @@
+use crate::crypto::rand::{self, SecureRandom};
 use crate::{ctapdef, fidokey::FidoKeyHid, util};
 use anyhow::{anyhow, Error, Result};
-use rand::{rng, Rng};
 use std::{thread, time};
 
 //pub const USAGE_PAGE_FIDO: u16 = 0xf1d0;
@@ -25,9 +25,10 @@ const CTAPHID_KEEPALIVE: u8 = CTAP_FRAME_INIT | 0x3B;
 
 // Function to generate random nonce
 fn generate_random_nonce() -> [u8; 8] {
-    let mut rng = rng();
+    let rng = rand::SystemRandom::new();
     let mut nonce = [0u8; 8];
-    rng.fill(&mut nonce);
+    rng.fill(&mut nonce)
+        .expect("failed to generate random nonce");
     nonce
 }
 

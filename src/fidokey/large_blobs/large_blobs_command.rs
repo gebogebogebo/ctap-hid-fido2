@@ -1,7 +1,7 @@
+use crate::crypto::digest;
 use crate::util_ciborium::ToValue;
 use crate::{ctapdef, encrypt::enc_hmac_sha_256, fidokey::common, pintoken::PinToken};
 use anyhow::Result;
-use ring::digest;
 
 pub fn create_payload(
     pin_token: Option<PinToken>,

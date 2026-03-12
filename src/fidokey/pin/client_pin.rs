@@ -3,6 +3,8 @@ use super::client_pin_command::Permission;
 use super::client_pin_command::SubCommand as PinCmd;
 use super::client_pin_response;
 use super::FidoKeyHid;
+use crate::crypto::rand;
+use crate::crypto::rand::SecureRandom;
 use crate::ctaphid;
 use crate::encrypt::cose;
 use crate::encrypt::enc_aes256_cbc;
@@ -11,8 +13,6 @@ use crate::encrypt::shared_secret::SharedSecret;
 use crate::encrypt::shared_secret2::SharedSecret2;
 use crate::pintoken::PinToken;
 use anyhow::{anyhow, Result};
-use ring::rand;
-use ring::rand::SecureRandom;
 
 impl FidoKeyHid {
     pub fn get_authenticator_key_agreement(&self) -> Result<cose::CoseKey> {
@@ -90,7 +90,7 @@ impl FidoKeyHid {
 
             pin_token_dec
         } else {
-            return Err(anyhow!("unknown pin_protocol_version"))
+            return Err(anyhow!("unknown pin_protocol_version"));
         };
 
         Ok(pin_token_dec)
@@ -156,9 +156,9 @@ impl FidoKeyHid {
 
             pin_token_dec
         } else {
-            return Err(anyhow!("unknown pin_protocol_version"))
+            return Err(anyhow!("unknown pin_protocol_version"));
         };
-        
+
         Ok(pin_token_dec)
     }
 

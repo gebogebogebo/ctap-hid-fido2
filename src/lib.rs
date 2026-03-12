@@ -6,6 +6,7 @@
 */
 
 pub mod auth_data;
+mod crypto;
 mod ctapdef;
 mod ctaphid;
 mod encrypt {
@@ -104,7 +105,7 @@ impl FidoKeyHidFactory {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ring::digest;
+    use crate::crypto::digest;
     use std::convert::TryFrom;
     use str_buf::StrBuf;
 
