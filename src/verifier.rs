@@ -1,15 +1,15 @@
+use crate::crypto::digest;
+use crate::crypto::rand::SecureRandom;
+use crate::crypto::signature;
 use crate::fidokey::get_assertion::get_assertion_params;
 use crate::fidokey::make_credential::make_credential_params;
 use crate::public_key::{PublicKey, PublicKeyType};
 use crate::util;
-use ring::digest;
-use ring::rand::SecureRandom;
-use ring::signature;
 use x509_parser::prelude::*;
 
 // Create Random Data
 pub fn create_challenge() -> [u8; 32] {
-    let rnd = ring::rand::SystemRandom::new();
+    let rnd = crate::crypto::rand::SystemRandom::new();
     let mut tmp = [0; 32];
     rnd.fill(&mut tmp).unwrap();
     tmp
@@ -116,7 +116,7 @@ fn verify_sig(public_key: &PublicKey, challenge: &[u8], auth_data: &[u8], sig: &
 
     match result {
         Ok(()) => true,
-        Err(ring::error::Unspecified) => false,
+        Err(crate::crypto::error::Unspecified) => false,
     }
 }
 
@@ -135,7 +135,7 @@ fn print_verify_info(
     public_key_der: &[u8],
     message: &[u8],
     sig: &[u8],
-    verify_result: &Result<(), ring::error::Unspecified>,
+    verify_result: &Result<(), crate::crypto::error::Unspecified>,
 ) {
     let public_key_pem = util::convert_to_publickey_pem(public_key_der);
 

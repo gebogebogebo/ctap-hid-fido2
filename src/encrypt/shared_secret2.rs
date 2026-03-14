@@ -3,10 +3,10 @@ use crate::pintoken::PinToken;
 
 use super::{cose::CoseKey, p256};
 
+use crate::crypto::rand::SecureRandom;
 use anyhow::{anyhow, Error, Result};
-use ring::rand::SecureRandom;
 
-use ring::{agreement, digest, hkdf, rand};
+use crate::crypto::{agreement, digest, hkdf, rand};
 
 pub struct SharedSecret2 {
     pub secret: [u8; 64],
@@ -45,14 +45,15 @@ impl SharedSecret2 {
         let peer_public_key =
             agreement::UnparsedPublicKey::new(&agreement::ECDH_P256, &peer_public_key_bytes);
 
-        let result_of_agree =
-            agreement::agree_ephemeral(my_private_key, &peer_public_key, |material| {
-                material.try_into().map_err(|_| ring::error::Unspecified)
+        let shared_secret_bytes =
+            crate::crypto::agree_ephemeral(my_private_key, &peer_public_key, |material| {
+                material.to_vec()
             })
             .map_err(Error::msg)?;
 
-        let shared_secret_z =
-            result_of_agree.map_err(|_| anyhow!("Failed to convert material to array"))?;
+        let shared_secret_z: [u8; 32] = shared_secret_bytes.try_into().map_err(|v: Vec<u8>| {
+            anyhow!("ECDH P-256 shared secret must be 32 bytes, got {}", v.len())
+        })?;
 
         let secret = kdf(&shared_secret_z)?;
 
@@ -135,7 +136,7 @@ impl SharedSecret2 {
 #[cfg(test)]
 mod tests {
     use super::{kdf, CoseKey, SharedSecret2};
-    use ring::hkdf;
+    use crate::crypto::hkdf;
 
     #[test]
     fn test_kdf_concatenation() {
@@ -175,7 +176,7 @@ mod tests {
 
         // Decrypt and verify
         let pin_token = ss2.decrypt_token(&encrypted_data).unwrap();
-        use ring::digest;
+        use crate::crypto::digest;
         let hash = digest::digest(&digest::SHA256, pin.as_bytes());
         let expected_plaintext = &hash.as_ref()[0..16];
         assert_eq!(pin_token.key, expected_plaintext);

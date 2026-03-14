@@ -1,7 +1,7 @@
 use crate::auth_data::Flags;
+use crate::crypto::digest;
 use crate::public_key_credential_user_entity::PublicKeyCredentialUserEntity;
 use crate::str_buf::StrBuf;
-use ring::digest;
 use std::convert::TryFrom;
 use std::fmt;
 use strum_macros::AsRefStr;
