@@ -45,14 +45,15 @@ impl SharedSecret2 {
         let peer_public_key =
             agreement::UnparsedPublicKey::new(&agreement::ECDH_P256, &peer_public_key_bytes);
 
-        let shared_secret_z: [u8; 32] =
+        let shared_secret_bytes =
             crate::crypto::agree_ephemeral(my_private_key, &peer_public_key, |material| {
-                let arr: [u8; 32] = material
-                    .try_into()
-                    .expect("ECDH P-256 shared secret must be 32 bytes");
-                arr
+                material.to_vec()
             })
             .map_err(Error::msg)?;
+
+        let shared_secret_z: [u8; 32] = shared_secret_bytes.try_into().map_err(|v: Vec<u8>| {
+            anyhow!("ECDH P-256 shared secret must be 32 bytes, got {}", v.len())
+        })?;
 
         let secret = kdf(&shared_secret_z)?;
 
