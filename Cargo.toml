@@ -16,6 +16,7 @@ readme="README.md"
 default = ["ring"]
 ring = ["dep:ring"]
 aws-lc-rs = ["dep:aws-lc-rs"]
+fips = ["aws-lc-rs", "aws-lc-rs/fips"]
 
 [dependencies]
 aes = "0.8.4"
