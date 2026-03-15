@@ -161,6 +161,31 @@ sudo apt install -y libusb-1.0-0-dev libudev-dev
 
 
 
+## Cargo features (crypto backend)
+
+This crate uses either **ring** or **aws-lc-rs** for cryptography. Choose one via Cargo features.
+
+| Feature | Description |
+|---------|-------------|
+| **ring** | Default. Uses [ring](https://github.com/briansmith/ring) as the crypto backend. |
+| **aws-lc-rs** | Uses [aws-lc-rs](https://github.com/aws/aws-lc-rs) (Apache 2.0 / BSD). |
+| **fips** | Builds aws-lc-rs in FIPS-validated mode. For regulated environments. |
+
+- By default **ring** is enabled (`default = ["ring"]`).
+- To use **aws-lc-rs**: `cargo build --no-default-features --features aws-lc-rs`
+- To use **FIPS** mode: `cargo build --no-default-features --features fips`  
+  FIPS build requires **Go** and **CMake** (e.g. `brew install go cmake` on macOS).
+
+When using as a dependency:
+
+```toml
+ctap-hid-fido2 = "3.5"   # default: ring
+ctap-hid-fido2 = { version = "3.5", default-features = false, features = ["aws-lc-rs"] }
+ctap-hid-fido2 = { version = "3.5", default-features = false, features = ["fips"] }
+```
+
+
+
 ## How to use
 
 **PIN has to be set**

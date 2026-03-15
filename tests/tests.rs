@@ -296,9 +296,9 @@ fn test_make_credential_with_pin_non_rk_exclude_authenticator() -> Result<()> {
 #[test]
 fn test_credential_management_get_creds_metadata() -> Result<()> {
     let device = FidoKeyHidFactory::create(&Cfg::init()).unwrap();
-    match device.enable_info_param(&InfoParam::VersionsFido21Pre) {
+    match device.enable_info_option(&InfoOption::CredMgmt) {
         Ok(result) => {
-            if !result {
+            if result != Some(true) {
                 return Err(anyhow!("skipped"));
             }
         }
@@ -315,10 +315,12 @@ fn test_credential_management_get_creds_metadata() -> Result<()> {
 
 #[test]
 fn test_credential_management_enumerate_rps() -> Result<()> {
-    let device = FidoKeyHidFactory::create(&Cfg::init()).unwrap();
-    match device.enable_info_param(&InfoParam::VersionsFido21Pre) {
+    let mut cfg = Cfg::init();
+    cfg.use_pre_credential_management = false;
+    let device = FidoKeyHidFactory::create(&cfg).unwrap();
+    match device.enable_info_option(&InfoOption::CredMgmt) {
         Ok(result) => {
-            if !result {
+            if result != Some(true) {
                 return Err(anyhow!("skipped"));
             }
         }

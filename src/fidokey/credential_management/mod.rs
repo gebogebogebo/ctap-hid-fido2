@@ -31,6 +31,9 @@ impl FidoKeyHid {
             datas.push(Rp::new(&data));
             let roop_n = data.total_rps - 1;
             for _ in 0..roop_n {
+                // TODO : It results in an error with the latest YubiKey. The following updates are required:
+                // - Set cfg.use_pre_credential_management = false.
+                // - Ensure that the pinUvAuthToken obtained via EnumerateRPsBegin is used in EnumerateRPsGetNextRp.                
                 let data = self.credential_management(pin, SubCommand::EnumerateRPsGetNextRp)?;
                 datas.push(Rp::new(&data));
             }

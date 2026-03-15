@@ -1,6 +1,6 @@
 [package]
 name = "ctap-hid-fido2"
-version = "3.5.8"
+version = "3.5.9"
 authors = ["gebo <35388172+gebogebogebo@users.noreply.github.com>"]
 edition = "2021"
 
@@ -20,7 +20,7 @@ fips = ["aws-lc-rs", "aws-lc-rs/fips"]
 
 [dependencies]
 aes = "0.8.4"
-anyhow = "1.0.100"
+anyhow = "1.0.102"
 aws-lc-rs = { version = "1.16.1", optional = true }
 base64 = "0.22.1"
 byteorder = "1.5.0"
@@ -30,23 +30,23 @@ num = "0.4.3"
 pad = "0.1.6"
 ring = { version = "0.17.14", optional = true }
 ciborium = "0.2.2"
-strum = "0.27.2"
-strum_macros = "0.27.2"
-x509-parser = "0.18.0"
+strum = "0.28.0"
+strum_macros = "0.28.0"
+x509-parser = "0.18.1"
 
 
 [dependencies.hidapi]
-version = "2.6.3"
+version = "2.6.5"
 default-features = false
 features=["linux-static-hidraw"]
 
 [dev-dependencies]
-clap = { version = "4.5.52", features = ["derive"] }
-env_logger = "0.11.8"
-log = "0.4.28"
+clap = { version = "4.6.0", features = ["derive"] }
+env_logger = "0.11.9"
+log = "0.4.29"
 rpassword = "7.4.0"
 arboard = "3.6.1"
-colored = "3.0.0"
+colored = "3.1.1"
 
 [[example]]
 name = "ctapcli"
