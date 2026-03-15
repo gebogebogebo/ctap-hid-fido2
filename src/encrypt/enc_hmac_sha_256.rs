@@ -1,4 +1,4 @@
-use ring::hmac;
+use crate::crypto::hmac;
 
 pub fn authenticate(key: &[u8], message: &[u8]) -> Vec<u8> {
     let hmac_key = hmac::Key::new(hmac::HMAC_SHA256, key);

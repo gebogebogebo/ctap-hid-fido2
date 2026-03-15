@@ -1,4 +1,9 @@
 ## Version
+### Ver 3.5.9
+- Optional crypto backends are now available: ring (default), aws-lc-rs, or fips (aws-lc-rs in FIPS mode).
+  - See ReadMe: Cargo features (crypto backend) for details.
+- Dependency Updates.
+
 ### Ver 3.5.8
 - [PIN/UV Auth Protocol Two](https://fidoalliance.org/specs/fido-v2.1-ps-20210615/fido-client-to-authenticator-protocol-v2.1-ps-20210615.html#pinProto2) is now supported.
   - example: [with PIN/UV Auth Protocol Two](https://github.com/gebogebogebo/ctap-hid-fido2/blob/ad3f21c763adeb4ee98fc607f5987f76572b6a41/examples/test-with-pin-non-rk/main.rs#L257-L320)
