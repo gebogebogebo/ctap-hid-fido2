@@ -80,6 +80,7 @@ pub struct GetAssertionArgs<'a> {
     pub challenge: Vec<u8>,
     pub pin: Option<&'a str>,
     pub credential_ids: Vec<Vec<u8>>,
+    pub up: bool,
     pub uv: Option<bool>,
     pub extensions: Option<Vec<Extension>>,
 }
@@ -95,12 +96,14 @@ pub struct GetAssertionArgsBuilder<'a> {
     challenge: Vec<u8>,
     pin: Option<&'a str>,
     credential_ids: Vec<Vec<u8>>,
+    up: bool,
     uv: Option<bool>,
     extensions: Option<Vec<Extension>>,
 }
 impl<'a> GetAssertionArgsBuilder<'a> {
     pub fn new(rpid: &str, challenge: &[u8]) -> GetAssertionArgsBuilder<'a> {
         GetAssertionArgsBuilder::<'_> {
+            up: true,
             uv: Some(true),
             rpid: String::from(rpid),
             challenge: challenge.to_vec(),
@@ -118,6 +121,11 @@ impl<'a> GetAssertionArgsBuilder<'a> {
     pub fn without_pin_and_uv(mut self) -> GetAssertionArgsBuilder<'a> {
         self.pin = None;
         self.uv = None;
+        self
+    }
+
+    pub fn without_up(mut self) -> GetAssertionArgsBuilder<'a> {
+        self.up = false;
         self
     }
 
@@ -142,6 +150,7 @@ impl<'a> GetAssertionArgsBuilder<'a> {
             challenge: self.challenge,
             pin: self.pin,
             credential_ids: self.credential_ids,
+            up: self.up,
             uv: self.uv,
             extensions: self.extensions,
         }

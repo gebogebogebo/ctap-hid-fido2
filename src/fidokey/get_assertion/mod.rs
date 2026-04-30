@@ -32,7 +32,7 @@ impl FidoKeyHid {
             args.challenge.to_vec(),
             credential_ids.to_vec(),
         );
-        params.option_up = true;
+        params.option_up = args.up;
         params.option_uv = args.uv;
 
         // create pin auth
