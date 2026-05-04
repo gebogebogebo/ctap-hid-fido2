@@ -3,7 +3,7 @@ pub mod credential_management_params;
 pub mod credential_management_response;
 use super::{pin::Permission::CredentialManagement, FidoKeyHid};
 use crate::{
-    ctaphid, public_key_credential_descriptor::PublicKeyCredentialDescriptor,
+    ctaphid, pintoken::PinToken, public_key_credential_descriptor::PublicKeyCredentialDescriptor,
     public_key_credential_user_entity::PublicKeyCredentialUserEntity, util,
 };
 use anyhow::Result;
@@ -25,16 +25,20 @@ impl FidoKeyHid {
     /// CredentialManagement - enumerateRPsBegin & enumerateRPsNext (CTAP 2.1-PRE)
     pub fn credential_management_enumerate_rps(&self, pin: Option<&str>) -> Result<Vec<Rp>> {
         let mut datas: Vec<Rp> = Vec::new();
-        let data = self.credential_management(pin, SubCommand::EnumerateRPsBegin)?;
+        let pin_token = self.resolve_credential_management_pin_token(pin)?;
+        let data = self.credential_management_with_pin_token(
+            pin_token.clone(),
+            SubCommand::EnumerateRPsBegin,
+        )?;
 
         if data.total_rps > 0 {
             datas.push(Rp::new(&data));
             let roop_n = data.total_rps - 1;
             for _ in 0..roop_n {
-                // TODO : It results in an error with the latest YubiKey. The following updates are required:
-                // - Set cfg.use_pre_credential_management = false.
-                // - Ensure that the pinUvAuthToken obtained via EnumerateRPsBegin is used in EnumerateRPsGetNextRp.                
-                let data = self.credential_management(pin, SubCommand::EnumerateRPsGetNextRp)?;
+                let data = self.credential_management_with_pin_token(
+                    pin_token.clone(),
+                    SubCommand::EnumerateRPsGetNextRp,
+                )?;
                 datas.push(Rp::new(&data));
             }
         }
@@ -49,8 +53,9 @@ impl FidoKeyHid {
     ) -> Result<Vec<credential_management_params::Credential>> {
         let mut datas: Vec<Credential> = Vec::new();
 
-        let data = self.credential_management(
-            pin,
+        let pin_token = self.resolve_credential_management_pin_token(pin)?;
+        let data = self.credential_management_with_pin_token(
+            pin_token.clone(),
             SubCommand::EnumerateCredentialsBegin(rpid_hash.to_vec()),
         )?;
 
@@ -58,8 +63,8 @@ impl FidoKeyHid {
         if data.total_credentials > 0 {
             let roop_n = data.total_credentials - 1;
             for _ in 0..roop_n {
-                let data = self.credential_management(
-                    pin,
+                let data = self.credential_management_with_pin_token(
+                    pin_token.clone(),
                     SubCommand::EnumerateCredentialsGetNextCredential(rpid_hash.to_vec()),
                 )?;
                 datas.push(Credential::new(&data));
@@ -94,19 +99,35 @@ impl FidoKeyHid {
         pin: Option<&str>,
         sub_command: SubCommand,
     ) -> Result<CredentialManagementData> {
-        // pin token
-        let pin_token = {
-            if let Some(pin) = pin {
-                if self.use_pre_credential_management {
-                    Some(self.get_pin_token(pin)?)
-                } else {
-                    Some(self.get_pinuv_auth_token_with_permission(pin, CredentialManagement)?)
-                }
-            } else {
-                None
-            }
-        };
+        let pin_token = self.resolve_credential_management_pin_token(pin)?;
+        self.credential_management_with_pin_token(pin_token, sub_command)
+    }
 
+    /// Obtain pinUvAuthToken for CredentialManagement once. Used so stateful CM subcommands
+    /// (enumerate RP / credential) are not interleaved with extra ClientPIN traffic.
+    fn resolve_credential_management_pin_token(
+        &self,
+        pin: Option<&str>,
+    ) -> Result<Option<PinToken>> {
+        match pin {
+            Some(pin) => {
+                if self.use_pre_credential_management {
+                    Ok(Some(self.get_pin_token(pin)?))
+                } else {
+                    Ok(Some(
+                        self.get_pinuv_auth_token_with_permission(pin, CredentialManagement)?,
+                    ))
+                }
+            }
+            None => Ok(None),
+        }
+    }
+
+    fn credential_management_with_pin_token(
+        &self,
+        pin_token: Option<PinToken>,
+        sub_command: SubCommand,
+    ) -> Result<CredentialManagementData> {
         let send_payload = credential_management_command::create_payload(
             pin_token,
             sub_command,

@@ -1,3 +1,4 @@
+#[derive(Clone)]
 pub struct PinToken {
     pub key: Vec<u8>,
 }

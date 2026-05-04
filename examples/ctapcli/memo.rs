@@ -18,12 +18,18 @@ pub enum Command {
     Get(String),
 }
 
-pub fn memo(device: &FidoKeyHid, command: Command) -> Result<()> {
+pub fn memo(device: &FidoKeyHid, command: Command, pin: Option<String>) -> Result<()> {
     if !(is_supported(device)?) {
         return Err(anyhow!(
             "This authenticator is not supported for this functions."
         ));
     }
+
+    let pin = if let Some(val) = pin {
+        val
+    } else {
+        common::get_pin()?
+    };
 
     // Title
     match command {
@@ -32,8 +38,6 @@ pub fn memo(device: &FidoKeyHid, command: Command) -> Result<()> {
         Command::Del(_) => println!("Delete a memo."),
         Command::Get(_) => println!("Get a memo."),
     }
-
-    let pin = common::get_pin()?;
     let rpid = "ctapcli";
 
     // main

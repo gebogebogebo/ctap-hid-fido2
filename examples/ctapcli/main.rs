@@ -102,6 +102,9 @@ enum Action {
 
         #[clap(short = 'l', long = "list", help = "List all memos.")]
         list: bool,
+
+        #[clap(short = 'p')]
+        pin: Option<String>,
     },
 
     #[clap(
@@ -246,6 +249,26 @@ fn main() -> Result<()> {
         }
     }
 
+    // Suppress CTAPHID keep-alive hint spam during long / repeated user-gesture flows.
+    if let Some(ref action) = arg.action {
+        match action {
+            Action::Cred {
+                metadata,
+                delete,
+                update,
+                ..
+            } if !metadata && !delete && !update => {
+                cfg.enable_keep_alive_msg = false;
+            }
+            Action::Blob {
+                str_val: Some(_), ..
+            } => {
+                cfg.enable_keep_alive_msg = false;
+            }
+            _ => {}
+        }
+    }
+
     let device = FidoKeyHidFactory::create(&cfg)?;
 
     if arg.user_presence {
@@ -290,6 +313,7 @@ fn main() -> Result<()> {
                 list,
                 get_tag,
                 del_tag,
+                pin,
             } => {
                 println!("Record some short texts in Authenticator.\n");
 
@@ -303,7 +327,7 @@ fn main() -> Result<()> {
                     memo::Command::Get(get_tag)
                 };
 
-                memo::memo(&device, command)?;
+                memo::memo(&device, command, pin)?;
             }
             Action::Bio {
                 list: _,
