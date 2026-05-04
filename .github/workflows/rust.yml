@@ -15,7 +15,7 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-    - uses: dtolnay/rust-toolchain@1.87
+    - uses: dtolnay/rust-toolchain@1.88
     - name: Build
       run: cargo build --examples --verbose
 
@@ -24,7 +24,7 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-    - uses: dtolnay/rust-toolchain@1.87
+    - uses: dtolnay/rust-toolchain@1.88
     - name: Install dependencies
       run: |
         sudo apt-get update
@@ -37,6 +37,6 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-    - uses: dtolnay/rust-toolchain@1.87
+    - uses: dtolnay/rust-toolchain@1.88
     - name: Build
       run: cargo build --examples --verbose
