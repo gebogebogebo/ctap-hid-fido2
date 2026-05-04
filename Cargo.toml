@@ -3,7 +3,7 @@ name = "ctap-hid-fido2"
 version = "3.5.9"
 authors = ["gebo <35388172+gebogebogebo@users.noreply.github.com>"]
 edition = "2021"
-rust-version = "1.85"
+rust-version = "1.87"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 

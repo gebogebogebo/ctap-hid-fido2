@@ -66,9 +66,7 @@ impl FidoKeyHid {
                 client_pin_response::parse_cbor_client_pin_get_pin_token(&response_cbor)?;
 
             // pintoken -> dec(pintoken)
-            let pin_token_dec = shared_secret.decrypt_token(&mut pin_token_enc)?;
-
-            pin_token_dec
+            shared_secret.decrypt_token(&mut pin_token_enc)?
         } else if self.pin_protocol_version == 2 {
             let shared_secret = SharedSecret2::new(&authenticator_key_agreement)?;
             let pin_hash_enc = shared_secret.encrypt_pin(pin)?;
@@ -86,9 +84,7 @@ impl FidoKeyHid {
                 client_pin_response::parse_cbor_client_pin_get_pin_token(&response_cbor)?;
 
             // pintoken -> dec(pintoken)
-            let pin_token_dec = shared_secret.decrypt_token(&pin_token_enc)?;
-
-            pin_token_dec
+            shared_secret.decrypt_token(&pin_token_enc)?
         } else {
             return Err(anyhow!("unknown pin_protocol_version"));
         };
@@ -128,9 +124,7 @@ impl FidoKeyHid {
                 client_pin_response::parse_cbor_client_pin_get_pin_token(&response_cbor)?;
 
             // pintoken -> dec(pintoken)
-            let pin_token_dec = shared_secret.decrypt_token(&mut pin_token_enc)?;
-
-            pin_token_dec
+            shared_secret.decrypt_token(&mut pin_token_enc)?
         } else if self.pin_protocol_version == 2 {
             // Get pinHashEnc
             // - shared_secret.public_key -> platform KeyAgreement
@@ -152,9 +146,7 @@ impl FidoKeyHid {
                 client_pin_response::parse_cbor_client_pin_get_pin_token(&response_cbor)?;
 
             // pintoken -> dec(pintoken)
-            let pin_token_dec = shared_secret.decrypt_token(&pin_token_enc)?;
-
-            pin_token_dec
+            shared_secret.decrypt_token(&pin_token_enc)?
         } else {
             return Err(anyhow!("unknown pin_protocol_version"));
         };
