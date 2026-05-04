@@ -102,6 +102,9 @@ enum Action {
 
         #[clap(short = 'l', long = "list", help = "List all memos.")]
         list: bool,
+
+        #[clap(short = 'p')]
+        pin: Option<String>,
     },
 
     #[clap(
@@ -310,6 +313,7 @@ fn main() -> Result<()> {
                 list,
                 get_tag,
                 del_tag,
+                pin,
             } => {
                 println!("Record some short texts in Authenticator.\n");
 
@@ -323,7 +327,7 @@ fn main() -> Result<()> {
                     memo::Command::Get(get_tag)
                 };
 
-                memo::memo(&device, command)?;
+                memo::memo(&device, command, pin)?;
             }
             Action::Bio {
                 list: _,
