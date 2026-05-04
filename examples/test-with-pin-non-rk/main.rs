@@ -225,6 +225,12 @@ fn non_discoverable_credentials(device: &FidoKeyHid, rpid: &str, pin: &str) -> R
     }
 
     print_step("- Authenticate");
+
+    // pre-flight
+    if !probe_device(device, rpid, &verify_result.credential_id) {
+        print_error("-- ! probe_device failed (silent getAssertion pre-flight rejected)");
+    }
+
     let challenge = verifier::create_challenge();
 
     let get_assertion_args = GetAssertionArgsBuilder::new(rpid, &challenge)
@@ -288,6 +294,12 @@ fn non_discoverable_credentials_pin_protocol_two(
     }
 
     print_step("- Authenticate");
+
+    // pre-flight
+    if !probe_device(device, rpid, &verify_result.credential_id) {
+        print_error("-- ! probe_device failed (silent getAssertion pre-flight rejected)");
+    }
+
     let challenge = verifier::create_challenge();
 
     let get_assertion_args = GetAssertionArgsBuilder::new(rpid, &challenge)
@@ -956,4 +968,14 @@ fn legacy_with_uv(device: &FidoKeyHid, rpid: &str) -> Result<()> {
 
     println!();
     Ok(())
+}
+
+fn probe_device(dev: &FidoKeyHid, rp: &str, cred: &[u8]) -> bool {
+    let challenge = verifier::create_challenge();
+    let req = GetAssertionArgsBuilder::new(rp, &challenge)
+        .credential_id(cred)
+        .without_pin_and_uv()
+        .without_up()
+        .build();
+    dev.get_assertion_with_args(&req).is_ok()
 }
