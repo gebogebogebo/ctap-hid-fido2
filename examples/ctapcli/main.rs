@@ -246,6 +246,26 @@ fn main() -> Result<()> {
         }
     }
 
+    // Suppress CTAPHID keep-alive hint spam during long / repeated user-gesture flows.
+    if let Some(ref action) = arg.action {
+        match action {
+            Action::Cred {
+                metadata,
+                delete,
+                update,
+                ..
+            } if !metadata && !delete && !update => {
+                cfg.enable_keep_alive_msg = false;
+            }
+            Action::Blob {
+                str_val: Some(_), ..
+            } => {
+                cfg.enable_keep_alive_msg = false;
+            }
+            _ => {}
+        }
+    }
+
     let device = FidoKeyHidFactory::create(&cfg)?;
 
     if arg.user_presence {
