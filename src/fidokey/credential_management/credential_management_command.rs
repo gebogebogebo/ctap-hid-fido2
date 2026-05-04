@@ -37,7 +37,7 @@ impl SubCommandBase for SubCommand {
 }
 
 pub fn create_payload(
-    pin_token: Option<pintoken::PinToken>,
+    pin_token: Option<&pintoken::PinToken>,
     sub_command: SubCommand,
     use_pre_credential_management: bool,
     pin_protocol_version: u8,
