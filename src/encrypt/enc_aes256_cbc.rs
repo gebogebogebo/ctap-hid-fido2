@@ -1,4 +1,6 @@
-use aes::cipher::{block_padding::NoPadding, BlockDecryptMut, BlockEncryptMut, KeyIvInit};
+use aes::cipher::{
+    block_padding::NoPadding, BlockModeDecrypt, BlockModeEncrypt, KeyIvInit,
+};
 
 // AES256-CBC(key,IV=0,message)
 type Aes256CbcEnc = cbc::Encryptor<aes::Aes256>;
@@ -16,8 +18,9 @@ pub fn encrypt_message(key: &[u8; 32], message: &[u8]) -> Vec<u8> {
 
     let mut buffer = message.to_vec();
     let pt_len = message.len();
-    let ciphertext = Aes256CbcEnc::new(key.into(), &[0u8; 16].into())
-        .encrypt_padded_mut::<NoPadding>(&mut buffer, pt_len)
+    let zero_iv = [0u8; 16];
+    let ciphertext = Aes256CbcEnc::new(&(*key).into(), &zero_iv.into())
+        .encrypt_padded::<NoPadding>(&mut buffer, pt_len)
         .unwrap();
     ciphertext.to_vec()
 }
@@ -29,8 +32,9 @@ pub fn encrypt_message_with_iv(key: &[u8], iv: &[u8], message: &[u8]) -> Vec<u8>
 
     let mut buffer = message.to_vec();
     let pt_len = message.len();
-    let ciphertext = Aes256CbcEnc::new(key.into(), iv.into())
-        .encrypt_padded_mut::<NoPadding>(&mut buffer, pt_len)
+    let ciphertext = Aes256CbcEnc::new_from_slices(key, iv)
+        .expect("AES-256-CBC requires a 32-byte key and 16-byte IV")
+        .encrypt_padded::<NoPadding>(&mut buffer, pt_len)
         .unwrap();
     ciphertext.to_vec()
 }
@@ -47,8 +51,9 @@ pub fn decrypt_message(key: &[u8; 32], message: &[u8]) -> Vec<u8> {
     }
 
     let mut buffer = message.to_vec();
-    let plaintext = Aes256CbcDec::new(key.into(), &[0u8; 16].into())
-        .decrypt_padded_mut::<NoPadding>(&mut buffer)
+    let zero_iv = [0u8; 16];
+    let plaintext = Aes256CbcDec::new(&(*key).into(), &zero_iv.into())
+        .decrypt_padded::<NoPadding>(&mut buffer)
         .unwrap();
     plaintext.to_vec()
 }
@@ -59,8 +64,9 @@ pub fn decrypt_message_with_iv(key: &[u8], iv: &[u8], message: &[u8]) -> Vec<u8>
     }
 
     let mut buffer = message.to_vec();
-    let plaintext = Aes256CbcDec::new(key.into(), iv.into())
-        .decrypt_padded_mut::<NoPadding>(&mut buffer)
+    let plaintext = Aes256CbcDec::new_from_slices(key, iv)
+        .expect("AES-256-CBC requires a 32-byte key and 16-byte IV")
+        .decrypt_padded::<NoPadding>(&mut buffer)
         .unwrap();
     plaintext.to_vec()
 }

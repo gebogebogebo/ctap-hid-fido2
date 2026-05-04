@@ -18,11 +18,7 @@ impl FidoKeyHid {
             &dummy_credentials
         };
 
-        let extensions = if args.extensions.is_some() {
-            Some(args.extensions.as_ref().unwrap())
-        } else {
-            None
-        };
+        let extensions = args.extensions.as_ref();
 
         let hmac_ext = create_hmacext(self, extensions)?;
 
