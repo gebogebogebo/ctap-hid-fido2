@@ -80,70 +80,77 @@ pub struct GetAssertionArgs<'a> {
     pub challenge: Vec<u8>,
     pub pin: Option<&'a str>,
     pub credential_ids: Vec<Vec<u8>>,
+    pub up: bool,
     pub uv: Option<bool>,
     pub extensions: Option<Vec<Extension>>,
 }
+impl<'a> Default for GetAssertionArgs<'a> {
+    fn default() -> Self {
+        Self {
+            rpid: String::new(),
+            challenge: Vec::new(),
+            pin: None,
+            credential_ids: Vec::new(),
+            up: true,
+            uv: Some(true),
+            extensions: None,
+        }
+    }
+}
 impl<'a> GetAssertionArgs<'a> {
     pub fn builder() -> GetAssertionArgsBuilder<'a> {
-        GetAssertionArgsBuilder::default()
+        GetAssertionArgsBuilder::new("", b"")
     }
 }
 
 #[derive(Default)]
 pub struct GetAssertionArgsBuilder<'a> {
-    rpid: String,
-    challenge: Vec<u8>,
-    pin: Option<&'a str>,
-    credential_ids: Vec<Vec<u8>>,
-    uv: Option<bool>,
-    extensions: Option<Vec<Extension>>,
+    inner: GetAssertionArgs<'a>,
 }
 impl<'a> GetAssertionArgsBuilder<'a> {
     pub fn new(rpid: &str, challenge: &[u8]) -> GetAssertionArgsBuilder<'a> {
-        GetAssertionArgsBuilder::<'_> {
-            uv: Some(true),
+        let inner = GetAssertionArgs {
             rpid: String::from(rpid),
             challenge: challenge.to_vec(),
             ..Default::default()
-        }
+        };
+        GetAssertionArgsBuilder { inner }
     }
 
     pub fn pin(mut self, pin: &'a str) -> GetAssertionArgsBuilder<'a> {
-        self.pin = Some(pin);
-        //self.uv = Some(false);
-        self.uv = None;
+        self.inner.pin = Some(pin);
+        //self.inner.uv = Some(false);
+        self.inner.uv = None;
         self
     }
 
     pub fn without_pin_and_uv(mut self) -> GetAssertionArgsBuilder<'a> {
-        self.pin = None;
-        self.uv = None;
+        self.inner.pin = None;
+        self.inner.uv = None;
+        self
+    }
+
+    pub fn without_up(mut self) -> GetAssertionArgsBuilder<'a> {
+        self.inner.up = false;
         self
     }
 
     pub fn extensions(mut self, extensions: &[Extension]) -> GetAssertionArgsBuilder<'a> {
-        self.extensions = Some(extensions.to_vec());
+        self.inner.extensions = Some(extensions.to_vec());
         self
     }
 
     pub fn credential_id(mut self, credential_id: &[u8]) -> GetAssertionArgsBuilder<'a> {
-        self.credential_ids.clear();
+        self.inner.credential_ids.clear();
         self.add_credential_id(credential_id)
     }
 
     pub fn add_credential_id(mut self, credential_id: &[u8]) -> GetAssertionArgsBuilder<'a> {
-        self.credential_ids.push(credential_id.to_vec());
+        self.inner.credential_ids.push(credential_id.to_vec());
         self
     }
 
     pub fn build(self) -> GetAssertionArgs<'a> {
-        GetAssertionArgs {
-            rpid: self.rpid,
-            challenge: self.challenge,
-            pin: self.pin,
-            credential_ids: self.credential_ids,
-            uv: self.uv,
-            extensions: self.extensions,
-        }
+        self.inner
     }
 }

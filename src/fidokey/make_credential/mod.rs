@@ -47,12 +47,7 @@ impl FidoKeyHid {
                 params.pin_auth = self.create_pin_auth(pin, &params.client_data_hash)?;
             }
 
-            // TODO
-            let extensions = if args.extensions.is_some() {
-                Some(args.extensions.as_ref().unwrap())
-            } else {
-                None
-            };
+            let extensions = args.extensions.as_ref();
 
             make_credential_command::create_payload(params, extensions, self.pin_protocol_version)?
         };

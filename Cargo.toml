@@ -1,8 +1,9 @@
 [package]
 name = "ctap-hid-fido2"
-version = "3.5.9"
+version = "3.5.10"
 authors = ["gebo <35388172+gebogebogebo@users.noreply.github.com>"]
 edition = "2021"
+rust-version = "1.88"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -19,12 +20,12 @@ aws-lc-rs = ["dep:aws-lc-rs"]
 fips = ["aws-lc-rs", "aws-lc-rs/fips"]
 
 [dependencies]
-aes = "0.8.4"
+aes = "0.9.0"
 anyhow = "1.0.102"
-aws-lc-rs = { version = "1.16.1", optional = true }
+aws-lc-rs = { version = "1.16.3", optional = true }
 base64 = "0.22.1"
 byteorder = "1.5.0"
-cbc = "0.1.2"
+cbc = "0.2.0"
 hex = "0.4.3"
 num = "0.4.3"
 pad = "0.1.6"
@@ -41,10 +42,10 @@ default-features = false
 features=["linux-static-hidraw"]
 
 [dev-dependencies]
-clap = { version = "4.6.0", features = ["derive"] }
-env_logger = "0.11.9"
+clap = { version = "4.6.1", features = ["derive"] }
+env_logger = "0.11.10"
 log = "0.4.29"
-rpassword = "7.4.0"
+rpassword = "7.5.2"
 arboard = "3.6.1"
 colored = "3.1.1"
 
