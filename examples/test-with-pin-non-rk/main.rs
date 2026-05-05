@@ -273,62 +273,66 @@ fn non_discoverable_credentials_pin_protocol_two(
         return Ok(());
     }
 
-    print_step("- Register");
-    let challenge = verifier::create_challenge();
+    let body_result = (|| -> Result<()> {
+        print_step("- Register");
+        let challenge = verifier::create_challenge();
 
-    let make_credential_args = MakeCredentialArgsBuilder::new(rpid, &challenge)
-        .pin(pin)
-        .build();
+        let make_credential_args = MakeCredentialArgsBuilder::new(rpid, &challenge)
+            .pin(pin)
+            .build();
 
-    let attestation = device.make_credential_with_args(&make_credential_args)?;
-    print_success("-- Register Success");
-    debug!("Attestation");
-    debug!("{}", attestation);
+        let attestation = device.make_credential_with_args(&make_credential_args)?;
+        print_success("-- Register Success");
+        debug!("Attestation");
+        debug!("{}", attestation);
 
-    print_step("-- Verify Attestation");
-    let verify_result = verifier::verify_attestation(rpid, &challenge, &attestation);
-    if verify_result.is_success {
-        print_success("-- Verify Attestation Success");
-    } else {
-        print_error("-- ! Verify Attestation Failed");
-    }
+        print_step("-- Verify Attestation");
+        let verify_result = verifier::verify_attestation(rpid, &challenge, &attestation);
+        if verify_result.is_success {
+            print_success("-- Verify Attestation Success");
+        } else {
+            print_error("-- ! Verify Attestation Failed");
+        }
 
-    print_step("- Authenticate");
+        print_step("- Authenticate");
 
-    // pre-flight
-    if !probe_device(device, rpid, &verify_result.credential_id) {
-        print_error("-- ! probe_device failed (silent getAssertion pre-flight rejected)");
-    }
+        // pre-flight
+        if !probe_device(device, rpid, &verify_result.credential_id) {
+            print_error("-- ! probe_device failed (silent getAssertion pre-flight rejected)");
+        }
 
-    let challenge = verifier::create_challenge();
+        let challenge = verifier::create_challenge();
 
-    let get_assertion_args = GetAssertionArgsBuilder::new(rpid, &challenge)
-        .pin(pin)
-        .credential_id(&verify_result.credential_id)
-        .build();
+        let get_assertion_args = GetAssertionArgsBuilder::new(rpid, &challenge)
+            .pin(pin)
+            .credential_id(&verify_result.credential_id)
+            .build();
 
-    let assertions = device.get_assertion_with_args(&get_assertion_args)?;
-    print_success("-- Authenticate Success");
-    debug!("Assertion");
-    debug!("{}", assertions[0]);
+        let assertions = device.get_assertion_with_args(&get_assertion_args)?;
+        print_success("-- Authenticate Success");
+        debug!("Assertion");
+        debug!("{}", assertions[0]);
 
-    print_step("-- Verify Assertion");
-    let is_success = verifier::verify_assertion(
-        rpid,
-        &verify_result.credential_public_key,
-        &challenge,
-        &assertions[0],
-    );
-    if is_success {
-        print_success("-- Verify Assertion Success");
-    } else {
-        print_error("-- ! Verify Assertion Failed");
-    }
+        print_step("-- Verify Assertion");
+        let is_success = verifier::verify_assertion(
+            rpid,
+            &verify_result.credential_public_key,
+            &challenge,
+            &assertions[0],
+        );
+        if is_success {
+            print_success("-- Verify Assertion Success");
+        } else {
+            print_error("-- ! Verify Assertion Failed");
+        }
+
+        Ok(())
+    })();
 
     device.pin_protocol_version = 1;
 
     println!();
-    Ok(())
+    body_result
 }
 
 fn with_uv(device: &FidoKeyHid, rpid: &str) -> Result<()> {
