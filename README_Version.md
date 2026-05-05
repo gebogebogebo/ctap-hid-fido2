@@ -1,4 +1,9 @@
 ## Version
+### Ver 3.5.10
+- Addressed [issue #115](https://github.com/gebogebogebo/ctap-hid-fido2/issues/115).
+- Addressed [pull request #117](https://github.com/gebogebogebo/ctap-hid-fido2/pull/117).
+- Dependency Updates.
+
 ### Ver 3.5.9
 - Optional crypto backends are now available: ring (default), aws-lc-rs, or fips (aws-lc-rs in FIPS mode).
   - See ReadMe: Cargo features (crypto backend) for details.
