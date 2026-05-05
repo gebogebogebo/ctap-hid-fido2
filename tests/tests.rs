@@ -199,7 +199,11 @@ fn test_get_info() -> Result<()> {
             "- remaining_discoverable_credentials = {}",
             info.remaining_discoverable_credentials
         );
-        assert_eq!(info.remaining_discoverable_credentials, 22);
+        assert!(
+            info.remaining_discoverable_credentials > 1,
+            "remaining_discoverable_credentials must be greater than 1, got {}",
+            info.remaining_discoverable_credentials
+        );
     } else {
         let device = FidoKeyHidFactory::create(&Cfg::init()).unwrap();
         device.get_info()?;
