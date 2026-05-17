@@ -31,7 +31,7 @@
 //! While the authenticator waits for user presence, redirect streams to files:
 //!
 //! ```text
-//! cargo run --example reg-auth -- --keep-alive-msg-to-stderr true 1>stdout.txt 2>stderr.txt
+//! cargo run --example reg-auth -- --enable-log false --keep-alive-msg-to-stderr true 1>stdout.txt 2>stderr.txt
 //! grep -F "Touch the sensor" stderr.txt   # should match
 //! grep -F "Touch the sensor" stdout.txt   # should not match
 //! ```
