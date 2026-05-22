@@ -219,7 +219,7 @@ If more than one Authenticator is detected, an error will result. See the follow
 
 **Cfg**
 
-The argument `Cfg` is fine with the default value you create using `init()`, but you can customize it to change the behavior a bit, see [Cfg definition](https://github.com/gebogebogebo/ctap-hid-fido2/blob/24df395e4ce1c3bcacdba69c63fc3a8ff5510d2c/src/lib.rs#L39-L55).
+The argument `Cfg` is fine with the default value you create using `init()`, but you can customize it to change the behavior a bit, see [Cfg definition](https://github.com/gebogebogebo/ctap-hid-fido2/blob/c2d23ee10bcb280cbc3d78f27f0244418f46e794/src/lib.rs#L53-L67).
 
 
 
