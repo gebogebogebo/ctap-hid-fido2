@@ -374,16 +374,24 @@ fn ctaphid_cbormsg(device: &FidoKeyHid, command: u8, payload: &[u8]) -> Result<V
         } else if st.0 == CTAPHID_KEEPALIVE {
             if !keep_alive_msg_flag {
                 if device.enable_keep_alive_msg && !device.keep_alive_msg.is_empty() {
-                    println!("{}", device.keep_alive_msg);
+                    if device.keep_alive_msg_to_stderr {
+                        eprintln!("{}", device.keep_alive_msg);
+                    } else {
+                        println!("{}", device.keep_alive_msg);
+                    }
                 }
                 keep_alive_msg_flag = true;
             }
             thread::sleep(time::Duration::from_millis(100));
         } else if st.0 == CTAPHID_ERROR {
-            println!("CTAPHID_ERROR Error code = 0x{:02x}", st.2);
+            if device.enable_log {
+                println!("CTAPHID_ERROR Error code = 0x{:02x}", st.2);
+            }
             break;
         } else {
-            println!("err");
+            if device.enable_log {
+                println!("err");
+            }
             break;
         }
     }

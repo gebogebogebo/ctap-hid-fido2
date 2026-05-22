@@ -1,4 +1,14 @@
 ## Version
+### Ver 3.5.11
+- Addressed [issue #127](https://github.com/gebogebogebo/ctap-hid-fido2/issues/127).
+- Addressed [pull request #128](https://github.com/gebogebogebo/ctap-hid-fido2/pull/128).
+  - Added `keep_alive_msg_to_stderr` to `Cfg` / `FidoKeyHid` (default: `false`). When `true`, the keep-alive user-presence message (e.g. "Touch the sensor on the authenticator") is printed to **stderr** instead of stdout.
+  - Added `Cfg::with_keep_alive_msg_to_stderr()`.
+  - example: [reg-auth](examples/reg-auth/main.rs) — CLI flags `--enable-log` and `--keep-alive-msg-to-stderr`.
+- Addressed [pull request #130](https://github.com/gebogebogebo/ctap-hid-fido2/pull/130).
+  - `ctaphid`: gate `CTAPHID_ERROR` and unknown-status `println!` output behind `enable_log` (consistent with other debug logs).
+- Dependency Updates.
+
 ### Ver 3.5.10
 - Addressed [issue #115](https://github.com/gebogebogebo/ctap-hid-fido2/issues/115).
 - Addressed [pull request #117](https://github.com/gebogebogebo/ctap-hid-fido2/pull/117).

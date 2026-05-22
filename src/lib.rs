@@ -45,21 +45,34 @@ pub struct LibCfg {
     pub use_pre_credential_management: bool,
     pub enable_keep_alive_msg: bool,
     pub keep_alive_msg: String,
+    pub keep_alive_msg_to_stderr: bool,
 }
 
 impl LibCfg {
     pub fn init() -> Self {
         LibCfg {
+            // Print CTAP/HID debug traces (hex dumps, etc.) to stdout when true.
             enable_log: false,
+            // Use pre-FIDO 2.1 bio enrollment command variants when true.
             use_pre_bio_enrollment: true,
+            // Use pre-FIDO 2.1 credential management command variants when true.
             use_pre_credential_management: true,
+            // Print a user-facing message while waiting on CTAPHID_KEEPALIVE (user presence).
             enable_keep_alive_msg: true,
+            // Text shown for keep-alive; empty string disables output even if enable_keep_alive_msg is true.
             keep_alive_msg: "- Touch the sensor on the authenticator".to_string(),
+            // When true, keep_alive_msg goes to stderr; when false, to stdout.
+            keep_alive_msg_to_stderr: false,
         }
     }
 
     pub fn with_enable_log(mut self, enable: bool) -> Self {
         self.enable_log = enable;
+        self
+    }
+
+    pub fn with_keep_alive_msg_to_stderr(mut self, to_stderr: bool) -> Self {
+        self.keep_alive_msg_to_stderr = to_stderr;
         self
     }
 }

@@ -1,10 +1,75 @@
+//! Register and authenticate with a FIDO2 key (PIN example).
+//!
+//! # Usage
+//!
+//! ```text
+//! # Defaults: debug log on, keep-alive message on stdout
+//! cargo run --example reg-auth
+//!
+//! # Print CLI help
+//! cargo run --example reg-auth -- --help
+//!
+//! # Disable CTAP/HID hex debug logs
+//! cargo run --example reg-auth -- --enable-log false
+//!
+//! # Send keep-alive text (e.g. "Touch the sensor...") to stderr
+//! cargo run --example reg-auth -- --keep-alive-msg-to-stderr true
+//!
+//! # Both options combined
+//! cargo run --example reg-auth -- --enable-log false --keep-alive-msg-to-stderr true
+//! ```
+//!
+//! # Options
+//!
+//! | Flag | Default | Description |
+//! |------|---------|-------------|
+//! | `--enable-log` | `true` | Print CTAP/HID debug logs to **stdout** |
+//! | `--keep-alive-msg-to-stderr` | `false` | Print the user-presence prompt to **stderr** instead of stdout |
+//!
+//! # Verifying stderr output manually
+//!
+//! While the authenticator waits for user presence, redirect streams to files:
+//!
+//! ```text
+//! cargo run --example reg-auth -- --enable-log false --keep-alive-msg-to-stderr true 1>stdout.txt 2>stderr.txt
+//! grep -F "Touch the sensor" stderr.txt   # should match
+//! grep -F "Touch the sensor" stdout.txt   # should not match
+//! ```
+
 use anyhow::{anyhow, Result};
+use clap::{ArgAction, Parser};
 use ctap_hid_fido2::{
     fidokey::{GetAssertionArgsBuilder, MakeCredentialArgsBuilder},
     verifier, Cfg, FidoKeyHidFactory,
 };
 
+#[derive(Parser)]
+#[command(
+    about = "Register and authenticate with a FIDO2 key (PIN example).",
+    after_help = "\
+Examples:
+  cargo run --example reg-auth
+  cargo run --example reg-auth -- --enable-log false
+  cargo run --example reg-auth -- --keep-alive-msg-to-stderr true
+  cargo run --example reg-auth -- --enable-log false --keep-alive-msg-to-stderr true
+
+Verify keep-alive on stderr:
+  cargo run --example reg-auth -- --keep-alive-msg-to-stderr true 1>stdout.txt 2>stderr.txt
+"
+)]
+struct Args {
+    /// Enable CTAP/HID debug log output to stdout (default: true).
+    #[arg(long, default_value_t = true, action = ArgAction::Set)]
+    enable_log: bool,
+
+    /// Send keep-alive message (e.g. touch prompt) to stderr instead of stdout (default: false).
+    #[arg(long, default_value_t = false, action = ArgAction::Set)]
+    keep_alive_msg_to_stderr: bool,
+}
+
 fn main() -> Result<()> {
+    let args = Args::parse();
+
     let rpid = "reg-auth-example-app";
     // let pin = get_input_with_message("input PIN:");
     let pin = "1234";
@@ -20,8 +85,10 @@ fn main() -> Result<()> {
         .build();
 
     // create `FidoKeyHid`
-    let device = FidoKeyHidFactory::create(&Cfg::init().with_enable_log(true))?
-        .with_pin_protocol_version(pin_protocol_version);
+    let cfg = Cfg::init()
+        .with_enable_log(args.enable_log)
+        .with_keep_alive_msg_to_stderr(args.keep_alive_msg_to_stderr);
+    let device = FidoKeyHidFactory::create(&cfg)?.with_pin_protocol_version(pin_protocol_version);
 
     // get `Attestation` Object
     let attestation = device.make_credential_with_args(&make_credential_args)?;

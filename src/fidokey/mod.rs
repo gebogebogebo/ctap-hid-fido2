@@ -33,6 +33,7 @@ pub struct FidoKeyHid {
     pub use_pre_credential_management: bool,
     pub enable_keep_alive_msg: bool,
     pub keep_alive_msg: String,
+    pub keep_alive_msg_to_stderr: bool,
     pub pin_protocol_version: u8,
     cid: Mutex<Option<[u8; 4]>>,
 }
@@ -59,6 +60,7 @@ impl FidoKeyHid {
                     use_pre_credential_management: cfg.use_pre_credential_management,
                     enable_keep_alive_msg: cfg.enable_keep_alive_msg,
                     keep_alive_msg: cfg.keep_alive_msg.to_string(),
+                    keep_alive_msg_to_stderr: cfg.keep_alive_msg_to_stderr,
                     pin_protocol_version: 1,
                     cid: Mutex::new(None), // Wrap in Mutex
                 };
