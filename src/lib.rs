@@ -45,6 +45,7 @@ pub struct LibCfg {
     pub use_pre_credential_management: bool,
     pub enable_keep_alive_msg: bool,
     pub keep_alive_msg: String,
+    pub keep_alive_msg_to_stderr: bool,
 }
 
 impl LibCfg {
@@ -55,11 +56,17 @@ impl LibCfg {
             use_pre_credential_management: true,
             enable_keep_alive_msg: true,
             keep_alive_msg: "- Touch the sensor on the authenticator".to_string(),
+            keep_alive_msg_to_stderr: false,
         }
     }
 
     pub fn with_enable_log(mut self, enable: bool) -> Self {
         self.enable_log = enable;
+        self
+    }
+
+    pub fn with_keep_alive_msg_to_stderr(mut self, to_stderr: bool) -> Self {
+        self.keep_alive_msg_to_stderr = to_stderr;
         self
     }
 }

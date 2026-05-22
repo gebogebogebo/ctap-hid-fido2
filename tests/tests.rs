@@ -50,6 +50,8 @@ fn test_main() {
     println!("<<< TEST START >>>");
 
     do_test(test_get_hid_devices);
+    do_test(test_keep_alive_msg_to_stderr_cfg);
+    do_test(test_keep_alive_msg_to_stderr_propagates);
     do_test(test_get_info);
     do_test(test_get_info_u2f);
     do_test(test_client_pin_get_retries);
@@ -67,6 +69,29 @@ fn test_main() {
 #[test]
 fn test_get_hid_devices() -> Result<()> {
     get_hid_devices();
+    Ok(())
+}
+
+#[test]
+fn test_keep_alive_msg_to_stderr_cfg() -> Result<()> {
+    assert!(!Cfg::init().keep_alive_msg_to_stderr);
+    assert!(Cfg::init()
+        .with_keep_alive_msg_to_stderr(true)
+        .keep_alive_msg_to_stderr);
+    assert!(!Cfg::init()
+        .with_keep_alive_msg_to_stderr(false)
+        .keep_alive_msg_to_stderr);
+    Ok(())
+}
+
+#[test]
+fn test_keep_alive_msg_to_stderr_propagates() -> Result<()> {
+    let device =
+        FidoKeyHidFactory::create(&Cfg::init().with_keep_alive_msg_to_stderr(true))?;
+    assert!(device.keep_alive_msg_to_stderr);
+
+    let device = FidoKeyHidFactory::create(&Cfg::init())?;
+    assert!(!device.keep_alive_msg_to_stderr);
     Ok(())
 }
 
