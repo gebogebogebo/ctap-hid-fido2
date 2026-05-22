@@ -380,10 +380,14 @@ fn ctaphid_cbormsg(device: &FidoKeyHid, command: u8, payload: &[u8]) -> Result<V
             }
             thread::sleep(time::Duration::from_millis(100));
         } else if st.0 == CTAPHID_ERROR {
-            println!("CTAPHID_ERROR Error code = 0x{:02x}", st.2);
+            if device.enable_log {
+                println!("CTAPHID_ERROR Error code = 0x{:02x}", st.2);
+            }
             break;
         } else {
-            println!("err");
+            if device.enable_log {
+                println!("err");
+            }
             break;
         }
     }
