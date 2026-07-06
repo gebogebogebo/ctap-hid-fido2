@@ -27,19 +27,19 @@ impl FidoKeyHid {
     pub fn create_pin_auth(&self, pin: &str, client_data_hash: &[u8]) -> Result<Vec<u8>> {
         let pin_token = self.get_pin_token(pin)?;
 
-        //
-        // https://fidoalliance.org/specs/fido-v2.1-ps-20210615/fido-client-to-authenticator-protocol-v2.1-ps-20210615.html#pinProto2
-        //
-        // 6.5.7. PIN/UV Auth Protocol Two
-        // [authenticate(key, message) → signature]
-        //
-
-        // 1. If key is longer than 32 bytes, discard the excess. (This selects the HMAC-key portion of the shared secret. When key is the pinUvAuthToken, it is exactly 32 bytes long and thus this step has no effect.)
-        // skip
-
-        // 2. Return the result of computing HMAC-SHA-256 on key and message.
         let sig = enc_hmac_sha_256::authenticate(&pin_token.key, client_data_hash);
-        Ok(sig[0..16].to_vec())
+
+        if self.pin_protocol_version == 2 {
+            // 6.5.8. PIN/UV Auth Protocol Two
+            // authenticate(key, message):
+            //   Return the result of computing HMAC-SHA-256 on key and message. (32 bytes)
+            Ok(sig.to_vec())
+        } else {
+            // 6.5.7. PIN/UV Auth Protocol One
+            // authenticate(key, message):
+            //   Return the first 16 bytes of the result of computing HMAC-SHA-256 on key and message.
+            Ok(sig[0..16].to_vec())
+        }
     }
 
     pub fn get_pin_token(&self, pin: &str) -> Result<PinToken> {

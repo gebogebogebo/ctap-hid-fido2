@@ -137,6 +137,21 @@ mod tests {
     }
 
     #[test]
+    fn test_create_pin_auth_protocol_two() {
+        // PIN/UV Auth Protocol Two returns the full 32-byte HMAC-SHA-256 output
+        // without truncation (CTAP 2.2 6.5.8. authenticate(key, message)).
+        let out_bytes = hex::decode("1A81CD600A1F6CF4BE5260FE3257B241").unwrap();
+        let client_data_hash =
+            hex::decode("E61E2BD6C4612662960B159CD54CF8EFF1A998C89B3742519D11F85E0F5E7876")
+                .unwrap();
+        let check =
+            "F0AC99D6AAD2E199AF9CF25F6568A6F555D6394CDC35D81573D71A3B3CB275F3".to_string();
+        let pin_auth = encrypt::enc_hmac_sha_256::authenticate(&out_bytes, &client_data_hash);
+        assert_eq!(pin_auth.len(), 32);
+        assert_eq!(check, hex::encode(pin_auth).to_uppercase());
+    }
+
+    #[test]
     fn test_hmac() {
         let key = b"this is key".to_vec();
         let message = b"this is message".to_vec();
