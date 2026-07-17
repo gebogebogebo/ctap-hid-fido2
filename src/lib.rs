@@ -125,14 +125,18 @@ mod tests {
     use str_buf::StrBuf;
 
     #[test]
-    fn test_create_pin_auth() {
+    fn test_create_pin_auth_protocol_one() {
+        // PIN/UV Auth Protocol One truncates the HMAC-SHA-256 output to 16 bytes
+        // (CTAP 2.2 6.5.7. authenticate(key, message)).
         let out_bytes = hex::decode("1A81CD600A1F6CF4BE5260FE3257B241").unwrap();
         let client_data_hash =
             hex::decode("E61E2BD6C4612662960B159CD54CF8EFF1A998C89B3742519D11F85E0F5E7876")
                 .unwrap();
         let check = "F0AC99D6AAD2E199AF9CF25F6568A6F5".to_string();
-        let sig = encrypt::enc_hmac_sha_256::authenticate(&out_bytes, &client_data_hash);
-        let pin_auth = sig[0..16].to_vec();
+        let pin_auth =
+            encrypt::enc_hmac_sha_256::compute_pin_uv_auth_param(&out_bytes, &client_data_hash, 1)
+                .unwrap();
+        assert_eq!(pin_auth.len(), 16);
         assert_eq!(check, hex::encode(pin_auth).to_uppercase());
     }
 
@@ -146,9 +150,22 @@ mod tests {
                 .unwrap();
         let check =
             "F0AC99D6AAD2E199AF9CF25F6568A6F555D6394CDC35D81573D71A3B3CB275F3".to_string();
-        let pin_auth = encrypt::enc_hmac_sha_256::authenticate(&out_bytes, &client_data_hash);
+        let pin_auth =
+            encrypt::enc_hmac_sha_256::compute_pin_uv_auth_param(&out_bytes, &client_data_hash, 2)
+                .unwrap();
         assert_eq!(pin_auth.len(), 32);
         assert_eq!(check, hex::encode(pin_auth).to_uppercase());
+    }
+
+    #[test]
+    fn test_create_pin_auth_unknown_protocol() {
+        let out_bytes = hex::decode("1A81CD600A1F6CF4BE5260FE3257B241").unwrap();
+        let client_data_hash =
+            hex::decode("E61E2BD6C4612662960B159CD54CF8EFF1A998C89B3742519D11F85E0F5E7876")
+                .unwrap();
+        let result =
+            encrypt::enc_hmac_sha_256::compute_pin_uv_auth_param(&out_bytes, &client_data_hash, 3);
+        assert!(result.is_err());
     }
 
     #[test]

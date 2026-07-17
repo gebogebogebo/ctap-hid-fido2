@@ -66,8 +66,12 @@ pub fn create_payload(
                 map.push((0x04.to_value(), pin_protocol_version.to_value()));
 
                 // pinUvAuthParam (0x05)
-                let pin_uv_auth_param =
-                    create_pin_auth_param(pin_token, sub_cmd_id, &sub_command_params_cbor);
+                let pin_uv_auth_param = create_pin_auth_param(
+                    pin_token,
+                    sub_cmd_id,
+                    &sub_command_params_cbor,
+                    pin_protocol_version,
+                )?;
                 map.push((0x05.to_value(), pin_uv_auth_param.to_value()));
             }
         }
@@ -123,12 +127,12 @@ fn create_pin_auth_param(
     pin_token: &PinToken,
     sub_cmd_id: u8,
     sub_command_params_cbor: &[u8],
-) -> Vec<u8> {
+    pin_protocol_version: u8,
+) -> Result<Vec<u8>> {
     let mut message = vec![0x01_u8]; // fingerprint modality
     message.push(sub_cmd_id);
     message.extend_from_slice(sub_command_params_cbor);
-    let sig = enc_hmac_sha_256::authenticate(&pin_token.key, &message);
-    sig[0..16].to_vec()
+    enc_hmac_sha_256::compute_pin_uv_auth_param(&pin_token.key, &message, pin_protocol_version)
 }
 
 /// Create template info parameter

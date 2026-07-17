@@ -27,19 +27,11 @@ impl FidoKeyHid {
     pub fn create_pin_auth(&self, pin: &str, client_data_hash: &[u8]) -> Result<Vec<u8>> {
         let pin_token = self.get_pin_token(pin)?;
 
-        let sig = enc_hmac_sha_256::authenticate(&pin_token.key, client_data_hash);
-
-        if self.pin_protocol_version == 2 {
-            // 6.5.8. PIN/UV Auth Protocol Two
-            // authenticate(key, message):
-            //   Return the result of computing HMAC-SHA-256 on key and message. (32 bytes)
-            Ok(sig.to_vec())
-        } else {
-            // 6.5.7. PIN/UV Auth Protocol One
-            // authenticate(key, message):
-            //   Return the first 16 bytes of the result of computing HMAC-SHA-256 on key and message.
-            Ok(sig[0..16].to_vec())
-        }
+        enc_hmac_sha_256::compute_pin_uv_auth_param(
+            &pin_token.key,
+            client_data_hash,
+            self.pin_protocol_version,
+        )
     }
 
     pub fn get_pin_token(&self, pin: &str) -> Result<PinToken> {

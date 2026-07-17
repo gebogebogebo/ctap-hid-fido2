@@ -85,8 +85,11 @@ pub fn create_payload(
         let mut message = vec![sub_command.id()?];
         message.append(&mut sub_command_params_cbor.to_vec());
 
-        let sig = enc_hmac_sha_256::authenticate(&pin_token.key, &message);
-        let pin_uv_auth_param = sig[0..16].to_vec();
+        let pin_uv_auth_param = enc_hmac_sha_256::compute_pin_uv_auth_param(
+            &pin_token.key,
+            &message,
+            pin_protocol_version,
+        )?;
 
         map.push((0x04.to_value(), pin_uv_auth_param.to_value()));
     }
