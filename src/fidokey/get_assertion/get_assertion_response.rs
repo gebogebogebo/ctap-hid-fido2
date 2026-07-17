@@ -1,8 +1,7 @@
 use super::get_assertion_params;
 use super::get_assertion_params::Extension;
 use crate::auth_data::Flags;
-use crate::encrypt::enc_aes256_cbc;
-use crate::encrypt::shared_secret::SharedSecret;
+use crate::hmac_ext::PinUvAuthSharedSecret;
 use crate::public_key_credential_user_entity::PublicKeyCredentialUserEntity;
 use crate::util_ciborium;
 use anyhow::Result;
@@ -12,7 +11,7 @@ use std::io::Cursor;
 fn parse_cbor_authdata(
     authdata: Vec<u8>,
     ass: &mut get_assertion_params::Assertion,
-    shared_secret: Option<&SharedSecret>,
+    shared_secret: Option<&PinUvAuthSharedSecret>,
 ) -> Result<()> {
     // copy
     ass.auth_data = authdata.to_vec();
@@ -64,10 +63,7 @@ fn parse_cbor_authdata(
                     let hmac_secret = util_ciborium::cbor_value_to_vec_u8(val)?;
 
                     // decrypt hmac_secret -> output1
-                    let output1 = enc_aes256_cbc::decrypt_message(
-                        &shared_secret.as_ref().unwrap().secret,
-                        &hmac_secret,
-                    );
+                    let output1 = shared_secret.as_ref().unwrap().decrypt(&hmac_secret)?;
 
                     if output1.len() == 32 {
                         let mut hmac_secret_0 = [0u8; 32];
@@ -101,7 +97,7 @@ fn parse_cbor_authdata(
 
 pub fn parse_cbor(
     bytes: &[u8],
-    shared_secret: Option<SharedSecret>,
+    shared_secret: Option<PinUvAuthSharedSecret>,
 ) -> Result<get_assertion_params::Assertion> {
     let mut ass = get_assertion_params::Assertion::default();
     let maps = util_ciborium::cbor_bytes_to_map(bytes)?;
