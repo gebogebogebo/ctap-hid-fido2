@@ -1,5 +1,14 @@
 //
-// cargo test test_main -- --nocapture
+// cargo test test_main -- --nocapture --test-threads=1
+//
+// This runs the suite twice against the connected device: once negotiated to
+// PIN/UV Auth Protocol One, once to Protocol Two (skipping the Protocol Two
+// run for any test if the device doesn't support it). `--test-threads=1` is
+// required so the two runs don't contend for the single physical HID device.
+//
+// To run just one protocol version:
+// cargo test test_main_pin_protocol_one -- --nocapture
+// cargo test test_main_pin_protocol_two -- --nocapture
 //
 // [Be sure to also run the following tests:]
 // cargo run --example test-with-pin-non-rk
@@ -28,6 +37,18 @@ fn is_my_test_key() -> Result<bool> {
     }
 }
 
+/// Create a device negotiated to the given PIN/UV Auth Protocol version.
+/// Returns an ("skipped: ...") Err for protocol 2 if the device doesn't advertise support for it.
+fn create_device_with_pin_protocol(cfg: &Cfg, pin_protocol_version: u8) -> Result<FidoKeyHid> {
+    let mut device = FidoKeyHidFactory::create(cfg)?;
+    if pin_protocol_version == 2 && !device.set_pin_uv_auth_protocol_two()? {
+        return Err(anyhow!(
+            "skipped: device does not support PIN/UV Auth Protocol Two"
+        ));
+    }
+    Ok(device)
+}
+
 fn do_test<F>(f: F)
 where
     F: FnOnce() -> Result<()>,
@@ -45,25 +66,34 @@ where
     println!();
 }
 
-#[test]
-fn test_main() {
-    println!("<<< TEST START >>>");
+fn run_all_tests(pin_protocol_version: u8) {
+    println!("<<< TEST START (PIN/UV Auth Protocol {}) >>>", pin_protocol_version);
 
     do_test(test_get_hid_devices);
     do_test(test_keep_alive_msg_to_stderr_cfg);
     do_test(test_keep_alive_msg_to_stderr_propagates);
     do_test(test_get_info);
     do_test(test_get_info_u2f);
-    do_test(test_client_pin_get_retries);
-    do_test(test_make_credential_with_pin_non_rk);
-    do_test(test_make_credential_with_pin_non_rk_exclude_authenticator);
-    do_test(test_credential_management_get_creds_metadata);
-    do_test(test_credential_management_enumerate_rps);
-    do_test(test_bio_enrollment_get_fingerprint_sensor_info);
-    do_test(test_bio_enrollment_enumerate_enrollments);
+    do_test(|| test_client_pin_get_retries(pin_protocol_version));
+    do_test(|| test_make_credential_with_pin_non_rk(pin_protocol_version));
+    do_test(|| test_make_credential_with_pin_non_rk_exclude_authenticator(pin_protocol_version));
+    do_test(|| test_credential_management_get_creds_metadata(pin_protocol_version));
+    do_test(|| test_credential_management_enumerate_rps(pin_protocol_version));
+    do_test(|| test_bio_enrollment_get_fingerprint_sensor_info(pin_protocol_version));
+    do_test(|| test_bio_enrollment_enumerate_enrollments(pin_protocol_version));
     do_test(test_wink);
 
-    println!("<<< TEST END >>>");
+    println!("<<< TEST END (PIN/UV Auth Protocol {}) >>>", pin_protocol_version);
+}
+
+#[test]
+fn test_main_pin_protocol_one() {
+    run_all_tests(1);
+}
+
+#[test]
+fn test_main_pin_protocol_two() {
+    run_all_tests(2);
 }
 
 #[test]
@@ -253,9 +283,8 @@ fn test_get_info_u2f() -> Result<()> {
     Ok(())
 }
 
-#[test]
-fn test_client_pin_get_retries() -> Result<()> {
-    let device = FidoKeyHidFactory::create(&Cfg::init()).unwrap();
+fn test_client_pin_get_retries(pin_protocol_version: u8) -> Result<()> {
+    let device = create_device_with_pin_protocol(&Cfg::init(), pin_protocol_version)?;
 
     let retry = device.get_pin_retries();
     println!("- retries = {:?}", retry);
@@ -271,14 +300,13 @@ fn test_client_pin_get_retries() -> Result<()> {
     Ok(())
 }
 
-#[test]
-fn test_make_credential_with_pin_non_rk() -> Result<()> {
+fn test_make_credential_with_pin_non_rk(pin_protocol_version: u8) -> Result<()> {
     // parameter
     let rpid = "test.com";
     let challenge = b"this is challenge".to_vec();
     let pin = "1234";
 
-    let device = FidoKeyHidFactory::create(&Cfg::init()).unwrap();
+    let device = create_device_with_pin_protocol(&Cfg::init(), pin_protocol_version)?;
     let att = device.make_credential(rpid, &challenge, Some(pin)).unwrap();
     println!("Attestation");
     println!("{}", att);
@@ -292,14 +320,15 @@ fn test_make_credential_with_pin_non_rk() -> Result<()> {
     Ok(())
 }
 
-#[test]
-fn test_make_credential_with_pin_non_rk_exclude_authenticator() -> Result<()> {
+fn test_make_credential_with_pin_non_rk_exclude_authenticator(
+    pin_protocol_version: u8,
+) -> Result<()> {
     // parameter
     let rpid = "test.com";
     let challenge = b"this is challenge".to_vec();
     let pin = "1234";
 
-    let device = FidoKeyHidFactory::create(&Cfg::init()).unwrap();
+    let device = create_device_with_pin_protocol(&Cfg::init(), pin_protocol_version)?;
 
     let make_credential_args = MakeCredentialArgsBuilder::new(rpid, &challenge)
         .pin(pin)
@@ -322,9 +351,8 @@ fn test_make_credential_with_pin_non_rk_exclude_authenticator() -> Result<()> {
     Ok(())
 }
 
-#[test]
-fn test_credential_management_get_creds_metadata() -> Result<()> {
-    let device = FidoKeyHidFactory::create(&Cfg::init()).unwrap();
+fn test_credential_management_get_creds_metadata(pin_protocol_version: u8) -> Result<()> {
+    let device = create_device_with_pin_protocol(&Cfg::init(), pin_protocol_version)?;
     match device.enable_info_option(&InfoOption::CredMgmt) {
         Ok(result) => {
             if result != Some(true) {
@@ -342,11 +370,10 @@ fn test_credential_management_get_creds_metadata() -> Result<()> {
     Ok(())
 }
 
-#[test]
-fn test_credential_management_enumerate_rps() -> Result<()> {
+fn test_credential_management_enumerate_rps(pin_protocol_version: u8) -> Result<()> {
     let mut cfg = Cfg::init();
     cfg.use_pre_credential_management = false;
-    let device = FidoKeyHidFactory::create(&cfg).unwrap();
+    let device = create_device_with_pin_protocol(&cfg, pin_protocol_version)?;
     match device.enable_info_option(&InfoOption::CredMgmt) {
         Ok(result) => {
             if result != Some(true) {
@@ -364,11 +391,10 @@ fn test_credential_management_enumerate_rps() -> Result<()> {
     Ok(())
 }
 
-#[test]
-fn test_bio_enrollment_get_fingerprint_sensor_info() -> Result<()> {
+fn test_bio_enrollment_get_fingerprint_sensor_info(pin_protocol_version: u8) -> Result<()> {
     let mut skip = true;
 
-    let device = FidoKeyHidFactory::create(&Cfg::init()).unwrap();
+    let device = create_device_with_pin_protocol(&Cfg::init(), pin_protocol_version)?;
 
     match device.enable_info_option(&InfoOption::UserVerificationMgmtPreview) {
         Ok(result) => {
@@ -395,11 +421,10 @@ fn test_bio_enrollment_get_fingerprint_sensor_info() -> Result<()> {
     Ok(())
 }
 
-#[test]
-fn test_bio_enrollment_enumerate_enrollments() -> Result<()> {
+fn test_bio_enrollment_enumerate_enrollments(pin_protocol_version: u8) -> Result<()> {
     let mut skip = true;
 
-    let device = FidoKeyHidFactory::create(&Cfg::init()).unwrap();
+    let device = create_device_with_pin_protocol(&Cfg::init(), pin_protocol_version)?;
 
     match device.enable_info_option(&InfoOption::UserVerificationMgmtPreview) {
         Ok(result) => {

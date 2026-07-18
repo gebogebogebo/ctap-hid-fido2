@@ -46,31 +46,3 @@ impl FidoKeyHid {
         Ok(())
     }
 }
-
-#[cfg(test)]
-mod tests {
-    use super::SubCommand as PinCmd;
-    use super::*;
-    use crate::ctaphid;
-    use crate::fidokey::FidoKeyHid;
-    use crate::Cfg;
-    use crate::HidParam;
-
-    #[test]
-    fn test_client_pin_get_keyagreement() {
-        let hid_params = HidParam::get();
-        let device = FidoKeyHid::new(&hid_params, &Cfg::init()).unwrap();
-
-        let send_payload =
-            create_payload(PinCmd::GetKeyAgreement, device.pin_protocol_version).unwrap();
-        // The cid is obtained internally by ctaphid_cbor
-        let response_cbor = ctaphid::ctaphid_cbor(&device, &send_payload).unwrap();
-
-        let key_agreement =
-            client_pin_response::parse_cbor_client_pin_get_keyagreement(&response_cbor).unwrap();
-        println!("authenticatorClientPIN (0x06) - getKeyAgreement");
-        println!("{}", key_agreement);
-
-        assert!(true);
-    }
-}

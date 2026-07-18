@@ -100,7 +100,7 @@ fn create_extensions(
 
     // HMAC Secret Extension
     if let Some(hmac_ext) = hmac_ext {
-        let tmp = hmac_ext.shared_secret.public_key.to_value_cib().unwrap();
+        let tmp = hmac_ext.shared_secret.public_key().to_value_cib().unwrap();
         let param = vec![
             // keyAgreement(0x01)
             (1.to_value(), tmp),
@@ -108,6 +108,8 @@ fn create_extensions(
             (2.to_value(), hmac_ext.salt_enc.to_value()),
             // saltAuth(0x03)
             (3.to_value(), hmac_ext.salt_auth.to_value()),
+            // pinUvAuthProtocol(0x04)
+            (4.to_value(), hmac_ext.pin_protocol_version.to_value()),
         ];
 
         ext_val.push((
