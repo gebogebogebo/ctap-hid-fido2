@@ -125,14 +125,21 @@ mod tests {
     use std::convert::TryFrom;
     use str_buf::StrBuf;
 
-    #[test]
-    fn test_create_pin_auth_protocol_one() {
-        // PIN/UV Auth Protocol One truncates the HMAC-SHA-256 output to 16 bytes
-        // (CTAP 2.2 6.5.7. authenticate(key, message)).
+    /// Shared HMAC-SHA-256 (key, message) test vector for the
+    /// test_create_pin_auth_protocol_* tests below.
+    fn pin_uv_auth_test_vector() -> (Vec<u8>, Vec<u8>) {
         let out_bytes = hex::decode("1A81CD600A1F6CF4BE5260FE3257B241").unwrap();
         let client_data_hash =
             hex::decode("E61E2BD6C4612662960B159CD54CF8EFF1A998C89B3742519D11F85E0F5E7876")
                 .unwrap();
+        (out_bytes, client_data_hash)
+    }
+
+    #[test]
+    fn test_create_pin_auth_protocol_one() {
+        // PIN/UV Auth Protocol One truncates the HMAC-SHA-256 output to 16 bytes
+        // (CTAP 2.2 6.5.7. authenticate(key, message)).
+        let (out_bytes, client_data_hash) = pin_uv_auth_test_vector();
         let check = "F0AC99D6AAD2E199AF9CF25F6568A6F5".to_string();
         let pin_auth =
             pin_uv_auth_protocol::compute_pin_uv_auth_param(&out_bytes, &client_data_hash, 1)
@@ -145,10 +152,7 @@ mod tests {
     fn test_create_pin_auth_protocol_two() {
         // PIN/UV Auth Protocol Two returns the full 32-byte HMAC-SHA-256 output
         // without truncation (CTAP 2.2 6.5.8. authenticate(key, message)).
-        let out_bytes = hex::decode("1A81CD600A1F6CF4BE5260FE3257B241").unwrap();
-        let client_data_hash =
-            hex::decode("E61E2BD6C4612662960B159CD54CF8EFF1A998C89B3742519D11F85E0F5E7876")
-                .unwrap();
+        let (out_bytes, client_data_hash) = pin_uv_auth_test_vector();
         let check =
             "F0AC99D6AAD2E199AF9CF25F6568A6F555D6394CDC35D81573D71A3B3CB275F3".to_string();
         let pin_auth =
@@ -160,10 +164,7 @@ mod tests {
 
     #[test]
     fn test_create_pin_auth_unknown_protocol() {
-        let out_bytes = hex::decode("1A81CD600A1F6CF4BE5260FE3257B241").unwrap();
-        let client_data_hash =
-            hex::decode("E61E2BD6C4612662960B159CD54CF8EFF1A998C89B3742519D11F85E0F5E7876")
-                .unwrap();
+        let (out_bytes, client_data_hash) = pin_uv_auth_test_vector();
         let result =
             pin_uv_auth_protocol::compute_pin_uv_auth_param(&out_bytes, &client_data_hash, 3);
         assert!(result.is_err());
