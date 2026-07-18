@@ -1,7 +1,7 @@
 use super::get_assertion_params;
 use super::get_assertion_params::Extension;
 use crate::auth_data::Flags;
-use crate::hmac_ext::PinUvAuthSharedSecret;
+use crate::pin_uv_auth_protocol::PinUvAuthSharedSecret;
 use crate::public_key_credential_user_entity::PublicKeyCredentialUserEntity;
 use crate::util_ciborium;
 use anyhow::Result;

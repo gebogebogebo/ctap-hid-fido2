@@ -49,7 +49,7 @@ impl SharedSecret {
         Ok(out_bytes)
     }
 
-    pub fn decrypt_token(&self, data: &mut [u8]) -> Result<PinToken> {
+    pub fn decrypt_token(&self, data: &[u8]) -> Result<PinToken> {
         let dec = enc_aes256_cbc::decrypt_message(&self.secret, data);
         let pin_token = PinToken::new(&dec);
         Ok(pin_token)
