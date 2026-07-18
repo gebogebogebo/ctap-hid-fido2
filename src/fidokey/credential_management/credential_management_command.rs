@@ -2,7 +2,7 @@ use super::super::sub_command_base::SubCommandBase;
 use crate::public_key_credential_descriptor::PublicKeyCredentialDescriptor;
 use crate::public_key_credential_user_entity::PublicKeyCredentialUserEntity;
 use crate::util_ciborium::ToValue;
-use crate::{ctapdef, encrypt::enc_hmac_sha_256, fidokey::common, pintoken};
+use crate::{ctapdef, fidokey::common, pin_uv_auth_protocol, pintoken};
 use anyhow::Result;
 use ciborium::value::Value;
 use strum_macros::EnumProperty;
@@ -85,7 +85,7 @@ pub fn create_payload(
         let mut message = vec![sub_command.id()?];
         message.append(&mut sub_command_params_cbor.to_vec());
 
-        let pin_uv_auth_param = enc_hmac_sha_256::compute_pin_uv_auth_param(
+        let pin_uv_auth_param = pin_uv_auth_protocol::compute_pin_uv_auth_param(
             &pin_token.key,
             &message,
             pin_protocol_version,

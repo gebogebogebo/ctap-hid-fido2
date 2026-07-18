@@ -8,9 +8,9 @@ use crate::crypto::rand::SecureRandom;
 use crate::ctaphid;
 use crate::encrypt::cose;
 use crate::encrypt::enc_aes256_cbc;
-use crate::encrypt::enc_hmac_sha_256;
 use crate::encrypt::shared_secret::SharedSecret;
 use crate::encrypt::shared_secret2::SharedSecret2;
+use crate::pin_uv_auth_protocol::{self, PinUvAuthProtocol};
 use crate::pintoken::PinToken;
 use anyhow::{anyhow, Result};
 
@@ -27,7 +27,7 @@ impl FidoKeyHid {
     pub fn create_pin_auth(&self, pin: &str, client_data_hash: &[u8]) -> Result<Vec<u8>> {
         let pin_token = self.get_pin_token(pin)?;
 
-        enc_hmac_sha_256::compute_pin_uv_auth_param(
+        pin_uv_auth_protocol::compute_pin_uv_auth_param(
             &pin_token.key,
             client_data_hash,
             self.pin_protocol_version,
@@ -41,44 +41,45 @@ impl FidoKeyHid {
 
         let authenticator_key_agreement = self.get_authenticator_key_agreement()?;
 
-        let pin_token_dec = if self.pin_protocol_version == 1 {
-            let shared_secret = SharedSecret::new(&authenticator_key_agreement)?;
-            let pin_hash_enc = shared_secret.encrypt_pin(pin)?;
+        let pin_token_dec = match PinUvAuthProtocol::from_version(self.pin_protocol_version)? {
+            PinUvAuthProtocol::One => {
+                let shared_secret = SharedSecret::new(&authenticator_key_agreement)?;
+                let pin_hash_enc = shared_secret.encrypt_pin(pin)?;
 
-            let send_payload = client_pin_command::create_payload_get_pin_token(
-                &shared_secret.public_key,
-                &pin_hash_enc,
-                self.pin_protocol_version,
-            )?;
+                let send_payload = client_pin_command::create_payload_get_pin_token(
+                    &shared_secret.public_key,
+                    &pin_hash_enc,
+                    self.pin_protocol_version,
+                )?;
 
-            let response_cbor = ctaphid::ctaphid_cbor(self, &send_payload)?;
+                let response_cbor = ctaphid::ctaphid_cbor(self, &send_payload)?;
 
-            // get pin_token (enc)
-            let mut pin_token_enc =
-                client_pin_response::parse_cbor_client_pin_get_pin_token(&response_cbor)?;
+                // get pin_token (enc)
+                let mut pin_token_enc =
+                    client_pin_response::parse_cbor_client_pin_get_pin_token(&response_cbor)?;
 
-            // pintoken -> dec(pintoken)
-            shared_secret.decrypt_token(&mut pin_token_enc)?
-        } else if self.pin_protocol_version == 2 {
-            let shared_secret = SharedSecret2::new(&authenticator_key_agreement)?;
-            let pin_hash_enc = shared_secret.encrypt_pin(pin)?;
+                // pintoken -> dec(pintoken)
+                shared_secret.decrypt_token(&mut pin_token_enc)?
+            }
+            PinUvAuthProtocol::Two => {
+                let shared_secret = SharedSecret2::new(&authenticator_key_agreement)?;
+                let pin_hash_enc = shared_secret.encrypt_pin(pin)?;
 
-            let send_payload = client_pin_command::create_payload_get_pin_token(
-                &shared_secret.public_key,
-                &pin_hash_enc,
-                self.pin_protocol_version,
-            )?;
+                let send_payload = client_pin_command::create_payload_get_pin_token(
+                    &shared_secret.public_key,
+                    &pin_hash_enc,
+                    self.pin_protocol_version,
+                )?;
 
-            let response_cbor = ctaphid::ctaphid_cbor(self, &send_payload)?;
+                let response_cbor = ctaphid::ctaphid_cbor(self, &send_payload)?;
 
-            // get pin_token (enc)
-            let pin_token_enc =
-                client_pin_response::parse_cbor_client_pin_get_pin_token(&response_cbor)?;
+                // get pin_token (enc)
+                let pin_token_enc =
+                    client_pin_response::parse_cbor_client_pin_get_pin_token(&response_cbor)?;
 
-            // pintoken -> dec(pintoken)
-            shared_secret.decrypt_token(&pin_token_enc)?
-        } else {
-            return Err(anyhow!("unknown pin_protocol_version"));
+                // pintoken -> dec(pintoken)
+                shared_secret.decrypt_token(&pin_token_enc)?
+            }
         };
 
         Ok(pin_token_dec)
@@ -95,52 +96,53 @@ impl FidoKeyHid {
 
         let authenticator_key_agreement = self.get_authenticator_key_agreement()?;
 
-        let pin_token_dec = if self.pin_protocol_version == 1 {
-            // Get pinHashEnc
-            // - shared_secret.public_key -> platform KeyAgreement
-            let shared_secret = SharedSecret::new(&authenticator_key_agreement)?;
-            let pin_hash_enc = shared_secret.encrypt_pin(pin)?;
+        let pin_token_dec = match PinUvAuthProtocol::from_version(self.pin_protocol_version)? {
+            PinUvAuthProtocol::One => {
+                // Get pinHashEnc
+                // - shared_secret.public_key -> platform KeyAgreement
+                let shared_secret = SharedSecret::new(&authenticator_key_agreement)?;
+                let pin_hash_enc = shared_secret.encrypt_pin(pin)?;
 
-            // Get pin token
-            let send_payload =
-                client_pin_command::create_payload_get_pin_uv_auth_token_using_pin_with_permissions(
-                    &shared_secret.public_key,
-                    &pin_hash_enc,
-                    permission,
-                    self.pin_protocol_version,
-                )?;
-            let response_cbor = ctaphid::ctaphid_cbor(self, &send_payload)?;
+                // Get pin token
+                let send_payload =
+                    client_pin_command::create_payload_get_pin_uv_auth_token_using_pin_with_permissions(
+                        &shared_secret.public_key,
+                        &pin_hash_enc,
+                        permission,
+                        self.pin_protocol_version,
+                    )?;
+                let response_cbor = ctaphid::ctaphid_cbor(self, &send_payload)?;
 
-            // get pin_token (enc)
-            let mut pin_token_enc =
-                client_pin_response::parse_cbor_client_pin_get_pin_token(&response_cbor)?;
+                // get pin_token (enc)
+                let mut pin_token_enc =
+                    client_pin_response::parse_cbor_client_pin_get_pin_token(&response_cbor)?;
 
-            // pintoken -> dec(pintoken)
-            shared_secret.decrypt_token(&mut pin_token_enc)?
-        } else if self.pin_protocol_version == 2 {
-            // Get pinHashEnc
-            // - shared_secret.public_key -> platform KeyAgreement
-            let shared_secret = SharedSecret2::new(&authenticator_key_agreement)?;
-            let pin_hash_enc = shared_secret.encrypt_pin(pin)?;
+                // pintoken -> dec(pintoken)
+                shared_secret.decrypt_token(&mut pin_token_enc)?
+            }
+            PinUvAuthProtocol::Two => {
+                // Get pinHashEnc
+                // - shared_secret.public_key -> platform KeyAgreement
+                let shared_secret = SharedSecret2::new(&authenticator_key_agreement)?;
+                let pin_hash_enc = shared_secret.encrypt_pin(pin)?;
 
-            // Get pin token
-            let send_payload =
-                client_pin_command::create_payload_get_pin_uv_auth_token_using_pin_with_permissions(
-                    &shared_secret.public_key,
-                    &pin_hash_enc,
-                    permission,
-                    self.pin_protocol_version,
-                )?;
-            let response_cbor = ctaphid::ctaphid_cbor(self, &send_payload)?;
+                // Get pin token
+                let send_payload =
+                    client_pin_command::create_payload_get_pin_uv_auth_token_using_pin_with_permissions(
+                        &shared_secret.public_key,
+                        &pin_hash_enc,
+                        permission,
+                        self.pin_protocol_version,
+                    )?;
+                let response_cbor = ctaphid::ctaphid_cbor(self, &send_payload)?;
 
-            // get pin_token (enc)
-            let pin_token_enc =
-                client_pin_response::parse_cbor_client_pin_get_pin_token(&response_cbor)?;
+                // get pin_token (enc)
+                let pin_token_enc =
+                    client_pin_response::parse_cbor_client_pin_get_pin_token(&response_cbor)?;
 
-            // pintoken -> dec(pintoken)
-            shared_secret.decrypt_token(&pin_token_enc)?
-        } else {
-            return Err(anyhow!("unknown pin_protocol_version"));
+                // pintoken -> dec(pintoken)
+                shared_secret.decrypt_token(&pin_token_enc)?
+            }
         };
 
         Ok(pin_token_dec)
@@ -160,25 +162,27 @@ impl FidoKeyHid {
             client_pin_response::parse_cbor_client_pin_get_keyagreement(&response_cbor)?;
 
         // get public_key, pin_auth, new_pin_enc
-        let (public_key, pin_auth, new_pin_enc) = if self.pin_protocol_version == 1 {
-            let shared_secret = SharedSecret::new(&key_agreement)?;
+        let (public_key, pin_auth, new_pin_enc) =
+            match PinUvAuthProtocol::from_version(self.pin_protocol_version)? {
+                PinUvAuthProtocol::One => {
+                    let shared_secret = SharedSecret::new(&key_agreement)?;
 
-            let new_pin_enc = create_new_pin_enc(&shared_secret, pin)?;
+                    let new_pin_enc = create_new_pin_enc(&shared_secret, pin)?;
 
-            let pin_auth = create_pin_auth_for_set_pin(&shared_secret, &new_pin_enc)?;
+                    let pin_auth = create_pin_auth_for_set_pin(&shared_secret, &new_pin_enc)?;
 
-            (shared_secret.public_key, pin_auth, new_pin_enc)
-        } else if self.pin_protocol_version == 2 {
-            let shared_secret = SharedSecret2::new(&key_agreement)?;
+                    (shared_secret.public_key, pin_auth, new_pin_enc)
+                }
+                PinUvAuthProtocol::Two => {
+                    let shared_secret = SharedSecret2::new(&key_agreement)?;
 
-            let new_pin_enc = create_new_pin_enc2(&shared_secret, pin)?;
+                    let new_pin_enc = create_new_pin_enc2(&shared_secret, pin)?;
 
-            let pin_auth = create_pin_auth_for_set_pin2(&shared_secret, &new_pin_enc)?;
+                    let pin_auth = create_pin_auth_for_set_pin2(&shared_secret, &new_pin_enc)?;
 
-            (shared_secret.public_key, pin_auth, new_pin_enc)
-        } else {
-            return Err(anyhow!("unknown pin_protocol_version"));
-        };
+                    (shared_secret.public_key, pin_auth, new_pin_enc)
+                }
+            };
 
         // set new pin
         let send_payload = client_pin_command::create_payload_set_pin(
@@ -211,52 +215,53 @@ impl FidoKeyHid {
 
         // get public_key, pin_auth, new_pin_enc, current_pin_hash_enc
         let (public_key, pin_auth, new_pin_enc, current_pin_hash_enc) =
-            if self.pin_protocol_version == 1 {
-                let shared_secret = SharedSecret::new(&key_agreement)?;
+            match PinUvAuthProtocol::from_version(self.pin_protocol_version)? {
+                PinUvAuthProtocol::One => {
+                    let shared_secret = SharedSecret::new(&key_agreement)?;
 
-                let current_pin_hash_enc = shared_secret.encrypt_pin(current_pin)?;
+                    let current_pin_hash_enc = shared_secret.encrypt_pin(current_pin)?;
 
-                let new_pin_enc = create_new_pin_enc(&shared_secret, new_pin)?;
+                    let new_pin_enc = create_new_pin_enc(&shared_secret, new_pin)?;
 
-                let pin_auth = create_pin_auth_for_change_pin(
-                    &shared_secret,
-                    &new_pin_enc,
-                    &current_pin_hash_enc,
-                )?;
+                    let pin_auth = create_pin_auth_for_change_pin(
+                        &shared_secret,
+                        &new_pin_enc,
+                        &current_pin_hash_enc,
+                    )?;
 
-                (
-                    shared_secret.public_key,
-                    pin_auth,
-                    new_pin_enc,
-                    current_pin_hash_enc.into(),
-                )
-            } else if self.pin_protocol_version == 2 {
-                // https://fidoalliance.org/specs/fido-v2.1-ps-20210615/fido-client-to-authenticator-protocol-v2.1-ps-20210615.html#changingExistingPin
-                // 6.5.5.6. Changing existing PIN
+                    (
+                        shared_secret.public_key,
+                        pin_auth,
+                        new_pin_enc,
+                        current_pin_hash_enc.into(),
+                    )
+                }
+                PinUvAuthProtocol::Two => {
+                    // https://fidoalliance.org/specs/fido-v2.1-ps-20210615/fido-client-to-authenticator-protocol-v2.1-ps-20210615.html#changingExistingPin
+                    // 6.5.5.6. Changing existing PIN
 
-                let shared_secret = SharedSecret2::new(&key_agreement)?;
+                    let shared_secret = SharedSecret2::new(&key_agreement)?;
 
-                // 4. pinHashEnc: The result of calling encrypt(shared secret, LEFT(SHA-256(curPin), 16)).
-                let current_pin_hash_enc = shared_secret.encrypt_pin(current_pin)?;
+                    // 4. pinHashEnc: The result of calling encrypt(shared secret, LEFT(SHA-256(curPin), 16)).
+                    let current_pin_hash_enc = shared_secret.encrypt_pin(current_pin)?;
 
-                // 5. newPinEnc: the result of calling encrypt(shared secret, paddedPin) where paddedPin is newPin padded on the right with 0x00 bytes to make it 64 bytes long. (Since the maximum length of newPin is 63 bytes, there is always at least one byte of padding.)
-                let new_pin_enc = create_new_pin_enc2(&shared_secret, new_pin)?;
+                    // 5. newPinEnc: the result of calling encrypt(shared secret, paddedPin) where paddedPin is newPin padded on the right with 0x00 bytes to make it 64 bytes long. (Since the maximum length of newPin is 63 bytes, there is always at least one byte of padding.)
+                    let new_pin_enc = create_new_pin_enc2(&shared_secret, new_pin)?;
 
-                // 6. pinUvAuthParam: the result of calling authenticate(shared secret, newPinEnc || pinHashEnc).
-                let pin_auth = create_pin_auth_for_change_pin2(
-                    &shared_secret,
-                    &new_pin_enc,
-                    &current_pin_hash_enc,
-                )?;
+                    // 6. pinUvAuthParam: the result of calling authenticate(shared secret, newPinEnc || pinHashEnc).
+                    let pin_auth = create_pin_auth_for_change_pin2(
+                        &shared_secret,
+                        &new_pin_enc,
+                        &current_pin_hash_enc,
+                    )?;
 
-                (
-                    shared_secret.public_key,
-                    pin_auth,
-                    new_pin_enc,
-                    current_pin_hash_enc,
-                )
-            } else {
-                return Err(anyhow!("unknown pin_protocol_version"));
+                    (
+                        shared_secret.public_key,
+                        pin_auth,
+                        new_pin_enc,
+                        current_pin_hash_enc,
+                    )
+                }
             };
 
         let send_payload = client_pin_command::create_payload_change_pin(
@@ -277,14 +282,14 @@ fn create_pin_auth_for_set_pin(
     shared_secret: &SharedSecret,
     new_pin_enc: &[u8],
 ) -> Result<Vec<u8>> {
-    enc_hmac_sha_256::compute_pin_uv_auth_param(&shared_secret.secret, new_pin_enc, 1)
+    pin_uv_auth_protocol::compute_pin_uv_auth_param(&shared_secret.secret, new_pin_enc, 1)
 }
 
 fn create_pin_auth_for_set_pin2(
     shared_secret: &SharedSecret2,
     new_pin_enc: &[u8],
 ) -> Result<Vec<u8>> {
-    enc_hmac_sha_256::compute_pin_uv_auth_param(&shared_secret.secret[0..32], new_pin_enc, 2)
+    pin_uv_auth_protocol::compute_pin_uv_auth_param(&shared_secret.secret[0..32], new_pin_enc, 2)
 }
 
 fn create_pin_auth_for_change_pin(
@@ -297,7 +302,7 @@ fn create_pin_auth_for_change_pin(
     message.append(&mut new_pin_enc.to_vec());
     message.append(&mut current_pin_hash_enc.to_vec());
 
-    enc_hmac_sha_256::compute_pin_uv_auth_param(&shared_secret.secret, &message, 1)
+    pin_uv_auth_protocol::compute_pin_uv_auth_param(&shared_secret.secret, &message, 1)
 }
 
 fn create_pin_auth_for_change_pin2(
@@ -310,7 +315,7 @@ fn create_pin_auth_for_change_pin2(
     message.append(&mut new_pin_enc.to_vec());
     message.append(&mut current_pin_hash_enc.to_vec());
 
-    enc_hmac_sha_256::compute_pin_uv_auth_param(&shared_secret.secret[0..32], &message, 2)
+    pin_uv_auth_protocol::compute_pin_uv_auth_param(&shared_secret.secret[0..32], &message, 2)
 }
 
 fn padding_pin_64(pin: &str) -> Result<Vec<u8>> {

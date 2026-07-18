@@ -18,6 +18,7 @@ mod encrypt {
     pub mod shared_secret2;
 }
 mod hmac_ext;
+mod pin_uv_auth_protocol;
 mod pintoken;
 pub mod public_key;
 pub mod public_key_credential_descriptor;
@@ -134,7 +135,7 @@ mod tests {
                 .unwrap();
         let check = "F0AC99D6AAD2E199AF9CF25F6568A6F5".to_string();
         let pin_auth =
-            encrypt::enc_hmac_sha_256::compute_pin_uv_auth_param(&out_bytes, &client_data_hash, 1)
+            pin_uv_auth_protocol::compute_pin_uv_auth_param(&out_bytes, &client_data_hash, 1)
                 .unwrap();
         assert_eq!(pin_auth.len(), 16);
         assert_eq!(check, hex::encode(pin_auth).to_uppercase());
@@ -151,7 +152,7 @@ mod tests {
         let check =
             "F0AC99D6AAD2E199AF9CF25F6568A6F555D6394CDC35D81573D71A3B3CB275F3".to_string();
         let pin_auth =
-            encrypt::enc_hmac_sha_256::compute_pin_uv_auth_param(&out_bytes, &client_data_hash, 2)
+            pin_uv_auth_protocol::compute_pin_uv_auth_param(&out_bytes, &client_data_hash, 2)
                 .unwrap();
         assert_eq!(pin_auth.len(), 32);
         assert_eq!(check, hex::encode(pin_auth).to_uppercase());
@@ -164,7 +165,7 @@ mod tests {
             hex::decode("E61E2BD6C4612662960B159CD54CF8EFF1A998C89B3742519D11F85E0F5E7876")
                 .unwrap();
         let result =
-            encrypt::enc_hmac_sha_256::compute_pin_uv_auth_param(&out_bytes, &client_data_hash, 3);
+            pin_uv_auth_protocol::compute_pin_uv_auth_param(&out_bytes, &client_data_hash, 3);
         assert!(result.is_err());
     }
 

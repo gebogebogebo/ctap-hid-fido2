@@ -1,13 +1,13 @@
 use crate::ctaphid;
 use crate::encrypt::cose::CoseKey;
-use crate::encrypt::enc_hmac_sha_256;
 use crate::encrypt::shared_secret::SharedSecret;
 use crate::encrypt::shared_secret2::SharedSecret2;
 use crate::fidokey::pin::{
     create_payload, parse_cbor_client_pin_get_keyagreement, SubCommand as PinCmd,
 };
+use crate::pin_uv_auth_protocol::{self, PinUvAuthProtocol};
 use crate::FidoKeyHid;
-use anyhow::{anyhow, Result};
+use anyhow::Result;
 
 /// A PIN/UV Auth Protocol shared secret, in whichever protocol version was negotiated.
 ///
@@ -29,10 +29,9 @@ impl Default for PinUvAuthSharedSecret {
 
 impl PinUvAuthSharedSecret {
     pub fn new(pin_protocol_version: u8, key_agreement: &CoseKey) -> Result<Self> {
-        match pin_protocol_version {
-            1 => Ok(Self::One(SharedSecret::new(key_agreement)?)),
-            2 => Ok(Self::Two(SharedSecret2::new(key_agreement)?)),
-            _ => Err(anyhow!("unknown pin_protocol_version")),
+        match PinUvAuthProtocol::from_version(pin_protocol_version)? {
+            PinUvAuthProtocol::One => Ok(Self::One(SharedSecret::new(key_agreement)?)),
+            PinUvAuthProtocol::Two => Ok(Self::Two(SharedSecret2::new(key_agreement)?)),
         }
     }
 
@@ -45,8 +44,8 @@ impl PinUvAuthSharedSecret {
 
     pub fn pin_protocol_version(&self) -> u8 {
         match self {
-            Self::One(_) => 1,
-            Self::Two(_) => 2,
+            Self::One(_) => PinUvAuthProtocol::One.version(),
+            Self::Two(_) => PinUvAuthProtocol::Two.version(),
         }
     }
 
@@ -77,7 +76,7 @@ impl PinUvAuthSharedSecret {
 
     /// authenticate(key, message) → pinUvAuthParam, per the negotiated protocol version.
     pub fn authenticate(&self, message: &[u8]) -> Result<Vec<u8>> {
-        enc_hmac_sha_256::compute_pin_uv_auth_param(
+        pin_uv_auth_protocol::compute_pin_uv_auth_param(
             self.auth_key(),
             message,
             self.pin_protocol_version(),

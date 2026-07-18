@@ -1,7 +1,7 @@
 use super::super::sub_command_base::SubCommandBase;
 use super::bio_enrollment_params::TemplateInfo;
 use crate::util_ciborium::ToValue;
-use crate::{ctapdef, encrypt::enc_hmac_sha_256, fidokey::common, pintoken::PinToken};
+use crate::{ctapdef, fidokey::common, pin_uv_auth_protocol, pintoken::PinToken};
 use anyhow::Result;
 use ciborium::value::Value;
 use strum_macros::EnumProperty;
@@ -132,7 +132,7 @@ fn create_pin_auth_param(
     let mut message = vec![0x01_u8]; // fingerprint modality
     message.push(sub_cmd_id);
     message.extend_from_slice(sub_command_params_cbor);
-    enc_hmac_sha_256::compute_pin_uv_auth_param(&pin_token.key, &message, pin_protocol_version)
+    pin_uv_auth_protocol::compute_pin_uv_auth_param(&pin_token.key, &message, pin_protocol_version)
 }
 
 /// Create template info parameter

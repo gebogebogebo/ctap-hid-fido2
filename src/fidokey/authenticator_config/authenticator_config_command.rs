@@ -1,6 +1,6 @@
 use super::super::sub_command_base::SubCommandBase;
 use crate::util_ciborium::ToValue;
-use crate::{ctapdef, encrypt::enc_hmac_sha_256, fidokey::common, pintoken};
+use crate::{ctapdef, fidokey::common, pin_uv_auth_protocol, pintoken};
 
 use anyhow::Result;
 use ciborium::value::Value;
@@ -117,5 +117,5 @@ fn create_pin_uv_auth_param(
     message.append(&mut vec![sub_command.id()?]);
     message.append(&mut sub_command_params_cbor.to_vec());
 
-    enc_hmac_sha_256::compute_pin_uv_auth_param(&pin_token.key, &message, pin_protocol_version)
+    pin_uv_auth_protocol::compute_pin_uv_auth_param(&pin_token.key, &message, pin_protocol_version)
 }
