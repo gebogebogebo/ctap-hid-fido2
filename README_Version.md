@@ -1,4 +1,14 @@
 ## Version
+### Ver 3.5.12
+- Addressed [issue #126](https://github.com/gebogebogebo/ctap-hid-fido2/issues/126).
+- Addressed [pull request #133](https://github.com/gebogebogebo/ctap-hid-fido2/pull/133).
+  - Fixed `non_discoverable_credentials` (make_credential / get_assertion) failing under [PIN/UV Auth Protocol Two](https://fidoalliance.org/specs/fido-v2.1-ps-20210615/fido-client-to-authenticator-protocol-v2.1-ps-20210615.html#pinProto2): `pinUvAuthParam` was always truncated to 16 bytes regardless of the negotiated protocol; Protocol Two now correctly returns the full 32-byte HMAC-SHA-256 output.
+  - Fixed the same truncation bug in bio enrollment, credential management, large blobs, and authenticator config commands.
+  - Fixed the `hmac-secret` extension to be PIN/UV Auth Protocol-aware (it previously always used Protocol One's shared-secret derivation/truncation regardless of the negotiated protocol).
+  - Centralized PIN/UV Auth Protocol version validation and shared-secret handling into a single module, removing duplicated per-protocol branching across the PIN, bio enrollment, credential management, large blobs, and authenticator config code paths.
+  - example: [test-with-pin-non-rk](examples/test-with-pin-non-rk/main.rs) / [test-with-pin-rk](examples/test-with-pin-rk/main.rs) now exercise both PIN/UV Auth Protocol One and Two.
+- Dependency Updates.
+
 ### Ver 3.5.11
 - Addressed [issue #127](https://github.com/gebogebogebo/ctap-hid-fido2/issues/127).
 - Addressed [pull request #128](https://github.com/gebogebogebo/ctap-hid-fido2/pull/128).
