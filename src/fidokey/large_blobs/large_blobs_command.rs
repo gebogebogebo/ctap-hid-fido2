@@ -1,6 +1,6 @@
 use crate::crypto::digest;
 use crate::util_ciborium::ToValue;
-use crate::{ctapdef, encrypt::enc_hmac_sha_256, fidokey::common, pintoken::PinToken};
+use crate::{ctapdef, fidokey::common, pin_uv_auth_protocol, pintoken::PinToken};
 use anyhow::Result;
 
 pub fn create_payload(
@@ -51,8 +51,11 @@ pub fn create_payload(
                 let hash = digest::digest(&digest::SHA256, &large_blob_array);
                 message.append(&mut hash.as_ref().to_vec());
 
-                let sig = enc_hmac_sha_256::authenticate(&pin_token.key, &message);
-                sig[0..16].to_vec()
+                pin_uv_auth_protocol::compute_pin_uv_auth_param(
+                    &pin_token.key,
+                    &message,
+                    pin_protocol_version,
+                )?
             };
 
             map.push((0x05.to_value(), pin_uv_auth_param.to_value()));

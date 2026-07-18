@@ -1,6 +1,6 @@
 use super::super::sub_command_base::SubCommandBase;
 use crate::util_ciborium::ToValue;
-use crate::{ctapdef, encrypt::enc_hmac_sha_256, fidokey::common, pintoken};
+use crate::{ctapdef, fidokey::common, pin_uv_auth_protocol, pintoken};
 
 use anyhow::Result;
 use ciborium::value::Value;
@@ -41,8 +41,12 @@ pub fn create_payload(
     let sub_command_params = create_sub_command_params(&sub_command)?;
 
     // 0x04: pinUvAuthParam
-    let pin_uv_auth_param =
-        create_pin_uv_auth_param(&pin_token, &sub_command, &sub_command_params.1)?;
+    let pin_uv_auth_param = create_pin_uv_auth_param(
+        &pin_token,
+        &sub_command,
+        &sub_command_params.1,
+        pin_protocol_version,
+    )?;
 
     // Create CBOR map
     let mut auth_config = vec![
@@ -103,6 +107,7 @@ fn create_pin_uv_auth_param(
     pin_token: &pintoken::PinToken,
     sub_command: &SubCommand,
     sub_command_params_cbor: &[u8],
+    pin_protocol_version: u8,
 ) -> Result<Vec<u8>> {
     // pinUvAuthParam (0x04)
     // - authenticate(pinUvAuthToken, 32×0xff || 0x0d || uint8(subCommand) || subCommandParams).
@@ -112,6 +117,5 @@ fn create_pin_uv_auth_param(
     message.append(&mut vec![sub_command.id()?]);
     message.append(&mut sub_command_params_cbor.to_vec());
 
-    let sig = enc_hmac_sha_256::authenticate(&pin_token.key, &message);
-    Ok(sig[0..16].to_vec())
+    pin_uv_auth_protocol::compute_pin_uv_auth_param(&pin_token.key, &message, pin_protocol_version)
 }

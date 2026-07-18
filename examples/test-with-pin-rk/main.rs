@@ -118,22 +118,39 @@ fn main() -> Result<()> {
         return Ok(());
     }
 
-    let device = FidoKeyHidFactory::create(&cfg)?;
+    let mut device = FidoKeyHidFactory::create(&cfg)?;
 
-    //
-    // Builder Pattern Sample
-    //
-    discoverable_credentials(&device, "test-rk.com", pin)
-        .unwrap_or_else(|err| print_error_with_count(&format!("Error => {}\n", err), true));
+    for pin_protocol_version in [1u8, 2u8] {
+        print_section(&format!(
+            "===== PIN/UV Auth Protocol {} =====",
+            pin_protocol_version
+        ));
 
-    with_cred_blob_ex(&device, "test-rk-2.com", pin)
-        .unwrap_or_else(|err| print_error_with_count(&format!("Error => {}\n", err), true));
+        if pin_protocol_version == 2 {
+            if !device.set_pin_uv_auth_protocol_two()? {
+                print_info("pin_protocol_two not supported, skipping.");
+                println!();
+                continue;
+            }
+        } else {
+            device.pin_protocol_version = 1;
+        }
 
-    //
-    // Legacy Pattern Sample
-    //
-    legacy_discoverable_credentials(&device, "test-rk-legacy.com", pin)
-        .unwrap_or_else(|err| print_error_with_count(&format!("Error => {}\n", err), true));
+        //
+        // Builder Pattern Sample
+        //
+        discoverable_credentials(&device, "test-rk.com", pin)
+            .unwrap_or_else(|err| print_error_with_count(&format!("Error => {}\n", err), true));
+
+        with_cred_blob_ex(&device, "test-rk-2.com", pin)
+            .unwrap_or_else(|err| print_error_with_count(&format!("Error => {}\n", err), true));
+
+        //
+        // Legacy Pattern Sample
+        //
+        legacy_discoverable_credentials(&device, "test-rk-legacy.com", pin)
+            .unwrap_or_else(|err| print_error_with_count(&format!("Error => {}\n", err), true));
+    }
 
     print_test_summary();
     print_section("----- test-with-pin-rk end -----");

@@ -8,6 +8,7 @@ use anyhow::{anyhow, Error, Result};
 
 use crate::crypto::{agreement, digest, hkdf, rand};
 
+#[derive(Debug, Clone)]
 pub struct SharedSecret2 {
     pub secret: [u8; 64],
     pub public_key: CoseKey,
@@ -66,16 +67,15 @@ impl SharedSecret2 {
         // Generate demPlaintext from pin
         let hash = digest::digest(&digest::SHA256, pin.as_bytes());
         let dem_plaintext = &hash.as_ref()[0..16];
+        self.encrypt(dem_plaintext)
+    }
 
-        //
-        // https://fidoalliance.org/specs/fido-v2.1-ps-20210615/fido-client-to-authenticator-protocol-v2.1-ps-20210615.html#pinProto2
-        //
-        // 6.5.7. PIN/UV Auth Protocol Two
-        // [encrypt(key, demPlaintext) → ciphertext]
-        //
-
+    /// 6.5.7. PIN/UV Auth Protocol Two: encrypt(key, demPlaintext) → ciphertext
+    /// https://fidoalliance.org/specs/fido-v2.1-ps-20210615/fido-client-to-authenticator-protocol-v2.1-ps-20210615.html#pinProto2
+    ///
+    /// `demPlaintext` must be a multiple of the AES block length (16 bytes); no padding is performed.
+    pub fn encrypt(&self, dem_plaintext: &[u8]) -> Result<Vec<u8>> {
         // 1. Discard the first 32 bytes of key. (This selects the AES-key portion of the shared secret.)
-        // Get AES key from the second half of self.secret
         let aes_key = &self.secret[32..];
 
         // 2. Let iv be a 16-byte, random bytestring.
@@ -84,11 +84,10 @@ impl SharedSecret2 {
         rng.fill(&mut iv)
             .map_err(|_| anyhow!("Failed to generate random IV"))?;
 
-        // 3. Let ct be the AES-256-CBC encryption of demPlaintext using key and iv. (No padding is performed as the size of demPlaintext is required to be a multiple of the AES block length.)
+        // 3. Let ct be the AES-256-CBC encryption of demPlaintext using key and iv.
         let ciphertext = enc_aes256_cbc::encrypt_message_with_iv(aes_key, &iv, dem_plaintext);
 
         // 4. Return iv || ct.
-        // Concatenate iv and ct(ciphertext)
         let mut result = vec![];
         result.extend_from_slice(&iv);
         result.extend_from_slice(&ciphertext);
@@ -97,15 +96,13 @@ impl SharedSecret2 {
     }
 
     pub fn decrypt_token(&self, dem_cipher_text: &[u8]) -> Result<PinToken> {
-        //
-        // https://fidoalliance.org/specs/fido-v2.1-ps-20210615/fido-client-to-authenticator-protocol-v2.1-ps-20210615.html#pinProto2
-        //
-        // 6.5.7. PIN/UV Auth Protocol Two
-        // decrypt(key, demCiphertext) → plaintext | error
-        //
+        Ok(PinToken::new(&self.decrypt(dem_cipher_text)?))
+    }
 
+    /// 6.5.7. PIN/UV Auth Protocol Two: decrypt(key, demCiphertext) → plaintext | error
+    /// https://fidoalliance.org/specs/fido-v2.1-ps-20210615/fido-client-to-authenticator-protocol-v2.1-ps-20210615.html#pinProto2
+    pub fn decrypt(&self, dem_cipher_text: &[u8]) -> Result<Vec<u8>> {
         // 1. Discard the first 32 bytes of key. (This selects the AES-key portion of the shared secret.)
-        // Get AES key
         let aes_key = &self.secret[32..];
 
         // 2. If demPlaintext is less than 16 bytes in length, return an error
@@ -125,11 +122,7 @@ impl SharedSecret2 {
         }
 
         // 4. Return the AES-256-CBC decryption of ct using key and iv.
-        let buf = enc_aes256_cbc::decrypt_message_with_iv(aes_key, iv, ciphertext);
-
-        // return
-        let pin_token = PinToken::new(&buf);
-        Ok(pin_token)
+        Ok(enc_aes256_cbc::decrypt_message_with_iv(aes_key, iv, ciphertext))
     }
 }
 
@@ -192,5 +185,24 @@ mod tests {
         let data = vec![0u8; 15]; // Less than 16 bytes
         let result = ss2.decrypt_token(&data);
         assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_encrypt_decrypt_roundtrip_hmac_secret_salt() {
+        // hmac-secret salts are raw 32-or-64-byte plaintext, not a PIN hash,
+        // so this exercises encrypt()/decrypt() directly rather than via encrypt_pin/decrypt_token.
+        let mut secret = [0u8; 64];
+        secret[32..].copy_from_slice(&[7u8; 32]);
+        let ss2 = SharedSecret2 {
+            secret,
+            public_key: CoseKey::default(),
+        };
+
+        let salt = [9u8; 32]; // single hmac-secret salt
+        let salt_enc = ss2.encrypt(&salt).unwrap();
+        assert_eq!(salt_enc.len(), 16 + salt.len()); // iv || ciphertext
+
+        let decrypted = ss2.decrypt(&salt_enc).unwrap();
+        assert_eq!(decrypted, salt);
     }
 }
