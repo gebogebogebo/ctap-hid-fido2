@@ -273,34 +273,18 @@ impl FidoKeyHid {
     }
 }
 
-// pinAuth = LEFT(HMAC-SHA-256(sharedSecret, newPinEnc), 16)
 fn create_pin_auth_for_set_pin(
     shared_secret: &SharedSecret,
     new_pin_enc: &[u8],
 ) -> Result<Vec<u8>> {
-    // HMAC-SHA-256(sharedSecret, newPinEnc)
-    let sig = enc_hmac_sha_256::authenticate(&shared_secret.secret, new_pin_enc);
-
-    // left 16
-    let pin_auth = sig[0..16].to_vec();
-
-    Ok(pin_auth)
+    enc_hmac_sha_256::compute_pin_uv_auth_param(&shared_secret.secret, new_pin_enc, 1)
 }
 
 fn create_pin_auth_for_set_pin2(
     shared_secret: &SharedSecret2,
     new_pin_enc: &[u8],
 ) -> Result<Vec<u8>> {
-    // HMAC-SHA-256(sharedSecret, message)
-    // If key is longer than 32 bytes, discard the excess. (This selects the HMAC-key portion of the shared secret. When key is the pinUvAuthToken, it is exactly 32 bytes long and thus this step has no effect.)
-    let key = shared_secret.secret[0..32].to_vec();
-    let sig = enc_hmac_sha_256::authenticate(&key, new_pin_enc);
-
-    // Return the result of computing HMAC-SHA-256 on key and message.
-    // 32byte
-    let pin_auth = sig.to_vec();
-
-    Ok(pin_auth)
+    enc_hmac_sha_256::compute_pin_uv_auth_param(&shared_secret.secret[0..32], new_pin_enc, 2)
 }
 
 fn create_pin_auth_for_change_pin(
@@ -313,13 +297,7 @@ fn create_pin_auth_for_change_pin(
     message.append(&mut new_pin_enc.to_vec());
     message.append(&mut current_pin_hash_enc.to_vec());
 
-    // HMAC-SHA-256(sharedSecret, message)
-    let sig = enc_hmac_sha_256::authenticate(&shared_secret.secret, &message);
-
-    // left 16
-    let pin_auth = sig[0..16].to_vec();
-
-    Ok(pin_auth)
+    enc_hmac_sha_256::compute_pin_uv_auth_param(&shared_secret.secret, &message, 1)
 }
 
 fn create_pin_auth_for_change_pin2(
@@ -332,16 +310,7 @@ fn create_pin_auth_for_change_pin2(
     message.append(&mut new_pin_enc.to_vec());
     message.append(&mut current_pin_hash_enc.to_vec());
 
-    // HMAC-SHA-256(sharedSecret, message)
-    // If key is longer than 32 bytes, discard the excess. (This selects the HMAC-key portion of the shared secret. When key is the pinUvAuthToken, it is exactly 32 bytes long and thus this step has no effect.)
-    let key = shared_secret.secret[0..32].to_vec();
-    let sig = enc_hmac_sha_256::authenticate(&key, &message);
-
-    // Return the result of computing HMAC-SHA-256 on key and message.
-    // 32byte
-    let pin_auth = sig.to_vec();
-
-    Ok(pin_auth)
+    enc_hmac_sha_256::compute_pin_uv_auth_param(&shared_secret.secret[0..32], &message, 2)
 }
 
 fn padding_pin_64(pin: &str) -> Result<Vec<u8>> {
