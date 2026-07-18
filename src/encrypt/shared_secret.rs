@@ -36,34 +36,28 @@ impl SharedSecret {
         Ok(res)
     }
 
-    pub fn encrypt_pin(&self, pin: &str) -> Result<[u8; 16]> {
-        self.encrypt(pin.as_bytes())
-    }
-
-    pub fn encrypt(&self, data: &[u8]) -> Result<[u8; 16]> {
-        let hash = digest::digest(&digest::SHA256, data);
-        let message = &hash.as_ref()[0..16];
-        let enc = enc_aes256_cbc::encrypt_message(&self.secret, message);
-        let mut out_bytes = [0; 16];
-        out_bytes.copy_from_slice(&enc[0..16]);
-        Ok(out_bytes)
+    pub fn encrypt_pin(&self, pin: &str) -> Result<Vec<u8>> {
+        // pinHashEnc: encrypt(shared secret, LEFT(SHA-256(pin), 16))
+        let hash = digest::digest(&digest::SHA256, pin.as_bytes());
+        let dem_plaintext = &hash.as_ref()[0..16];
+        Ok(self.encrypt(dem_plaintext))
     }
 
     pub fn decrypt_token(&self, data: &[u8]) -> Result<PinToken> {
-        let dec = enc_aes256_cbc::decrypt_message(&self.secret, data);
+        let dec = self.decrypt(data);
         let pin_token = PinToken::new(&dec);
         Ok(pin_token)
     }
 
     /// 6.5.6. PIN/UV Auth Protocol One: encrypt(key, demPlaintext) → ciphertext
     /// AES-256-CBC(key, IV=0, demPlaintext), no padding.
-    pub fn encrypt_raw(&self, dem_plaintext: &[u8]) -> Vec<u8> {
+    pub fn encrypt(&self, dem_plaintext: &[u8]) -> Vec<u8> {
         enc_aes256_cbc::encrypt_message(&self.secret, dem_plaintext)
     }
 
     /// 6.5.6. PIN/UV Auth Protocol One: decrypt(key, demCiphertext) → plaintext
     /// AES-256-CBC(key, IV=0, demCiphertext), no padding.
-    pub fn decrypt_raw(&self, dem_cipher_text: &[u8]) -> Vec<u8> {
+    pub fn decrypt(&self, dem_cipher_text: &[u8]) -> Vec<u8> {
         enc_aes256_cbc::decrypt_message(&self.secret, dem_cipher_text)
     }
 }

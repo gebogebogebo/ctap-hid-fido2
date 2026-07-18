@@ -100,7 +100,7 @@ impl PinUvAuthSharedSecret {
     /// encrypt(key, demPlaintext) → ciphertext, per the negotiated protocol version.
     pub fn encrypt(&self, dem_plaintext: &[u8]) -> Result<Vec<u8>> {
         match self {
-            Self::One(s) => Ok(s.encrypt_raw(dem_plaintext)),
+            Self::One(s) => Ok(s.encrypt(dem_plaintext)),
             Self::Two(s) => s.encrypt(dem_plaintext),
         }
     }
@@ -108,7 +108,7 @@ impl PinUvAuthSharedSecret {
     /// decrypt(key, demCiphertext) → plaintext, per the negotiated protocol version.
     pub fn decrypt(&self, dem_cipher_text: &[u8]) -> Result<Vec<u8>> {
         match self {
-            Self::One(s) => Ok(s.decrypt_raw(dem_cipher_text)),
+            Self::One(s) => Ok(s.decrypt(dem_cipher_text)),
             Self::Two(s) => s.decrypt(dem_cipher_text),
         }
     }
@@ -122,7 +122,7 @@ impl PinUvAuthSharedSecret {
     /// protocol version's PIN-hashing rule (LEFT(SHA-256(pin), 16), then encrypt()).
     pub fn encrypt_pin(&self, pin: &str) -> Result<Vec<u8>> {
         match self {
-            Self::One(s) => Ok(s.encrypt_pin(pin)?.to_vec()),
+            Self::One(s) => s.encrypt_pin(pin),
             Self::Two(s) => s.encrypt_pin(pin),
         }
     }

@@ -50,7 +50,7 @@ impl HmacExt {
         self.salt_auth = shared_secret.authenticate(&self.salt_enc)?;
         //println!("{}", StrBuf::bufh("salt_auth", &self.salt_auth));
 
-        self.pin_protocol_version = shared_secret.pin_protocol_version();
+        self.pin_protocol_version = device.pin_protocol_version;
         self.shared_secret = shared_secret;
 
         Ok(())
