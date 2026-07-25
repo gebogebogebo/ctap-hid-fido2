@@ -118,6 +118,24 @@ pub(crate) fn cbor_value_to_num<T: NumCast>(value: &Value) -> Result<T> {
 }
 
 #[allow(dead_code)]
+pub(crate) fn cbor_value_to_vec_num<T: NumCast>(value: &Value) -> Result<Vec<T>> {
+    if let Value::Array(elements) = value {
+        let mut nums = Vec::new();
+        for element in elements {
+            // Skip elements that aren't an Integer, or don't fit T (e.g. a
+            // negative or out-of-range value), rather than failing the
+            // whole array on one bad element.
+            if let Ok(num) = cbor_value_to_num(element) {
+                nums.push(num);
+            }
+        }
+        Ok(nums)
+    } else {
+        Err(anyhow!("Cast Error: Value is not an Array."))
+    }
+}
+
+#[allow(dead_code)]
 pub(crate) fn cbor_value_to_bool(value: &Value) -> Result<bool> {
     if let Value::Bool(b) = value {
         Ok(*b)

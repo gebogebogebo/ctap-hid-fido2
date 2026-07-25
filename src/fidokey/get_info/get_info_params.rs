@@ -25,7 +25,19 @@ pub struct Info {
     pub uv_modality: u32,
     pub remaining_discoverable_credentials: u32,
     // CTAP 2.2
+    pub certifications: Vec<(String, i32)>,
+    pub vendor_prototype_config_commands: Vec<u32>,
     pub attestation_formats: Vec<String>,
+    pub uv_count_since_last_pin_entry: u32,
+    pub long_touch_for_reset: bool,
+    pub enc_identifier: Vec<u8>,
+    pub transports_for_reset: Vec<String>,
+    pub pin_complexity_policy: bool,
+    pub pin_complexity_policy_url: Vec<u8>,
+    pub max_pin_length: u32,
+    // CTAP 2.3
+    pub enc_cred_store_state: Vec<u8>,
+    pub authenticator_config_commands: Vec<u32>,
 }
 
 impl fmt::Display for Info {
@@ -78,9 +90,41 @@ impl fmt::Display for Info {
                 "- remaining_discoverable_credentials",
                 &format!("{:?}", self.remaining_discoverable_credentials),
             )
+            .append("- certifications", &format!("{:?}", self.certifications))
+            .append(
+                "- vendor_prototype_config_commands",
+                &format!("{:?}", self.vendor_prototype_config_commands),
+            )
             .append(
                 "- attestation_formats",
                 &format!("{:?}", self.attestation_formats),
+            )
+            .append(
+                "- uv_count_since_last_pin_entry",
+                &format!("{:?}", self.uv_count_since_last_pin_entry),
+            )
+            .append(
+                "- long_touch_for_reset",
+                &format!("{:?}", self.long_touch_for_reset),
+            )
+            .appenh("- enc_identifier", &self.enc_identifier)
+            .append(
+                "- transports_for_reset",
+                &format!("{:?}", self.transports_for_reset),
+            )
+            .append(
+                "- pin_complexity_policy",
+                &format!("{:?}", self.pin_complexity_policy),
+            )
+            .appenh(
+                "- pin_complexity_policy_url",
+                &self.pin_complexity_policy_url,
+            )
+            .append("- max_pin_length", &format!("{:?}", self.max_pin_length))
+            .appenh("- enc_cred_store_state", &self.enc_cred_store_state)
+            .append(
+                "- authenticator_config_commands",
+                &format!("{:?}", self.authenticator_config_commands),
             );
 
         write!(f, "{}", strbuf.build())
