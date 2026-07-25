@@ -331,6 +331,18 @@ mod tests {
             ),
             (Value::Integer(0x0D.into()), Value::Integer(4.into())),
             (
+                // A malformed entry (non-text key) alongside a well-formed one:
+                // only the well-formed entry should be kept.
+                Value::Integer(0x13.into()),
+                Value::Map(vec![
+                    (
+                        Value::Text("FIDO_CERTIFIED".to_string()),
+                        Value::Integer(1.into()),
+                    ),
+                    (Value::Integer(0.into()), Value::Integer(1.into())),
+                ]),
+            ),
+            (
                 Value::Integer(0x15.into()),
                 Value::Array(vec![
                     Value::Integer(1.into()),
@@ -343,8 +355,14 @@ mod tests {
                 Value::Integer(0x19.into()),
                 Value::Text("not-bytes".to_string()),
             ),
+            (Value::Integer(0x1A.into()), Value::Integer(1.into())),
             (Value::Integer(0x1B.into()), Value::Integer(1.into())),
+            (
+                Value::Integer(0x1C.into()),
+                Value::Text("not-bytes".to_string()),
+            ),
             (Value::Integer(0x1D.into()), Value::Bool(false)),
+            (Value::Integer(0x1E.into()), Value::Integer(1.into())),
             (
                 Value::Integer(0x1F.into()),
                 Value::Array(vec![Value::Text("bad".to_string())]),
@@ -356,9 +374,10 @@ mod tests {
 
         let info = get_info_response::parse_cbor(&bytes).unwrap();
 
-        // Fields parsed before the malformed ones still come through.
+        // Fields parsed before/around the malformed ones still come through.
         assert_eq!(info.versions, vec!["FIDO_2_1"]);
         assert_eq!(info.min_pin_length, 4);
+        assert_eq!(info.certifications, vec![("FIDO_CERTIFIED".to_string(), 1)]);
 
         // Malformed CTAP 2.2/2.3 members are left at their default value
         // instead of aborting the whole parse.
@@ -366,8 +385,11 @@ mod tests {
         assert_eq!(info.uv_count_since_last_pin_entry, 0);
         assert_eq!(info.long_touch_for_reset, false);
         assert_eq!(info.enc_identifier, Vec::<u8>::new());
+        assert_eq!(info.transports_for_reset, Vec::<String>::new());
         assert_eq!(info.pin_complexity_policy, false);
+        assert_eq!(info.pin_complexity_policy_url, Vec::<u8>::new());
         assert_eq!(info.max_pin_length, 0);
+        assert_eq!(info.enc_cred_store_state, Vec::<u8>::new());
         assert_eq!(info.authenticator_config_commands, Vec::<u32>::new());
     }
 }
