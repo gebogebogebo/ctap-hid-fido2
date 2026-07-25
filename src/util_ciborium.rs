@@ -187,6 +187,11 @@ pub(crate) fn is_bytes(value: &Value) -> bool {
 }
 
 #[allow(dead_code)]
+pub(crate) fn is_bool(value: &Value) -> bool {
+    matches!(value, Value::Bool(_))
+}
+
+#[allow(dead_code)]
 pub(crate) fn integer_to_i64(value: &Value) -> Result<i64> {
     if let Value::Integer(n) = value {
         i64::try_from(*n).map_err(|_| anyhow!("Integer value too large for i64"))

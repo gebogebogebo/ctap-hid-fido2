@@ -315,4 +315,59 @@ mod tests {
         assert_eq!(info.enc_cred_store_state, vec![0xEE, 0xFF]);
         assert_eq!(info.authenticator_config_commands, vec![2, 3]);
     }
+
+    #[test]
+    fn test_get_info_response_parse_cbor_ctap22_23_members_type_mismatch_is_tolerated() {
+        use ciborium::value::Value;
+
+        // A non-conforming authenticator that sends the wrong CBOR type for
+        // several CTAP 2.2/2.3 members must not abort parsing of the whole
+        // response: these optional fields should just be left at their
+        // default value, like any other unrecognized member.
+        let map = Value::Map(vec![
+            (
+                Value::Integer(0x01.into()),
+                Value::Array(vec![Value::Text("FIDO_2_1".to_string())]),
+            ),
+            (Value::Integer(0x0D.into()), Value::Integer(4.into())),
+            (
+                Value::Integer(0x15.into()),
+                Value::Array(vec![
+                    Value::Integer(1.into()),
+                    Value::Text("bad".to_string()),
+                ]),
+            ),
+            (Value::Integer(0x17.into()), Value::Bool(true)),
+            (Value::Integer(0x18.into()), Value::Integer(1.into())),
+            (
+                Value::Integer(0x19.into()),
+                Value::Text("not-bytes".to_string()),
+            ),
+            (Value::Integer(0x1B.into()), Value::Integer(1.into())),
+            (Value::Integer(0x1D.into()), Value::Bool(false)),
+            (
+                Value::Integer(0x1F.into()),
+                Value::Array(vec![Value::Text("bad".to_string())]),
+            ),
+        ]);
+
+        let mut bytes = Vec::new();
+        ciborium::ser::into_writer(&map, &mut bytes).unwrap();
+
+        let info = get_info_response::parse_cbor(&bytes).unwrap();
+
+        // Fields parsed before the malformed ones still come through.
+        assert_eq!(info.versions, vec!["FIDO_2_1"]);
+        assert_eq!(info.min_pin_length, 4);
+
+        // Malformed CTAP 2.2/2.3 members are left at their default value
+        // instead of aborting the whole parse.
+        assert_eq!(info.vendor_prototype_config_commands, vec![1]);
+        assert_eq!(info.uv_count_since_last_pin_entry, 0);
+        assert_eq!(info.long_touch_for_reset, false);
+        assert_eq!(info.enc_identifier, Vec::<u8>::new());
+        assert_eq!(info.pin_complexity_policy, false);
+        assert_eq!(info.max_pin_length, 0);
+        assert_eq!(info.authenticator_config_commands, Vec::<u32>::new());
+    }
 }

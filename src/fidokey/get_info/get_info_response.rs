@@ -68,26 +68,62 @@ pub fn parse_cbor(bytes: &[u8]) -> Result<get_info_params::Info> {
                 if util_ciborium::is_array(val) {
                     let elements = util_ciborium::extract_array_ref(val)?;
                     for element in elements {
-                        info.vendor_prototype_config_commands
-                            .push(util_ciborium::cbor_value_to_num(element)?);
+                        if util_ciborium::is_integer(element) {
+                            info.vendor_prototype_config_commands
+                                .push(util_ciborium::cbor_value_to_num(element)?);
+                        }
                     }
                 }
             }
             0x16 => info.attestation_formats = util_ciborium::cbor_value_to_vec_string(val)?,
-            0x17 => info.uv_count_since_last_pin_entry = util_ciborium::cbor_value_to_num(val)?,
-            0x18 => info.long_touch_for_reset = util_ciborium::cbor_value_to_bool(val)?,
-            0x19 => info.enc_identifier = util_ciborium::cbor_value_to_vec_u8(val)?,
-            0x1A => info.transports_for_reset = util_ciborium::cbor_value_to_vec_string(val)?,
-            0x1B => info.pin_complexity_policy = util_ciborium::cbor_value_to_bool(val)?,
-            0x1C => info.pin_complexity_policy_url = util_ciborium::cbor_value_to_vec_u8(val)?,
-            0x1D => info.max_pin_length = util_ciborium::cbor_value_to_num(val)?,
-            0x1E => info.enc_cred_store_state = util_ciborium::cbor_value_to_vec_u8(val)?,
+            0x17 => {
+                if util_ciborium::is_integer(val) {
+                    info.uv_count_since_last_pin_entry = util_ciborium::cbor_value_to_num(val)?;
+                }
+            }
+            0x18 => {
+                if util_ciborium::is_bool(val) {
+                    info.long_touch_for_reset = util_ciborium::cbor_value_to_bool(val)?;
+                }
+            }
+            0x19 => {
+                if util_ciborium::is_bytes(val) {
+                    info.enc_identifier = util_ciborium::cbor_value_to_vec_u8(val)?;
+                }
+            }
+            0x1A => {
+                if util_ciborium::is_array(val) {
+                    info.transports_for_reset = util_ciborium::cbor_value_to_vec_string(val)?;
+                }
+            }
+            0x1B => {
+                if util_ciborium::is_bool(val) {
+                    info.pin_complexity_policy = util_ciborium::cbor_value_to_bool(val)?;
+                }
+            }
+            0x1C => {
+                if util_ciborium::is_bytes(val) {
+                    info.pin_complexity_policy_url = util_ciborium::cbor_value_to_vec_u8(val)?;
+                }
+            }
+            0x1D => {
+                if util_ciborium::is_integer(val) {
+                    info.max_pin_length = util_ciborium::cbor_value_to_num(val)?;
+                }
+            }
+            0x1E => {
+                if util_ciborium::is_bytes(val) {
+                    info.enc_cred_store_state = util_ciborium::cbor_value_to_vec_u8(val)?;
+                }
+            }
             0x1F => {
                 if util_ciborium::is_array(val) {
                     let elements = util_ciborium::extract_array_ref(val)?;
                     for element in elements {
-                        info.authenticator_config_commands
-                            .push(util_ciborium::cbor_value_to_num(element)?);
+                        if util_ciborium::is_integer(element) {
+                            info.authenticator_config_commands
+                                .push(util_ciborium::cbor_value_to_num(element)?);
+                        }
                     }
                 }
             }
