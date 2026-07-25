@@ -29,11 +29,7 @@ pub fn parse_cbor(bytes: &[u8]) -> Result<get_info_params::Info> {
             0x05 => info.max_msg_size = util_ciborium::cbor_value_to_num(val)?,
             0x06 => {
                 if util_ciborium::is_array(val) {
-                    let elements = util_ciborium::extract_array_ref(val)?;
-                    for element in elements {
-                        info.pin_uv_auth_protocols
-                            .push(util_ciborium::cbor_value_to_num(element)?);
-                    }
+                    info.pin_uv_auth_protocols = util_ciborium::cbor_value_to_vec_num(val)?;
                 }
             }
             0x07 => info.max_credential_count_in_list = util_ciborium::cbor_value_to_num(val)?,
@@ -48,9 +44,6 @@ pub fn parse_cbor(bytes: &[u8]) -> Result<get_info_params::Info> {
             0x10 => info.max_rpids_for_set_min_pin_length = util_ciborium::cbor_value_to_num(val)?,
             0x11 => info.preferred_platform_uv_attempts = util_ciborium::cbor_value_to_num(val)?,
             0x12 => info.uv_modality = util_ciborium::cbor_value_to_num(val)?,
-            0x14 => {
-                info.remaining_discoverable_credentials = util_ciborium::cbor_value_to_num(val)?
-            }
             0x13 => {
                 if util_ciborium::is_map(val) {
                     let elements = util_ciborium::extract_map_ref(val)?;
@@ -64,15 +57,13 @@ pub fn parse_cbor(bytes: &[u8]) -> Result<get_info_params::Info> {
                     }
                 }
             }
+            0x14 => {
+                info.remaining_discoverable_credentials = util_ciborium::cbor_value_to_num(val)?
+            }
             0x15 => {
                 if util_ciborium::is_array(val) {
-                    let elements = util_ciborium::extract_array_ref(val)?;
-                    for element in elements {
-                        if util_ciborium::is_integer(element) {
-                            info.vendor_prototype_config_commands
-                                .push(util_ciborium::cbor_value_to_num(element)?);
-                        }
-                    }
+                    info.vendor_prototype_config_commands =
+                        util_ciborium::cbor_value_to_vec_num(val)?;
                 }
             }
             0x16 => info.attestation_formats = util_ciborium::cbor_value_to_vec_string(val)?,
@@ -118,13 +109,7 @@ pub fn parse_cbor(bytes: &[u8]) -> Result<get_info_params::Info> {
             }
             0x1F => {
                 if util_ciborium::is_array(val) {
-                    let elements = util_ciborium::extract_array_ref(val)?;
-                    for element in elements {
-                        if util_ciborium::is_integer(element) {
-                            info.authenticator_config_commands
-                                .push(util_ciborium::cbor_value_to_num(element)?);
-                        }
-                    }
+                    info.authenticator_config_commands = util_ciborium::cbor_value_to_vec_num(val)?;
                 }
             }
             _ => println!("parse_cbor_member - unknown info {:?}", val),
