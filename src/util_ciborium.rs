@@ -122,8 +122,11 @@ pub(crate) fn cbor_value_to_vec_num<T: NumCast>(value: &Value) -> Result<Vec<T>>
     if let Value::Array(elements) = value {
         let mut nums = Vec::new();
         for element in elements {
-            if is_integer(element) {
-                nums.push(cbor_value_to_num(element)?);
+            // Skip elements that aren't an Integer, or don't fit T (e.g. a
+            // negative or out-of-range value), rather than failing the
+            // whole array on one bad element.
+            if let Ok(num) = cbor_value_to_num(element) {
+                nums.push(num);
             }
         }
         Ok(nums)
@@ -199,11 +202,6 @@ pub(crate) fn is_array(value: &Value) -> bool {
 #[allow(dead_code)]
 pub(crate) fn is_bytes(value: &Value) -> bool {
     matches!(value, Value::Bytes(_))
-}
-
-#[allow(dead_code)]
-pub(crate) fn is_bool(value: &Value) -> bool {
-    matches!(value, Value::Bool(_))
 }
 
 #[allow(dead_code)]

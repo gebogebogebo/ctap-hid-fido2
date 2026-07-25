@@ -392,4 +392,56 @@ mod tests {
         assert_eq!(info.enc_cred_store_state, Vec::<u8>::new());
         assert_eq!(info.authenticator_config_commands, Vec::<u32>::new());
     }
+
+    #[test]
+    fn test_get_info_response_parse_cbor_ctap22_23_members_out_of_range_integer_is_tolerated() {
+        use ciborium::value::Value;
+
+        // These fields ARE CBOR integers (unlike the type-mismatch test
+        // above), but don't fit the target unsigned type (negative, or too
+        // large for u32). This must not abort parsing of the whole
+        // response either.
+        let map = Value::Map(vec![
+            (
+                Value::Integer(0x01.into()),
+                Value::Array(vec![Value::Text("FIDO_2_1".to_string())]),
+            ),
+            (Value::Integer(0x0D.into()), Value::Integer(4.into())),
+            (
+                Value::Integer(0x13.into()),
+                Value::Map(vec![(
+                    Value::Text("FIDO_CERTIFIED".to_string()),
+                    Value::Integer(9_000_000_000i64.into()),
+                )]),
+            ),
+            (
+                Value::Integer(0x15.into()),
+                Value::Array(vec![Value::Integer(1.into()), Value::Integer((-1).into())]),
+            ),
+            (Value::Integer(0x17.into()), Value::Integer((-1).into())),
+            (Value::Integer(0x1D.into()), Value::Integer((-1).into())),
+            (
+                Value::Integer(0x1F.into()),
+                Value::Array(vec![Value::Integer(9_000_000_000i64.into())]),
+            ),
+        ]);
+
+        let mut bytes = Vec::new();
+        ciborium::ser::into_writer(&map, &mut bytes).unwrap();
+
+        let info = get_info_response::parse_cbor(&bytes).unwrap();
+
+        // Fields parsed alongside the out-of-range ones still come through.
+        assert_eq!(info.versions, vec!["FIDO_2_1"]);
+        assert_eq!(info.min_pin_length, 4);
+
+        // The out-of-range entry/element is dropped, well-formed siblings
+        // in the same map/array are kept.
+        assert_eq!(info.certifications, Vec::new());
+        assert_eq!(info.vendor_prototype_config_commands, vec![1]);
+        // Out-of-range scalar fields are left at their default value.
+        assert_eq!(info.uv_count_since_last_pin_entry, 0);
+        assert_eq!(info.max_pin_length, 0);
+        assert_eq!(info.authenticator_config_commands, Vec::<u32>::new());
+    }
 }

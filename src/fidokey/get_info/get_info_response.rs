@@ -28,9 +28,8 @@ pub fn parse_cbor(bytes: &[u8]) -> Result<get_info_params::Info> {
             }
             0x05 => info.max_msg_size = util_ciborium::cbor_value_to_num(val)?,
             0x06 => {
-                if util_ciborium::is_array(val) {
-                    info.pin_uv_auth_protocols = util_ciborium::cbor_value_to_vec_num(val)?;
-                }
+                info.pin_uv_auth_protocols =
+                    util_ciborium::cbor_value_to_vec_num(val).unwrap_or_default()
             }
             0x07 => info.max_credential_count_in_list = util_ciborium::cbor_value_to_num(val)?,
             0x08 => info.max_credential_id_length = util_ciborium::cbor_value_to_num(val)?,
@@ -48,11 +47,15 @@ pub fn parse_cbor(bytes: &[u8]) -> Result<get_info_params::Info> {
                 if util_ciborium::is_map(val) {
                     let elements = util_ciborium::extract_map_ref(val)?;
                     for (key, value) in elements {
-                        if util_ciborium::is_text(key) && util_ciborium::is_integer(value) {
-                            info.certifications.push((
-                                util_ciborium::cbor_value_to_str(key)?,
-                                util_ciborium::cbor_value_to_num(value)?,
-                            ));
+                        if !util_ciborium::is_text(key) {
+                            continue;
+                        }
+                        // Skip entries whose value isn't a fitting integer,
+                        // rather than failing the whole map/parse on one
+                        // bad entry.
+                        if let Ok(level) = util_ciborium::cbor_value_to_num(value) {
+                            info.certifications
+                                .push((util_ciborium::cbor_value_to_str(key)?, level));
                         }
                     }
                 }
@@ -61,56 +64,41 @@ pub fn parse_cbor(bytes: &[u8]) -> Result<get_info_params::Info> {
                 info.remaining_discoverable_credentials = util_ciborium::cbor_value_to_num(val)?
             }
             0x15 => {
-                if util_ciborium::is_array(val) {
-                    info.vendor_prototype_config_commands =
-                        util_ciborium::cbor_value_to_vec_num(val)?;
-                }
+                info.vendor_prototype_config_commands =
+                    util_ciborium::cbor_value_to_vec_num(val).unwrap_or_default()
             }
             0x16 => info.attestation_formats = util_ciborium::cbor_value_to_vec_string(val)?,
             0x17 => {
-                if util_ciborium::is_integer(val) {
-                    info.uv_count_since_last_pin_entry = util_ciborium::cbor_value_to_num(val)?;
-                }
+                info.uv_count_since_last_pin_entry =
+                    util_ciborium::cbor_value_to_num(val).unwrap_or_default()
             }
             0x18 => {
-                if util_ciborium::is_bool(val) {
-                    info.long_touch_for_reset = util_ciborium::cbor_value_to_bool(val)?;
-                }
+                info.long_touch_for_reset =
+                    util_ciborium::cbor_value_to_bool(val).unwrap_or_default()
             }
             0x19 => {
-                if util_ciborium::is_bytes(val) {
-                    info.enc_identifier = util_ciborium::cbor_value_to_vec_u8(val)?;
-                }
+                info.enc_identifier = util_ciborium::cbor_value_to_vec_u8(val).unwrap_or_default()
             }
             0x1A => {
-                if util_ciborium::is_array(val) {
-                    info.transports_for_reset = util_ciborium::cbor_value_to_vec_string(val)?;
-                }
+                info.transports_for_reset =
+                    util_ciborium::cbor_value_to_vec_string(val).unwrap_or_default()
             }
             0x1B => {
-                if util_ciborium::is_bool(val) {
-                    info.pin_complexity_policy = util_ciborium::cbor_value_to_bool(val)?;
-                }
+                info.pin_complexity_policy =
+                    util_ciborium::cbor_value_to_bool(val).unwrap_or_default()
             }
             0x1C => {
-                if util_ciborium::is_bytes(val) {
-                    info.pin_complexity_policy_url = util_ciborium::cbor_value_to_vec_u8(val)?;
-                }
+                info.pin_complexity_policy_url =
+                    util_ciborium::cbor_value_to_vec_u8(val).unwrap_or_default()
             }
-            0x1D => {
-                if util_ciborium::is_integer(val) {
-                    info.max_pin_length = util_ciborium::cbor_value_to_num(val)?;
-                }
-            }
+            0x1D => info.max_pin_length = util_ciborium::cbor_value_to_num(val).unwrap_or_default(),
             0x1E => {
-                if util_ciborium::is_bytes(val) {
-                    info.enc_cred_store_state = util_ciborium::cbor_value_to_vec_u8(val)?;
-                }
+                info.enc_cred_store_state =
+                    util_ciborium::cbor_value_to_vec_u8(val).unwrap_or_default()
             }
             0x1F => {
-                if util_ciborium::is_array(val) {
-                    info.authenticator_config_commands = util_ciborium::cbor_value_to_vec_num(val)?;
-                }
+                info.authenticator_config_commands =
+                    util_ciborium::cbor_value_to_vec_num(val).unwrap_or_default()
             }
             _ => println!("parse_cbor_member - unknown info {:?}", val),
         }
