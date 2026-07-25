@@ -51,7 +51,46 @@ pub fn parse_cbor(bytes: &[u8]) -> Result<get_info_params::Info> {
             0x14 => {
                 info.remaining_discoverable_credentials = util_ciborium::cbor_value_to_num(val)?
             }
+            0x13 => {
+                if util_ciborium::is_map(val) {
+                    let elements = util_ciborium::extract_map_ref(val)?;
+                    for (key, value) in elements {
+                        if util_ciborium::is_text(key) && util_ciborium::is_integer(value) {
+                            info.certifications.push((
+                                util_ciborium::cbor_value_to_str(key)?,
+                                util_ciborium::cbor_value_to_num(value)?,
+                            ));
+                        }
+                    }
+                }
+            }
+            0x15 => {
+                if util_ciborium::is_array(val) {
+                    let elements = util_ciborium::extract_array_ref(val)?;
+                    for element in elements {
+                        info.vendor_prototype_config_commands
+                            .push(util_ciborium::cbor_value_to_num(element)?);
+                    }
+                }
+            }
             0x16 => info.attestation_formats = util_ciborium::cbor_value_to_vec_string(val)?,
+            0x17 => info.uv_count_since_last_pin_entry = util_ciborium::cbor_value_to_num(val)?,
+            0x18 => info.long_touch_for_reset = util_ciborium::cbor_value_to_bool(val)?,
+            0x19 => info.enc_identifier = util_ciborium::cbor_value_to_vec_u8(val)?,
+            0x1A => info.transports_for_reset = util_ciborium::cbor_value_to_vec_string(val)?,
+            0x1B => info.pin_complexity_policy = util_ciborium::cbor_value_to_bool(val)?,
+            0x1C => info.pin_complexity_policy_url = util_ciborium::cbor_value_to_vec_u8(val)?,
+            0x1D => info.max_pin_length = util_ciborium::cbor_value_to_num(val)?,
+            0x1E => info.enc_cred_store_state = util_ciborium::cbor_value_to_vec_u8(val)?,
+            0x1F => {
+                if util_ciborium::is_array(val) {
+                    let elements = util_ciborium::extract_array_ref(val)?;
+                    for element in elements {
+                        info.authenticator_config_commands
+                            .push(util_ciborium::cbor_value_to_num(element)?);
+                    }
+                }
+            }
             _ => println!("parse_cbor_member - unknown info {:?}", val),
         }
     }

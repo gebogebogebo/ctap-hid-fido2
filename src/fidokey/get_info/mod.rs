@@ -257,4 +257,62 @@ mod tests {
         assert_eq!(info.remaining_discoverable_credentials, 0);
         assert_eq!(info.attestation_formats, vec!["packed", "none"]);
     }
+
+    #[test]
+    fn test_get_info_response_parse_cbor_ctap22_and_ctap23_members() {
+        use ciborium::value::Value;
+
+        let map = Value::Map(vec![
+            (
+                Value::Integer(0x01.into()),
+                Value::Array(vec![Value::Text("FIDO_2_1".to_string())]),
+            ),
+            (
+                Value::Integer(0x13.into()),
+                Value::Map(vec![(
+                    Value::Text("FIDO_CERTIFIED".to_string()),
+                    Value::Integer(1.into()),
+                )]),
+            ),
+            (
+                Value::Integer(0x15.into()),
+                Value::Array(vec![Value::Integer(1.into()), Value::Integer(2.into())]),
+            ),
+            (Value::Integer(0x17.into()), Value::Integer(5.into())),
+            (Value::Integer(0x18.into()), Value::Bool(true)),
+            (Value::Integer(0x19.into()), Value::Bytes(vec![0xAA, 0xBB])),
+            (
+                Value::Integer(0x1A.into()),
+                Value::Array(vec![
+                    Value::Text("nfc".to_string()),
+                    Value::Text("usb".to_string()),
+                ]),
+            ),
+            (Value::Integer(0x1B.into()), Value::Bool(true)),
+            (Value::Integer(0x1C.into()), Value::Bytes(vec![0xCC, 0xDD])),
+            (Value::Integer(0x1D.into()), Value::Integer(63.into())),
+            (Value::Integer(0x1E.into()), Value::Bytes(vec![0xEE, 0xFF])),
+            (
+                Value::Integer(0x1F.into()),
+                Value::Array(vec![Value::Integer(2.into()), Value::Integer(3.into())]),
+            ),
+        ]);
+
+        let mut bytes = Vec::new();
+        ciborium::ser::into_writer(&map, &mut bytes).unwrap();
+
+        let info = get_info_response::parse_cbor(&bytes).unwrap();
+
+        assert_eq!(info.certifications, vec![("FIDO_CERTIFIED".to_string(), 1)]);
+        assert_eq!(info.vendor_prototype_config_commands, vec![1, 2]);
+        assert_eq!(info.uv_count_since_last_pin_entry, 5);
+        assert_eq!(info.long_touch_for_reset, true);
+        assert_eq!(info.enc_identifier, vec![0xAA, 0xBB]);
+        assert_eq!(info.transports_for_reset, vec!["nfc", "usb"]);
+        assert_eq!(info.pin_complexity_policy, true);
+        assert_eq!(info.pin_complexity_policy_url, vec![0xCC, 0xDD]);
+        assert_eq!(info.max_pin_length, 63);
+        assert_eq!(info.enc_cred_store_state, vec![0xEE, 0xFF]);
+        assert_eq!(info.authenticator_config_commands, vec![2, 3]);
+    }
 }
