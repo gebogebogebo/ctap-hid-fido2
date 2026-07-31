@@ -49,41 +49,105 @@ fn create_device_with_pin_protocol(cfg: &Cfg, pin_protocol_version: u8) -> Resul
     Ok(device)
 }
 
-fn do_test<F>(f: F)
+/// An `Err` whose message starts with this is "this device doesn't support the
+/// feature", not a failure. Anything else is reported as a failed test.
+const SKIP_PREFIX: &str = "skipped";
+
+/// Run one test, printing its result. Real failures are collected instead of
+/// panicking, so a single failing test no longer aborts the remaining ones.
+fn do_test<F>(name: &str, f: F, failures: &mut Vec<String>)
 where
     F: FnOnce() -> Result<()>,
 {
-    println!("{}", std::any::type_name::<F>());
+    println!("{}", name);
 
     match f() {
         Ok(()) => {
             println!("ok");
         }
         Err(e) => {
-            println!("- {:?}", e);
+            let msg = format!("{:?}", e);
+            if msg.starts_with(SKIP_PREFIX) {
+                println!("- {}", msg);
+            } else {
+                println!("- FAILED: {}", msg);
+                failures.push(format!("{} : {}", name, msg));
+            }
         }
     };
     println!();
 }
 
 fn run_all_tests(pin_protocol_version: u8) {
-    println!("<<< TEST START (PIN/UV Auth Protocol {}) >>>", pin_protocol_version);
+    println!(
+        "<<< TEST START (PIN/UV Auth Protocol {}) >>>",
+        pin_protocol_version
+    );
 
-    do_test(test_get_hid_devices);
-    do_test(test_keep_alive_msg_to_stderr_cfg);
-    do_test(test_keep_alive_msg_to_stderr_propagates);
-    do_test(test_get_info);
-    do_test(test_get_info_u2f);
-    do_test(|| test_client_pin_get_retries(pin_protocol_version));
-    do_test(|| test_make_credential_with_pin_non_rk(pin_protocol_version));
-    do_test(|| test_make_credential_with_pin_non_rk_exclude_authenticator(pin_protocol_version));
-    do_test(|| test_credential_management_get_creds_metadata(pin_protocol_version));
-    do_test(|| test_credential_management_enumerate_rps(pin_protocol_version));
-    do_test(|| test_bio_enrollment_get_fingerprint_sensor_info(pin_protocol_version));
-    do_test(|| test_bio_enrollment_enumerate_enrollments(pin_protocol_version));
-    do_test(test_wink);
+    let mut failures = Vec::new();
 
-    println!("<<< TEST END (PIN/UV Auth Protocol {}) >>>", pin_protocol_version);
+    do_test("test_get_hid_devices", test_get_hid_devices, &mut failures);
+    do_test(
+        "test_keep_alive_msg_to_stderr_cfg",
+        test_keep_alive_msg_to_stderr_cfg,
+        &mut failures,
+    );
+    do_test(
+        "test_keep_alive_msg_to_stderr_propagates",
+        test_keep_alive_msg_to_stderr_propagates,
+        &mut failures,
+    );
+    do_test("test_get_info", test_get_info, &mut failures);
+    do_test("test_get_info_u2f", test_get_info_u2f, &mut failures);
+    do_test(
+        "test_client_pin_get_retries",
+        || test_client_pin_get_retries(pin_protocol_version),
+        &mut failures,
+    );
+    do_test(
+        "test_make_credential_with_pin_non_rk",
+        || test_make_credential_with_pin_non_rk(pin_protocol_version),
+        &mut failures,
+    );
+    do_test(
+        "test_make_credential_with_pin_non_rk_exclude_authenticator",
+        || test_make_credential_with_pin_non_rk_exclude_authenticator(pin_protocol_version),
+        &mut failures,
+    );
+    do_test(
+        "test_credential_management_get_creds_metadata",
+        || test_credential_management_get_creds_metadata(pin_protocol_version),
+        &mut failures,
+    );
+    do_test(
+        "test_credential_management_enumerate_rps",
+        || test_credential_management_enumerate_rps(pin_protocol_version),
+        &mut failures,
+    );
+    do_test(
+        "test_bio_enrollment_get_fingerprint_sensor_info",
+        || test_bio_enrollment_get_fingerprint_sensor_info(pin_protocol_version),
+        &mut failures,
+    );
+    do_test(
+        "test_bio_enrollment_enumerate_enrollments",
+        || test_bio_enrollment_enumerate_enrollments(pin_protocol_version),
+        &mut failures,
+    );
+    do_test("test_wink", test_wink, &mut failures);
+
+    println!(
+        "<<< TEST END (PIN/UV Auth Protocol {}) >>>",
+        pin_protocol_version
+    );
+
+    assert!(
+        failures.is_empty(),
+        "{} test(s) failed (PIN/UV Auth Protocol {}):\n{}",
+        failures.len(),
+        pin_protocol_version,
+        failures.join("\n")
+    );
 }
 
 #[test]
@@ -116,9 +180,10 @@ fn test_keep_alive_msg_to_stderr_cfg() -> Result<()> {
 
 #[test]
 fn test_keep_alive_msg_to_stderr_propagates() -> Result<()> {
-    let device =
-        FidoKeyHidFactory::create(&Cfg::init().with_keep_alive_msg_to_stderr(true))?;
-    assert!(device.keep_alive_msg_to_stderr);
+    {
+        let device = FidoKeyHidFactory::create(&Cfg::init().with_keep_alive_msg_to_stderr(true))?;
+        assert!(device.keep_alive_msg_to_stderr);
+    } // Close the handle before reopening: the same HID path can't be opened twice.
 
     let device = FidoKeyHidFactory::create(&Cfg::init())?;
     assert!(!device.keep_alive_msg_to_stderr);
@@ -127,15 +192,15 @@ fn test_keep_alive_msg_to_stderr_propagates() -> Result<()> {
 
 #[test]
 fn test_wink() -> Result<()> {
-    let device = FidoKeyHidFactory::create(&Cfg::init()).unwrap();
-    device.wink().unwrap();
+    let device = FidoKeyHidFactory::create(&Cfg::init())?;
+    device.wink().map_err(|e| anyhow!("wink failed: {}", e))?;
     Ok(())
 }
 
 #[test]
 fn test_get_info() -> Result<()> {
     if is_my_test_key()? {
-        let device = FidoKeyHidFactory::create(&Cfg::init()).unwrap();
+        let device = FidoKeyHidFactory::create(&Cfg::init())?;
         let info = device.get_info()?;
         println!("- versions = {:?}", info.versions);
         assert_eq!(
@@ -260,7 +325,7 @@ fn test_get_info() -> Result<()> {
             info.remaining_discoverable_credentials
         );
     } else {
-        let device = FidoKeyHidFactory::create(&Cfg::init()).unwrap();
+        let device = FidoKeyHidFactory::create(&Cfg::init())?;
         device.get_info()?;
     }
 
@@ -269,17 +334,19 @@ fn test_get_info() -> Result<()> {
 
 #[test]
 fn test_get_info_u2f() -> Result<()> {
-    let device = FidoKeyHidFactory::create(&Cfg::init()).unwrap();
+    let device = FidoKeyHidFactory::create(&Cfg::init())?;
     match device.enable_info_param(&InfoParam::VersionsU2Fv2) {
         Ok(result) => {
             if !result {
                 return Err(anyhow!("skipped"));
             }
         }
-        Err(_) => assert!(false),
+        Err(e) => return Err(anyhow!("enable_info_param(VersionsU2Fv2) failed: {}", e)),
     };
 
-    device.get_info_u2f().unwrap();
+    device
+        .get_info_u2f()
+        .map_err(|e| anyhow!("get_info_u2f failed: {}", e))?;
     Ok(())
 }
 
@@ -307,13 +374,15 @@ fn test_make_credential_with_pin_non_rk(pin_protocol_version: u8) -> Result<()> 
     let pin = "1234";
 
     let device = create_device_with_pin_protocol(&Cfg::init(), pin_protocol_version)?;
-    let att = device.make_credential(rpid, &challenge, Some(pin)).unwrap();
+    let att = device
+        .make_credential(rpid, &challenge, Some(pin))
+        .map_err(|e| anyhow!("make_credential failed: {}", e))?;
     println!("Attestation");
     println!("{}", att);
 
     let ass = device
         .get_assertion(rpid, &challenge, &[att.credential_descriptor.id], Some(pin))
-        .unwrap();
+        .map_err(|e| anyhow!("get_assertion failed: {}", e))?;
     println!("Assertion");
     println!("{}", ass);
 
@@ -336,7 +405,7 @@ fn test_make_credential_with_pin_non_rk_exclude_authenticator(
 
     let att = device
         .make_credential_with_args(&make_credential_args)
-        .unwrap();
+        .map_err(|e| anyhow!("make_credential_with_args failed: {}", e))?;
 
     let verify_result = verifier::verify_attestation(rpid, &challenge, &att);
     assert!(verify_result.is_success);
@@ -359,14 +428,13 @@ fn test_credential_management_get_creds_metadata(pin_protocol_version: u8) -> Re
                 return Err(anyhow!("skipped"));
             }
         }
-        Err(_) => assert!(false),
+        Err(e) => return Err(anyhow!("enable_info_option(CredMgmt) failed: {}", e)),
     };
 
     let pin = "1234";
-    match device.credential_management_get_creds_metadata(Some(pin)) {
-        Ok(_) => assert!(true),
-        Err(_) => assert!(false),
-    };
+    device
+        .credential_management_get_creds_metadata(Some(pin))
+        .map_err(|e| anyhow!("credential_management_get_creds_metadata failed: {}", e))?;
     Ok(())
 }
 
@@ -380,14 +448,13 @@ fn test_credential_management_enumerate_rps(pin_protocol_version: u8) -> Result<
                 return Err(anyhow!("skipped"));
             }
         }
-        Err(_) => assert!(false),
+        Err(e) => return Err(anyhow!("enable_info_option(CredMgmt) failed: {}", e)),
     };
 
     let pin = "1234";
-    match device.credential_management_enumerate_rps(Some(pin)) {
-        Ok(_) => assert!(true),
-        Err(_) => assert!(false),
-    };
+    device
+        .credential_management_enumerate_rps(Some(pin))
+        .map_err(|e| anyhow!("credential_management_enumerate_rps failed: {}", e))?;
     Ok(())
 }
 
@@ -406,7 +473,12 @@ fn test_bio_enrollment_get_fingerprint_sensor_info(pin_protocol_version: u8) -> 
                 };
             }
         }
-        Err(_) => assert!(false),
+        Err(e) => {
+            return Err(anyhow!(
+                "enable_info_option(UserVerificationMgmtPreview) failed: {}",
+                e
+            ))
+        }
     };
 
     // skip
@@ -414,10 +486,9 @@ fn test_bio_enrollment_get_fingerprint_sensor_info(pin_protocol_version: u8) -> 
         return Err(anyhow!("skipped"));
     };
 
-    match device.bio_enrollment_get_fingerprint_sensor_info() {
-        Ok(_) => assert!(true),
-        Err(_) => assert!(false),
-    };
+    device
+        .bio_enrollment_get_fingerprint_sensor_info()
+        .map_err(|e| anyhow!("bio_enrollment_get_fingerprint_sensor_info failed: {}", e))?;
     Ok(())
 }
 
@@ -434,7 +505,12 @@ fn test_bio_enrollment_enumerate_enrollments(pin_protocol_version: u8) -> Result
                 };
             }
         }
-        Err(_) => assert!(false),
+        Err(e) => {
+            return Err(anyhow!(
+                "enable_info_option(UserVerificationMgmtPreview) failed: {}",
+                e
+            ))
+        }
     };
 
     if skip {
@@ -442,10 +518,9 @@ fn test_bio_enrollment_enumerate_enrollments(pin_protocol_version: u8) -> Result
     };
 
     let pin = "1234";
-    match device.bio_enrollment_enumerate_enrollments(pin) {
-        Ok(_) => assert!(true),
-        Err(_) => assert!(false),
-    };
+    device
+        .bio_enrollment_enumerate_enrollments(pin)
+        .map_err(|e| anyhow!("bio_enrollment_enumerate_enrollments failed: {}", e))?;
 
     Ok(())
 }
