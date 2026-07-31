@@ -42,6 +42,12 @@ struct AppArg {
     #[clap(short = 'u', long = "user-presence", help = "User Presence Test.")]
     user_presence: bool,
 
+    #[clap(
+        long = "enable-log",
+        help = "Enable CTAP/HID debug log output to stdout."
+    )]
+    enable_log: bool,
+
     #[clap(subcommand)]
     action: Option<Action>,
 }
@@ -223,7 +229,7 @@ fn main() -> Result<()> {
     let arg: AppArg = AppArg::parse();
 
     let mut cfg = Cfg::init();
-    cfg.enable_log = false;
+    cfg.enable_log = arg.enable_log;
     cfg.use_pre_bio_enrollment = true;
     cfg.use_pre_credential_management = true;
 

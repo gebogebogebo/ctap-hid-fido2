@@ -20,8 +20,24 @@ const CTAPHID_CANCEL: u8 = CTAP_FRAME_INIT | 0x11;
 const CTAPHID_ERROR: u8 = CTAP_FRAME_INIT | 0x3F;
 const CTAPHID_KEEPALIVE: u8 = CTAP_FRAME_INIT | 0x3B;
 
-//const CTAPHID_KEEPALIVE_STATUS_PROCESSING = 1;     // The authenticator is still processing the current request.
-//const CTAPHID_KEEPALIVE_STATUS_UPNEEDED = 2;       // The authenticator is waiting for user presence.
+const CTAPHID_KEEPALIVE_STATUS_PROCESSING: u8 = 1; // The authenticator is still processing the current request.
+const CTAPHID_KEEPALIVE_STATUS_UPNEEDED: u8 = 2; // The authenticator is waiting for user presence.
+
+// Should the user presence message be shown for this CTAPHID_KEEPALIVE status?
+// Only `processing` is known not to require user presence, so it is the only status
+// that suppresses the message. Any other value (including out-of-spec ones) falls back
+// to showing it, so a device that needs a touch never leaves the user without a prompt.
+fn should_show_keep_alive_msg(status: u8) -> bool {
+    status != CTAPHID_KEEPALIVE_STATUS_PROCESSING
+}
+
+fn get_keep_alive_status_message(status: u8) -> String {
+    match status {
+        CTAPHID_KEEPALIVE_STATUS_PROCESSING => "processing".to_string(),
+        CTAPHID_KEEPALIVE_STATUS_UPNEEDED => "up-needed".to_string(),
+        _ => format!("unknown(0x{:02x})", status),
+    }
+}
 
 // Function to generate random nonce
 fn generate_random_nonce() -> [u8; 8] {
@@ -372,13 +388,21 @@ fn ctaphid_cbormsg(device: &FidoKeyHid, command: u8, payload: &[u8]) -> Result<V
             packet_1st = buf;
             break;
         } else if st.0 == CTAPHID_KEEPALIVE {
-            if !keep_alive_msg_flag {
-                if device.enable_keep_alive_msg && !device.keep_alive_msg.is_empty() {
-                    if device.keep_alive_msg_to_stderr {
-                        eprintln!("{}", device.keep_alive_msg);
-                    } else {
-                        println!("{}", device.keep_alive_msg);
-                    }
+            if device.enable_log {
+                println!(
+                    "CTAPHID_KEEPALIVE status = {}",
+                    get_keep_alive_status_message(st.2)
+                );
+            }
+            if !keep_alive_msg_flag
+                && should_show_keep_alive_msg(st.2)
+                && device.enable_keep_alive_msg
+                && !device.keep_alive_msg.is_empty()
+            {
+                if device.keep_alive_msg_to_stderr {
+                    eprintln!("{}", device.keep_alive_msg);
+                } else {
+                    println!("{}", device.keep_alive_msg);
                 }
                 keep_alive_msg_flag = true;
             }
@@ -525,3 +549,44 @@ https://github.com/Yubico/python-fido2/blob/master/fido2/ctap1.py#L214
             raise ApduError(status, data)
         return data
 */
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_should_show_keep_alive_msg_processing() {
+        // The authenticator is only processing, no touch is required.
+        assert!(!should_show_keep_alive_msg(
+            CTAPHID_KEEPALIVE_STATUS_PROCESSING
+        ));
+    }
+
+    #[test]
+    fn test_should_show_keep_alive_msg_upneeded() {
+        assert!(should_show_keep_alive_msg(
+            CTAPHID_KEEPALIVE_STATUS_UPNEEDED
+        ));
+    }
+
+    #[test]
+    fn test_should_show_keep_alive_msg_unknown_status() {
+        // Out-of-spec values fall back to showing the message.
+        assert!(should_show_keep_alive_msg(0x00));
+        assert!(should_show_keep_alive_msg(0x03));
+        assert!(should_show_keep_alive_msg(0xff));
+    }
+
+    #[test]
+    fn test_get_keep_alive_status_message() {
+        assert_eq!(
+            get_keep_alive_status_message(CTAPHID_KEEPALIVE_STATUS_PROCESSING),
+            "processing"
+        );
+        assert_eq!(
+            get_keep_alive_status_message(CTAPHID_KEEPALIVE_STATUS_UPNEEDED),
+            "up-needed"
+        );
+        assert_eq!(get_keep_alive_status_message(0xff), "unknown(0xff)");
+    }
+}
