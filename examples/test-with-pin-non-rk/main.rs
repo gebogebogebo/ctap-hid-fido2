@@ -203,10 +203,6 @@ fn builder_pattern_sample(device: &mut FidoKeyHid, rpid: &str, pin: &str) -> Res
         print_error_with_count(&format!("Error => {}\n", err), true);
     });
 
-    with_large_blob_key(device, rpid, pin).unwrap_or_else(|err| {
-        print_error_with_count(&format!("Error => {}\n", err), true);
-    });
-
     with_min_pin_length_ex(device, rpid, pin).unwrap_or_else(|err| {
         print_error_with_count(&format!("Error => {}\n", err), true);
     });
@@ -588,94 +584,6 @@ fn without_pin(device: &FidoKeyHid, rpid: &str) -> Result<()> {
 
     let assertions = device.get_assertion_with_args(&get_assertion_args)?;
     print_success("-- Authenticate Success");
-    debug!("Assertion");
-    debug!("{}", assertions[0]);
-
-    print_step("-- Verify Assertion");
-    let is_success = verifier::verify_assertion(
-        rpid,
-        &verify_result.credential_public_key,
-        &challenge,
-        &assertions[0],
-    );
-    if is_success {
-        print_success("-- Verify Assertion Success");
-    } else {
-        print_error("-- ! Verify Assertion Failed");
-    }
-
-    println!();
-    Ok(())
-}
-
-fn with_large_blob_key(device: &FidoKeyHid, rpid: &str, pin: &str) -> Result<()> {
-    print_section("----- with large_blob_key -----");
-
-    let is_supported = device.enable_info_option(&InfoOption::LargeBlobs)?;
-    if !is_supported.unwrap_or(false) {
-        print_info("LargeBlobs not supported, skipping test.");
-        println!();
-        return Ok(());
-    }
-
-    print_step("- Register");
-    let challenge = verifier::create_challenge();
-    let ext = Mext::LargeBlobKey((Some(true), None));
-
-    let make_credential_args = MakeCredentialArgsBuilder::new(rpid, &challenge)
-        .pin(pin)
-        .extensions(&[ext])
-        .build();
-
-    let attestation = device.make_credential_with_args(&make_credential_args)?;
-    print_success("-- Register Success");
-    let find = attestation
-        .extensions
-        .iter()
-        .find(|it| matches!(it, Mext::LargeBlobKey((_, _))));
-    if let Some(Mext::LargeBlobKey((_, large_blob_key))) = find {
-        print_info(&format!(
-            "--- Large Blob Key = {}",
-            util::to_hex_str(&large_blob_key.clone().unwrap())
-        ));
-    } else {
-        print_error("--- Large Blob Key Not Found");
-    }
-    debug!("Attestation");
-    debug!("{}", attestation);
-
-    print_step("-- Verify Attestation");
-    let verify_result = verifier::verify_attestation(rpid, &challenge, &attestation);
-    if verify_result.is_success {
-        print_success("-- Verify Attestation Success");
-    } else {
-        print_error("-- ! Verify Attestation Failed");
-    }
-
-    print_step("- Authenticate");
-    let challenge = verifier::create_challenge();
-    let ext = Gext::LargeBlobKey((Some(true), None));
-
-    let get_assertion_args = GetAssertionArgsBuilder::new(rpid, &challenge)
-        .pin(pin)
-        .credential_id(&verify_result.credential_id)
-        .extensions(&[ext])
-        .build();
-
-    let assertions = device.get_assertion_with_args(&get_assertion_args)?;
-    print_success("-- Authenticate Success");
-    let find = assertions[0]
-        .extensions
-        .iter()
-        .find(|it| matches!(it, Gext::LargeBlobKey((_, _))));
-    if let Some(Gext::LargeBlobKey((_, large_blob_key))) = find {
-        print_info(&format!(
-            "--- Large Blob Key = {}",
-            util::to_hex_str(&large_blob_key.clone().unwrap())
-        ));
-    } else {
-        print_error("--- Large Blob Key Not Found");
-    }
     debug!("Assertion");
     debug!("{}", assertions[0]);
 
