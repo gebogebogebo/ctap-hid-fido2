@@ -106,12 +106,13 @@ pub fn get_input_with_message(message: &str) -> String {
 
 
 ## Description
-**ctap-hid-fido2** is a crate implementing [CTAP 2.0 and 2.1](https://fidoalliance.org/specs/fido-v2.1-ps-20210615/fido-client-to-authenticator-protocol-v2.1-ps-20210615.html), allowing direct control of FIDO2-compliant Authenticators such as Yubikey.<br>For more information on FIDO, see [FIDO Alliance Page](https://fidoalliance.org/).
+**ctap-hid-fido2** is a crate implementing CTAP 2.0 , 2.1 and 2.2, allowing direct control of FIDO2-compliant Authenticators such as Yubikey.<br>For more information on FIDO, see [FIDO Alliance Page](https://fidoalliance.org/).
 
 
 
-- Implements FIDO2 CTAP 2.0 & 2.1 (HID)
+- Implements FIDO2 CTAP 2.0 & 2.1 & 2.2(HID)
 - [Client to Authenticator Protocol (CTAP)](https://fidoalliance.org/specs/fido-v2.1-ps-20210615/fido-client-to-authenticator-protocol-v2.1-ps-20210615.html)
+- Supports [YubiKey firmware 5.8](https://docs.yubico.com/hardware/yubikey/yk-tech-manual/yk5-firmware-5.8.html)
 - Supported FIDO key
   - [Yubikey Bio](https://www.yubico.com/products/yubikey-bio-series/)
   - [Yubikey](https://www.yubico.com/products/)
