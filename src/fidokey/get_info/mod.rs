@@ -342,12 +342,17 @@ mod tests {
                     (Value::Integer(0.into()), Value::Integer(1.into())),
                 ]),
             ),
+            (Value::Integer(0x14.into()), Value::Bool(true)),
             (
                 Value::Integer(0x15.into()),
                 Value::Array(vec![
                     Value::Integer(1.into()),
                     Value::Text("bad".to_string()),
                 ]),
+            ),
+            (
+                Value::Integer(0x16.into()),
+                Value::Text("not-an-array".to_string()),
             ),
             (Value::Integer(0x17.into()), Value::Bool(true)),
             (Value::Integer(0x18.into()), Value::Integer(1.into())),
@@ -381,7 +386,9 @@ mod tests {
 
         // Malformed CTAP 2.2/2.3 members are left at their default value
         // instead of aborting the whole parse.
+        assert_eq!(info.remaining_discoverable_credentials, 0);
         assert_eq!(info.vendor_prototype_config_commands, vec![1]);
+        assert_eq!(info.attestation_formats, Vec::<String>::new());
         assert_eq!(info.uv_count_since_last_pin_entry, 0);
         assert_eq!(info.long_touch_for_reset, false);
         assert_eq!(info.enc_identifier, Vec::<u8>::new());

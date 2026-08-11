@@ -61,13 +61,17 @@ pub fn parse_cbor(bytes: &[u8]) -> Result<get_info_params::Info> {
                 }
             }
             0x14 => {
-                info.remaining_discoverable_credentials = util_ciborium::cbor_value_to_num(val)?
+                info.remaining_discoverable_credentials =
+                    util_ciborium::cbor_value_to_num(val).unwrap_or_default()
             }
             0x15 => {
                 info.vendor_prototype_config_commands =
                     util_ciborium::cbor_value_to_vec_num(val).unwrap_or_default()
             }
-            0x16 => info.attestation_formats = util_ciborium::cbor_value_to_vec_string(val)?,
+            0x16 => {
+                info.attestation_formats =
+                    util_ciborium::cbor_value_to_vec_string(val).unwrap_or_default()
+            }
             0x17 => {
                 info.uv_count_since_last_pin_entry =
                     util_ciborium::cbor_value_to_num(val).unwrap_or_default()
