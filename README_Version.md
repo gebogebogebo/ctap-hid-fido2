@@ -9,7 +9,6 @@
   - Fixed the keep-alive user-presence message (e.g. "Touch the sensor on the authenticator") being shown for every `CTAPHID_KEEPALIVE` packet regardless of its status byte. It is now only shown when the status indicates `up-needed` (2); a `processing` (1) keep-alive no longer prints a misleading touch prompt for commands such as `authenticatorGetInfo`. Unknown status values still show the message, so an authenticator that does need a touch never leaves the user without a prompt.
   - The `CTAPHID_KEEPALIVE` status is now logged when `enable_log` is `true`.
   - example: [ctapcli](examples/ctapcli/main.rs) — added the `--enable-log` CLI flag.
-- example: the `largeBlobKey` extension test moved from [test-with-pin-non-rk](examples/test-with-pin-non-rk/main.rs) to [test-with-pin-rk](examples/test-with-pin-rk/main.rs). Per [CTAP 2.1 section 12.3](https://fidoalliance.org/specs/fido-v2.1-ps-20210615/fido-client-to-authenticator-protocol-v2.1-ps-errata-20220621.html#sctn-largeBlobKey-extension), the extension is only defined for discoverable credentials and the authenticator returns `CTAP2_ERR_INVALID_OPTION` unless `rk` is mapped to `true`, so the test now registers with `resident_key()`.
 - Dependency Updates.
 
 ### Ver 3.5.12

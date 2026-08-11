@@ -112,10 +112,10 @@ pub fn get_input_with_message(message: &str) -> String {
 
 - Implements FIDO2 CTAP 2.0 & 2.1 & 2.2(HID)
 - [Client to Authenticator Protocol (CTAP)](https://fidoalliance.org/specs/fido-v2.1-ps-20210615/fido-client-to-authenticator-protocol-v2.1-ps-20210615.html)
-- Supports [YubiKey firmware 5.8](https://docs.yubico.com/hardware/yubikey/yk-tech-manual/yk5-firmware-5.8.html)
 - Supported FIDO key
   - [Yubikey Bio](https://www.yubico.com/products/yubikey-bio-series/)
   - [Yubikey](https://www.yubico.com/products/)
+    - Supports [YubiKey firmware 5.8](https://docs.yubico.com/hardware/yubikey/yk-tech-manual/yk5-firmware-5.8.html)
   - FEITIAN ePass FIDO(A4B)
   - FEITIAN BioPass K27 USB Security Key
   - FEITIAN AllinPass FIDO2 K33
