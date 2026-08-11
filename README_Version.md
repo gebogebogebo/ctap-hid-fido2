@@ -1,4 +1,16 @@
 ## Version
+### Ver 3.5.13
+- Addressed [issue #136](https://github.com/gebogebogebo/ctap-hid-fido2/issues/136).
+- Addressed [pull request #137](https://github.com/gebogebogebo/ctap-hid-fido2/pull/137).
+  - Added support for YubiKey firmware 5.8. `get_info()` against a 5.8 key used to log several `parse_cbor_member - unknown info` lines and silently drop the values; the following `authenticatorGetInfo` response members are now parsed and exposed on `Info`: `certifications` (0x13), `vendorPrototypeConfigCommands` (0x15), `uvCountSinceLastPinEntry` (0x17), `longTouchForReset` (0x18), `encIdentifier` (0x19), `transportsForReset` (0x1A), `pinComplexityPolicy` (0x1B), `pinComplexityPolicyURL` (0x1C), `maxPINLength` (0x1D), `encCredStoreState` (0x1E), `authenticatorConfigCommands` (0x1F).
+  - `get_info()` is now tolerant of malformed values in these newer members: a member with a mismatched type or an out-of-range integer is skipped (left at its default) instead of failing the whole `authenticatorGetInfo` parse.
+- Addressed [issue #138](https://github.com/gebogebogebo/ctap-hid-fido2/issues/138).
+- Addressed [pull request #139](https://github.com/gebogebogebo/ctap-hid-fido2/pull/139).
+  - Fixed the keep-alive user-presence message (e.g. "Touch the sensor on the authenticator") being shown for every `CTAPHID_KEEPALIVE` packet regardless of its status byte. It is now only shown when the status indicates `up-needed` (2); a `processing` (1) keep-alive no longer prints a misleading touch prompt for commands such as `authenticatorGetInfo`. Unknown status values still show the message, so an authenticator that does need a touch never leaves the user without a prompt.
+  - The `CTAPHID_KEEPALIVE` status is now logged when `enable_log` is `true`.
+  - example: [ctapcli](examples/ctapcli/main.rs) — added the `--enable-log` CLI flag.
+- Dependency Updates.
+
 ### Ver 3.5.12
 - Addressed [issue #126](https://github.com/gebogebogebo/ctap-hid-fido2/issues/126).
 - Addressed [pull request #133](https://github.com/gebogebogebo/ctap-hid-fido2/pull/133).

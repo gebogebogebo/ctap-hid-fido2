@@ -257,4 +257,198 @@ mod tests {
         assert_eq!(info.remaining_discoverable_credentials, 0);
         assert_eq!(info.attestation_formats, vec!["packed", "none"]);
     }
+
+    #[test]
+    fn test_get_info_response_parse_cbor_ctap22_and_ctap23_members() {
+        use ciborium::value::Value;
+
+        let map = Value::Map(vec![
+            (
+                Value::Integer(0x01.into()),
+                Value::Array(vec![Value::Text("FIDO_2_1".to_string())]),
+            ),
+            (
+                Value::Integer(0x13.into()),
+                Value::Map(vec![(
+                    Value::Text("FIDO_CERTIFIED".to_string()),
+                    Value::Integer(1.into()),
+                )]),
+            ),
+            (
+                Value::Integer(0x15.into()),
+                Value::Array(vec![Value::Integer(1.into()), Value::Integer(2.into())]),
+            ),
+            (Value::Integer(0x17.into()), Value::Integer(5.into())),
+            (Value::Integer(0x18.into()), Value::Bool(true)),
+            (Value::Integer(0x19.into()), Value::Bytes(vec![0xAA, 0xBB])),
+            (
+                Value::Integer(0x1A.into()),
+                Value::Array(vec![
+                    Value::Text("nfc".to_string()),
+                    Value::Text("usb".to_string()),
+                ]),
+            ),
+            (Value::Integer(0x1B.into()), Value::Bool(true)),
+            (Value::Integer(0x1C.into()), Value::Bytes(vec![0xCC, 0xDD])),
+            (Value::Integer(0x1D.into()), Value::Integer(63.into())),
+            (Value::Integer(0x1E.into()), Value::Bytes(vec![0xEE, 0xFF])),
+            (
+                Value::Integer(0x1F.into()),
+                Value::Array(vec![Value::Integer(2.into()), Value::Integer(3.into())]),
+            ),
+        ]);
+
+        let mut bytes = Vec::new();
+        ciborium::ser::into_writer(&map, &mut bytes).unwrap();
+
+        let info = get_info_response::parse_cbor(&bytes).unwrap();
+
+        assert_eq!(info.certifications, vec![("FIDO_CERTIFIED".to_string(), 1)]);
+        assert_eq!(info.vendor_prototype_config_commands, vec![1, 2]);
+        assert_eq!(info.uv_count_since_last_pin_entry, 5);
+        assert_eq!(info.long_touch_for_reset, true);
+        assert_eq!(info.enc_identifier, vec![0xAA, 0xBB]);
+        assert_eq!(info.transports_for_reset, vec!["nfc", "usb"]);
+        assert_eq!(info.pin_complexity_policy, true);
+        assert_eq!(info.pin_complexity_policy_url, vec![0xCC, 0xDD]);
+        assert_eq!(info.max_pin_length, 63);
+        assert_eq!(info.enc_cred_store_state, vec![0xEE, 0xFF]);
+        assert_eq!(info.authenticator_config_commands, vec![2, 3]);
+    }
+
+    #[test]
+    fn test_get_info_response_parse_cbor_ctap22_23_members_type_mismatch_is_tolerated() {
+        use ciborium::value::Value;
+
+        // A non-conforming authenticator that sends the wrong CBOR type for
+        // several CTAP 2.2/2.3 members must not abort parsing of the whole
+        // response: these optional fields should just be left at their
+        // default value, like any other unrecognized member.
+        let map = Value::Map(vec![
+            (
+                Value::Integer(0x01.into()),
+                Value::Array(vec![Value::Text("FIDO_2_1".to_string())]),
+            ),
+            (Value::Integer(0x0D.into()), Value::Integer(4.into())),
+            (
+                // A malformed entry (non-text key) alongside a well-formed one:
+                // only the well-formed entry should be kept.
+                Value::Integer(0x13.into()),
+                Value::Map(vec![
+                    (
+                        Value::Text("FIDO_CERTIFIED".to_string()),
+                        Value::Integer(1.into()),
+                    ),
+                    (Value::Integer(0.into()), Value::Integer(1.into())),
+                ]),
+            ),
+            (Value::Integer(0x14.into()), Value::Bool(true)),
+            (
+                Value::Integer(0x15.into()),
+                Value::Array(vec![
+                    Value::Integer(1.into()),
+                    Value::Text("bad".to_string()),
+                ]),
+            ),
+            (
+                Value::Integer(0x16.into()),
+                Value::Text("not-an-array".to_string()),
+            ),
+            (Value::Integer(0x17.into()), Value::Bool(true)),
+            (Value::Integer(0x18.into()), Value::Integer(1.into())),
+            (
+                Value::Integer(0x19.into()),
+                Value::Text("not-bytes".to_string()),
+            ),
+            (Value::Integer(0x1A.into()), Value::Integer(1.into())),
+            (Value::Integer(0x1B.into()), Value::Integer(1.into())),
+            (
+                Value::Integer(0x1C.into()),
+                Value::Text("not-bytes".to_string()),
+            ),
+            (Value::Integer(0x1D.into()), Value::Bool(false)),
+            (Value::Integer(0x1E.into()), Value::Integer(1.into())),
+            (
+                Value::Integer(0x1F.into()),
+                Value::Array(vec![Value::Text("bad".to_string())]),
+            ),
+        ]);
+
+        let mut bytes = Vec::new();
+        ciborium::ser::into_writer(&map, &mut bytes).unwrap();
+
+        let info = get_info_response::parse_cbor(&bytes).unwrap();
+
+        // Fields parsed before/around the malformed ones still come through.
+        assert_eq!(info.versions, vec!["FIDO_2_1"]);
+        assert_eq!(info.min_pin_length, 4);
+        assert_eq!(info.certifications, vec![("FIDO_CERTIFIED".to_string(), 1)]);
+
+        // Malformed CTAP 2.2/2.3 members are left at their default value
+        // instead of aborting the whole parse.
+        assert_eq!(info.remaining_discoverable_credentials, 0);
+        assert_eq!(info.vendor_prototype_config_commands, vec![1]);
+        assert_eq!(info.attestation_formats, Vec::<String>::new());
+        assert_eq!(info.uv_count_since_last_pin_entry, 0);
+        assert_eq!(info.long_touch_for_reset, false);
+        assert_eq!(info.enc_identifier, Vec::<u8>::new());
+        assert_eq!(info.transports_for_reset, Vec::<String>::new());
+        assert_eq!(info.pin_complexity_policy, false);
+        assert_eq!(info.pin_complexity_policy_url, Vec::<u8>::new());
+        assert_eq!(info.max_pin_length, 0);
+        assert_eq!(info.enc_cred_store_state, Vec::<u8>::new());
+        assert_eq!(info.authenticator_config_commands, Vec::<u32>::new());
+    }
+
+    #[test]
+    fn test_get_info_response_parse_cbor_ctap22_23_members_out_of_range_integer_is_tolerated() {
+        use ciborium::value::Value;
+
+        // These fields ARE CBOR integers (unlike the type-mismatch test
+        // above), but don't fit the target unsigned type (negative, or too
+        // large for u32). This must not abort parsing of the whole
+        // response either.
+        let map = Value::Map(vec![
+            (
+                Value::Integer(0x01.into()),
+                Value::Array(vec![Value::Text("FIDO_2_1".to_string())]),
+            ),
+            (Value::Integer(0x0D.into()), Value::Integer(4.into())),
+            (
+                Value::Integer(0x13.into()),
+                Value::Map(vec![(
+                    Value::Text("FIDO_CERTIFIED".to_string()),
+                    Value::Integer(9_000_000_000i64.into()),
+                )]),
+            ),
+            (
+                Value::Integer(0x15.into()),
+                Value::Array(vec![Value::Integer(1.into()), Value::Integer((-1).into())]),
+            ),
+            (Value::Integer(0x17.into()), Value::Integer((-1).into())),
+            (Value::Integer(0x1D.into()), Value::Integer((-1).into())),
+            (
+                Value::Integer(0x1F.into()),
+                Value::Array(vec![Value::Integer(9_000_000_000i64.into())]),
+            ),
+        ]);
+
+        let mut bytes = Vec::new();
+        ciborium::ser::into_writer(&map, &mut bytes).unwrap();
+
+        let info = get_info_response::parse_cbor(&bytes).unwrap();
+
+        // Fields parsed alongside the out-of-range ones still come through.
+        assert_eq!(info.versions, vec!["FIDO_2_1"]);
+        assert_eq!(info.min_pin_length, 4);
+
+        // The out-of-range entry/element is dropped, well-formed siblings
+        // in the same map/array are kept.
+        assert_eq!(info.certifications, Vec::new());
+        assert_eq!(info.vendor_prototype_config_commands, vec![1]);
+        // Out-of-range scalar fields are left at their default value.
+        assert_eq!(info.uv_count_since_last_pin_entry, 0);
+        assert_eq!(info.max_pin_length, 0);
+        assert_eq!(info.authenticator_config_commands, Vec::<u32>::new());
+    }
 }
