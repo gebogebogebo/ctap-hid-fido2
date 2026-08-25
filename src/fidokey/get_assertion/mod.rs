@@ -82,7 +82,7 @@ impl FidoKeyHid {
     }
 
     /// Authentication command(with PIN , non Resident Key , Extension)
-    pub fn get_assertion_with_extensios(
+    pub fn get_assertion_with_extensions(
         &self,
         rpid: &str,
         challenge: &[u8],
@@ -103,6 +103,22 @@ impl FidoKeyHid {
         let args = builder.build();
         let assertions = self.get_assertion_with_args(&args)?;
         Ok(assertions[0].clone())
+    }
+
+    /// Authentication command(with PIN , non Resident Key , Extension)
+    #[deprecated(
+        since = "3.5.14",
+        note = "renamed to `get_assertion_with_extensions` (typo fix)"
+    )]
+    pub fn get_assertion_with_extensios(
+        &self,
+        rpid: &str,
+        challenge: &[u8],
+        credential_ids: &[Vec<u8>],
+        pin: Option<&str>,
+        extensions: Option<&Vec<Gext>>,
+    ) -> Result<Assertion> {
+        self.get_assertion_with_extensions(rpid, challenge, credential_ids, pin, extensions)
     }
 
     /// Authentication command(with PIN , Resident Key)
