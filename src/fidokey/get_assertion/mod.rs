@@ -82,7 +82,7 @@ impl FidoKeyHid {
     }
 
     /// Authentication command(with PIN , non Resident Key , Extension)
-    pub fn get_assertion_with_extensios(
+    pub fn get_assertion_with_extensions(
         &self,
         rpid: &str,
         challenge: &[u8],
