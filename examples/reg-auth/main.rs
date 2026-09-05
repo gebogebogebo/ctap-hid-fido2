@@ -81,7 +81,7 @@ fn main() -> Result<()> {
 
     // create `MakeCredentialArgs`
     let make_credential_args = MakeCredentialArgsBuilder::new(rpid, &challenge)
-        .pin(&pin)
+        .pin(pin)
         .build();
 
     // create `FidoKeyHid`
@@ -111,7 +111,7 @@ fn main() -> Result<()> {
 
     // create `GetAssertionArgs`
     let get_assertion_args = GetAssertionArgsBuilder::new(rpid, &challenge)
-        .pin(&pin)
+        .pin(pin)
         .credential_id(&userdata_credential_id)
         .build();
 
@@ -136,7 +136,7 @@ fn main() -> Result<()> {
 pub fn get_input() -> String {
     let mut word = String::new();
     std::io::stdin().read_line(&mut word).ok();
-    return word.trim().to_string();
+    word.trim().to_string()
 }
 
 pub fn get_input_with_message(message: &str) -> String {

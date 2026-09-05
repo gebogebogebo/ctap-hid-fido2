@@ -10,12 +10,10 @@ use crate::str_buf::StrBuf;
 pub fn info(device: &FidoKeyHid, item: &str) -> Result<()> {
     if item.is_empty() {
         println!("Get all data.");
-        match device.get_info() {
-            Ok(info) => {
-                println!("{}", info);
-                return Ok(());
-            }
-            Err(err) => return Err(err),
+        {
+            let info = device.get_info()?;
+            println!("{}", info);
+            return Ok(());
         };
     }
 
@@ -36,10 +34,8 @@ pub fn info(device: &FidoKeyHid, item: &str) -> Result<()> {
     };
 
     if let Some(option) = info_option {
-        match device.enable_info_option(&option) {
-            Ok(result) => println!("{}", option_message(item, &option, result)?),
-            Err(err) => return Err(err),
-        }
+        let result = device.enable_info_option(&option)?;
+        println!("{}", option_message(item, &option, result)?);
     } else {
         let info_param = match item {
             "u2f_v2" => Some(InfoParam::VersionsU2Fv2),
@@ -51,10 +47,8 @@ pub fn info(device: &FidoKeyHid, item: &str) -> Result<()> {
         };
 
         if let Some(param) = info_param {
-            match device.enable_info_param(&param) {
-                Ok(result) => println!("{}", param_message(item, &param, result)?),
-                Err(err) => return Err(err),
-            }
+            let result = device.enable_info_param(&param)?;
+            println!("{}", param_message(item, &param, result)?);
         } else {
             return Err(anyhow!("Invalid item"));
         }
