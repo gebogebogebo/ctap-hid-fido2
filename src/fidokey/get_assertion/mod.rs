@@ -107,7 +107,7 @@ impl FidoKeyHid {
 
     /// Authentication command(with PIN , non Resident Key , Extension)
     #[deprecated(
-        since = "3.5.14",
+        since = "3.6.0",
         note = "renamed to `get_assertion_with_extensions` (typo fix)"
     )]
     pub fn get_assertion_with_extensios(
