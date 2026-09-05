@@ -114,9 +114,10 @@ impl FidoKeyHid {
                 if self.use_pre_credential_management {
                     Ok(Some(self.get_pin_token(pin)?))
                 } else {
-                    Ok(Some(
-                        self.get_pinuv_auth_token_with_permission(pin, CredentialManagement)?,
-                    ))
+                    Ok(Some(self.get_pinuv_auth_token_with_permission(
+                        pin,
+                        CredentialManagement,
+                    )?))
                 }
             }
             None => Ok(None),

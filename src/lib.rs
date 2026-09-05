@@ -153,8 +153,7 @@ mod tests {
         // PIN/UV Auth Protocol Two returns the full 32-byte HMAC-SHA-256 output
         // without truncation (CTAP 2.2 6.5.8. authenticate(key, message)).
         let (out_bytes, client_data_hash) = pin_uv_auth_test_vector();
-        let check =
-            "F0AC99D6AAD2E199AF9CF25F6568A6F555D6394CDC35D81573D71A3B3CB275F3".to_string();
+        let check = "F0AC99D6AAD2E199AF9CF25F6568A6F555D6394CDC35D81573D71A3B3CB275F3".to_string();
         let pin_auth =
             pin_uv_auth_protocol::compute_pin_uv_auth_param(&out_bytes, &client_data_hash, 2)
                 .unwrap();

@@ -122,7 +122,9 @@ impl SharedSecret2 {
         }
 
         // 4. Return the AES-256-CBC decryption of ct using key and iv.
-        Ok(enc_aes256_cbc::decrypt_message_with_iv(aes_key, iv, ciphertext))
+        Ok(enc_aes256_cbc::decrypt_message_with_iv(
+            aes_key, iv, ciphertext,
+        ))
     }
 }
 

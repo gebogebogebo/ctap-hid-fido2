@@ -1,6 +1,4 @@
-use aes::cipher::{
-    block_padding::NoPadding, BlockModeDecrypt, BlockModeEncrypt, KeyIvInit,
-};
+use aes::cipher::{block_padding::NoPadding, BlockModeDecrypt, BlockModeEncrypt, KeyIvInit};
 
 // AES256-CBC(key,IV=0,message)
 type Aes256CbcEnc = cbc::Encryptor<aes::Aes256>;
