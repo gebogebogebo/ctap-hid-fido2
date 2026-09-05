@@ -169,12 +169,16 @@ fn test_get_hid_devices() -> Result<()> {
 #[test]
 fn test_keep_alive_msg_to_stderr_cfg() -> Result<()> {
     assert!(!Cfg::init().keep_alive_msg_to_stderr);
-    assert!(Cfg::init()
-        .with_keep_alive_msg_to_stderr(true)
-        .keep_alive_msg_to_stderr);
-    assert!(!Cfg::init()
-        .with_keep_alive_msg_to_stderr(false)
-        .keep_alive_msg_to_stderr);
+    assert!(
+        Cfg::init()
+            .with_keep_alive_msg_to_stderr(true)
+            .keep_alive_msg_to_stderr
+    );
+    assert!(
+        !Cfg::init()
+            .with_keep_alive_msg_to_stderr(false)
+            .keep_alive_msg_to_stderr
+    );
     Ok(())
 }
 

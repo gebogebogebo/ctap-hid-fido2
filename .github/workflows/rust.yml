@@ -14,29 +14,35 @@ jobs:
     runs-on: macos-latest
 
     steps:
-    - uses: actions/checkout@v2
-    - uses: dtolnay/rust-toolchain@1.88
+    - uses: actions/checkout@v4
+    - uses: dtolnay/rust-toolchain@1.89
     - name: Build
-      run: cargo build --examples --verbose
+      run: cargo build --all-targets --verbose
+    - name: Test
+      run: cargo test --lib --verbose
 
   ubuntu-build:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2
-    - uses: dtolnay/rust-toolchain@1.88
+    - uses: actions/checkout@v4
+    - uses: dtolnay/rust-toolchain@1.89
     - name: Install dependencies
       run: |
         sudo apt-get update
         sudo apt install -y libusb-1.0-0-dev libudev-dev
     - name: Build
-      run: cargo build --examples --verbose
+      run: cargo build --all-targets --verbose
+    - name: Test
+      run: cargo test --lib --verbose
 
   windows-build:
     runs-on: windows-latest
 
     steps:
-    - uses: actions/checkout@v2
-    - uses: dtolnay/rust-toolchain@1.88
+    - uses: actions/checkout@v4
+    - uses: dtolnay/rust-toolchain@1.89
     - name: Build
-      run: cargo build --examples --verbose
+      run: cargo build --all-targets --verbose
+    - name: Test
+      run: cargo test --lib --verbose

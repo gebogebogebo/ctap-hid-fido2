@@ -198,7 +198,7 @@ mod tests {
         }
 
         assert_eq!(info.max_serialized_large_blob_array, 1024);
-        assert_eq!(info.force_pin_change, false);
+        assert!(!info.force_pin_change);
         assert_eq!(info.min_pin_length, 4);
         assert_eq!(info.firmware_version, 328966);
         assert_eq!(info.max_cred_blob_length, 32);
@@ -247,7 +247,7 @@ mod tests {
         assert_eq!(info.transports, vec!["nfc", "usb"]);
         assert_eq!(info.algorithms.len(), 0);
         assert_eq!(info.max_serialized_large_blob_array, 0);
-        assert_eq!(info.force_pin_change, false);
+        assert!(!info.force_pin_change);
         assert_eq!(info.min_pin_length, 0);
         assert_eq!(info.firmware_version, 0);
         assert_eq!(info.max_cred_blob_length, 0);
@@ -306,10 +306,10 @@ mod tests {
         assert_eq!(info.certifications, vec![("FIDO_CERTIFIED".to_string(), 1)]);
         assert_eq!(info.vendor_prototype_config_commands, vec![1, 2]);
         assert_eq!(info.uv_count_since_last_pin_entry, 5);
-        assert_eq!(info.long_touch_for_reset, true);
+        assert!(info.long_touch_for_reset);
         assert_eq!(info.enc_identifier, vec![0xAA, 0xBB]);
         assert_eq!(info.transports_for_reset, vec!["nfc", "usb"]);
-        assert_eq!(info.pin_complexity_policy, true);
+        assert!(info.pin_complexity_policy);
         assert_eq!(info.pin_complexity_policy_url, vec![0xCC, 0xDD]);
         assert_eq!(info.max_pin_length, 63);
         assert_eq!(info.enc_cred_store_state, vec![0xEE, 0xFF]);
@@ -390,10 +390,10 @@ mod tests {
         assert_eq!(info.vendor_prototype_config_commands, vec![1]);
         assert_eq!(info.attestation_formats, Vec::<String>::new());
         assert_eq!(info.uv_count_since_last_pin_entry, 0);
-        assert_eq!(info.long_touch_for_reset, false);
+        assert!(!info.long_touch_for_reset);
         assert_eq!(info.enc_identifier, Vec::<u8>::new());
         assert_eq!(info.transports_for_reset, Vec::<String>::new());
-        assert_eq!(info.pin_complexity_policy, false);
+        assert!(!info.pin_complexity_policy);
         assert_eq!(info.pin_complexity_policy_url, Vec::<u8>::new());
         assert_eq!(info.max_pin_length, 0);
         assert_eq!(info.enc_cred_store_state, Vec::<u8>::new());

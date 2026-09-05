@@ -89,21 +89,19 @@ pub fn pin(device: &FidoKeyHid, command: PinCommand) -> Result<()> {
                 println!();
                 println!();
                 println!("Get UV retry counter.\n");
-                match device.get_uv_retries() {
-                    Ok(v) => {
-                        println!("UV retry counter = {}", v);
+                {
+                    let v = device.get_uv_retries()?;
+                    println!("UV retry counter = {}", v);
 
-                        if v > 0 {
-                            println!();
-                            println!("UV retries count is the number of built-in UV attempts remaining before built-in UV is disabled on the device.");
-                        } else {
-                            println!("\nUV is blocked. \nAuthenticate with a PIN will unblock it.");
-                            println!();
-                            println!(":_( ");
-                            println!();
-                        }
+                    if v > 0 {
+                        println!();
+                        println!("UV retries count is the number of built-in UV attempts remaining before built-in UV is disabled on the device.");
+                    } else {
+                        println!("\nUV is blocked. \nAuthenticate with a PIN will unblock it.");
+                        println!();
+                        println!(":_( ");
+                        println!();
                     }
-                    Err(err) => return Err(err),
                 };
             }
         }

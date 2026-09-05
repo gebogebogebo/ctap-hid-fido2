@@ -28,7 +28,7 @@ impl fmt::Display for Assertion {
         strbuf
             .appenh("- rpid_hash", &self.rpid_hash)
             .append("- sign_count", &self.sign_count)
-            .add(&format!("{}", &self.flags))
+            .add(&format!("{}", self.flags))
             .append("- number_of_credentials", &self.number_of_credentials)
             .appenh("- signature", &self.signature)
             .append("- user", &self.user)
