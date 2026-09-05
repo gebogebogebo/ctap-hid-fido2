@@ -391,18 +391,14 @@ fn main() -> Result<()> {
             } => {
                 if toggle_always_uv {
                     cfg::config(&device, cfg::Command::ToggleAlwaysUv, pin)?;
-                } else if new_min_pin_length.is_some() {
+                } else if let Some(new_min_pin_length) = new_min_pin_length {
                     cfg::config(
                         &device,
-                        cfg::Command::SetMinPINLength(new_min_pin_length.unwrap()),
+                        cfg::Command::SetMinPINLength(new_min_pin_length),
                         pin,
                     )?;
-                } else if rpids.is_some() {
-                    cfg::config(
-                        &device,
-                        cfg::Command::SetMinPinLengthRPIDs(rpids.unwrap()),
-                        pin,
-                    )?;
+                } else if let Some(rpids) = rpids {
+                    cfg::config(&device, cfg::Command::SetMinPinLengthRPIDs(rpids), pin)?;
                 } else if force_change_pin {
                     cfg::config(&device, cfg::Command::ForceChangePin, pin)?;
                 }

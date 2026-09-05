@@ -32,7 +32,7 @@ impl fmt::Display for Attestation {
         let mut strbuf = StrBuf::new(42);
         strbuf
             .appenh("- rpid_hash", &self.rpid_hash)
-            .add(&format!("{}", &self.flags))
+            .add(&format!("{}", self.flags))
             .append("- sign_count", &self.sign_count)
             .appenh("- aaguid", &self.aaguid)
             .append("- credential_descriptor", &self.credential_descriptor)
