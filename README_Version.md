@@ -1,4 +1,14 @@
 ## Version
+### Ver 3.6.0
+- The minimum supported Rust version (MSRV) is now **1.89** (was 1.88), because `aes` 0.9.3 requires rustc 1.89. Since an MSRV bump is a minor-level change, this release is 3.6.0 instead of 3.5.14.
+- Addressed [issue #141](https://github.com/gebogebogebo/ctap-hid-fido2/issues/141).
+- Addressed [pull request #144](https://github.com/gebogebogebo/ctap-hid-fido2/pull/144).
+  - Fixed the typo in `get_assertion_with_extensios()`: it is renamed to `get_assertion_with_extensions()`. The misspelled method is kept as a `#[deprecated]` wrapper for backward compatibility and will be removed in a future release.
+- Addressed [pull request #145](https://github.com/gebogebogebo/ctap-hid-fido2/pull/145).
+  - Resolved all `cargo clippy` warnings in the examples.
+- CI: `actions/checkout` updated to v4, the build now uses `cargo build --all-targets`, and `cargo test --lib` is run on macOS, Ubuntu and Windows.
+- Dependency Updates.
+
 ### Ver 3.5.13
 - Addressed [issue #136](https://github.com/gebogebogebo/ctap-hid-fido2/issues/136).
 - Addressed [pull request #137](https://github.com/gebogebogebo/ctap-hid-fido2/pull/137).
