@@ -101,7 +101,8 @@ fn enumerate(device: &FidoKeyHid, pin: &str) -> Result<()> {
     for rp in rps {
         println!(
             "- rp: (id: {}, name: {})",
-            rp.public_key_credential_rp_entity.id, rp.public_key_credential_rp_entity.name
+            common::escape_control_chars(&rp.public_key_credential_rp_entity.id),
+            common::escape_control_chars(&rp.public_key_credential_rp_entity.name)
         );
         //println!("## rps\n{}", rp);
 
@@ -110,8 +111,8 @@ fn enumerate(device: &FidoKeyHid, pin: &str) -> Result<()> {
             println!(
                 "  - credential: (id: {}, name: {}, display_name: {})",
                 util::to_hex_str(&cred.public_key_credential_user_entity.id),
-                cred.public_key_credential_user_entity.name,
-                cred.public_key_credential_user_entity.display_name
+                common::escape_control_chars(&cred.public_key_credential_user_entity.name),
+                common::escape_control_chars(&cred.public_key_credential_user_entity.display_name)
             );
             //println!("### credentials\n{}", cred);
         }
