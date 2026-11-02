@@ -1,4 +1,19 @@
 ## Version
+### Ver 3.6.1
+- Addressed [issue #147](https://github.com/gebogebogebo/ctap-hid-fido2/issues/147).
+- Addressed [pull request #148](https://github.com/gebogebogebo/ctap-hid-fido2/pull/148).
+  - Hardened response parsing against malformed data from a faulty or malicious authenticator. The following cases used to panic and now return `Err`:
+    - A COSE key-agreement public key whose x / y coordinates are not 32 bytes.
+    - An encrypted response (e.g. the PIN token or `hmac-secret` output) whose length is not a multiple of 16 bytes or exceeds 4096 bytes.
+    - A CTAPHID response whose byte count (BCNT) is larger than the data actually received, or a U2F response too short to contain the status word.
+    - A `largeBlobs` response shorter than its 16-byte hash.
+  - Valid responses are handled as before, and the public API does not change.
+  - example: [ctapcli](examples/ctapcli/main.rs)
+    - `pin` (new / change) no longer echoes the PIN while typing when stdin is a terminal. Piped input is still read from stdin.
+    - `cred` escapes control characters in the RP and user names returned by the authenticator, so they cannot inject terminal escape sequences.
+- Ran `cargo audit`: no advisories in the dependency tree.
+- Dependency Updates.
+
 ### Ver 3.6.0
 - The minimum supported Rust version (MSRV) is now **1.89** (was 1.88), because `aes` 0.9.3 requires rustc 1.89. Since an MSRV bump is a minor-level change, this release is 3.6.0 instead of 3.5.14.
 - Addressed [issue #141](https://github.com/gebogebogebo/ctap-hid-fido2/issues/141).
