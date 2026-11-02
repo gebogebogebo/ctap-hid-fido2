@@ -44,7 +44,7 @@ impl SharedSecret {
     }
 
     pub fn decrypt_token(&self, data: &[u8]) -> Result<PinToken> {
-        let dec = self.decrypt(data);
+        let dec = self.decrypt(data)?;
         let pin_token = PinToken::new(&dec);
         Ok(pin_token)
     }
@@ -57,7 +57,7 @@ impl SharedSecret {
 
     /// 6.5.6. PIN/UV Auth Protocol One: decrypt(key, demCiphertext) → plaintext
     /// AES-256-CBC(key, IV=0, demCiphertext), no padding.
-    pub fn decrypt(&self, dem_cipher_text: &[u8]) -> Vec<u8> {
+    pub fn decrypt(&self, dem_cipher_text: &[u8]) -> Result<Vec<u8>> {
         enc_aes256_cbc::decrypt_message(&self.secret, dem_cipher_text)
     }
 }

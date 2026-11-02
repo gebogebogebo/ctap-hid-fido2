@@ -209,7 +209,7 @@ mod tests {
             util::to_str_hex("37455A8392187439EFAA249617AAB5C2")
         );
 
-        let dec_data = encrypt::enc_aes256_cbc::decrypt_message_str(&key, &enc_data);
+        let dec_data = encrypt::enc_aes256_cbc::decrypt_message_str(&key, &enc_data).unwrap();
         print!("- dec_data = {}", dec_data);
         assert_eq!(dec_data, message);
     }

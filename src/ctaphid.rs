@@ -131,12 +131,15 @@ fn get_responce_status(packet: &[u8]) -> Result<(u8, u16, u8)> {
 
     // status
     let response_status = if command == CTAPHID_MSG {
-        // length check ()
-        if payload_size > packet.len() as u16 {
+        // U2F data ends with SW1 SW2, so it needs at least 2 bytes.
+        if payload_size < 2 {
             return Err(anyhow!("u2f response size error?"));
         }
-        // U2F(last byte of data)
-        packet[(4 + 2 + payload_size - 1) as usize]
+        // U2F(SW1: second to last byte of data, data starts at offset 7)
+        let sw1_index = 7 + payload_size as usize - 2;
+        *packet
+            .get(sw1_index)
+            .ok_or_else(|| anyhow!("u2f response size error?"))?
     } else {
         // CTAP(first byte of data)
         packet[7]
@@ -161,16 +164,24 @@ fn get_status_message(status: (u8, u16, u8)) -> String {
     }
 }
 
-fn get_data(status: (u8, u16, u8), payload: Vec<u8>) -> Vec<u8> {
+fn get_data(status: (u8, u16, u8), payload: Vec<u8>) -> Result<Vec<u8>> {
     let statindex = if status.0 == CTAPHID_MSG { 0 } else { 1 };
 
     // data size
     let datasize = if status.0 == CTAPHID_MSG {
         // remove SW1 , SW2
-        status.1 - 2
+        status
+            .1
+            .checked_sub(2)
+            .ok_or_else(|| anyhow!("response size error"))?
     } else {
         status.1
     };
+
+    // The device may claim more data than it actually sent.
+    if usize::from(datasize) > payload.len() {
+        return Err(anyhow!("response size error"));
+    }
 
     // get CBOR
     let mut data: Vec<u8> = vec![];
@@ -179,7 +190,7 @@ fn get_data(status: (u8, u16, u8), payload: Vec<u8>) -> Vec<u8> {
         let dat = payload[index];
         data.push(dat);
     }
-    data
+    Ok(data)
 }
 
 fn ctaphid_cbor_responce_get_payload_1(packet: &[u8]) -> Vec<u8> {
@@ -458,7 +469,7 @@ fn ctaphid_cbormsg(device: &FidoKeyHid, command: u8, payload: &[u8]) -> Result<V
         }
 
         // get data
-        let data = get_data(st, payload);
+        let data = get_data(st, payload)?;
 
         if device.enable_log {
             println!();
@@ -588,5 +599,80 @@ mod tests {
             "up-needed"
         );
         assert_eq!(get_keep_alive_status_message(0xff), "unknown(0xff)");
+    }
+
+    // Build a 64-byte init frame: cid(4) cmd(1) bcnt(2) data(57).
+    fn init_frame(cmd: u8, bcnt: u16) -> Vec<u8> {
+        let mut packet = vec![0u8; 64];
+        packet[4] = cmd;
+        packet[5] = (bcnt >> 8) as u8;
+        packet[6] = (bcnt & 0xff) as u8;
+        packet
+    }
+
+    #[test]
+    fn test_get_responce_status_u2f_reads_sw1() {
+        // "U2F_V2" + 0x90 0x00
+        let mut packet = init_frame(CTAPHID_MSG, 8);
+        packet[7..15].copy_from_slice(b"U2F_V2\x90\x00");
+        let status = get_responce_status(&packet).unwrap();
+        assert_eq!(status, (CTAPHID_MSG, 8, 0x90));
+        assert!(!is_responce_error(status));
+    }
+
+    #[test]
+    fn test_get_responce_status_u2f_sw1_at_end_of_packet() {
+        let mut packet = init_frame(CTAPHID_MSG, 58);
+        packet[63] = 0x90;
+        assert_eq!(
+            get_responce_status(&packet).unwrap(),
+            (CTAPHID_MSG, 58, 0x90)
+        );
+    }
+
+    #[test]
+    fn test_get_responce_status_u2f_bcnt_past_packet_is_error() {
+        for bcnt in [59u16, 60, 64, 65, 0xffff] {
+            let packet = init_frame(CTAPHID_MSG, bcnt);
+            assert!(get_responce_status(&packet).is_err(), "bcnt={}", bcnt);
+        }
+    }
+
+    #[test]
+    fn test_get_responce_status_u2f_bcnt_too_small_is_error() {
+        for bcnt in [0u16, 1] {
+            let packet = init_frame(CTAPHID_MSG, bcnt);
+            assert!(get_responce_status(&packet).is_err(), "bcnt={}", bcnt);
+        }
+    }
+
+    #[test]
+    fn test_get_data_cbor() {
+        // status byte 0x00 followed by CBOR data
+        let payload = vec![0x00, 0xa1, 0x01, 0x02];
+        let data = get_data((CTAPHID_CBOR, 4, 0x00), payload).unwrap();
+        assert_eq!(data, vec![0xa1, 0x01, 0x02]);
+    }
+
+    #[test]
+    fn test_get_data_u2f() {
+        // data + SW1 SW2
+        let payload = vec![0x01, 0x02, 0x90, 0x00];
+        let data = get_data((CTAPHID_MSG, 4, 0x90), payload).unwrap();
+        assert_eq!(data, vec![0x01, 0x02]);
+    }
+
+    #[test]
+    fn test_get_data_bcnt_past_payload_is_error() {
+        // The device claims more bytes than were received.
+        let payload = vec![0u8; 5957];
+        assert!(get_data((CTAPHID_CBOR, 5957, 0x00), payload.clone()).is_ok());
+        assert!(get_data((CTAPHID_CBOR, 5958, 0x00), payload.clone()).is_err());
+        assert!(get_data((CTAPHID_CBOR, 0xffff, 0x00), payload).is_err());
+    }
+
+    #[test]
+    fn test_get_data_u2f_bcnt_too_small_is_error() {
+        assert!(get_data((CTAPHID_MSG, 1, 0x90), vec![0x90]).is_err());
     }
 }
