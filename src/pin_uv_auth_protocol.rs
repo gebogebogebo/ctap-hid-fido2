@@ -108,7 +108,7 @@ impl PinUvAuthSharedSecret {
     /// decrypt(key, demCiphertext) → plaintext, per the negotiated protocol version.
     pub fn decrypt(&self, dem_cipher_text: &[u8]) -> Result<Vec<u8>> {
         match self {
-            Self::One(s) => Ok(s.decrypt(dem_cipher_text)),
+            Self::One(s) => s.decrypt(dem_cipher_text),
             Self::Two(s) => s.decrypt(dem_cipher_text),
         }
     }
@@ -185,6 +185,24 @@ mod pin_uv_auth_shared_secret_tests {
         // Protocol Two returns the full 32-byte HMAC-SHA-256 output.
         let param_two = two().authenticate(&message).unwrap();
         assert_eq!(param_two.len(), 32);
+    }
+
+    #[test]
+    fn test_pin_uv_auth_shared_secret_decrypt_rejects_malformed_ciphertext() {
+        // Authenticator-supplied ciphertext with a bad length must yield an error, not a panic.
+        let unaligned = vec![0u8; 17];
+        assert!(one().decrypt(&unaligned).is_err());
+        assert!(one().decrypt_token(&unaligned).is_err());
+        assert!(two().decrypt(&unaligned).is_err());
+        assert!(two().decrypt_token(&unaligned).is_err());
+
+        let too_long_one = vec![0u8; 4096 + 16];
+        assert!(one().decrypt(&too_long_one).is_err());
+        assert!(one().decrypt_token(&too_long_one).is_err());
+
+        let too_long_two = vec![0u8; 16 + 4096 + 16]; // iv || ct
+        assert!(two().decrypt(&too_long_two).is_err());
+        assert!(two().decrypt_token(&too_long_two).is_err());
     }
 
     #[test]
